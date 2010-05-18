@@ -51,7 +51,7 @@ static pid_t _ecore_memory_pid = 0;
 
 static const char *_ecore_magic_string_get(Ecore_Magic m);
 static int _ecore_init_count = 0;
-int _ecore_log_dom = -1;
+EAPI int _ecore_log_dom = -1;
 int _ecore_fps_debug = 0;
 
 /** OpenBSD does not define CODESET
