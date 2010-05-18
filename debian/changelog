@@ -1,0 +1,261 @@
+ecore (0.9.9.060+svn20100304slp2+4) unstable; urgency=low
+
+  * Enable curl
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL
+  * Tag: ecore_0.9.9.060+svn20100304slp2+4
+
+ -- Sangjin Lee <lsj119@samsung.com>  Wed, 14 Apr 2010 17:54:37 +0900
+
+ecore (0.9.9.060+svn20100304slp2+3) unstable; urgency=low
+
+  * change control - add libeina-svn-04 dependency to libecore-svn-01
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL
+  * Tag: 9.9.060+svn20100304slp2+3
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Thu, 01 Apr 2010 16:50:07 +0900
+
+ecore (0.9.9.060+svn20100304slp2+2) unstable; urgency=low
+
+  * add document in ecore_imf and cleanup
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 30 Mar 2010 16:55:51 +0900
+
+ecore (0.9.9.060+svn20100304slp2+1) unstable; urgency=low
+
+  * change package version
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Thu, 25 Mar 2010 15:05:10 +0900
+
+ecore (0.9.9.060+svn20100304-5) unstable; urgency=low
+
+  * Upgrade ecore to 47360 
+
+ -- Sangjin Lee <lsj119@samsung.com>  Mon, 22 Mar 2010 20:52:51 +0900
+
+ecore (0.9.9.060+svn20100304-4) unstable; urgency=low
+
+  * Modifed keydefs.h for resolving macro name conflicts
+
+ -- Ji-hoon Lee <dalton.lee@samsung.com>  Mon, 22 Mar 2010 16:03:48 +0900
+
+ecore (0.9.9.060+svn20100304-3) unstable; urgency=low
+
+    * Added keydefs.h for identifying key index
+
+ -- Ji-hoon Lee <dalton.lee@samsung.com>  Fri, 19 Mar 2010 20:20:43 +0900
+
+ecore (0.9.9.060+svn20100304-2) unstable; urgency=low
+
+  * Fix debian/libecore-dev.install not to omit symbolic links for shared objects
+
+ -- Sung-Jin Park <sj76.park@samsung.com>  Tue, 16 Mar 2010 21:26:16 +0900
+
+ecore (0.9.9.060+svn20100304-1) unstable; urgency=low
+
+  * EFL_update_revision_46864
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Thu, 11 Mar 2010 10:50:35 +0900
+
+ecore (0.9.9.060+svn20100203-16) unstable; urgency=low
+
+  * Modify shape input mask
+
+ -- Sangjin Lee <lsj119@samsung.com>  Thu, 11 Mar 2010 10:42:52 +0900
+
+ecore (0.9.9.060+svn20100203-15) unstable; urgency=low
+
+  * Modify ecore_x_window_hide().
+   + In order to avoid ISE lockup problem, we ensure that root window
+     receives UnmapNotify event.
+
+ -- Gwanglim Lee <gl77.lee@samsung.com>  Wed, 10 Mar 2010 17:07:18 +0900
+
+ecore (0.9.9.060+svn20100203-14) unstable; urgency=low
+
+  * Merge source (based on SVN rev.46421).
+  * Add ecore_data library.
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Thu, 04 Mar 2010 20:17:30 +0900
+
+ecore (0.9.9.060+svn20100203-13) unstable; urgency=low
+
+  * Rollback to source (0.9.9.060+svn20100203-10)
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Thu, 04 Mar 2010 14:26:58 +0900
+
+ecore (0.9.9.060+svn20100203-12) unstable; urgency=low
+
+  * Merge the latest ecore_imf
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Thu, 04 Mar 2010 13:21:57 +0900
+
+ecore (0.9.9.060+svn20100203-11) unstable; urgency=low
+
+  * Merge source (based on SVN rev.46421)
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Thu, 04 Mar 2010 12:17:19 +0900
+
+ecore (0.9.9.060+svn20100203-10) unstable; urgency=low
+
+  * Add ecore_imf_context_ise_event_callback_set API. ise_state_add_listener, remove_listener, change_listener will be deprecated.
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 02 Mar 2010 17:52:58 +0900
+
+ecore (0.9.9.060+svn20100203-9) unstable; urgency=low
+
+  * Patch for ecore_evas_x_alpha_set
+
+ -- Sangjin Lee <lsj119@samsung.com>  Sat, 27 Feb 2010 20:44:34 +0900
+
+ecore (0.9.9.060+svn20100203-8) unstable; urgency=low
+
+  * add more ISE_EVENT types
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Thu, 25 Feb 2010 17:09:28 +0900
+
+ecore (0.9.9.060+svn20100203-7) unstable; urgency=low
+
+  * add ecore_imf_context_ise_get_window_rect API
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 23 Feb 2010 20:42:39 +0900
+
+ecore (0.9.9.060+svn20100203-6) unstable; urgency=low
+
+  * revision update to 46263. (partial merge)
+  * add atoms for rotation.
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Thu, 18 Feb 2010 19:37:45 +0900
+
+ecore (0.9.9.060+svn20100203-5) unstable; urgency=low
+
+  * elm_win_transparent apply
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Thu, 11 Feb 2010 15:12:01 +0900
+
+ecore (0.9.9.060+svn20100203-4) unstable; urgency=low
+
+  * Add rotate with resize.
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Mon, 08 Feb 2010 14:14:00 +0900
+
+ecore (0.9.9.060+svn20100203-3) unstable; urgency=low
+
+  * repack
+
+ -- sangho park <sangho.g.park@samsung.com>  Thu, 04 Feb 2010 22:04:12 +0900
+
+ecore (0.9.9.060+svn20100203-2) unstable; urgency=low
+
+  * repack
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Thu, 04 Feb 2010 20:27:43 +0900
+
+ecore (0.9.9.060+svn20100203-1) unstable; urgency=low
+
+  * EFL_update_revision_45828
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Wed, 03 Feb 2010 16:39:21 +0900
+
+ecore (0.9.9.060+svn20100119-2) unstable; urgency=low
+
+  * updated ISF files
+
+ -- sehwan <sehwan@samsung.com>  Thu, 21 Jan 2010 23:23:29 +0900
+
+ecore (0.9.9.060+svn20100119-1) unstable; urgency=low
+
+  * EFL_update_revision_45322
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 19 Jan 2010 20:44:48 +0900
+
+ecore (0.9.9.060+svn20100111-4) unstable; urgency=low
+
+  * changed ecore-imf for isf
+
+ -- sehwan <sehwan@samsung.com>  Fri, 15 Jan 2010 15:06:31 +0900
+
+ecore (0.9.9.060+svn20100111-3) unstable; urgency=low
+
+  * reupload EFL i686
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Tue, 12 Jan 2010 17:35:33 +0900
+
+ecore (0.9.9.060+svn20100111-2) unstable; urgency=low
+
+  * reupload EFL
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Mon, 11 Jan 2010 22:16:49 +0900
+
+ecore (0.9.9.060+svn20100111-1) unstable; urgency=low
+
+  * update EFL revision 45026
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Mon, 11 Jan 2010 13:28:04 +0900
+
+ecore (0.9.9.060+svn20091229-3) unstable; urgency=low
+
+  * To solve version mismatch between i386 and armel.
+  * No source code changed.
+
+ -- Jongwoo Chae <jongwoo.chae@samsung.com>  Thu, 07 Jan 2010 21:47:34 +0900
+
+ecore (0.9.9.060+svn20091229-2) unstable; urgency=low
+
+  * Changed ecore_imf for isf package
+
+ -- Ji-hoon Lee <dalton.lee@samsung.com>  Wed, 06 Jan 2010 13:55:00 +0900
+
+ecore (0.9.9.060+svn20091229-1) unstable; urgency=low
+
+  * update EFL
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Tue, 29 Dec 2009 14:27:03 +0900
+
+ecore (0.9.9.060+svn20091112-6) unstable; urgency=low
+
+  * modified debian/control to link libcurl
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 29 Dec 2009 19:31:19 +0900
+
+
+ecore (0.9.9.060+svn20091112-5) unstable; urgency=low
+
+  * modified debian/control : changed Architecture all to any (by Juyung Seo)
+
+ -- Sangho Park <sangho.g.park@samsung.com>  Fri, 27 Nov 2009 15:59:07 +0900
+
+ecore (0.9.9.060+svn20091112-4) unstable; urgency=low
+
+  * svn stable version
+
+ -- Sangho Park <sangho.g.park@samsung.com>  Thu, 19 Nov 2009 18:50:08 +0900
+
+ecore (0.9.9.060+svn20091112-3) unstable; urgency=low
+
+  * add build dependency glib
+
+ -- Sangho Park <sangho.g.park@samsung.com>  Tue, 17 Nov 2009 21:37:23 +0900
+
+ecore (0.9.9.060+svn20091112-2) unstable; urgency=low
+
+  * add glib dependency
+
+ -- Sangho Park <sangho.g.park@samsung.com>  Tue, 17 Nov 2009 16:27:18 +0900
+
+ecore (0.9.9.060+svn20091112-1) unstable; urgency=low
+
+  * New version
+
+ -- Sangho Park <sangho.g.park@samsung.com>  Thu, 12 Nov 2009 23:44:06 +0900
+
+ecore (0.9.9.060+svnYYYYMMDD-1) unstable; urgency=low
+
+  * New version
+
+ -- quaker <quaker66@gmail.com>  Thu, 22 Apr 2009 18:12:06 +0100
+
+ecore (0.9.9.050+svnYYYYMMDD-1) unstable; urgency=low
+
+  * Clean up changelog
+
+ -- quaker <quaker66@gmail.com>  Tue, 21 Apr 2009 19:14:37 +0100

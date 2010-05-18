@@ -1,0 +1,38 @@
+#!/usr/bin/make -f
+
+include /usr/share/cdbs/1/class/autotools.mk
+include /usr/share/cdbs/1/rules/debhelper.mk
+
+DEB_CONFIGURE_SCRIPT := ./autogen.sh
+DEB_INSTALL_MANPAGES_libecore-bin := debian/ecore_config.1
+DEB_DH_STRIP_ARGS := --dbg-package=libecore-dbg
+DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb \
+	--disable-ecore-directfb \
+	--disable-ecore-evas-dfb \
+	--enable-ecore-evas-fb \
+	--disable-rpath \
+	--disable-openssl \
+	--disable-gnutls \
+	--enable-doc \
+	--enable-simple-x11 \
+	--enable-ecore-evas-opengl-x11 \
+	--disable-ecore-evas-xrender-x11 \
+	--enable-curl \
+	--disable-openssl \
+	--enable-ecore-data \
+	--enable-ecore-config \
+	--enable-glib-integration-always 
+DEB_MAKE_CLEAN_TARGET := distclean
+CFLAGS += -fvisibility=hidden
+LDFLAGS += -fvisibility=hidden
+
+build/libecore-doc::
+	cd $(DEB_SRCDIR)/doc && make doc
+
+install/libecore-doc::
+	mkdir -p debian/libecore-doc/usr/share/doc/libecore-doc
+	cp -R $(DEB_SRCDIR)/doc/html debian/libecore-doc/usr/share/doc/libecore-doc/
+
+clean::
+	[ ! -f Makefile ] || make distclean
+	rm -f ecore-*.tar.bz2 ecore-*.tar.bz2.cdbs-config_list
