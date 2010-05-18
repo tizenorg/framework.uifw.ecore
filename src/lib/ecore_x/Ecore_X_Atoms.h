@@ -251,4 +251,16 @@ EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_SYNC_CANCEL;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_FLUSH;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_DUMP;
 
+/* added by doyoun.kang 100218 - for rotation */
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE;
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_AVAILABLE_ANGLE;
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_OPERATOR;
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_ROOT_ANGLE;
+
+/* added by doyoun.kang - for user created window */
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_USER_CREATED_WINDOW;
+
+/* added by doyoun.kang - for indicator's state */
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_INDICATOR_STATE;
+
 #endif /* _ECORE_X_ATOMS_H */

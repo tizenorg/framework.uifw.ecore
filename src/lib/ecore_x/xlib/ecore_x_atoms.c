@@ -264,7 +264,19 @@ _ecore_x_atoms_init(void)
         { "_E_COMP_SYNC_CANCEL", &ECORE_X_ATOM_E_COMP_SYNC_CANCEL },
         
         { "_E_COMP_FLUSH", &ECORE_X_ATOM_E_COMP_FLUSH },
-        { "_E_COMP_DUMP", &ECORE_X_ATOM_E_COMP_DUMP }
+        { "_E_COMP_DUMP", &ECORE_X_ATOM_E_COMP_DUMP },
+
+        /* added by doyoun.kang 100218 - for rotation */
+        { "_E_ILLUME_ROTATE_WINDOW_ANGLE", & ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE },
+        { "_E_ILLUME_ROTATE_WINDOW_AVAILABLE_ANGLES", & ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_AVAILABLE_ANGLE },
+        { "_E_ILLUME_ROTATE_OPERATOR", & ECORE_X_ATOM_E_ILLUME_ROTATE_OPERATOR },
+        { "_E_ILLUME_ROTATE_ROOT_ANGLE", & ECORE_X_ATOM_E_ILLUME_ROTATE_ROOT_ANGLE },
+
+        /* added by doyoun.kang - for user created window */ 
+        { "_ECORE_X_USER_CREATED_WINDOW", & ECORE_X_ATOM_USER_CREATED_WINDOW },
+
+        /* added by doyoun.kang - for indicator's state */
+        { "_E_ILLUME_INDICATOR_STATE", &ECORE_X_ATOM_E_ILLUME_INDICATOR_STATE }
      };
    Atom *atoms;
    char **names;
