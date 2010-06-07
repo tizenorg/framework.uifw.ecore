@@ -71,6 +71,19 @@
 extern "C" {
 #endif
 
+#define ECORE_VERSION_MAJOR 0
+#define ECORE_VERSION_MINOR 9
+
+   typedef struct _Ecore_Version
+     {
+        int major;
+        int minor;
+        int micro;
+        int revision;
+     } Ecore_Version;
+   
+   EAPI extern Ecore_Version *ecore_version;
+
 #define ECORE_CALLBACK_CANCEL 0 /**< Return value to remove a callback */
 #define ECORE_CALLBACK_RENEW 1  /**< Return value to keep a callback */
 
@@ -345,6 +358,8 @@ extern "C" {
 
    EAPI void          ecore_poller_poll_interval_set(Ecore_Poller_Type type, double poll_time);
    EAPI double        ecore_poller_poll_interval_get(Ecore_Poller_Type type);
+   EAPI Eina_Bool     ecore_poller_poller_interval_set(Ecore_Poller *poller, int interval);
+   EAPI int           ecore_poller_poller_interval_get(Ecore_Poller *poller);
    EAPI Ecore_Poller *ecore_poller_add(Ecore_Poller_Type type, int interval, int (*func) (void *data), const void *data);
    EAPI void         *ecore_poller_del(Ecore_Poller *poller);
 
