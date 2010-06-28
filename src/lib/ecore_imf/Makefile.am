@@ -13,6 +13,7 @@ AM_CFLAGS = @WIN32_CFLAGS@
 lib_LTLIBRARIES = libecore_imf.la
 include_HEADERS = \
 Ecore_IMF.h \
+Ecore_IMF_Input_Panel_Key.h \
 keydefs.h
 
 libecore_imf_la_SOURCES = \
