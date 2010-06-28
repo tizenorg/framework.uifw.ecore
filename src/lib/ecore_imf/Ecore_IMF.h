@@ -7,6 +7,7 @@
 
 #include <Evas.h>
 #include <keydefs.h>
+#include <Ecore_IMF_Input_Panel_Key.h>
 
 #ifdef EAPI
 # undef EAPI
