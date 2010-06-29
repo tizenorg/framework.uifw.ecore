@@ -3300,6 +3300,36 @@ ecore_evas_gl_x11_pre_post_swap_callback_set(const Ecore_Evas *ee, void *data, v
 }
 #endif /* ! BUILD_ECORE_EVAS_OPENGL_X11 */
 
+
+/*
+ * @param ee
+ * @param no_swap If = 1, ee doesn't perform swap buffer.
+ *                If = 0, ee performs swap buffer.
+ */
+#ifdef BUILD_ECORE_EVAS_OPENGL_X11
+EAPI void
+ecore_evas_gl_x11_no_swap_set(const Ecore_Evas *ee, Eina_Bool no_swap)
+{
+   Evas_Engine_Info_GL_X11 *einfo;
+   if (!(!strcmp(ee->driver, "opengl_x11"))) return;
+   einfo = (Evas_Engine_Info_GL_X11 *)evas_engine_info_get(ee->evas);
+   if (einfo)
+     {
+	einfo->no_swap = no_swap;
+	if (!evas_engine_info_set(ee->evas, (Evas_Engine_Info *)einfo))
+          {
+             ERR("evas_engine_info_set() for engine '%s' failed.", ee->driver);
+          }
+     }
+}
+#else
+EAPI void
+ecore_evas_gl_x11_no_swap_set(const Ecore_Evas *ee, Eina_Bool no_swap)
+{
+   return;
+}
+#endif /* ! BUILD_ECORE_EVAS_OPENGL_X11 */
+
 /**
  * To be documented.
  *
