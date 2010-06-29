@@ -1,3 +1,11 @@
+ecore (0.9.9.060+svn.49540slp2+3build05) unstable; urgency=low
+
+  * add ecore_evas_gl_x11_no_swap_set for supporting lock/unlock feature.
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL-pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build05
+
+ -- Gwanglim Lee <gl77.lee@samsung.com>  Tue, 29 Jun 2010 18:58:38 +0900
+
 ecore (0.9.9.060+svn.49540slp2+3build04) unstable; urgency=low
 
   * Packaging.
