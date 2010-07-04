@@ -250,6 +250,7 @@ EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_SYNC_END;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_SYNC_CANCEL;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_FLUSH;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_DUMP;
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED;
 
 /* added by doyoun.kang 100218 - for rotation */
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE;

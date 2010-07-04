@@ -1624,6 +1624,9 @@ EAPI void                 ecore_x_e_comp_sync_cancel_send(Ecore_X_Window win);
 
 EAPI void                 ecore_x_e_comp_flush_send(Ecore_X_Window win);
 EAPI void                 ecore_x_e_comp_dump_send(Ecore_X_Window win);
+
+EAPI void                 ecore_x_e_comp_dri_buff_flip_supported_set(Ecore_X_Window root, Eina_Bool enabled);
+EAPI void                 ecore_x_e_comp_dri_buff_flip_supported_get(Ecore_X_Window root);
        
 EAPI Ecore_X_Sync_Alarm   ecore_x_sync_alarm_new(Ecore_X_Sync_Counter counter);
 EAPI int                  ecore_x_sync_alarm_free(Ecore_X_Sync_Alarm alarm);
