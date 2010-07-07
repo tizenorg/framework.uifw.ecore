@@ -3,7 +3,7 @@ Section: libs
 Priority: optional
 Maintainer:  Jaehwan Kim <jae.hwan.kim@samsung.com>, Jihoon Kim <jihoon48.kim@samsung.com>, sangho park <sangho.g.park@samsung.com>, Sangjin Lee <lsj119@samsung.com>, Doyoun Kang <doyoun.kang@samsung.com>, Sung-Jin Park <sj76.park@samsung.com>, Juyung Seo <juyung.seo@samsung.com>
 Original-Maintainer:  Debian Pkg-e Team <pkg-e-devel@lists.alioth.debian.org>
-Uploaders: Albin Tonnerre <albin.tonnerre@gmail.com>, Niv Sardi <xaiki@debian.org>,
+Uploaders: Albin Tonnerre <albin.tonnerre@gmail.com>, Niv Sardi <xaiki@debian.org>, ChunEon Park <chuneon.park@samsung.com>
  Xavier Oswald <x.oswald@free.fr>, Jan Lübbe <jluebbe@debian.org>, sehwan <sehwan@samsung.com>, Gwanglim Lee <gl77.lee@samsung.com>, Ji-hoon Lee <dalton.lee@samsung.com>
 Build-Depends: dpkg-dev, debhelper (>= 6), cdbs, libeina-dev (>= 0.0.2.060+svn20100304),
  libeet-dev (>= 1.0.0), libevas-dev , libglib2.0-dev,
