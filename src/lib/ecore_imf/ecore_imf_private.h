@@ -42,9 +42,19 @@ struct _Ecore_IMF_Context
    const Ecore_IMF_Module        *module;
    const Ecore_IMF_Context_Class *klass;
    void                          *data;
-   int                            input_mode;
+   int                           input_mode;
+   void*                         window;
+   void*                         client_object;
+   Ecore_IMF_Input_Panel_Layout  input_panel_layout;
+   int                           use_effect;
+   int                           input_panel_x;
+   int                           input_panel_y;
+   Ecore_IMF_Input_Panel_Orient input_panel_orient;
    int                          (*retrieve_surrounding_func)(void *data, Ecore_IMF_Context *ctx, char **text, int *cursor_pos);
    void                          *retrieve_surrounding_data;
+   Eina_List                     *callbacks;
+   Eina_List                     *disabled_key_list;
+   Eina_List                     *private_key_list;	
 };
 
 struct _Ecore_IMF_Module
