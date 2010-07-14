@@ -285,5 +285,8 @@ EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_ROOT_ANGLE = 0;
 /* added by doyoun.kang - for user created window */
 EAPI Ecore_X_Atom ECORE_X_ATOM_USER_CREATED_WINDOW = 0;
 
+/* added by gl77.lee - XID that points to the parent border window */
+EAPI Ecore_X_Atom ECORE_X_ATOM_PARENT_BORDER_WINDOW = 0;
+
 /* added by doyoun.kang - for indicator's state */
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_INDICATOR_STATE = 0;

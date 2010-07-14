@@ -1,3 +1,11 @@
+ecore (0.9.9.060+svn.49540slp2+3build08) unstable; urgency=low
+
+  * add the ECORE_X_ATOM_PARENT_BORDER_WINDOW atom.
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL-pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build08
+
+ -- Gwanglim Lee <gl77.lee@samsung.com>  Wed, 14 Jul 2010 15:41:35 +0900
+
 ecore (0.9.9.060+svn.49540slp2+3build07) unstable; urgency=low
 
   * Ecore_IMF API is revised.

@@ -277,6 +277,9 @@ _ecore_x_atoms_init(void)
         /* added by doyoun.kang - for user created window */ 
         { "_ECORE_X_USER_CREATED_WINDOW", & ECORE_X_ATOM_USER_CREATED_WINDOW },
 
+        /* added by gl77.lee - XID that points to the parent border window */
+        { "_ECORE_X_PARENT_BORDER_WINDOW", &ECORE_X_ATOM_PARENT_BORDER_WINDOW },
+
         /* added by doyoun.kang - for indicator's state */
         { "_E_ILLUME_INDICATOR_STATE", &ECORE_X_ATOM_E_ILLUME_INDICATOR_STATE }
      };
