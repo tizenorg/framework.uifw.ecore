@@ -504,7 +504,7 @@ _ecore_x_event_handle_button_press(XEvent *xevent)
 	     if ((_ecore_window_grabs[i] == xevent->xbutton.window) ||
 		 (_ecore_window_grabs[i] == xevent->xbutton.subwindow))
 	       {
-		  int replay = 0;
+		  Eina_Bool replay = EINA_FALSE;
 
 		  if (_ecore_window_grab_replay_func)
 		    replay = _ecore_window_grab_replay_func(_ecore_window_grab_replay_data,
@@ -572,7 +572,7 @@ _ecore_x_event_handle_button_press(XEvent *xevent)
 		  if ((_ecore_window_grabs[i] == xevent->xbutton.window) ||
 		      (_ecore_window_grabs[i] == xevent->xbutton.subwindow))
 		    {
-		       int replay = 0;
+		       Eina_Bool replay = EINA_FALSE;
 
 		       if (_ecore_window_grab_replay_func)
 			 replay = _ecore_window_grab_replay_func(_ecore_window_grab_replay_data,
@@ -1283,12 +1283,13 @@ _ecore_x_event_handle_selection_clear(XEvent *xevent)
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    _ecore_x_last_event_mouse_move = 0;
    d = _ecore_x_selection_get(xevent->xselectionclear.selection);
+/* errr..... why? paranoia.  
    if (d && (xevent->xselectionclear.time > d->time))
      {
 	_ecore_x_selection_set(None, NULL, 0, 
 			       xevent->xselectionclear.selection);
      }
-
+ */
    /* Generate event for app cleanup */
    e = malloc(sizeof(Ecore_X_Event_Selection_Clear));
    e->win = xevent->xselectionclear.window;
@@ -1311,6 +1312,8 @@ _ecore_x_event_handle_selection_request(XEvent *xevent)
    Ecore_X_Event_Selection_Request *e;
    Ecore_X_Selection_Intern *sd;
    void *data;
+   int len;
+   int typesize;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    _ecore_x_last_event_mouse_move = 0;
@@ -1335,10 +1338,16 @@ _ecore_x_event_handle_selection_request(XEvent *xevent)
 	if (si->data)
 	  {
 	     Ecore_X_Atom property;
+	     Ecore_X_Atom type;
+
+	     /* Set up defaults for strings first */
+	     type = xevent->xselectionrequest.target;
+	     typesize = 8;
+	     len = sd->length;
 
 	     if (!ecore_x_selection_convert(xevent->xselectionrequest.selection,
 					    xevent->xselectionrequest.target,
-					    &data))
+					    &data, &len, &type, &typesize))
 	       {
 		  /* Refuse selection, conversion to requested target failed */
 		  property = None;
@@ -1348,8 +1357,8 @@ _ecore_x_event_handle_selection_request(XEvent *xevent)
 		  /* FIXME: This does not properly handle large data transfers */
 		  ecore_x_window_prop_property_set(xevent->xselectionrequest.requestor,
 						   xevent->xselectionrequest.property,
-						   xevent->xselectionrequest.target,
-						   8, data, sd->length);
+						   type, typesize,
+						   data, len);
 		  property = xevent->xselectionrequest.property;
 		  free(data);
 	       }

@@ -84,8 +84,10 @@ extern "C" {
    
    EAPI extern Ecore_Version *ecore_version;
 
-#define ECORE_CALLBACK_CANCEL 0 /**< Return value to remove a callback */
-#define ECORE_CALLBACK_RENEW 1  /**< Return value to keep a callback */
+#define ECORE_CALLBACK_CANCEL EINA_FALSE /**< Return value to remove a callback */
+#define ECORE_CALLBACK_RENEW EINA_TRUE  /**< Return value to keep a callback */
+#define ECORE_CALLBACK_PASS_ON EINA_TRUE /**< Return value to pass event to next handler */
+#define ECORE_CALLBACK_DONE EINA_FALSE /**< Return value to stop event handling */
 
 #define ECORE_EVENT_NONE            0
 #define ECORE_EVENT_SIGNAL_USER     1 /**< User signal event */

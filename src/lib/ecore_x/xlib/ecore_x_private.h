@@ -106,8 +106,9 @@ typedef struct _Ecore_X_Selection_Converter Ecore_X_Selection_Converter;
 struct _Ecore_X_Selection_Converter
 {
    Ecore_X_Atom target;
-   int (*convert)(char *target, void *data, int size, 
-                  void **data_ret, int *size_ret);
+   int (*convert)(char *target, void *data, int size,
+                  void **data_ret, int *size_ret,
+		  Ecore_X_Atom *type, int *typeseize);
    Ecore_X_Selection_Converter *next;
 };
 
@@ -196,7 +197,7 @@ extern Ecore_X_Atom     _ecore_x_atoms_wm_protocols[ECORE_X_WM_PROTOCOL_NUM];
 
 extern int      _ecore_window_grabs_num;
 extern Window  *_ecore_window_grabs;
-extern int    (*_ecore_window_grab_replay_func) (void *data, int event_type, void *event);
+extern int (*_ecore_window_grab_replay_func) (void *data, int event_type, void *event);
 extern void    *_ecore_window_grab_replay_data;
 
 extern Ecore_X_Window _ecore_x_private_win;
@@ -259,7 +260,7 @@ char *_ecore_x_selection_target_get(Ecore_X_Atom target);
 Ecore_X_Selection_Intern * 
       _ecore_x_selection_get(Ecore_X_Atom selection);
 int   _ecore_x_selection_set(Window w, const void *data, int len, Ecore_X_Atom selection);
-int   _ecore_x_selection_convert(Ecore_X_Atom selection, Ecore_X_Atom target, void **data_ret);
+int   _ecore_x_selection_convert(Ecore_X_Atom selection, Ecore_X_Atom target, void **data_ret, Ecore_X_Atom *targettype, int *targetsize);
 void *_ecore_x_selection_parse(const char *target, void *data, int size, int format);
 
 void _ecore_x_sync_magic_send(int val, Ecore_X_Window swin);
@@ -291,7 +292,7 @@ extern int _ecore_x_xi2_opcode;
 
 void _ecore_x_input_init(void);
 void _ecore_x_input_shutdown(void);
-void _ecore_x_input_handler(XEvent* xevent);    
+void _ecore_x_input_handler(XEvent* xevent);
 /* from sync */
 
 void _ecore_mouse_move(unsigned int timestamp, unsigned int xmodifiers, int x, int y, int x_root, int y_root, unsigned int event_window, unsigned int window, unsigned int root_win, int same_screen, int dev, double radx, double rady, double pressure, double angle, double mx, double my, double mrx, double mry);
@@ -300,6 +301,7 @@ Ecore_Event_Mouse_Button *_ecore_mouse_button(int event, unsigned int timestamp,
 //#define LOGFNS 1
 
 #ifdef LOGFNS
+#include <stdio.h>
 #define LOGFN(fl, ln, fn) printf("-ECORE-X: %25s: %5i - %s\n", fl, ln, fn);
 #else
 #define LOGFN(fl, ln, fn)
