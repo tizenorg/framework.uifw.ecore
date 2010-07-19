@@ -1,7 +1,7 @@
 Source: ecore
 Section: libs
 Priority: optional
-Maintainer:  Jaehwan Kim <jae.hwan.kim@samsung.com>, Jihoon Kim <jihoon48.kim@samsung.com>, sangho park <sangho.g.park@samsung.com>, Sangjin Lee <lsj119@samsung.com>, Doyoun Kang <doyoun.kang@samsung.com>, Sung-Jin Park <sj76.park@samsung.com>, Juyung Seo <juyung.seo@samsung.com>
+Maintainer:  Jaehwan Kim <jae.hwan.kim@samsung.com>, Jihoon Kim <jihoon48.kim@samsung.com>, Sangjin Lee <lsj119@samsung.com>, Doyoun Kang <doyoun.kang@samsung.com>, Sung-Jin Park <sj76.park@samsung.com>, Juyung Seo <juyung.seo@samsung.com>
 Original-Maintainer:  Debian Pkg-e Team <pkg-e-devel@lists.alioth.debian.org>
 Uploaders: Albin Tonnerre <albin.tonnerre@gmail.com>, Niv Sardi <xaiki@debian.org>, ChunEon Park <chuneon.park@samsung.com>, WooHyun Jung <wh0705.jung@samsung.com>
  Xavier Oswald <x.oswald@free.fr>, Jan Lübbe <jluebbe@debian.org>, sehwan <sehwan@samsung.com>, Gwanglim Lee <gl77.lee@samsung.com>, Ji-hoon Lee <dalton.lee@samsung.com>
