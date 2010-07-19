@@ -4,7 +4,7 @@ ecore (0.9.9.060+svn.49540slp2+3build09) unstable; urgency=low
   * Git: 165.213.180.234:/git/slp/pkgs/ecore
   * Tag: ecore_0.9.9.060+svn.49540slp2+3build09
 
- -- Gwanglim Lee <gl77.lee@samsung.com>  Mon, 19 Jul 2010 10:47:44 +0900
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Mon, 19 Jul 2010 10:47:44 +0900
 
 ecore (0.9.9.060+svn.49540slp2+3build08) unstable; urgency=low
 
