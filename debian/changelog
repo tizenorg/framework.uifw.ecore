@@ -1,3 +1,11 @@
+ecore (0.9.9.060+svn.49540slp2+3build10) unstable; urgency=low
+
+  * Remove deprecated Ecore_IMF APIs.
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build10
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 20 Jul 2010 18:17:00 +0900
+
 ecore (0.9.9.060+svn.49540slp2+3build09) unstable; urgency=low
 
   * Repackage for beat release.

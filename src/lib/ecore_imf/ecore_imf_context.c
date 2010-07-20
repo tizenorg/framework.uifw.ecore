@@ -224,7 +224,17 @@ ecore_imf_context_del(Ecore_IMF_Context *ctx)
      }
    if (ctx->klass->del) ctx->klass->del(ctx);
    ECORE_MAGIC_SET(ctx, ECORE_MAGIC_NONE);
-   free(ctx);
+
+/*
+   void *data;
+	
+   EINA_LIST_FREE(ctx->private_key_list, data)
+   	free(data);
+
+   EINA_LIST_FREE(ctx->disabled_key_list, data)
+   	free(data);
+*/
+   free(ctx);   
 }
 
 /**
@@ -294,7 +304,7 @@ ecore_imf_context_client_canvas_set(Ecore_IMF_Context *ctx, void *canvas)
  * @param ctx An #Ecore_IMF_Context.
  * @ingroup Ecore_IMF_Context_Group
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_show(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -312,7 +322,7 @@ ecore_imf_context_show(Ecore_IMF_Context *ctx)
  * @param ctx An #Ecore_IMF_Context.
  * @ingroup Ecore_IMF_Context_Group
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_hide(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -489,7 +499,7 @@ ecore_imf_context_retrieve_surrounding_callback_set(Ecore_IMF_Context *ctx, int 
  * @param input_mode The input mode to be used by @p ctx.
  * @ingroup Ecore_IMF_Context_Group
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_input_mode_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Mode input_mode)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -511,7 +521,7 @@ ecore_imf_context_input_mode_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Mode in
  * @return The input mode being used by @p ctx.
  * @ingroup Ecore_IMF_Context_Group
  */
-EAPI Ecore_IMF_Input_Mode
+EINA_DEPRECATED EAPI Ecore_IMF_Input_Mode
 ecore_imf_context_input_mode_get(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -829,34 +839,6 @@ ecore_imf_context_delete_surrounding_event_add(Ecore_IMF_Context *ctx, int offse
 }
 
 /*** ImControl Related APIs */
-
-EAPI Ecore_IMF_Context* ecore_get_imf_context()
-{
-    const char *ctx_id = NULL;
-    Ecore_IMF_Context *imf_context = NULL;
-
-    ctx_id = ecore_imf_context_default_id_get();
-    //printf ("ctx_id = %s\n", ctx_id);
-    if (ctx_id)
-        imf_context = ecore_imf_context_add(ctx_id);
-
-   return imf_context;			    
-}
-
-EINA_DEPRECATED EAPI void  
-ecore_imf_context_ise_show(Ecore_IMF_Context *ctx, Evas_Object *obj, ISE_STATE state)
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_show");
-	return;
-     }
-
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_show instead.\n", __func__);
-   
-   if (ctx->klass->ise_show) ctx->klass->ise_show(ctx, obj, state);
-}
-
 EAPI void  
 ecore_imf_context_input_panel_show(Ecore_IMF_Context *ctx)
 {
@@ -867,15 +849,6 @@ ecore_imf_context_input_panel_show(Ecore_IMF_Context *ctx)
      }
 
    if (ctx->klass->input_panel_show) ctx->klass->input_panel_show(ctx);
-}
-
-EINA_DEPRECATED EAPI void  
-ecore_imf_context_ise_hide(Ecore_IMF_Context *ctx)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_hide instead.\n", __func__);
-   
-   ecore_imf_context_input_panel_hide(ctx);
-
 }
 
 EAPI void  
@@ -890,14 +863,6 @@ ecore_imf_context_input_panel_hide(Ecore_IMF_Context *ctx)
    if (ctx->klass->input_panel_hide) ctx->klass->input_panel_hide(ctx);
 }
 
-EINA_DEPRECATED EAPI void  
-ecore_imf_context_ise_control_panel_show (Ecore_IMF_Context *ctx)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_control_panel_show instead.\n", __func__);
-   
-   ecore_imf_context_control_panel_show (ctx);
-}
-
 EAPI void  
 ecore_imf_context_control_panel_show (Ecore_IMF_Context *ctx)
 {
@@ -910,14 +875,6 @@ ecore_imf_context_control_panel_show (Ecore_IMF_Context *ctx)
    if (ctx->klass->control_panel_show) ctx->klass->control_panel_show(ctx);
 }
 
-EINA_DEPRECATED EAPI void
-ecore_imf_context_ise_control_panel_hide (Ecore_IMF_Context *ctx)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_control_panel_hide instead.\n", __func__);
-   
-   ecore_imf_context_control_panel_hide (ctx);
-}
-
 EAPI void  
 ecore_imf_context_control_panel_hide (Ecore_IMF_Context *ctx)
 {
@@ -928,54 +885,6 @@ ecore_imf_context_control_panel_hide (Ecore_IMF_Context *ctx)
      }
    
    if (ctx->klass->control_panel_hide) ctx->klass->control_panel_hide(ctx);
-}
-
-EINA_DEPRECATED EAPI void
-ecore_imf_context_ise_set_mode  (Ecore_IMF_Context *ctx, ISE_MODE mode)
-{
-   Ecore_IMF_Input_Mode input_mode;
-
-   switch(mode)
-     {
-     /*
-      case ISE_MODE_NATIVE:
-	 input_mode = ECORE_IMF_INPUT_MODE_NATIVE;
-	 break;
-	*/
-      case ISE_MODE_NUMBER:
-	 input_mode = ECORE_IMF_INPUT_MODE_NUMERIC;
-	 break;
-      default:
-	 input_mode = ECORE_IMF_INPUT_MODE_ALPHA;
-	 break;
-     }
-
-   if (ctx->klass->input_mode_set) ctx->klass->input_mode_set(ctx, input_mode);
-}
-
-EINA_DEPRECATED EAPI void
-ecore_imf_context_ise_get_mode  (Ecore_IMF_Context *ctx, ISE_MODE *mode)
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_get_mode");
-	return;
-     }
-
-   switch(ctx->input_mode)
-     {
-     /*
-      case ECORE_IMF_INPUT_MODE_NATIVE:
-	 *mode = ISE_MODE_NATIVE;
-	 break;
-     */
-      case ECORE_IMF_INPUT_MODE_NUMERIC:
-	 *mode = ISE_MODE_NUMBER;
-	 break;
-      default:
-	 *mode = ISE_MODE_ENGLISH;
-	 break;
-     }
 }
 
 #if 0    
@@ -995,17 +904,6 @@ ecore_imf_context_input_panel_mode_get  (Ecore_IMF_Context *ctx)
 }
 #endif
 
-EINA_DEPRECATED EAPI void  
-ecore_imf_context_ise_set_language (Ecore_IMF_Context *ctx, ISE_LANG lang)
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_set_language");
-	return;
-     }
-   //if (ctx->klass->ise_set_language) ctx->klass->ise_set_language(ctx, lang);
-}
-
 EAPI void  
 ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang)
 {
@@ -1015,17 +913,6 @@ ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_In
 	return;
      }
 //   if (ctx->klass->ise_set_language) ctx->klass->ise_set_language(ctx, lang);
-}
-
-EINA_DEPRECATED EAPI void
-ecore_imf_context_ise_get_language (Ecore_IMF_Context *ctx, ISE_LANG *lang)
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_get_language");
-	return;
-     }
-   //if (ctx->klass->ise_get_language) ctx->klass->ise_get_language(ctx, lang);
 }
 
 EAPI Ecore_IMF_Input_Panel_Lang  
@@ -1110,13 +997,6 @@ ecore_imf_context_ise_set_isf_language (Ecore_IMF_Context *ctx, const char* lang
    if (ctx->klass->ise_set_isf_language) ctx->klass->ise_set_isf_language(ctx, lang);
 }
 
-EINA_DEPRECATED EAPI void
-ecore_imf_context_ise_set_imdata (Ecore_IMF_Context *ctx, const char * data, int len)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_imdata_set instead.\n", __func__);
-   ecore_imf_context_input_panel_imdata_set (ctx, data, len);
-}
-
 EAPI void  
 ecore_imf_context_input_panel_imdata_set (Ecore_IMF_Context *ctx, const char * data, int len)
 {
@@ -1135,14 +1015,6 @@ ecore_imf_context_input_panel_imdata_set (Ecore_IMF_Context *ctx, const char * d
    if (ctx->klass->input_panel_imdata_set) ctx->klass->input_panel_imdata_set(ctx, data, len);
 }
 
-EINA_DEPRECATED EAPI void  
-ecore_imf_context_ise_get_imdata (Ecore_IMF_Context *ctx, char * data, int *len)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_imdata_get instead.\n", __func__);
-   
-   ecore_imf_context_input_panel_imdata_get (ctx, data, len);
-}
-
 EAPI void  
 ecore_imf_context_input_panel_imdata_get (Ecore_IMF_Context *ctx, char * data, int *len)
 {
@@ -1159,14 +1031,6 @@ ecore_imf_context_input_panel_imdata_get (Ecore_IMF_Context *ctx, char * data, i
      }
 
    if (ctx->klass->input_panel_imdata_get) ctx->klass->input_panel_imdata_get(ctx, data, len);
-}
-
-EINA_DEPRECATED EAPI void  
-ecore_imf_context_ise_set_style (Ecore_IMF_Context *ctx, ISE_STYLE style)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_use_effect_set instead.\n", __func__);
-   
-   ecore_imf_context_input_panel_use_effect_set(ctx, style.fUseImEffect);
 }
 
 EAPI void  
@@ -1194,22 +1058,6 @@ ecore_imf_context_input_panel_use_effect_get (Ecore_IMF_Context *ctx)
    return ctx->use_effect;
 }
 
-EINA_DEPRECATED EAPI void  
-ecore_imf_context_ise_get_style (Ecore_IMF_Context *ctx, ISE_STYLE *style)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_use_effect_get instead.\n", __func__);
-   
-   style->fUseImEffect = ctx->use_effect;
-}
-
-EINA_DEPRECATED EAPI void  
-ecore_imf_context_ise_get_window_rect (Ecore_IMF_Context *ctx, ISE_RECT *rect)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_geometry_get instead.\n", __func__);
-   
-   ecore_imf_context_input_panel_geometry_get (ctx, &rect->x, &rect->y, &rect->width, &rect->height);
-}
-
 EAPI void  
 ecore_imf_context_input_panel_geometry_get (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h)
 {
@@ -1220,13 +1068,6 @@ ecore_imf_context_input_panel_geometry_get (Ecore_IMF_Context *ctx, int *x, int 
      }
    
    if (ctx->klass->input_panel_geometry_get) ctx->klass->input_panel_geometry_get(ctx, x, y, w, h);
-}
-
-EINA_DEPRECATED EAPI void  
-ecore_imf_context_ise_set_private_key (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char* label, const char* value)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_private_key_set instead.\n", __func__);
-//   ecore_imf_context_input_panel_private_key_set (ctx, layout_index, key_index, NULL, label, value);
 }
 
 EAPI void  
@@ -1305,38 +1146,6 @@ ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx)
    return ctx->private_key_list;
 }
 
-
-EINA_DEPRECATED EAPI void  
-ecore_imf_context_ise_set_private_key_by_image (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char* img_path, const char* value)
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_set_private_key_by_image");
-	return;
-     }
-
-   if (!img_path || !value)
-     {
-	printf ("input parameters error!!! \n");
-	return;
-     }
-
-   if (ctx->klass->input_panel_private_key_set) ctx->klass->input_panel_private_key_set(ctx, layout_index, key_index, img_path, NULL, value);
-}
-
-EINA_DEPRECATED EAPI void  
-ecore_imf_context_ise_set_disable_key (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled)
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_set_disable_key");
-	return;
-     }
-
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_key_disabled_set instead.\n", __func__);
-   if (ctx->klass->input_panel_key_disabled_set) ctx->klass->input_panel_key_disabled_set(ctx, layout_index, key_index, disabled);
-}
-
 EAPI void  
 ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled)
 {
@@ -1380,13 +1189,6 @@ ecore_imf_context_input_panel_key_disabled_list_get  (Ecore_IMF_Context *ctx)
 	return ctx->disabled_key_list;
 }
 
-EINA_DEPRECATED EAPI void  
-ecore_imf_context_ise_set_layout (Ecore_IMF_Context *ctx, ISE_LAYOUT layout)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_layout_set instead.\n", __func__);
-   ecore_imf_context_input_panel_layout_set (ctx, (Ecore_IMF_Input_Panel_Layout)layout);
-}
-
 EAPI void  
 ecore_imf_context_input_panel_layout_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout)
 {
@@ -1400,18 +1202,9 @@ ecore_imf_context_input_panel_layout_set (Ecore_IMF_Context *ctx, Ecore_IMF_Inpu
    ctx->input_panel_layout = layout;
 }
 
-EINA_DEPRECATED EAPI void      
-ecore_imf_context_ise_get_layout  (Ecore_IMF_Context *ctx, ISE_LAYOUT *layout)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_layout_get instead.\n", __func__);
-   *layout = ecore_imf_context_input_panel_layout_get(ctx);
-}
-
 EAPI Ecore_IMF_Input_Panel_Layout
 ecore_imf_context_input_panel_layout_get  (Ecore_IMF_Context *ctx)
 {
-//   Ecore_IMF_Input_Panel_Layout layout;
-
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
 	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_layout_get");
@@ -1427,13 +1220,6 @@ ecore_imf_context_input_panel_layout_get  (Ecore_IMF_Context *ctx)
      return ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID;
 }
 
-EINA_DEPRECATED EAPI void      
-ecore_imf_context_ise_reset (Ecore_IMF_Context *ctx)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_reset instead.\n", __func__);
-   ecore_imf_context_input_panel_reset(ctx);
-}
-    
 EAPI void      
 ecore_imf_context_input_panel_reset (Ecore_IMF_Context *ctx)
 {
@@ -1444,13 +1230,6 @@ ecore_imf_context_input_panel_reset (Ecore_IMF_Context *ctx)
      }
 
    if (ctx->klass->input_panel_reset) ctx->klass->input_panel_reset(ctx);
-}
-
-EINA_DEPRECATED EAPI void      
-ecore_imf_context_ise_set_screen_orientation (Ecore_IMF_Context *ctx, int orientation)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_orient_set instead.\n", __func__);
-   ecore_imf_context_input_panel_orient_set (ctx, (Ecore_IMF_Input_Panel_Orient)((orientation%360)/90));
 }
 
 EAPI void      
@@ -1464,8 +1243,6 @@ ecore_imf_context_input_panel_orient_set (Ecore_IMF_Context *ctx, Ecore_IMF_Inpu
 
    if (ctx->klass->input_panel_orient_set) ctx->klass->input_panel_orient_set(ctx, orientation*90);
    ctx->input_panel_orient = orientation;
-
-   //printf("[%s] orient : %d\n", __func__, ctx->input_panel_orient);
 }
 
 EAPI Ecore_IMF_Input_Panel_Orient 
@@ -1476,8 +1253,6 @@ ecore_imf_context_input_panel_orient_get (Ecore_IMF_Context *ctx)
 	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_orient_get");
 	return ECORE_IMF_INPUT_PANEL_ORIENT_NONE;
      }
-
-   //printf("[%s] orient : %d\n", __func__, ctx->input_panel_orient);
 
    return ctx->input_panel_orient;
 }
@@ -1551,13 +1326,6 @@ ecore_imf_context_ise_get_iselist (Ecore_IMF_Context *ctx,  char*** iselist)
      return -1;
 }
 
-EINA_DEPRECATED EAPI void      
-ecore_imf_context_ise_get_ise_state (Ecore_IMF_Context *ctx, ISE_STATE *state)
-{
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_state_get instead.\n", __func__);
-   *state = ecore_imf_context_input_panel_state_get (ctx);
-}
-    
 EAPI Ecore_IMF_Input_Panel_State      
 ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx)
 {
@@ -1573,78 +1341,6 @@ ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx)
    }
    
    return state;   
-}
-
-EINA_DEPRECATED EAPI int      
-ecore_imf_context_ise_state_add_listener (Ecore_IMF_Context *ctx, void (*plistenerCallBackFunc) (ISE_EVENT,int), void *data)
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_state_add_listener");
-	return -1;
-     }
-
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_event_callback_add instead.\n", __func__);
-
-   if (ctx->klass->ise_state_add_listener) {
-       ctx->klass->ise_state_add_listener(ctx, plistenerCallBackFunc, data);
-       return 1;
-   }
-   else
-      return -1;
-
-   return -1;
-}
-    
-EINA_DEPRECATED EAPI void      
-ecore_imf_context_ise_state_remove_listener (Ecore_IMF_Context *ctx, int listener_id)
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_state_remove_listener");
-	return;
-     }
-
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_event_callback_del instead.\n", __func__);
-
-   if (ctx->klass->ise_state_remove_listener) ctx->klass->ise_state_remove_listener(ctx, listener_id);
-}
-    
-EAPI int      
-ecore_imf_context_ise_state_change_listener (Ecore_IMF_Context *ctx, void (*plistenerCallBackFunc) (ISE_EVENT, int))
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_state_change_listener");
-	return -1;
-     }
-
-   printf("[Warning] '%s' API will be deprecated. Use ecore_imf_context_input_panel_event_callback_add instead.\n", __func__);
-
-   if (ctx->klass->ise_state_change_listener) 
-     {
-         ctx->klass->ise_state_change_listener(ctx, plistenerCallBackFunc);
-         return 1;
-     }
-     else 		
-         return -1;
-}
-
-EINA_DEPRECATED EAPI void      
-ecore_imf_context_ise_event_callback_set (Ecore_IMF_Context *ctx, void (*pEventCallBackFunc) (void *, ISE_EVENT,int), void *data)
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_event_callback_set");
-	return;
-     }
-
-   printf("[Warning] '%s API will be deprecated. Use ecore_imf_context_input_panel_event_callback_add instead.\n", __func__);
-      
-   if (ctx->klass->input_panel_event_callback_set) 
-     {
-	ctx->klass->input_panel_event_callback_set(ctx, pEventCallBackFunc, data);
-     }
 }
 
 EAPI void      
@@ -1675,29 +1371,6 @@ ecore_imf_context_input_panel_event_callback_del (Ecore_IMF_Context *ctx, Ecore_
      {
 	ctx->klass->input_panel_event_callback_del(ctx, type, pEventCallBackFunc);
      }
-}
-
-EINA_DEPRECATED EAPI void      
-ecore_imf_context_ise_initialize (Ecore_IMF_Context *ctx, Evas_Object * mainwindow)
-{
-   //ecore_imf_context_input_panel_initialize (ctx, mainwindow);
-}
-
-EINA_DEPRECATED EAPI const char*      
-ecore_imf_context_get_focused_preedit_string (Ecore_IMF_Context *ctx)
-{
-   const char str[128];
-   int cursor_pos;
-
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_get_focused_preedit_string");
-	return NULL;
-     }
-
-   ecore_imf_context_preedit_string_get(ctx, &str, &cursor_pos);
-
-   return str;
 }
 
 EAPI void      
