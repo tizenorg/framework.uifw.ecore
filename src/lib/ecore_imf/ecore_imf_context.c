@@ -216,6 +216,8 @@ ecore_imf_context_info_get(Ecore_IMF_Context *ctx)
 EAPI void
 ecore_imf_context_del(Ecore_IMF_Context *ctx)
 {
+   void *data;
+
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
 	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
@@ -224,17 +226,17 @@ ecore_imf_context_del(Ecore_IMF_Context *ctx)
      }
    if (ctx->klass->del) ctx->klass->del(ctx);
    ECORE_MAGIC_SET(ctx, ECORE_MAGIC_NONE);
-
-/*
-   void *data;
 	
    EINA_LIST_FREE(ctx->private_key_list, data)
    	free(data);
 
    EINA_LIST_FREE(ctx->disabled_key_list, data)
    	free(data);
-*/
-   free(ctx);   
+
+   ctx->private_key_list = NULL;
+   ctx->disabled_key_list = NULL;
+
+   free(ctx);
 }
 
 /**
@@ -296,7 +298,21 @@ ecore_imf_context_client_canvas_set(Ecore_IMF_Context *ctx, void *canvas)
 	return;
      }
    if (ctx->klass->client_canvas_set) ctx->klass->client_canvas_set(ctx, canvas);
+   ctx->client_canvas = canvas;
 }
+
+EAPI void*
+ecore_imf_context_client_canvas_get(Ecore_IMF_Context *ctx)
+{
+   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
+     {
+	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+			 "ecore_imf_context_client_canvas_get");
+	return NULL;
+     }
+   return ctx->client_canvas;
+}
+
 
 /**
  * Ask the Input Method Context to show itself.
@@ -1140,7 +1156,7 @@ ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx)
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
 	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_private_key_list_get");
-	return;
+	return NULL;
      }
 
    return ctx->private_key_list;

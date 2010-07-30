@@ -461,8 +461,8 @@ extern "C" {
 	int (*input_panel_imdata_set)         (Ecore_IMF_Context *ctx, const char* data, int len);
 	int (*input_panel_imdata_get)         (Ecore_IMF_Context *ctx, char* data, int *len);
 
-	int (*input_panel_style_set)          (Ecore_IMF_Context *ctx, ISE_STYLE style);
-	int (*input_panel_style_get)          (Ecore_IMF_Context *ctx, ISE_STYLE *style);
+	int (*input_panel_style_set)          (Ecore_IMF_Context *ctx, ISE_STYLE style); /* will de deprecated */
+	int (*input_panel_style_get)          (Ecore_IMF_Context *ctx, ISE_STYLE *style); /* will de deprecated */
 	int (*input_panel_geometry_get)       (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
 	int (*input_panel_private_key_set)    (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, const char* value);
 	int (*input_panel_private_key_image_set) (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* value); /* will be deprecated */
@@ -479,13 +479,13 @@ extern "C" {
 	Ecore_IMF_Input_Panel_State (*input_panel_state_get)          (Ecore_IMF_Context *ctx);
 
 	/* CallBack APIs  */
-	void (*ise_state_add_listener)   (Ecore_IMF_Context *ctx, void (*plistenerCallBackFunc) (ISE_EVENT,int), void *data); /* This API will be depricated */
-	void (*ise_state_remove_listener)(Ecore_IMF_Context *ctx, int listener_id); /* This API will be depricated */
+	void (*ise_state_add_listener)   (Ecore_IMF_Context *ctx, void (*plistenerCallBackFunc) (ISE_EVENT,int), void *data); /* will be depricated */
+	void (*ise_state_remove_listener)(Ecore_IMF_Context *ctx, int listener_id); /* will be depricated */
 	void (*ise_state_change_listener)(Ecore_IMF_Context *ctx, void (*plistenerCallBackFunc) (ISE_EVENT,int)); /* This API will be depricated */
 
 	void (*input_panel_event_callback_set)  (Ecore_IMF_Context *ctx, void (*plistenerCallBackFunc) (void *, ISE_EVENT, int), void *data); /* will be deprecated */
-	int (*input_panel_initialize)(Ecore_IMF_Context *ctx, Evas_Object * mainwindow);
-	const char * (*get_focused_preedit_string)(Ecore_IMF_Context *ctx);
+	int (*input_panel_initialize)(Ecore_IMF_Context *ctx, Evas_Object * mainwindow); /* will be depricated */
+	const char * (*get_focused_preedit_string)(Ecore_IMF_Context *ctx); /* will be depricated */
 
 	void (*input_panel_key_disabled_set)    (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
 
@@ -495,7 +495,7 @@ extern "C" {
 
 	void (*input_panel_move) (Ecore_IMF_Context *ctx, int x, int y);
 	
-	void (*input_panel_event_callback_add)   (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
+	void (*input_panel_event_callback_add)   (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value), const void *data);
 	void (*input_panel_event_callback_del)   (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallbackFunc) (void *data, Ecore_IMF_Context *ctx, int value));
      };
 
@@ -525,6 +525,7 @@ extern "C" {
    EAPI void                          ecore_imf_context_client_window_set(Ecore_IMF_Context *ctx, void *window);
    EAPI void*                         ecore_imf_context_client_window_get(Ecore_IMF_Context *ctx);
    EAPI void                          ecore_imf_context_client_canvas_set(Ecore_IMF_Context *ctx, void *canvas);
+   EAPI void*                         ecore_imf_context_client_canvas_get(Ecore_IMF_Context *ctx);
    EINA_DEPRECATED EAPI void          ecore_imf_context_show(Ecore_IMF_Context *ctx);
    EINA_DEPRECATED EAPI void          ecore_imf_context_hide(Ecore_IMF_Context *ctx);
    EAPI void                          ecore_imf_context_preedit_string_get(Ecore_IMF_Context *ctx, char **str, int *cursor_pos);
