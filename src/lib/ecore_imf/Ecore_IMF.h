@@ -495,7 +495,7 @@ extern "C" {
 
 	void (*input_panel_move) (Ecore_IMF_Context *ctx, int x, int y);
 	
-	void (*input_panel_event_callback_add)   (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value), const void *data);
+	void (*input_panel_event_callback_add)   (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
 	void (*input_panel_event_callback_del)   (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallbackFunc) (void *data, Ecore_IMF_Context *ctx, int value));
      };
 
