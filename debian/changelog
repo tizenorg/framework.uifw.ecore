@@ -1,3 +1,11 @@
+ecore (0.9.9.060+svn.49540slp2+3build11) unstable; urgency=low
+
+  * [ecore_imf] fix memory leak when private key or disable key func is used
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build11
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Fri, 30 Jul 2010 14:32:07 +0900
+
 ecore (0.9.9.060+svn.49540slp2+3build10) unstable; urgency=low
 
   * Remove deprecated Ecore_IMF APIs.
