@@ -779,9 +779,9 @@ extern "C" {
     * @code
     * #include <Ecore_IMF.h>
     *
-    * static void create_entry(struct appdata *ad)
+    * static Eina_Bool get_effect_info(struct appdata *ad)
     * {
-    *     Eina_Bool use_effect;
+    *     Eina_Bool use_effect = EINA_TRUE;
     *
     *     Ecore_IMF_Context *imf_context = elm_entry_imf_context_get(ad->entry);
     *     
@@ -789,6 +789,8 @@ extern "C" {
     *     {    
     *         use_effect = ecore_imf_context_input_panel_use_effect_get (imf_context); 
     *     }
+    *
+    *     return use_effect;
     * }
     * @endcode
     */    
