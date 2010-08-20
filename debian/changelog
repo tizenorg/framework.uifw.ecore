@@ -1,3 +1,11 @@
+ecore (0.9.9.060+svn.49540slp2+3build13) unstable; urgency=low
+
+  * [ecore_imf] add MONTH, NUMBERONLY Layout
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build13
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Fri, 20 Aug 2010 11:23:12 +0900
+
 ecore (0.9.9.060+svn.49540slp2+3build12) unstable; urgency=low
 
   * [ecore_imf] change parameter type of event_callback_add

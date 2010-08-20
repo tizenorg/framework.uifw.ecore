@@ -130,13 +130,15 @@ extern "C" {
 
    typedef enum 
      {
-	ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL,          /**< default 4x4 layout */
-	ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBER,          /**< number layout*/
-	ECORE_IMF_INPUT_PANEL_LAYOUT_EMAIL,           /**< Email layout*/
-	ECORE_IMF_INPUT_PANEL_LAYOUT_URL,             /**< URL layout*/
-	ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER,     /**< Phone Number layout*/
-	ECORE_IMF_INPUT_PANEL_LAYOUT_IP,              /**< IP layout*/
-	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_1 = 10,   /* Reserved for future use */
+	ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL,          /**< Default 4x4 layout */
+	ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBER,          /**< Number layout */
+	ECORE_IMF_INPUT_PANEL_LAYOUT_EMAIL,           /**< Email layout */
+	ECORE_IMF_INPUT_PANEL_LAYOUT_URL,             /**< URL layout */
+	ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER,     /**< Phone Number layout */
+	ECORE_IMF_INPUT_PANEL_LAYOUT_IP,              /**< IP layout */
+	ECORE_IMF_INPUT_PANEL_LAYOUT_MONTH,           /**< Month layout */	
+	ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY,      /**< Number Only layout */
+	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_1 = 100,  /* Reserved for future use */
 	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_2,
 	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_3,
 	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_4,
