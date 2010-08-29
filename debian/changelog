@@ -1,3 +1,12 @@
+ecore (0.9.9.060+svn.49540slp2+3build14) unstable; urgency=low
+
+  * [ecore_x] fix sync issue in 1 special event re-order case. ( Changeset r51609 ) 
+  * Reference : http://trac.enlightenment.org/e/changeset/51609
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build14
+
+ -- Gwan-gyeong Mun <kk.moon@samsung.com>  Mon, 30 Aug 2010 08:46:33 +0900
+
 ecore (0.9.9.060+svn.49540slp2+3build13) unstable; urgency=low
 
   * [ecore_imf] add MONTH, NUMBERONLY Layout

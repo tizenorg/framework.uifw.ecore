@@ -632,6 +632,11 @@ _ecore_evas_x_event_client_message(void *data __UNUSED__, int type __UNUSED__, v
         ee = ecore_event_window_match(e->data.l[0]);
         if (!ee) return 1; /* pass on event */
         if (e->data.l[0] != (long)ee->prop.window) return 1;
+        if (!ee->engine.x.sync_began) // fix sync issue in 1 special event re-order case. by raster. ( kk.moon )
+          {
+             // qeue a damage + draw. work around an event re-ordering thing.
+             evas_damage_rectangle_add(ee->evas, 0, 0, ee->w, ee->h);
+          }
         ee->engine.x.sync_began = 1;
         ee->engine.x.sync_cancel = 0;
      }
