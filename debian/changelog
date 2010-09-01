@@ -1,3 +1,11 @@
+ecore (0.9.9.060+svn.49540slp2+3build15) unstable; urgency=low
+
+  * [rules] add disable-xim (from Wonkuk Jung)
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build15
+
+ -- Juyung Seo  <juyung.seo@samsung.com>  Wed, 01 Sep 2010 21:52:08 +0900
+
 ecore (0.9.9.060+svn.49540slp2+3build14) unstable; urgency=low
 
   * [ecore_x] fix sync issue in 1 special event re-order case. ( Changeset r51609 ) 

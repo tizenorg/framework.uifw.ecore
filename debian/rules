@@ -21,7 +21,9 @@ DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb \
 	--disable-openssl \
 	--enable-ecore-data \
 	--enable-ecore-config \
-	--enable-glib-integration-always 
+	--enable-glib-integration-always \
+	--disable-xim
+
 DEB_MAKE_CLEAN_TARGET := distclean
 CFLAGS += -fvisibility=hidden
 LDFLAGS += -fvisibility=hidden
