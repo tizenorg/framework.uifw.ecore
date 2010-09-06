@@ -228,10 +228,10 @@ ecore_imf_context_del(Ecore_IMF_Context *ctx)
    ECORE_MAGIC_SET(ctx, ECORE_MAGIC_NONE);
 	
    EINA_LIST_FREE(ctx->private_key_list, data)
-   	free(data);
+      free(data);
 
    EINA_LIST_FREE(ctx->disabled_key_list, data)
-   	free(data);
+      free(data);
 
    ctx->private_key_list = NULL;
    ctx->disabled_key_list = NULL;
@@ -1095,7 +1095,7 @@ ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layou
 	return;
      }
    
-   if (!label || !key_string)
+   if (label == NULL && img_path == NULL)
      {
 	printf ("input parameters error!!! \n");
 	return;
@@ -1143,8 +1143,13 @@ ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layou
 	     key_item->type = 1;
 	     strcpy(key_item->data, img_path);
 	  }
-      key_item->key_value = key_value;
-	strcpy(key_item->key_string, key_string);
+	key_item->key_value = key_value;
+
+	if (key_string)
+	  {
+	     strcpy(key_item->key_string, key_string);
+	  }
+
 	ctx->private_key_list = eina_list_append(ctx->private_key_list, key_item);
      }
 //   if (ctx->klass->input_panel_private_key_set) ctx->klass->input_panel_private_key_set(ctx, layout_index, key_index, img_path, label, value);
