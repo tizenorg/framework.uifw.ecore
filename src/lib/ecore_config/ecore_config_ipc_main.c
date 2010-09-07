@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -209,7 +205,7 @@ _ecore_config_ipc_bundle_label_find(Ecore_Config_Server * srv,
    return ns ? ecore_config_bundle_serial_get(ns) : -1;
 }
 
-static int
+static Eina_Bool
 _ecore_config_ipc_poll(void *data __UNUSED__)
 {
    Ecore_Config_Server *s;
@@ -221,7 +217,7 @@ _ecore_config_ipc_poll(void *data __UNUSED__)
         s = s->next;
      }
 
-   return 1;
+   return EINA_TRUE;
 }
 
 int
@@ -255,8 +251,7 @@ _ecore_config_ipc_init(const char *pipe_name)
    ret_srv = NULL;
    list = NULL;
 
-   list = malloc(sizeof(Ecore_Config_Server));
-   memset(list, 0, sizeof(Ecore_Config_Server));
+   list = calloc(1, sizeof(Ecore_Config_Server));
    if ((ret = _ecore_config_ipc_ecore_init(pipe_name, &list->server)) != ECORE_CONFIG_ERR_SUCC)
      {
 	ERR("_ecore_config_ipc_init: failed to register %s, code %d",

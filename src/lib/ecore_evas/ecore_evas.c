@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -24,13 +20,13 @@
 int _ecore_evas_log_dom = -1;
 static int _ecore_evas_init_count = 0;
 static Ecore_Fd_Handler *_ecore_evas_async_events_fd = NULL;
-static int _ecore_evas_async_events_fd_handler(void *data, Ecore_Fd_Handler *fd_handler);
+static Eina_Bool _ecore_evas_async_events_fd_handler(void *data, Ecore_Fd_Handler *fd_handler);
 
 static Ecore_Idle_Enterer *ecore_evas_idle_enterer = NULL;
 static Ecore_Evas *ecore_evases = NULL;
 static int _ecore_evas_fps_debug = 0;
 
-static int
+static Eina_Bool
 _ecore_evas_idle_enter(void *data __UNUSED__)
 {
    Ecore_Evas *ee;
@@ -38,7 +34,7 @@ _ecore_evas_idle_enter(void *data __UNUSED__)
    double t2 = 0.0;
    int rend = 0;
    
-   if (!ecore_evases) return 1;
+   if (!ecore_evases) return ECORE_CALLBACK_RENEW;
    if (_ecore_evas_fps_debug)
      {
         t1 = ecore_time_get();
@@ -57,7 +53,7 @@ _ecore_evas_idle_enter(void *data __UNUSED__)
         if (rend)
           _ecore_evas_fps_debug_rendertime_add(t2 - t1);
      }
-   return 1;
+   return ECORE_CALLBACK_RENEW;
 }
 
 /**
@@ -153,6 +149,13 @@ ecore_evas_engine_type_supported_get(Ecore_Evas_Engine_Type engine)
 #endif
       case ECORE_EVAS_ENGINE_SOFTWARE_FB:
 #ifdef BUILD_ECORE_EVAS_FB
+	return 1;
+#else
+	return 0;
+#endif
+
+	  case ECORE_EVAS_ENGINE_SOFTWARE_8_X11:
+#ifdef BUILD_ECORE_EVAS_SOFTWARE_8_X11
 	return 1;
 #else
 	return 0;
@@ -443,6 +446,22 @@ _ecore_evas_constructor_opengl_x11(int x, int y, int w, int h, const char *extra
 }
 #endif
 
+#ifdef BUILD_ECORE_EVAS_SOFTWARE_8_X11
+static Ecore_Evas *
+_ecore_evas_constructor_software_8_x11(int x, int y, int w, int h, const char *extra_options)
+{
+   Ecore_X_Window parent = 0;
+   char *disp_name = NULL;
+   Ecore_Evas *ee;
+
+   _ecore_evas_parse_extra_options_x(extra_options, &disp_name, &parent);
+   ee = ecore_evas_software_x11_8_new(disp_name, parent, x, y, w, h);
+   free(disp_name);
+
+   return ee;
+}
+#endif
+
 #ifdef BUILD_ECORE_EVAS_SOFTWARE_16_X11
 static Ecore_Evas *
 _ecore_evas_constructor_software_16_x11(int x, int y, int w, int h, const char *extra_options)
@@ -640,6 +659,9 @@ static const struct ecore_evas_engine _engines[] = {
 #endif
 #ifdef BUILD_ECORE_EVAS_XRENDER_XCB
   {"xrender_xcb", _ecore_evas_constructor_xrender_x11},
+#endif
+#ifdef BUILD_ECORE_EVAS_SOFTWARE_8_X11
+  {"software_8_x11", _ecore_evas_constructor_software_8_x11},
 #endif
 #ifdef BUILD_ECORE_EVAS_SOFTWARE_16_X11
   {"software_16_x11", _ecore_evas_constructor_software_16_x11},
@@ -2794,7 +2816,7 @@ _ecore_evas_free(Ecore_Evas *ee)
    free(ee);
 }
 
-static int
+static Eina_Bool
 _ecore_evas_cb_idle_flush(void *data)
 {
    Ecore_Evas *ee;
@@ -2802,15 +2824,15 @@ _ecore_evas_cb_idle_flush(void *data)
    ee = (Ecore_Evas *)data;
    evas_render_idle_flush(ee->evas);
    ee->engine.idle_flush_timer = NULL;
-   return 0;
+   return ECORE_CALLBACK_CANCEL;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_async_events_fd_handler(void *data __UNUSED__, Ecore_Fd_Handler *fd_handler __UNUSED__)
 {
    evas_async_events_process();
 
-   return 1;
+   return ECORE_CALLBACK_RENEW;
 }
 
 void
@@ -2857,4 +2879,27 @@ _ecore_evas_mouse_move_process(Ecore_Evas *ee, int x, int y, unsigned int timest
    else if (ee->rotation == 270)
      evas_event_feed_mouse_move(ee->evas, y, ee->w - x - 1, timestamp, NULL);
 }
+
+/**
+ * Get a list of all the ecore_evases.
+ * 
+ * The returned list of ecore evases is only valid until the canvases are
+ * destroyed (and should not be cached for instance).
+ * The list can be free by just deleting the list.
+ *
+ * @return A list of ecore_evases.
+ */
+EAPI Eina_List *
+ecore_evas_ecore_evas_list_get(void){
+   Ecore_Evas *ee;
+   Eina_List *l = NULL;
+
+   EINA_INLIST_FOREACH(ecore_evases, ee)
+     {
+	l = eina_list_append(l, ee);
+     }
+
+   return l;
+}
+
 

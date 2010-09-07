@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -46,7 +42,7 @@ EAPI Ecore_Version *ecore_version = &_version;
    if (Global < (Local))			\
      Global = Local;
 
-static int _ecore_memory_statistic(void *data);
+static Eina_Bool _ecore_memory_statistic(void *data);
 static int _ecore_memory_max_total = 0;
 static int _ecore_memory_max_free = 0;
 static pid_t _ecore_memory_pid = 0;
@@ -115,6 +111,7 @@ ecore_init(void)
    }
    if (getenv("ECORE_FPS_DEBUG")) _ecore_fps_debug = 1;
    if (_ecore_fps_debug) _ecore_fps_debug_init();
+   _ecore_main_loop_init();
    _ecore_signal_init();
    _ecore_exe_init();
    _ecore_thread_init();
@@ -130,7 +127,7 @@ ecore_init(void)
      }
 #endif
 
-#ifdef GLIB_INTEGRATION_ALWAYS   
+#if defined(GLIB_INTEGRATION_ALWAYS)
    if (_ecore_glib_always_integrate) ecore_main_loop_glib_integrate();
 #endif
    
@@ -175,6 +172,7 @@ ecore_shutdown(void)
    _ecore_event_shutdown();
    _ecore_main_shutdown();
    _ecore_signal_shutdown();
+   _ecore_main_loop_shutdown();
 
 #if HAVE_MALLINFO
    if (getenv("ECORE_MEM_STAT"))
@@ -386,7 +384,7 @@ _ecore_fps_debug_runtime_add(double t)
 }
 
 #if HAVE_MALLINFO
-static int
+static Eina_Bool
 _ecore_memory_statistic(__UNUSED__ void *data)
 {
    struct mallinfo mi;
@@ -415,6 +413,6 @@ _ecore_memory_statistic(__UNUSED__ void *data)
    KEEP_MAX(_ecore_memory_max_total, mi.uordblks);
    KEEP_MAX(_ecore_memory_max_free, mi.fordblks);
 
-   return 1;
+   return ECORE_CALLBACK_RENEW;
 }
 #endif

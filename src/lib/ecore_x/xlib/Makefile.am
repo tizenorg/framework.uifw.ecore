@@ -34,6 +34,9 @@ ecore_x.c \
 ecore_x_dnd.c \
 ecore_x_sync.c \
 ecore_x_randr.c \
+ecore_x_randr_11.c \
+ecore_x_randr_12.c \
+ecore_x_randr_13.c \
 ecore_x_fixes.c \
 ecore_x_damage.c \
 ecore_x_composite.c \
@@ -58,7 +61,8 @@ ecore_x_test.c \
 ecore_x_atoms.c \
 ecore_x_region.c \
 ecore_x_image.c \
-ecore_x_xi2.c
+ecore_x_xi2.c \
+ecore_x_randr.h
 
 libecore_x_xlib_la_LIBADD = \
 @Xcursor_libs@ \
@@ -78,8 +82,6 @@ libecore_x_xlib_la_LIBADD = \
 $(top_builddir)/src/lib/ecore/libecore.la \
 $(top_builddir)/src/lib/ecore_input/libecore_input.la \
 @EINA_LIBS@
-
-libecore_x_xlib_la_LDFLAGS = -version-info @version_info@
 
 endif
 

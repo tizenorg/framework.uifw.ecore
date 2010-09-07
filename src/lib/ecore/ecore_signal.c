@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -40,7 +36,7 @@ static void _ecore_signal_callback_sigpwr(int sig, siginfo_t *si, void *foo);
 static void _ecore_signal_callback_sigrt(int sig, siginfo_t *si, void *foo);
 #endif
 
-static int _ecore_signal_exe_exit_delay(void *data);
+static Eina_Bool _ecore_signal_exe_exit_delay(void *data);
 
 //#define MAXSIGQ 256 // 32k
 #define MAXSIGQ 64 // 8k
@@ -608,7 +604,7 @@ _ecore_signal_callback_sigrt(int sig, siginfo_t *si, void *foo __UNUSED__)
 }
 #endif
 
-static int
+static Eina_Bool
 _ecore_signal_exe_exit_delay(void *data)
 {
    Ecore_Exe_Event_Del *e;
@@ -620,5 +616,5 @@ _ecore_signal_exe_exit_delay(void *data)
 	_ecore_event_add(ECORE_EXE_EVENT_DEL, e,
 			 _ecore_exe_event_del_free, NULL);
      }
-   return 0;
+   return ECORE_CALLBACK_CANCEL;
 }

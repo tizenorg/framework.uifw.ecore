@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -78,7 +74,7 @@ ecore_imf_module_available_get(void)
    if (!it)
        return NULL;
 
-   eina_iterator_foreach(it, EINA_EACH(_hash_module_available_get), &values);
+   eina_iterator_foreach(it, EINA_EACH_CB(_hash_module_available_get), &values);
    eina_iterator_free(it);
 
    return values;
@@ -132,7 +128,7 @@ ecore_imf_module_context_ids_get(void)
    if (!it)
        return NULL;
 
-   eina_iterator_foreach(it, EINA_EACH(_hash_ids_get), &l);
+   eina_iterator_foreach(it, EINA_EACH_CB(_hash_ids_get), &l);
    eina_iterator_free(it);
 
    return l;
@@ -168,7 +164,7 @@ ecore_imf_module_context_ids_by_canvas_type_get(const char *canvas_type)
 
    selector.toselect = canvas_type;
    selector.selected = values;
-   eina_iterator_foreach(it, EINA_EACH(_hash_ids_by_canvas_type_get), &selector);
+   eina_iterator_foreach(it, EINA_EACH_CB(_hash_ids_by_canvas_type_get), &selector);
    eina_iterator_free(it);
 
    return values;

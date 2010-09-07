@@ -13,6 +13,10 @@
 # include <Evil.h>
 #endif
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+
 #include "Ecore.h"
 #include "ecore_private.h"
 

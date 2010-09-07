@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifndef _ECORE_EVAS_H
 #define _ECORE_EVAS_H
 
@@ -84,6 +80,7 @@ typedef enum _Ecore_Evas_Engine_Type
    ECORE_EVAS_ENGINE_SOFTWARE_SDL,
    ECORE_EVAS_ENGINE_DIRECTFB,
    ECORE_EVAS_ENGINE_SOFTWARE_FB,
+   ECORE_EVAS_ENGINE_SOFTWARE_8_X11,
    ECORE_EVAS_ENGINE_SOFTWARE_16_X11,
    ECORE_EVAS_ENGINE_SOFTWARE_16_DDRAW,
    ECORE_EVAS_ENGINE_SOFTWARE_16_WINCE,
@@ -139,7 +136,7 @@ EAPI int         ecore_evas_shutdown(void);
 
 EAPI void        ecore_evas_app_comp_sync_set(int do_sync);
 EAPI int         ecore_evas_app_comp_sync_get(void);
-   
+
 EAPI Eina_List  *ecore_evas_engines_get(void);
 EAPI void        ecore_evas_engines_free(Eina_List *engines);
 EAPI Ecore_Evas *ecore_evas_new(const char *engine_name, int x, int y, int w, int h, const char *extra_options);
@@ -163,12 +160,19 @@ EAPI void            ecore_evas_gl_x11_direct_resize_set(Ecore_Evas *ee, int on)
 EAPI int             ecore_evas_gl_x11_direct_resize_get(const Ecore_Evas *ee);
 EAPI void            ecore_evas_gl_x11_extra_event_window_add(Ecore_Evas *ee, Ecore_X_Window win);
 EAPI void            ecore_evas_gl_x11_pre_post_swap_callback_set(const Ecore_Evas *ee, void *data, void (*pre_cb) (void *data, Evas *e), void (*post_cb) (void *data, Evas *e));
-       
+
 EAPI Ecore_Evas     *ecore_evas_xrender_x11_new(const char *disp_name, Ecore_X_Window parent, int x, int y, int w, int h);
 EAPI Ecore_X_Window  ecore_evas_xrender_x11_window_get(const Ecore_Evas *ee);
 EAPI void            ecore_evas_xrender_x11_direct_resize_set(Ecore_Evas *ee, int on);
 EAPI int             ecore_evas_xrender_x11_direct_resize_get(const Ecore_Evas *ee);
 EAPI void            ecore_evas_xrender_x11_extra_event_window_add(Ecore_Evas *ee, Ecore_X_Window win);
+
+EAPI Ecore_Evas     *ecore_evas_software_x11_8_new(const char *disp_name, Ecore_X_Window parent, int x, int y, int w, int h);
+EAPI Ecore_X_Window  ecore_evas_software_x11_8_window_get(const Ecore_Evas *ee);
+EAPI Ecore_X_Window  ecore_evas_software_x11_8_subwindow_get(const Ecore_Evas *ee);
+EAPI void            ecore_evas_software_x11_8_direct_resize_set(Ecore_Evas *ee, int on);
+EAPI int             ecore_evas_software_x11_8_direct_resize_get(const Ecore_Evas *ee);
+EAPI void            ecore_evas_software_x11_8_extra_event_window_add(Ecore_Evas *ee, Ecore_X_Window win);
 
 EAPI Ecore_Evas     *ecore_evas_software_x11_16_new(const char *disp_name, Ecore_X_Window parent, int x, int y, int w, int h);
 EAPI Ecore_X_Window  ecore_evas_software_x11_16_window_get(const Ecore_Evas *ee);
@@ -351,6 +355,9 @@ EAPI Evas_Object *ecore_evas_object_associate_get(const Ecore_Evas *ee);
 
 /* helper function to be used with ECORE_GETOPT_CALLBACK_*() */
 EAPI unsigned char ecore_getopt_callback_ecore_evas_list_engines(const Ecore_Getopt *parser, const Ecore_Getopt_Desc *desc, const char *str, void *data, Ecore_Getopt_Value *storage);
+
+EAPI Eina_List   *ecore_evas_ecore_evas_list_get(void);
+
 
 #ifdef __cplusplus
 }

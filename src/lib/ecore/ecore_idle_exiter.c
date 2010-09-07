@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -16,7 +12,7 @@ struct _Ecore_Idle_Exiter
 {
    EINA_INLIST;
    ECORE_MAGIC;
-   int        (*func) (void *data);
+   Ecore_Task_Cb func;
    void        *data;
    int          references;
    Eina_Bool    delete_me : 1;
@@ -35,7 +31,7 @@ static int                idle_exiters_delete_me = 0;
  * @ingroup Idle_Group
  */
 EAPI Ecore_Idle_Exiter *
-ecore_idle_exiter_add(int (*func) (void *data), const void *data)
+ecore_idle_exiter_add(Ecore_Task_Cb func, const void *data)
 {
    Ecore_Idle_Exiter *ie;
 
@@ -65,6 +61,7 @@ ecore_idle_exiter_del(Ecore_Idle_Exiter *idle_exiter)
 			 "ecore_idle_exiter_del");
 	return NULL;
      }
+   EINA_SAFETY_ON_TRUE_RETURN_VAL(idle_exiter->delete_me, NULL);
    idle_exiter->delete_me = 1;
    idle_exiters_delete_me = 1;
    return idle_exiter->data;
@@ -105,7 +102,10 @@ _ecore_idle_exiter_call(void)
 	if (!ie->delete_me)
 	  {
 	     ie->references++;
-	     if (!ie->func(ie->data)) ecore_idle_exiter_del(ie);
+	     if (!ie->func(ie->data))
+	       {
+		  if (!ie->delete_me) ecore_idle_exiter_del(ie);
+	       }
 	     ie->references--;
 	  }
 	if (idle_exiter_current) /* may have changed in recursive main loops */

@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -41,7 +37,7 @@ static Ecore_Timer   *_timer = NULL;
 static Ecore_File_Monitor *_monitors = NULL;
 static int          _lock = 0;
 
-static int         _ecore_file_monitor_poll_handler(void *data);
+static Eina_Bool   _ecore_file_monitor_poll_handler(void *data);
 static void        _ecore_file_monitor_poll_check(Ecore_File_Monitor *em);
 static int         _ecore_file_monitor_poll_checking(Ecore_File_Monitor *em, char *name);
 
@@ -95,6 +91,8 @@ ecore_file_monitor_poll_add(const char *path,
    em->data = data;
 
    ECORE_FILE_MONITOR_POLL(em)->mtime = ecore_file_mod_time(em->path);
+   _monitors = ECORE_FILE_MONITOR(eina_inlist_append(EINA_INLIST_GET(_monitors), EINA_INLIST_GET(em)));
+
    if (ecore_file_exists(em->path))
      {
 	if (ecore_file_is_dir(em->path))
@@ -129,8 +127,6 @@ ecore_file_monitor_poll_add(const char *path,
 	ecore_file_monitor_poll_del(em);
 	return NULL;
      }
-
-   _monitors = ECORE_FILE_MONITOR(eina_inlist_append(EINA_INLIST_GET(_monitors), EINA_INLIST_GET(em)));
 
    return em;
 }
@@ -178,7 +174,7 @@ ecore_file_monitor_poll_del(Ecore_File_Monitor *em)
      }
 }
 
-static int
+static Eina_Bool
 _ecore_file_monitor_poll_handler(void *data __UNUSED__)
 {
    Ecore_File_Monitor *l;
@@ -202,7 +198,7 @@ _ecore_file_monitor_poll_handler(void *data __UNUSED__)
 	if (ECORE_FILE_MONITOR_POLL(em)->deleted)
 	  ecore_file_monitor_del(em);
      }
-   return 1;
+   return ECORE_CALLBACK_RENEW;
 }
 
 static void

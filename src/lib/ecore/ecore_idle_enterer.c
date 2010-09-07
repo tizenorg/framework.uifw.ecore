@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -16,7 +12,7 @@ struct _Ecore_Idle_Enterer
 {
    EINA_INLIST;
    ECORE_MAGIC;
-   int        (*func) (void *data);
+   Ecore_Task_Cb func;
    void        *data;
    int          references;
    Eina_Bool    delete_me : 1;
@@ -36,7 +32,7 @@ static int                 idle_enterers_delete_me = 0;
  * @ingroup Idle_Group
  */
 EAPI Ecore_Idle_Enterer *
-ecore_idle_enterer_add(int (*func) (void *data), const void *data)
+ecore_idle_enterer_add(Ecore_Task_Cb func, const void *data)
 {
    Ecore_Idle_Enterer *ie;
 
@@ -59,7 +55,7 @@ ecore_idle_enterer_add(int (*func) (void *data), const void *data)
  * @ingroup Idle_Group
  */
 EAPI Ecore_Idle_Enterer *
-ecore_idle_enterer_before_add(int (*func) (void *data), const void *data)
+ecore_idle_enterer_before_add(Ecore_Task_Cb func, const void *data)
 {
    Ecore_Idle_Enterer *ie;
 
@@ -89,6 +85,7 @@ ecore_idle_enterer_del(Ecore_Idle_Enterer *idle_enterer)
 			 "ecore_idle_enterer_del");
 	return NULL;
      }
+   EINA_SAFETY_ON_TRUE_RETURN_VAL(idle_enterer->delete_me, NULL);
    idle_enterer->delete_me = 1;
    idle_enterers_delete_me = 1;
    return idle_enterer->data;
@@ -129,7 +126,10 @@ _ecore_idle_enterer_call(void)
 	if (!ie->delete_me)
 	  {
 	     ie->references++;
-	     if (!ie->func(ie->data)) ecore_idle_enterer_del(ie);
+	     if (!ie->func(ie->data))
+	       {
+		  if (!ie->delete_me) ecore_idle_enterer_del(ie);
+	       }
 	     ie->references--;
 	  }
 	if (idle_enterer_current) /* may have changed in recursive main loops */

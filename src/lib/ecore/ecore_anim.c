@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -18,7 +14,7 @@ struct _Ecore_Animator
    EINA_INLIST;
    ECORE_MAGIC;
 
-   int           (*func) (void *data);
+   Ecore_Task_Cb func;
    void          *data;
 
    Eina_Bool     delete_me : 1;
@@ -26,7 +22,7 @@ struct _Ecore_Animator
 };
 
 
-static int _ecore_animator(void *data);
+static Eina_Bool _ecore_animator(void *data);
 
 static Ecore_Timer    *timer = NULL;
 static int             animators_delete_me = 0;
@@ -51,7 +47,7 @@ static double          animators_frametime = 1.0 / 30.0;
  * automatically making any references/handles for it invalid.
  */
 EAPI Ecore_Animator *
-ecore_animator_add(int (*func) (void *data), const void *data)
+ecore_animator_add(Ecore_Task_Cb func, const void *data)
 {
    Ecore_Animator *animator;
 
@@ -195,7 +191,7 @@ _ecore_animator_shutdown(void)
      }
 }
 
-static int
+static Eina_Bool
 _ecore_animator(void *data __UNUSED__)
 {
    Ecore_Animator *animator;
@@ -231,7 +227,7 @@ _ecore_animator(void *data __UNUSED__)
    if (!animators)
      {
 	timer = NULL;
-	return 0;
+	return ECORE_CALLBACK_CANCEL;
      }
-   return 1;
+   return ECORE_CALLBACK_RENEW;
 }

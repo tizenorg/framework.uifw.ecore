@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -18,8 +14,8 @@ struct _Ecore_Event_Handler
    EINA_INLIST;
    ECORE_MAGIC;
    int type;
-   int (*func) (void *data, int type, void *event);
-   void  *data;
+   Ecore_Event_Handler_Cb func;
+   void *data;
    int       references;
    Eina_Bool delete_me : 1;
 };
@@ -28,9 +24,9 @@ struct _Ecore_Event_Filter
 {
    EINA_INLIST;
    ECORE_MAGIC;
-   void *(*func_start) (void *data);
-   int (*func_filter) (void *data, void *loop_data, int type, void *event);
-   void (*func_end) (void *data, void *loop_data);
+   Ecore_Data_Cb func_start;
+   Ecore_Filter_Cb func_filter;
+   Ecore_End_Cb func_end;
    void *loop_data;
    void *data;
    int       references;
@@ -43,7 +39,7 @@ struct _Ecore_Event
    ECORE_MAGIC;
    int type;
    void *event;
-   void (*func_free) (void *data, void *ev);
+   Ecore_End_Cb func_free;
    void *data;
    int       references;
    Eina_Bool delete_me : 1;
@@ -98,7 +94,7 @@ static void *_ecore_event_del(Ecore_Event *event);
  * been called, will not be.
  */
 EAPI Ecore_Event_Handler *
-ecore_event_handler_add(int type, int (*func) (void *data, int type, void *event), const void *data)
+ecore_event_handler_add(int type, Ecore_Event_Handler_Cb func, const void *data)
 {
    Ecore_Event_Handler *eh;
 
@@ -156,6 +152,7 @@ ecore_event_handler_del(Ecore_Event_Handler *event_handler)
 			 "ecore_event_handler_del");
 	return NULL;
      }
+   EINA_SAFETY_ON_TRUE_RETURN_VAL(event_handler->delete_me, NULL);
    event_handler->delete_me = 1;
    event_handlers_delete_list = eina_list_append(event_handlers_delete_list, event_handler);
    return event_handler->data;
@@ -186,7 +183,7 @@ _ecore_event_generic_free (void *data __UNUSED__, void *event)
  * func_free is passed @p data as its data parameter.
  */
 EAPI Ecore_Event *
-ecore_event_add(int type, void *ev, void (*func_free) (void *data, void *ev), void *data)
+ecore_event_add(int type, void *ev, Ecore_End_Cb func_free, void *data)
 {
 /*   if (!ev) return NULL;*/
    if (type <= ECORE_EVENT_NONE) return NULL;
@@ -214,6 +211,7 @@ ecore_event_del(Ecore_Event *event)
 	ECORE_MAGIC_FAIL(event, ECORE_MAGIC_EVENT, "ecore_event_del");
 	return NULL;
      }
+   EINA_SAFETY_ON_TRUE_RETURN_VAL(event->delete_me, NULL);
    event->delete_me = 1;
    return event->data;
 }
@@ -256,7 +254,7 @@ ecore_event_type_new(void)
  * and @p data pointer to clean up.
  */
 EAPI Ecore_Event_Filter *
-ecore_event_filter_add(void * (*func_start) (void *data), int (*func_filter) (void *data, void *loop_data, int type, void *event), void (*func_end) (void *data, void *loop_data), const void *data)
+ecore_event_filter_add(Ecore_Data_Cb func_start, Ecore_Filter_Cb func_filter, Ecore_End_Cb func_end, const void *data)
 {
    Ecore_Event_Filter *ef;
 
@@ -289,6 +287,7 @@ ecore_event_filter_del(Ecore_Event_Filter *ef)
 	ECORE_MAGIC_FAIL(ef, ECORE_MAGIC_EVENT_FILTER, "ecore_event_filter_del");
 	return NULL;
      }
+   EINA_SAFETY_ON_TRUE_RETURN_VAL(ef->delete_me, NULL);
    ef->delete_me = 1;
    event_filters_delete_me = 1;
    return ef->data;
@@ -379,7 +378,7 @@ _ecore_event_exist(void)
 }
 
 Ecore_Event *
-_ecore_event_add(int type, void *ev, void (*func_free) (void *data, void *ev), void *data)
+_ecore_event_add(int type, void *ev, Ecore_End_Cb func_free, void *data)
 {
    Ecore_Event *e;
 
@@ -570,7 +569,7 @@ _ecore_event_call(void)
 		  Ecore_Event_Handler *eh = event_handler_current;
 		  if (!eh->delete_me)
 		    {
-		       int ret;
+		       Eina_Bool ret;
 
 		       handle_count++;
 

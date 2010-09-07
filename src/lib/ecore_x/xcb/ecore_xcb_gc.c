@@ -1,9 +1,4 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #include "ecore_xcb_private.h"
-
 
 /**
  * Creates a new default graphics context associated with the given
@@ -25,14 +20,14 @@ ecore_x_gc_new(Ecore_X_Drawable drawable, Ecore_X_GC_Value_Mask value_mask, cons
 {
    xcb_gcontext_t gc;
 
-   if (!drawable) drawable = ((xcb_screen_t *)_ecore_xcb_screen)->root;
+   if (!drawable)
+      drawable = ((xcb_screen_t *)_ecore_xcb_screen)->root;
 
    gc = xcb_generate_id(_ecore_xcb_conn);
    xcb_create_gc(_ecore_xcb_conn, gc, drawable, value_mask, value_list);
 
    return gc;
-}
-
+} /* ecore_x_gc_new */
 
 /**
  * Deletes and frees the given graphics context.
@@ -45,4 +40,5 @@ EAPI void
 ecore_x_gc_free(Ecore_X_GC gc)
 {
    xcb_free_gc(_ecore_xcb_conn, gc);
-}
+} /* ecore_x_gc_free */
+
