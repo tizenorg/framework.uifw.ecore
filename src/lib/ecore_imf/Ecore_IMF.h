@@ -32,11 +32,15 @@
 
 /* Faked 'bool'.  */
 #ifndef __cplusplus
-#ifndef bool
-#define bool int
-#define FALSE 0
-#define TRUE 1
-#endif
+# ifndef bool
+#  define bool int
+#  ifndef FALSE
+#   define FALSE 0
+#  endif
+#  ifndef TRUE 
+#   define TRUE 1
+#  endif
+# endif
 #endif
 
 /**
