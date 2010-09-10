@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifndef _ECORE_INPUT_EVAS_H
 #define _ECORE_INPUT_EVAS_H
 
@@ -42,14 +38,14 @@ typedef void (*Ecore_Event_Mouse_Move_Cb)(void *window, int x, int y, unsigned i
 EAPI int	 ecore_event_evas_init(void);
 EAPI int	 ecore_event_evas_shutdown(void);
 
-EAPI int	 ecore_event_evas_key_down(void *data, int type, void *event);
-EAPI int	 ecore_event_evas_key_up(void *data, int type, void *event);
-EAPI int	 ecore_event_evas_mouse_button_up(void *data, int type, void *event);
-EAPI int	 ecore_event_evas_mouse_button_down(void *data, int type, void *event);
-EAPI int	 ecore_event_evas_mouse_wheel(void *data, int type, void *event);
-EAPI int	 ecore_event_evas_mouse_move(void *data, int type, void *event);
-EAPI int	 ecore_event_evas_mouse_in(void *data, int type, void *event);
-EAPI int	 ecore_event_evas_mouse_out(void *data, int type, void *event);
+EAPI Eina_Bool	 ecore_event_evas_key_down(void *data, int type, void *event);
+EAPI Eina_Bool	 ecore_event_evas_key_up(void *data, int type, void *event);
+EAPI Eina_Bool	 ecore_event_evas_mouse_button_up(void *data, int type, void *event);
+EAPI Eina_Bool	 ecore_event_evas_mouse_button_down(void *data, int type, void *event);
+EAPI Eina_Bool	 ecore_event_evas_mouse_wheel(void *data, int type, void *event);
+EAPI Eina_Bool	 ecore_event_evas_mouse_move(void *data, int type, void *event);
+EAPI Eina_Bool	 ecore_event_evas_mouse_in(void *data, int type, void *event);
+EAPI Eina_Bool	 ecore_event_evas_mouse_out(void *data, int type, void *event);
 
 EAPI void        ecore_event_window_register(Ecore_Window id, void *window, Evas *evas, Ecore_Event_Mouse_Move_Cb move_mouse);
 EAPI void        ecore_event_window_unregister(Ecore_Window id);

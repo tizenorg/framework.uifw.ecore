@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -47,35 +43,35 @@ _ecore_evas_sdl_match(void)
    return sdl_ee;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_sdl_event_got_focus(void *data __UNUSED__, int type __UNUSED__, void *event __UNUSED__)
 {
    Ecore_Evas                   *ee;
 
    ee = _ecore_evas_sdl_match();
 
-   if (!ee) return 1;
+   if (!ee) return ECORE_CALLBACK_PASS_ON;
    /* pass on event */
    ee->prop.focused = 1;
 
-   return 0;
+   return ECORE_CALLBACK_DONE;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_sdl_event_lost_focus(void *data __UNUSED__, int type __UNUSED__, void *event __UNUSED__)
 {
    Ecore_Evas                   *ee;
 
    ee = _ecore_evas_sdl_match();
 
-   if (!ee) return 1;
+   if (!ee) return ECORE_CALLBACK_PASS_ON;
    /* pass on event */
    ee->prop.focused = 0;
 
-   return 0;
+   return ECORE_CALLBACK_DONE;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_sdl_event_video_resize(void *data __UNUSED__, int type __UNUSED__, void *event)
 {
    Ecore_Sdl_Event_Video_Resize *e;
@@ -84,13 +80,13 @@ _ecore_evas_sdl_event_video_resize(void *data __UNUSED__, int type __UNUSED__, v
    e = event;
    ee = _ecore_evas_sdl_match();
 
-   if (!ee) return 1; /* pass on event */
+   if (!ee) return ECORE_CALLBACK_PASS_ON; /* pass on event */
    evas_output_size_set(ee->evas, e->w, e->h);
 
-   return 0;
+   return ECORE_CALLBACK_DONE;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_sdl_event_video_expose(void *data __UNUSED__, int type __UNUSED__, void *event __UNUSED__)
 {
    Ecore_Evas                   *ee;
@@ -99,11 +95,11 @@ _ecore_evas_sdl_event_video_expose(void *data __UNUSED__, int type __UNUSED__, v
 
    ee = _ecore_evas_sdl_match();
 
-   if (!ee) return 1;
+   if (!ee) return ECORE_CALLBACK_PASS_ON;
    evas_output_size_get(ee->evas, &w, &h);
    evas_damage_rectangle_add(ee->evas, 0, 0, w, h);
 
-   return 0;
+   return ECORE_CALLBACK_DONE;
 }
 
 static int
@@ -151,11 +147,11 @@ _ecore_evas_sdl_render(Ecore_Evas *ee)
    return rend;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_sdl_event(void *data __UNUSED__)
 {
    ecore_sdl_feed_events();
-   return 1;
+   return ECORE_CALLBACK_RENEW;
 }
 
 static int

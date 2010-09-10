@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -20,7 +16,7 @@ struct _Ecore_Timer
    double          in;
    double          at;
    double          pending;
-   int           (*func) (void *data);
+   Ecore_Task_Cb   func;
    void           *data;
 
    int             references;
@@ -30,7 +26,7 @@ struct _Ecore_Timer
 };
 
 
-static void _ecore_timer_set(Ecore_Timer *timer, double at, double in, int (*func) (void *data), void *data);
+static void _ecore_timer_set(Ecore_Timer *timer, double at, double in, Ecore_Task_Cb func, void *data);
 
 static int          timers_added = 0;
 static int          timers_delete_me = 0;
@@ -113,7 +109,7 @@ ecore_timer_precision_set(double value)
  * invalid.
  */
 EAPI Ecore_Timer *
-ecore_timer_add(double in, int (*func) (void *data), const void *data)
+ecore_timer_add(double in, Ecore_Task_Cb func, const void *data)
 {
    double now;
    Ecore_Timer *timer;
@@ -142,7 +138,7 @@ ecore_timer_add(double in, int (*func) (void *data), const void *data)
  * ecore_timer_add() for more details.
  */
 EAPI Ecore_Timer *
-ecore_timer_loop_add(double in, int (*func) (void *data), const void *data)
+ecore_timer_loop_add(double in, Ecore_Task_Cb func, const void *data)
 {
    double now;
    Ecore_Timer *timer;
@@ -190,9 +186,9 @@ ecore_timer_del(Ecore_Timer *timer)
 	return data;
      }
 
-   if (timer->delete_me) return timer->data;
-   timers_delete_me++;
+   EINA_SAFETY_ON_TRUE_RETURN_VAL(timer->delete_me, NULL);
    timer->delete_me = 1;
+   timers_delete_me++;
    return timer->data;
 }
 
@@ -368,7 +364,7 @@ void
 _ecore_timer_cleanup(void)
 {
    Ecore_Timer *l;
-   int in_use = 0;
+   int in_use = 0, todo = timers_delete_me, done = 0;
 
    if (!timers_delete_me) return;
    for (l = timers; l;)
@@ -387,6 +383,7 @@ _ecore_timer_cleanup(void)
 	     ECORE_MAGIC_SET(timer, ECORE_MAGIC_NONE);
 	     free(timer);
 	     timers_delete_me--;
+	     done++;
 	     if (timers_delete_me == 0) return;
 	  }
      }
@@ -406,14 +403,17 @@ _ecore_timer_cleanup(void)
 	     ECORE_MAGIC_SET(timer, ECORE_MAGIC_NONE);
 	     free(timer);
 	     timers_delete_me--;
+	     done++;
 	     if (timers_delete_me == 0) return;
 	  }
      }
 
    if ((!in_use) && (timers_delete_me))
      {
-	ERR("%d timers to delete, but they were not found! reset counter.",
-	    timers_delete_me);
+	ERR("%d timers to delete, but they were not found!"
+	    "Stats: todo=%d, done=%d, pending=%d, in_use=%d. "
+	    "reset counter.",
+	    timers_delete_me, todo, done, todo - done, in_use);
 	timers_delete_me = 0;
      }
 }
@@ -549,7 +549,10 @@ _ecore_timer_call(double when)
 	  }
 
 	timer->references++;
-	if (!timer->func(timer->data)) ecore_timer_del(timer);
+	if (!timer->func(timer->data))
+	  {
+	     if (!timer->delete_me) ecore_timer_del(timer);
+	  }
 	timer->references--;
 
 	if (timer_current) /* may have changed in recursive main loops */
@@ -561,7 +564,7 @@ _ecore_timer_call(double when)
 }
 
 static void
-_ecore_timer_set(Ecore_Timer *timer, double at, double in, int (*func) (void *data), void *data)
+_ecore_timer_set(Ecore_Timer *timer, double at, double in, Ecore_Task_Cb func, void *data)
 {
    Ecore_Timer *t2;
 

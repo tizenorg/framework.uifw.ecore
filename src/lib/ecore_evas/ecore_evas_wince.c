@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -29,19 +25,19 @@ static int _ecore_evas_init_count = 0;
 
 static Ecore_Event_Handler *ecore_evas_event_handlers[ECORE_EVAS_EVENT_COUNT];
 
-static int _ecore_evas_wince_event_mouse_in(void *data __UNUSED__, int type __UNUSED__, void *event);
+static Eina_Bool _ecore_evas_wince_event_mouse_in(void *data __UNUSED__, int type __UNUSED__, void *event);
 
-static int _ecore_evas_wince_event_mouse_out(void *data __UNUSED__, int type __UNUSED__, void *event);
+static Eina_Bool _ecore_evas_wince_event_mouse_out(void *data __UNUSED__, int type __UNUSED__, void *event);
 
-static int _ecore_evas_wince_event_window_damage(void *data __UNUSED__, int type __UNUSED__, void *event);
+static Eina_Bool _ecore_evas_wince_event_window_damage(void *data __UNUSED__, int type __UNUSED__, void *event);
 
-static int _ecore_evas_wince_event_window_destroy(void *data __UNUSED__, int type __UNUSED__, void *event);
+static Eina_Bool _ecore_evas_wince_event_window_destroy(void *data __UNUSED__, int type __UNUSED__, void *event);
 
-static int _ecore_evas_wince_event_window_show(void *data __UNUSED__, int type __UNUSED__, void *event);
+static Eina_Bool _ecore_evas_wince_event_window_show(void *data __UNUSED__, int type __UNUSED__, void *event);
 
-static int _ecore_evas_wince_event_window_hide(void *data __UNUSED__, int type __UNUSED__, void *event);
+static Eina_Bool _ecore_evas_wince_event_window_hide(void *data __UNUSED__, int type __UNUSED__, void *event);
 
-static int _ecore_evas_wince_event_window_delete_request(void *data __UNUSED__, int type __UNUSED__, void *event);
+static Eina_Bool _ecore_evas_wince_event_window_delete_request(void *data __UNUSED__, int type __UNUSED__, void *event);
 
 /* Private functions */
 
@@ -126,7 +122,7 @@ _ecore_evas_wince_shutdown(void)
    return _ecore_evas_init_count;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_wince_event_mouse_in(void *data __UNUSED__, int type __UNUSED__, void *event)
 {
    Ecore_Evas                 *ee;
@@ -148,7 +144,7 @@ _ecore_evas_wince_event_mouse_in(void *data __UNUSED__, int type __UNUSED__, voi
    return 1;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_wince_event_mouse_out(void *data __UNUSED__, int type __UNUSED__, void *event)
 {
    Ecore_Evas                  *ee;
@@ -172,7 +168,7 @@ _ecore_evas_wince_event_mouse_out(void *data __UNUSED__, int type __UNUSED__, vo
    return 1;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_wince_event_window_damage(void *data __UNUSED__, int type __UNUSED__, void *event)
 {
    Ecore_Evas                      *ee;
@@ -220,7 +216,7 @@ _ecore_evas_wince_event_window_damage(void *data __UNUSED__, int type __UNUSED__
    return 1;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_wince_event_window_destroy(void *data __UNUSED__, int type __UNUSED__, void *event)
 {
    Ecore_Evas                       *ee;
@@ -238,7 +234,7 @@ _ecore_evas_wince_event_window_destroy(void *data __UNUSED__, int type __UNUSED_
    return 1;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_wince_event_window_show(void *data __UNUSED__, int type __UNUSED__, void *event)
 {
    Ecore_Evas                    *ee;
@@ -257,7 +253,7 @@ _ecore_evas_wince_event_window_show(void *data __UNUSED__, int type __UNUSED__, 
    return 1;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_wince_event_window_hide(void *data __UNUSED__, int type __UNUSED__, void *event)
 {
    Ecore_Evas                    *ee;
@@ -276,7 +272,7 @@ _ecore_evas_wince_event_window_hide(void *data __UNUSED__, int type __UNUSED__, 
    return 1;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_wince_event_window_delete_request(void *data __UNUSED__, int type __UNUSED__, void *event)
 {
    Ecore_Evas                              *ee;

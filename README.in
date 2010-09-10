@@ -1,17 +1,43 @@
 Ecore @VERSION@
 
+******************************************************************************
+
+ FOR ANY ISSUES PLEASE EMAIL:
+ enlightenment-devel@lists.sourceforge.net
+  
+******************************************************************************
+  
 Requirements:
 -------------
 
 Must:
-  libc libm
-
+  libc
+  libm
+  eina (1.0.0 or better)
+  (For windows you also need: evil)
+  
 Recommended:
-  libX11 libXext libXcursor libXprint libXinerama libXrandr libXss libXrender
-  libXcomposite libXfixes libXdamage libXdpms libXtest OpenSSL CURL
+  libX11
+  libXext
+  libXcursor
+  libXprint
+  libXinerama
+  libXrandr
+  libXss
+  libXrender
+  libXcomposite
+  libXfixes
+  libXdamage
+  libXdpms
+  libXtest
+  OpenSSL
+  CURL
+  evas (1.0.0 or better)
 
 Optional:
-  XCB SDL DirectFB
+  XCB
+  SDL
+  DirectFB
 
 Ecore is a clean and tiny event loop library with many modules to do
 lots of convenient things for a programmer, to save time and effort.
@@ -36,6 +62,14 @@ that the program sets up to handle those events. Handling them is
 simple and other Ecore modules produce more events on the queue,
 coming from other sources such as file descriptors etc.
 
+Ecore also help you work in a multi threaded environment and setup a
+thread pool that help you use the EFL on multi-cpu system. It help split
+the part that can't be called outside of the ecore main loop from the
+computation heavy function that could run on another CPU. Be aware that
+Evas and most of Ecore API is not thread safe and should only be called
+in the main loop. Eina and Eet could be used, if done carefully, in any
+heavy function on another cpu.
+
 Ecore also lets you have functions called when file descriptors become
 active for reading or writing, allowing for streamlined, non-blocking
 IO.
@@ -45,27 +79,6 @@ COMPILING AND INSTALLING:
 
   ./configure
   make
-(as root unless youa re installing in your users directories):
+(as root unless you are installing in your users directories):
   make install
       
-------------------------------------------------------------------------------
-BUILDING PACKAGES:
-
-RPM: To build rpm packages:
-  
-  sudo rpm -ta @PACKAGE@-@VERSION@.tar.gz
-
-You will find rpm packages in your system /usr/src/redhat/* dirs (note you may
-not need to use sudo or root if you have your own ~/.rpmrc. see rpm documents
-for more details)
-
-DEB: To build deb packages:
-
-  tar zvf @PACKAGE@-@VERSION@.tar.gz
-  cd @PACKAGE@-@VERSION@
-  dpkg-buildpackage -us -uc -rfakeroot
-  cd ..
-  rm -rf @PACKAGE@-@VERSION@
-
-You will find all the debian source, binary etc. packages put in the directory
-where you first untarred the source tarball.

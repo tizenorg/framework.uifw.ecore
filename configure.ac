@@ -1,26 +1,24 @@
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
-m4_define([v_maj], [0])
-m4_define([v_min], [9])
-m4_define([v_mic], [9])
-m4_define([v_rev], m4_esyscmd([(svnversion . | grep -v exported || echo 0) | awk -F : '{printf("%s\n", $1);}' | tr -d ' :MSP\n']))
+m4_define([v_maj], [1])
+m4_define([v_min], [0])
+m4_define([v_mic], [0])
+m4_define([v_rev], m4_esyscmd([(svnversion "${SVN_REPO_PATH:-.}" | grep -v export || echo 0) | awk -F : '{printf("%s\n", $1);}' | tr -d ' :MSP\n']))
 m4_if(v_rev, [0], [m4_define([v_rev], m4_esyscmd([git log 2> /dev/null | (grep -m1 git-svn-id || echo 0) | sed -e 's/.*@\([0-9]*\).*/\1/' | tr -d '\n']))])
 ##--   When released, remove the dnl on the below line
-dnl m4_undefine([v_rev])
+m4_undefine([v_rev])
 ##--   When doing snapshots - change soname. remove dnl on below line
-m4_define([relname], [ver-pre-svn-06])
-m4_define([v_rel], [-release relname])
+dnl m4_define([relname], [ver-pre-svn-07])
+dnl m4_define([v_rel], [-release relname])
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
-m4_ifdef([v_rev], [m4_define([v_ver], [v_maj.v_min.v_mic.v_rev])],
-[m4_define([v_ver], [v_maj.v_min.v_mic])])
+m4_ifdef([v_rev], [m4_define([v_ver], [v_maj.v_min.v_mic.v_rev])], [m4_define([v_ver], [v_maj.v_min.v_mic])])
 m4_define([lt_rev], m4_eval(v_maj + v_min))
 m4_define([lt_cur], v_mic)
 m4_define([lt_age], v_min)
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
 
-AC_INIT([ecore], [v_ver], [enlightenment-devel@lists.sourceforge.net])
-release="ver-pre-svn-06"
+AC_INIT([ecore], [v_ver-alpha], [enlightenment-devel@lists.sourceforge.net])
 AC_PREREQ([2.52])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_MACRO_DIR([m4])
@@ -52,9 +50,21 @@ AC_SUBST(version_info)
 AC_SUBST(release_info)
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
+VMAJ=v_maj
+AC_SUBST(VMAJ)
 
+m4_ifdef([AM_GNU_GETTEXT_VERSION], [
 AM_GNU_GETTEXT_VERSION([0.12.1])
+])
+
+m4_ifdef([AM_GNU_GETTEXT], [
 AM_GNU_GETTEXT([external])
+po_makefile_in=po/Makefile.in
+AM_CONDITIONAL([HAVE_PO], [true])
+],[
+AM_CONDITIONAL([HAVE_PO], [false])
+])
+AC_SUBST(LTLIBINTL)
 
 EFL_CHECK_PATH_MAX
 
@@ -133,6 +143,7 @@ want_ecore_evas_software_x11="no"
 want_ecore_evas_xrender_x11="no"
 want_ecore_evas_opengl_x11="no"
 want_ecore_evas_software_16_x11="no"
+want_ecore_evas_software_8_x11="no"
 want_ecore_evas_software_xcb="no"
 want_ecore_evas_xrender_xcb="no"
 want_ecore_evas_software_gdi="no"
@@ -197,6 +208,7 @@ case "$host_os" in
       want_ecore_evas_xrender_x11="yes"
       want_ecore_evas_opengl_x11="yes"
       want_ecore_evas_software_16_x11="yes"
+      want_ecore_evas_software_8_x11="yes"
       want_ecore_evas_software_xcb="yes"
       want_ecore_evas_xrender_xcb="yes"
       want_ecore_evas_software_sdl="yes"
@@ -233,6 +245,21 @@ AC_ARG_ENABLE(glib-integration-always,
 
 if test "x${want_glib_integration_always}" = "xyes" ; then
   AC_DEFINE([GLIB_INTEGRATION_ALWAYS], [1], [Always integrate glib if support compiled])
+  want_glib=yes
+fi
+
+want_g_main_loop=no
+AC_ARG_ENABLE(g-main-loop,
+  AC_HELP_STRING([--enable-g-main-loop], [ecore_main_loop based on g_main_loop]),
+  [want_g_main_loop=$enableval])
+
+if test "x${want_g_main_loop}" = "xyes" ; then
+  AC_DEFINE([USE_G_MAIN_LOOP], [1], [Use g_main_loop in ecore])
+  want_glib=yes
+fi
+
+if test "x${want_glib_integration_always}" = "xyes" -a "x${want_g_main_loop}" = "xyes"; then
+  AC_MSG_ERROR([--enable-glib-integration-always and --enable-glib-main-loop are mutually exclusive])
 fi
 
 # abstract sockets (ecore_con.c)
@@ -388,25 +415,25 @@ AC_SUBST(dlopen_libs)
 
 # Eina library
 
-PKG_CHECK_MODULES(EINA, [eina-0])
+PKG_CHECK_MODULES(EINA, [eina >= 1.0.0])
 #FIXME check all the requirements when the eina move will be finished
-requirements_ecore="eina-0 ${requirements_ecore}"
-requirements_ecore_con="ecore eina-0 ${requirements_ecore_con}"
-requirements_ecore_config="ecore eina-0 ${requirements_ecore_config}"
-requirements_ecore_directfb="ecore eina-0 ${requirements_ecore_directfb}"
-requirements_ecore_evas="ecore eina-0 ${requirements_ecore_evas}"
-requirements_ecore_fb="ecore eina-0 ${requirements_ecore_fb}"
-requirements_ecore_file="ecore eina-0 ${requirements_ecore_file}"
-requirements_ecore_imf="ecore eina-0 ${requirements_ecore_imf}"
-requirements_ecore_imf_evas="ecore eina-0 ${requirements_ecore_imf_evas}"
-requirements_ecore_input="ecore eina-0 ${requirements_ecore_input}"
-requirements_ecore_input_evas="ecore eina-0 ${requirements_ecore_input_evas}"
-requirements_ecore_ipc="ecore eina-0 ${requirements_ecore_ipc}"
-requirements_ecore_cocoa="ecore eina-0 ${requirements_ecore_cocoa}"
-requirements_ecore_sdl="ecore eina-0 ${requirements_ecore_sdl}"
-requirements_ecore_win32="ecore eina-0 ${requirements_ecore_win32}"
-requirements_ecore_wince="ecore eina-0 ${requirements_ecore_wince}"
-requirements_ecore_x="ecore eina-0 ${requirements_ecore_x}"
+requirements_ecore="eina >= 1.0.0 ${requirements_ecore}"
+requirements_ecore_con="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_con}"
+requirements_ecore_config="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_config}"
+requirements_ecore_directfb="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_directfb}"
+requirements_ecore_evas="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_evas}"
+requirements_ecore_fb="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_fb}"
+requirements_ecore_file="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_file}"
+requirements_ecore_imf="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_imf}"
+requirements_ecore_imf_evas="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_imf_evas}"
+requirements_ecore_input="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_input}"
+requirements_ecore_input_evas="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_input_evas}"
+requirements_ecore_ipc="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_ipc}"
+requirements_ecore_cocoa="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_cocoa}"
+requirements_ecore_sdl="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_sdl}"
+requirements_ecore_win32="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_win32}"
+requirements_ecore_wince="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_wince}"
+requirements_ecore_x="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_x}"
 
 
 # glib support (main loop integration)
@@ -467,7 +494,7 @@ PKG_CHECK_MODULES([DIRECTFB],
 # Eet library (ecore_config)
 
 PKG_CHECK_MODULES([EET],
-   [eet >= 1.0.0],
+   [eet >= 1.4.0],
    [have_eet="yes"],
    [have_eet="no"])
 
@@ -824,7 +851,7 @@ AM_CONDITIONAL(BUILD_ECORE_X_XCB, test $have_ecore_x_xcb = yes)
 
 # Evas library (ecore_config, ecore_input_evas, ecore_imf_evas and ecore_evas)
 
-PKG_CHECK_MODULES([EVAS], [evas >= 0.9.9],
+PKG_CHECK_MODULES([EVAS], [evas >= 1.0.0],
    [have_evas="yes"],
    [have_evas="no"])
 
@@ -875,6 +902,9 @@ m4_ifdef([AC_PROG_OBJC], [
     fi
 ])
 AC_SUBST(cocoa_ldflags)
+
+# check for epoll support
+AC_CHECK_HEADERS([sys/epoll.h])
 
 # basic pthread support
 
@@ -1011,7 +1041,7 @@ AM_CONDITIONAL([HAVE_CARES], [test "x${have_cares}" = "xyes"])
 
 # ecore_ipc
 ECORE_CHECK_MODULE([ipc], [${want_ecore_ipc}], [Ipc], [${have_ecore_con}],
-   [requirements_ecore_ipc="ecore-con ${requirements_ecore_ipc}"])
+   [requirements_ecore_ipc="ecore-con >= 1.0.0 ${requirements_ecore_ipc}"])
 
 # ecore_file
 ECORE_CHECK_MODULE([file], [${want_ecore_file}], [File])
@@ -1025,7 +1055,7 @@ if test "x${have_ecore_file}" = "xyes" ; then
    ECORE_CHECK_NOTIFY_WIN32([${want_notify_win32}], [have_notify_win32="yes"], [have_notify_win32="no"])
 
    if test "x${have_ecore_con}" = "xyes" ; then
-      requirements_ecore_file="ecore-con ${requirements_ecore_file}"
+      requirements_ecore_file="ecore-con >= 1.0.0 ${requirements_ecore_file}"
    fi
 fi
 
@@ -1036,7 +1066,7 @@ if test "x${have_eet}" = "xyes" -a "x${have_evas}"  -a "x${have_ecore_ipc}" ; th
 fi
 
 ECORE_CHECK_MODULE([config], [${want_ecore_config}], [Config], [${ecore_config_deps}],
-   [requirements_ecore_config="ecore-ipc evas eet ${requirements_ecore_config}"])
+   [requirements_ecore_config="ecore-ipc >= 1.0.0 evas >= 1.0.0 eet >= 1.4.0 ${requirements_ecore_config}"])
 
 # ecore_imf
 
@@ -1050,12 +1080,12 @@ if test "x${have_ecore_imf}" = "xyes" -a "x${have_evas}" = "xyes" ; then
 fi
 
 ECORE_CHECK_MODULE([imf-evas], [${want_ecore_imf}], [Imf_Evas], [${ecore_imf_evas_deps}],
-   [requirements_ecore_imf_evas="ecore-imf evas ${requirements_ecore_imf_evas}"])
+   [requirements_ecore_imf_evas="ecore-imf >= 1.0.0 evas >= 1.0.0 ${requirements_ecore_imf_evas}"])
 
 # ecore_input{_evas}
 ECORE_CHECK_MODULE([input], [${want_ecore_input}], [Input])
 ECORE_CHECK_MODULE([input-evas], [${want_ecore_input}], [Input_Evas], [${have_evas}],
-   [requirements_ecore_input_evas="ecore-input evas ${requirements_ecore_input}"])
+   [requirements_ecore_input_evas="ecore-input >= 1.0.0 evas >= 1.0.0 ${requirements_ecore_input}"])
 
 ## Graphic systems
 
@@ -1070,7 +1100,7 @@ fi
 ECORE_CHECK_MODULE([x], [${want_ecore_x}], [X], [${ecore_x_deps}],
   [
    ecore_x_libs="$ecore_x_libs $x_libs"
-   requirements_ecore_x="ecore-input ${requirements_ecore_x}"
+   requirements_ecore_x="ecore-input >= 1.0.0 ${requirements_ecore_x}"
   ])
 
 # ecore_win32
@@ -1078,7 +1108,7 @@ ECORE_CHECK_MODULE([x], [${want_ecore_x}], [X], [${ecore_x_deps}],
 ECORE_CHECK_MODULE([win32], [${want_ecore_win32}], [Win32], [${have_ecore_input}],
    [
     ecore_win32_libs="-lole32 -lgdi32"
-    requirements_ecore_win32="ecore-input ${requirements_ecore_win32}"
+    requirements_ecore_win32="ecore-input >= 1.0.0 ${requirements_ecore_win32}"
    ])
 AC_SUBST(ecore_win32_libs)
 
@@ -1090,7 +1120,7 @@ if test "x${have_ecore_input}" = "xyes" -a "x${have_cocoa}" = "xyes" ; then
 fi
 
 ECORE_CHECK_MODULE([cocoa], [${want_ecore_cocoa}], [Cocoa], [${ecore_cocoa_deps}],
-   [requirements_ecore_cocoa="ecore-input ${requirements_ecore_cocoa}"])
+   [requirements_ecore_cocoa="ecore-input >= 1.0.0 ${requirements_ecore_cocoa}"])
 
 # ecore_sdl
 
@@ -1100,7 +1130,7 @@ if test "x${have_sdl}" = "xyes" -a "x${have_ecore_input}" = "xyes" ; then
 fi
 
 ECORE_CHECK_MODULE([sdl], [${want_ecore_sdl}], [Sdl], [${ecore_sdl_deps}],
-   [requirements_ecore_sdl="ecore-input ${requirements_ecore_sdl}"])
+   [requirements_ecore_sdl="ecore-input >= 1.0.0 ${requirements_ecore_sdl}"])
 
 # ecore_fb
 ECORE_CHECK_MODULE([fb], [${want_ecore_fb}], [FB], [$have_fb])
@@ -1122,7 +1152,7 @@ ECORE_CHECK_MODULE([directfb], [${want_ecore_directfb}], [DirectFB], [${have_dir
 # ecore_wince
 
 ECORE_CHECK_MODULE([wince], [${want_ecore_wince}], [WinCE], [${have_ecore_input}],
-   [requirements_ecore_win32="ecore-input ${requirements_ecore_win32}"])
+   [requirements_ecore_win32="ecore-input >= 1.0.0 ${requirements_ecore_win32}"])
 
 ## Ecore Evas
 
@@ -1134,7 +1164,7 @@ if test "x${have_evas}" = "xyes" -a "x${have_ecore_input}" = "xyes" -a "x${have_
 fi
 
 ECORE_CHECK_MODULE([evas], [${want_ecore_evas}], [Evas], [${ecore_evas_deps}],
-  [requirements_ecore_evas="ecore-input ecore-input-evas evas ${requirements_ecore_evas}"])
+  [requirements_ecore_evas="ecore-input >= 1.0.0 ecore-input-evas >= 1.0.0 evas >= 1.0.0 ${requirements_ecore_evas}"])
 
 # ecore_evas_buffer
 
@@ -1186,6 +1216,12 @@ ECORE_EVAS_CHECK_MODULE([software-16-x11],
    [Software Xlib 16 bits],
    [${have_ecore_x_xlib}])
 
+ECORE_EVAS_CHECK_MODULE([software-8-x11],
+    [$want_ecore_evas_software_8_x11],
+    [Software 8bit X11],
+    $have_ecore_x_xcb)
+
+
 # ecore_evas_xrender_xcb
 
 ECORE_EVAS_CHECK_MODULE([xrender-xcb],
@@ -1196,11 +1232,12 @@ ECORE_EVAS_CHECK_MODULE([xrender-xcb],
 if test "x$have_ecore_evas_software_x11" = "xyes" -o \
         "x$have_ecore_evas_xrender_x11" = "xyes" -o \
         "x$have_ecore_evas_opengl_x11" = "xyes" -o \
+        "x$have_ecore_evas_software_8_x11" = "xyes" -o \
         "x$have_ecore_evas_software_16_x11" = "xyes" -o \
         "x$have_ecore_evas_software_xcb" = "xyes" -o \
         "x$have_ecore_evas_xrender_xcb" = "xyes"; then
    AC_DEFINE(BUILD_ECORE_EVAS_X11, 1, [Support for X Window Engines in Ecore_Evas])
-   requirements_ecore_evas="ecore-x ${requirements_ecore_evas}"
+   requirements_ecore_evas="ecore-x >= 1.0.0 ${requirements_ecore_evas}"
 fi
 
 # ecore_evas_win32
@@ -1236,7 +1273,7 @@ if test "x${have_ecore_evas_software_gdi}" = "xyes" -o \
         "x${have_ecore_evas_opengl_glew}" = "xyes" -o \
         "x${have_ecore_evas_software_16_ddraw}" = "xyes" ; then
    AC_DEFINE(BUILD_ECORE_EVAS_WIN32, 1, [Support for Win32 Engine in Ecore_Evas])
-   requirements_ecore_evas="ecore-win32 ${requirements_ecore_evas}"
+   requirements_ecore_evas="ecore-win32 >= 1.0.0 ${requirements_ecore_evas}"
 fi
 
 # ecore_evas_cocoa
@@ -1245,7 +1282,7 @@ ECORE_EVAS_CHECK_MODULE([cocoa],
    [${want_ecore_evas_cocoa}],
    [Cocoa],
    [${have_ecore_cocoa}],
-   [requirements_ecore_evas="ecore-cocoa ${requirements_ecore_evas}"])
+   [requirements_ecore_evas="ecore-cocoa >= 1.0.0 ${requirements_ecore_evas}"])
 
 # ecore_evas_software_sdl
 
@@ -1253,7 +1290,7 @@ ECORE_EVAS_CHECK_MODULE([software-sdl],
    [${want_ecore_evas_software_sdl}],
    [Software SDL],
    [${have_ecore_sdl}],
-   [requirements_ecore_evas="ecore-sdl ${requirements_ecore_evas}"])
+   [requirements_ecore_evas="ecore-sdl >= 1.0.0 ${requirements_ecore_evas}"])
 
 # ecore_evas_gl_sdl
 
@@ -1261,7 +1298,7 @@ ECORE_EVAS_CHECK_MODULE([opengl-sdl],
    [${want_ecore_evas_gl_sdl}],
    [OpenGL SDL],
    [${have_ecore_sdl}],
-   [requirements_ecore_evas="ecore-sdl ${requirements_ecore_evas}"])
+   [requirements_ecore_evas="ecore-sdl >= 1.0.0 ${requirements_ecore_evas}"])
 
 # ecore_evas_directfb
 
@@ -1269,7 +1306,7 @@ ECORE_EVAS_CHECK_MODULE([directfb],
    [${want_ecore_evas_directfb}],
    [DirectFB],
    [${have_ecore_directfb}],
-   [requirements_ecore_evas="ecore-directfb ${requirements_ecore_evas}"])
+   [requirements_ecore_evas="ecore-directfb >= 1.0.0 ${requirements_ecore_evas}"])
 
 # ecore_evas_fb
 
@@ -1277,7 +1314,7 @@ ECORE_EVAS_CHECK_MODULE([fb],
    [${want_ecore_evas_fb}],
    [Linux Framebuffer],
    [${have_ecore_fb}],
-   [requirements_ecore_evas="ecore-fb ${requirements_ecore_evas}"])
+   [requirements_ecore_evas="ecore-fb >= 1.0.0 ${requirements_ecore_evas}"])
 
 # ecore_evas_wince
 
@@ -1285,7 +1322,7 @@ ECORE_EVAS_CHECK_MODULE([software-16-wince],
    [${want_ecore_evas_software_16_wince}],
    [16 bpp Software Windows CE],
    [${have_ecore_wince}],
-   [requirements_ecore_evas="ecore-wince ${requirements_ecore_evas}"])
+   [requirements_ecore_evas="ecore-wince >= 1.0.0 ${requirements_ecore_evas}"])
 
 
 
@@ -1355,7 +1392,7 @@ src/lib/ecore_x/xcb/Makefile
 src/tests/Makefile
 README
 ecore.spec
-po/Makefile.in
+$po_makefile_in
 ])
 
 echo
@@ -1369,6 +1406,7 @@ echo "  Ecore........................: always"
 echo "    Thread support.............: $have_pthread"
 echo "    GLib support...............: $have_glib"
 echo "    Always integrate GLib......: $want_glib_integration_always"
+echo "    Use g_main_loop............: $want_g_main_loop"
 echo "    Gathering memory statistic.: $have_mallinfo"
 echo "  Ecore_Con....................: $have_ecore_con"
 if test "x$have_ecore_con" = "xyes" ; then
@@ -1479,6 +1517,7 @@ if test "x${have_ecore_evas}" = "xyes" ; then
   echo "    OpenGL SDL.................: $have_ecore_evas_opengl_sdl"
   echo "    DirectFB...................: $have_ecore_evas_directfb"
   echo "    Software Framebuffer.......: $have_ecore_evas_fb"
+  echo "    Software 8bit grayscale XCB: $have_ecore_evas_software_8_x11"
   echo "    Software 16bit X11.........: $have_ecore_evas_software_16_x11"
   echo "    Software 16bit DirectDraw..: $have_ecore_evas_software_16_ddraw"
   echo "    Software 16bit WinCE.......: $have_ecore_evas_software_16_wince"

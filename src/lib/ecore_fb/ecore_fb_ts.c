@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -64,7 +60,7 @@ struct _Ecore_Fb_Ts_Flite
    unsigned char brightness;
 };
 
-static int _ecore_fb_ts_fd_handler(void *data, Ecore_Fd_Handler *fd_handler);
+static Eina_Bool _ecore_fb_ts_fd_handler(void *data, Ecore_Fd_Handler *fd_handler);
 static int _ecore_fb_ts_fd = -1;
 static int _ecore_fb_ts_event_byte_count = 0;
 static int _ecore_fb_ts_apply_cal = 0;
@@ -130,9 +126,9 @@ ecore_fb_ts_init(void)
 EAPI void
 ecore_fb_ts_shutdown(void)
 {
-   if (_ecore_fb_ts_fd >= 0) close(_ecore_fb_ts_fd);
    if (_ecore_fb_ts_fd_handler_handle)
      ecore_main_fd_handler_del(_ecore_fb_ts_fd_handler_handle);
+   if (_ecore_fb_ts_fd >= 0) close(_ecore_fb_ts_fd);
    _ecore_fb_ts_fd = -1;
    _ecore_fb_ts_fd_handler_handle = NULL;
 }
@@ -203,7 +199,7 @@ ecore_fb_touch_screen_calibrate_get(int *xscale, int *xtrans, int *yscale, int *
    if (xyswap) *xyswap = cal.xyswap;
 }
 
-static int
+static Eina_Bool
 _ecore_fb_ts_fd_handler(void *data __UNUSED__, Ecore_Fd_Handler *fd_handler __UNUSED__)
 {
    static int prev_x = 0, prev_y = 0, prev_pressure = 0;

@@ -2,29 +2,29 @@
 # include <config.h>
 #endif
 
+#include "ecore_suite.h"
+
 #include <Ecore.h>
 #include <Eina.h>
 #include <unistd.h>
-
-#include "ecore_suite.h"
-
+#include <stdio.h>
 
 static int _log_dom;
 #define INF(...) EINA_LOG_DOM_INFO(_log_dom, __VA_ARGS__)
 
-static int
+static Eina_Bool
 _quit_cb(void *data)
 {
    Eina_Bool *val = data;
    *val = EINA_TRUE;
    ecore_main_loop_quit();
-   return 0;
+   return EINA_FALSE;
 }
 
-static int
+static Eina_Bool
 _dummy_cb(void *data)
 {
-   return (int)(long)data;
+   return !!data;
 }
 
 START_TEST(ecore_test_ecore_init)
@@ -155,20 +155,20 @@ START_TEST(ecore_test_ecore_main_loop_timer)
 }
 END_TEST
 
-static int _timer3(void *data)
+static Eina_Bool _timer3(void *data)
 {
    /* timer 3, do nothing */
-   return 0;
+   return EINA_FALSE;
 }
 
-static int _timer2(void *data)
+static Eina_Bool _timer2(void *data)
 {
    /* timer 2, quit inner mainloop */
    ecore_main_loop_quit();
-   return 0;
+   return EINA_FALSE;
 }
 
-static int _timer1(void *data)
+static Eina_Bool _timer1(void *data)
 {
    /* timer 1, begin inner mainloop */
    int *times = data;
@@ -180,7 +180,7 @@ static int _timer1(void *data)
 
    ecore_main_loop_quit();
 
-   return 0;
+   return EINA_FALSE;
 }
 
 START_TEST(ecore_test_ecore_main_loop_timer_inner)
@@ -198,13 +198,13 @@ START_TEST(ecore_test_ecore_main_loop_timer_inner)
 }
 END_TEST
 
-static int
+static Eina_Bool
 _fd_handler_cb(void *data, Ecore_Fd_Handler *handler __UNUSED__)
 {
    Eina_Bool *val = data;
    *val = EINA_TRUE;
    ecore_main_loop_quit();
-   return 0;
+   return EINA_FALSE;
 }
 
 START_TEST(ecore_test_ecore_main_loop_fd_handler)
@@ -239,13 +239,13 @@ START_TEST(ecore_test_ecore_main_loop_fd_handler)
 }
 END_TEST
 
-static int
+static Eina_Bool
 _event_handler_cb(void *data, int type __UNUSED__, void *event __UNUSED__)
 {
    Eina_Bool *val = data;
    *val = EINA_TRUE;
    ecore_main_loop_quit();
-   return 0;
+   return EINA_FALSE;
 }
 
 START_TEST(ecore_test_ecore_main_loop_event)
@@ -276,16 +276,16 @@ START_TEST(ecore_test_ecore_main_loop_event)
 }
 END_TEST
 
-static int
+static Eina_Bool
 _timer_quit_recursive(void *data)
 {
    INF("   _timer_quit_recursive: begin");
    ecore_main_loop_quit(); /* quits inner main loop */
    INF("   _timer_quit_recursive: end");
-   return 0;
+   return EINA_FALSE;
 }
 
-static int
+static Eina_Bool
 _event_recursive_cb(void *data, int type, void *event)
 {
    Ecore_Event *e;
@@ -308,7 +308,7 @@ _event_recursive_cb(void *data, int type, void *event)
 
    INF("   guard = %d", guard);
    INF("  event_recursive_cb: end");
-   return 0;
+   return EINA_FALSE;
 }
 
 
@@ -340,6 +340,28 @@ START_TEST(ecore_test_ecore_main_loop_event_recursive)
 }
 END_TEST
 
+/* TODO: change to HAVE_ECORE_X when xcb implementation is done */
+#ifdef HAVE_ECORE_X_XLIB
+
+START_TEST(ecore_test_ecore_x_bell)
+{
+   int ret = 0, i;
+   ecore_x_init(NULL);
+
+   printf("You should hear 3 beeps now.\n");
+   for (i=0; i < 3; i++)
+     {
+	ret = ecore_x_bell(0);
+	fail_if(ret != EINA_TRUE);
+	ecore_x_sync();
+	sleep(1);
+     }
+   ecore_x_shutdown();
+}
+END_TEST
+
+#endif
+
 void ecore_test_ecore(TCase *tc)
 {
    tcase_add_test(tc, ecore_test_ecore_init);
@@ -352,4 +374,9 @@ void ecore_test_ecore(TCase *tc)
    tcase_add_test(tc, ecore_test_ecore_main_loop_event);
    tcase_add_test(tc, ecore_test_ecore_main_loop_timer_inner);
    tcase_add_test(tc, ecore_test_ecore_main_loop_event_recursive);
+
+/* TODO: change to HAVE_ECORE_X when xcb implementation is done */
+#ifdef HAVE_ECORE_X_XLIB
+   tcase_add_test(tc, ecore_test_ecore_x_bell);
+#endif
 }

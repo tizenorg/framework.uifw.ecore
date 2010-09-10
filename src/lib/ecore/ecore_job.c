@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -11,7 +7,7 @@
 #include "Ecore.h"
 #include "ecore_private.h"
 
-static int _ecore_job_event_handler(void *data, int type, void *ev);
+static Eina_Bool _ecore_job_event_handler(void *data, int type, void *ev);
 static void _ecore_job_event_free(void *data, void *ev);
 
 static int ecore_event_job_type = 0;
@@ -21,7 +17,7 @@ struct _Ecore_Job
 {
    ECORE_MAGIC;
    Ecore_Event  *event;
-   void        (*func) (void *data);
+   Ecore_Cb func;
    void         *data;
 };
 
@@ -50,7 +46,7 @@ _ecore_job_shutdown(void)
  * @note    Once the job has been executed, the job handle is invalid.
  */
 EAPI Ecore_Job *
-ecore_job_add(void (*func) (void *data), const void *data)
+ecore_job_add(Ecore_Cb func, const void *data)
 {
    Ecore_Job *job;
    
@@ -93,14 +89,14 @@ ecore_job_del(Ecore_Job *job)
    return data;
 }
 
-static int
+static Eina_Bool
 _ecore_job_event_handler(void *data __UNUSED__, int type __UNUSED__, void *ev)
 {
    Ecore_Job *job;
    
    job = ev;
    job->func(job->data);
-   return 0;
+   return ECORE_CALLBACK_CANCEL;
 }
 
 static void

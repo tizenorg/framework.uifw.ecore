@@ -1,10 +1,6 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
-#endif
+#endif /* ifdef HAVE_CONFIG_H */
 
 #include "ecore_x_private.h"
 
@@ -20,13 +16,14 @@ _ecore_x_dpms_init(void)
    _dpms_minor = 0;
 
    if (DPMSGetVersion(_ecore_x_disp, &_dpms_major, &_dpms_minor))
-     _dpms_available = 1;
+      _dpms_available = 1;
    else
-     _dpms_available = 0;
-#else
+      _dpms_available = 0;
+
+#else /* ifdef ECORE_XDPMS */
    _dpms_available = 0;
-#endif
-}
+#endif /* ifdef ECORE_XDPMS */
+} /* _ecore_x_dpms_init */
 
 /**
  * @defgroup Ecore_X_DPMS_Group X DPMS Extension Functions
@@ -43,7 +40,7 @@ EAPI int
 ecore_x_dpms_query(void)
 {
    return _dpms_available;
-}
+} /* ecore_x_dpms_query */
 
 /**
  * Checks if the X server is capable of DPMS.
@@ -56,10 +53,10 @@ ecore_x_dpms_capable_get(void)
 #ifdef ECORE_XDPMS
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    return DPMSCapable(_ecore_x_disp);
-#else
+#else /* ifdef ECORE_XDPMS */
    return 0;
-#endif
-}
+#endif /* ifdef ECORE_XDPMS */
+} /* ecore_x_dpms_capable_get */
 
 /**
  * Checks the DPMS state of the display.
@@ -76,10 +73,10 @@ ecore_x_dpms_enabled_get(void)
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    DPMSInfo(_ecore_x_disp, &power_lvl, &state);
    return state;
-#else
+#else /* ifdef ECORE_XDPMS */
    return 0;
-#endif
-}
+#endif /* ifdef ECORE_XDPMS */
+} /* ecore_x_dpms_enabled_get */
 
 /**
  * Sets the DPMS state of the display.
@@ -92,11 +89,12 @@ ecore_x_dpms_enabled_set(int enabled)
 #ifdef ECORE_XDPMS
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    if (enabled)
-     DPMSEnable(_ecore_x_disp);
+      DPMSEnable(_ecore_x_disp);
    else
-     DPMSDisable(_ecore_x_disp);
-#endif
-}
+      DPMSDisable(_ecore_x_disp);
+
+#endif /* ifdef ECORE_XDPMS */
+} /* ecore_x_dpms_enabled_set */
 
 /**
  * Gets the timeouts. The values are in unit of seconds.
@@ -106,14 +104,16 @@ ecore_x_dpms_enabled_set(int enabled)
  * @ingroup Ecore_X_DPMS_Group
  */
 EAPI void
-ecore_x_dpms_timeouts_get(unsigned int *standby, unsigned int *suspend, unsigned int *off)
+ecore_x_dpms_timeouts_get(unsigned int *standby,
+                          unsigned int *suspend,
+                          unsigned int *off)
 {
 #ifdef ECORE_XDPMS
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
-   DPMSGetTimeouts(_ecore_x_disp, (unsigned short *)standby, 
-		   (unsigned short *)suspend, (unsigned short *)off);
-#endif
-}
+   DPMSGetTimeouts(_ecore_x_disp, (unsigned short *)standby,
+                   (unsigned short *)suspend, (unsigned short *)off);
+#endif /* ifdef ECORE_XDPMS */
+} /* ecore_x_dpms_timeouts_get */
 
 /**
  * Sets the timeouts. The values are in unit of seconds.
@@ -123,15 +123,17 @@ ecore_x_dpms_timeouts_get(unsigned int *standby, unsigned int *suspend, unsigned
  * @ingroup Ecore_X_DPMS_Group
  */
 EAPI int
-ecore_x_dpms_timeouts_set(unsigned int standby, unsigned int suspend, unsigned int off)
+ecore_x_dpms_timeouts_set(unsigned int standby,
+                          unsigned int suspend,
+                          unsigned int off)
 {
 #ifdef ECORE_XDPMS
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    return DPMSSetTimeouts(_ecore_x_disp, standby, suspend, off);
-#else
+#else /* ifdef ECORE_XDPMS */
    return 0;
-#endif
-}
+#endif /* ifdef ECORE_XDPMS */
+} /* ecore_x_dpms_timeouts_set */
 
 /**
  * Returns the amount of time of inactivity before standby mode is invoked.
@@ -147,10 +149,10 @@ ecore_x_dpms_timeout_standby_get()
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    DPMSGetTimeouts(_ecore_x_disp, &standby, &suspend, &off);
    return standby;
-#else
+#else /* ifdef ECORE_XDPMS */
    return 0;
-#endif
-}
+#endif /* ifdef ECORE_XDPMS */
+} /* ecore_x_dpms_timeout_standby_get */
 
 /**
  * Returns the amount of time of inactivity before the second level of
@@ -167,10 +169,10 @@ ecore_x_dpms_timeout_suspend_get()
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    DPMSGetTimeouts(_ecore_x_disp, &standby, &suspend, &off);
    return suspend;
-#else
+#else /* ifdef ECORE_XDPMS */
    return 0;
-#endif
-}
+#endif /* ifdef ECORE_XDPMS */
+} /* ecore_x_dpms_timeout_suspend_get */
 
 /**
  * Returns the amount of time of inactivity before the third and final
@@ -187,10 +189,10 @@ ecore_x_dpms_timeout_off_get()
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    DPMSGetTimeouts(_ecore_x_disp, &standby, &suspend, &off);
    return off;
-#else
+#else /* ifdef ECORE_XDPMS */
    return 0;
-#endif
-}
+#endif /* ifdef ECORE_XDPMS */
+} /* ecore_x_dpms_timeout_off_get */
 
 /**
  * Sets the standby timeout (in unit of seconds).
@@ -206,8 +208,8 @@ ecore_x_dpms_timeout_standby_set(unsigned int new_timeout)
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    DPMSGetTimeouts(_ecore_x_disp, &standby, &suspend, &off);
    DPMSSetTimeouts(_ecore_x_disp, new_timeout, suspend, off);
-#endif
-}
+#endif /* ifdef ECORE_XDPMS */
+} /* ecore_x_dpms_timeout_standby_set */
 
 /**
  * Sets the suspend timeout (in unit of seconds).
@@ -223,8 +225,8 @@ ecore_x_dpms_timeout_suspend_set(unsigned int new_timeout)
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    DPMSGetTimeouts(_ecore_x_disp, &standby, &suspend, &off);
    DPMSSetTimeouts(_ecore_x_disp, standby, new_timeout, off);
-#endif
-}
+#endif /* ifdef ECORE_XDPMS */
+} /* ecore_x_dpms_timeout_suspend_set */
 
 /**
  * Sets the off timeout (in unit of seconds).
@@ -240,5 +242,6 @@ ecore_x_dpms_timeout_off_set(unsigned int new_timeout)
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    DPMSGetTimeouts(_ecore_x_disp, &standby, &suspend, &off);
    DPMSSetTimeouts(_ecore_x_disp, standby, suspend, new_timeout);
-#endif
-}
+#endif /* ifdef ECORE_XDPMS */
+} /* ecore_x_dpms_timeout_off_set */
+

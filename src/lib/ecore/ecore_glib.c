@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -15,7 +11,7 @@
 #include <glib.h>
 
 static Eina_Bool _ecore_glib_active = EINA_FALSE;
-static int (*_ecore_glib_select_original)(int, fd_set*, fd_set*, fd_set*, struct timeval *);
+static Ecore_Select_Function _ecore_glib_select_original;
 static GCond *_ecore_glib_cond = NULL;
 static GPollFD *_ecore_glib_fds = NULL;
 static size_t _ecore_glib_fds_size = 0;

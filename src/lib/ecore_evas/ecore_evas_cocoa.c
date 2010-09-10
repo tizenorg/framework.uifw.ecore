@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -86,33 +82,33 @@ _ecore_evas_cocoa_match(void)
    return ecore_evases;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_cocoa_event_got_focus(void *data __UNUSED__, int type __UNUSED__, void *event)
 {
    Ecore_Evas                   *ee;
 
    ee = _ecore_evas_cocoa_match();
 
-   if (!ee) return 1;
+   if (!ee) return EINA_TRUE;
    ee->prop.focused = 1;
 
-   return 0;
+   return EINA_FALSE;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_cocoa_event_lost_focus(void *data __UNUSED__, int type __UNUSED__, void *event)
 {
    Ecore_Evas                   *ee;
 
    ee = _ecore_evas_cocoa_match();
 
-   if (!ee) return 1;
+   if (!ee) return EINA_TRUE;
    ee->prop.focused = 0;
 
-   return 0;
+   return EINA_FALSE;
 }
 
-static int
+static Eina_Bool
 _ecore_evas_cocoa_event_video_resize(void *data __UNUSED__, int type __UNUSED__, void *event)
 {
    /*Ecore_Cocoa_Event_Video_Resize *e;
@@ -127,7 +123,7 @@ _ecore_evas_cocoa_event_video_resize(void *data __UNUSED__, int type __UNUSED__,
    return 0;*/
 }
 
-static int
+static Eina_Bool
 _ecore_evas_cocoa_event_video_expose(void *data __UNUSED__, int type __UNUSED__, void *event __UNUSED__)
 {
    Ecore_Evas                   *ee;
@@ -136,11 +132,11 @@ _ecore_evas_cocoa_event_video_expose(void *data __UNUSED__, int type __UNUSED__,
 
    ee = _ecore_evas_cocoa_match();
 
-   if (!ee) return 1;
+   if (!ee) return EINA_TRUE;
    evas_output_size_get(ee->evas, &w, &h);
    evas_damage_rectangle_add(ee->evas, 0, 0, w, h);
 
-   return 0;
+   return EINA_FALSE;
 }
 
 static int

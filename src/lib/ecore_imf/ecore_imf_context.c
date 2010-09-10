@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -864,7 +860,7 @@ ecore_imf_context_input_panel_show(Ecore_IMF_Context *ctx)
 	return;
      }
 
-   if (ctx->klass->input_panel_show) ctx->klass->input_panel_show(ctx);
+   if (ctx->klass->show) ctx->klass->show(ctx);
 }
 
 EAPI void  
@@ -876,7 +872,7 @@ ecore_imf_context_input_panel_hide(Ecore_IMF_Context *ctx)
 	return;
      }
    
-   if (ctx->klass->input_panel_hide) ctx->klass->input_panel_hide(ctx);
+   if (ctx->klass->hide) ctx->klass->hide(ctx);
 }
 
 EAPI void  
@@ -1152,6 +1148,7 @@ ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layou
 
 	ctx->private_key_list = eina_list_append(ctx->private_key_list, key_item);
      }
+
 //   if (ctx->klass->input_panel_private_key_set) ctx->klass->input_panel_private_key_set(ctx, layout_index, key_index, img_path, label, value);
 }
 

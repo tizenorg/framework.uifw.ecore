@@ -6,14 +6,14 @@ AM_CPPFLAGS = \
 -DPACKAGE_LIB_DIR=\"$(libdir)\" \
 @EFL_ECORE_IMF_BUILD@ \
 @EVIL_CFLAGS@ \
-@EINA_CFLAGS@
+@EINA_CFLAGS@ \
+@EVAS_CFLAGS@
 
 AM_CFLAGS = @WIN32_CFLAGS@
 
 lib_LTLIBRARIES = libecore_imf.la
-include_HEADERS = \
-Ecore_IMF.h \
-Ecore_IMF_Input_Panel_Key.h
+includes_HEADERS = Ecore_IMF.h Ecore_IMF_Input_Panel_Key.h
+includesdir = $(includedir)/ecore-@VMAJ@
 
 libecore_imf_la_SOURCES = \
 ecore_imf.c \

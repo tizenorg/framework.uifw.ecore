@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifndef _ECORE_IMF_H
 #define _ECORE_IMF_H
 
@@ -447,57 +443,42 @@ extern "C" {
 	int  (*filter_event)        (Ecore_IMF_Context *ctx, Ecore_IMF_Event_Type type, Ecore_IMF_Event *event);
 
 	/* Input Panel Control APIs */
-	int (*ise_show)	            (Ecore_IMF_Context *ctx, Evas_Object *obj, ISE_STATE state);
-	int (*input_panel_hide)	    (Ecore_IMF_Context *ctx);
+//	int (*input_panel_show)	    (Ecore_IMF_Context *ctx);
+//	int (*input_panel_hide)	    (Ecore_IMF_Context *ctx);
 	int (*control_panel_show)   (Ecore_IMF_Context *ctx);
 	int (*control_panel_hide)   (Ecore_IMF_Context *ctx);
 
-	int (*ise_mode_set)         (Ecore_IMF_Context *ctx, ISE_MODE mode);  /* will de deprecated */
-	int (*ise_mode_get)         (Ecore_IMF_Context *ctx, ISE_MODE *mode); /* will de deprecated */
+	int (*input_panel_layout_set)         (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout);
+	Ecore_IMF_Input_Panel_Layout (*input_panel_layout_get)         (Ecore_IMF_Context *ctx);
+
 	int (*input_panel_language_set)       (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang);
-	Ecore_IMF_Input_Panel_Lang (*input_panel_language_get)       (Ecore_IMF_Context *ctx); 
-	int (*ise_get_ise_language) (Ecore_IMF_Context *ctx, const char* input_panel_name, char*** langlist);
-	int (*ise_set_isf_language) (Ecore_IMF_Context *ctx, const char* lang);
+	Ecore_IMF_Input_Panel_Lang (*input_panel_language_get) (Ecore_IMF_Context *ctx); 
 
 	int (*input_panel_imdata_set)         (Ecore_IMF_Context *ctx, const char* data, int len);
 	int (*input_panel_imdata_get)         (Ecore_IMF_Context *ctx, char* data, int *len);
 
-	int (*input_panel_style_set)          (Ecore_IMF_Context *ctx, ISE_STYLE style);  /* will de deprecated */
-	int (*input_panel_style_get)          (Ecore_IMF_Context *ctx, ISE_STYLE *style); /* will de deprecated */
+	void (*input_panel_use_effect_set)      (Ecore_IMF_Context *ctx, Eina_Bool use_effect);
+	int (*input_panel_orient_set)     (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation);
+	
+	void (*input_panel_move) (Ecore_IMF_Context *ctx, int x, int y);
 	int (*input_panel_geometry_get)       (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
 	int (*input_panel_private_key_set)    (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, const char* value);
-	int (*input_panel_private_key_image_set) (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* value); /* will be deprecated */
-
-	int (*input_panel_layout_set)         (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout);
-	Ecore_IMF_Input_Panel_Layout (*input_panel_layout_get)         (Ecore_IMF_Context *ctx);
+	void (*input_panel_key_disabled_set)  (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
+	
 	int (*input_panel_reset)              (Ecore_IMF_Context *ctx); /* Same as reset to default property*/
+	Ecore_IMF_Input_Panel_State (*input_panel_state_get)          (Ecore_IMF_Context *ctx);
 
-	int (*input_panel_orient_set)     (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation);
+	/* CallBack APIs  */
+	void (*input_panel_event_callback_add) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
+	void (*input_panel_event_callback_del) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallbackFunc) (void *data, Ecore_IMF_Context *ctx, int value));
+
+	/* ISF related APIs */
+	int (*ise_get_ise_language)       (Ecore_IMF_Context *ctx, const char* input_panel_name, char*** langlist);
+	int (*ise_set_isf_language)       (Ecore_IMF_Context *ctx, const char* lang);
 	int (*ise_get_active_isename)     (Ecore_IMF_Context *ctx, char* name);       /**< will be deprecated */
 	int (*ise_set_active_ise_by_name) (Ecore_IMF_Context *ctx, const char* name); /**< will be deprecated */
 	int (*ise_set_active_ise_by_uuid) (Ecore_IMF_Context *ctx, const char* uuid); /**< will be deprecated */
 	int (*ise_get_iselist)            (Ecore_IMF_Context *ctx, char*** iselist);  /**< will be deprecated */
-	Ecore_IMF_Input_Panel_State (*input_panel_state_get)          (Ecore_IMF_Context *ctx);
-
-	/* CallBack APIs  */
-	void (*ise_state_add_listener)   (Ecore_IMF_Context *ctx, void (*plistenerCallBackFunc) (ISE_EVENT,int), void *data); /* will be depricated */
-	void (*ise_state_remove_listener)(Ecore_IMF_Context *ctx, int listener_id); /* will be depricated */
-	void (*ise_state_change_listener)(Ecore_IMF_Context *ctx, void (*plistenerCallBackFunc) (ISE_EVENT,int)); /* This API will be depricated */
-
-	void (*input_panel_event_callback_set)  (Ecore_IMF_Context *ctx, void (*plistenerCallBackFunc) (void *, ISE_EVENT, int), void *data); /* will be deprecated */
-	int (*input_panel_initialize)(Ecore_IMF_Context *ctx, Evas_Object * mainwindow); /* will be depricated */
-	const char * (*get_focused_preedit_string)(Ecore_IMF_Context *ctx); /* will be depricated */
-
-	void (*input_panel_key_disabled_set)    (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
-
-	int (*input_panel_show)	                (Ecore_IMF_Context *ctx);
-	
-	void (*input_panel_use_effect_set)      (Ecore_IMF_Context *ctx, Eina_Bool use_effect);
-
-	void (*input_panel_move) (Ecore_IMF_Context *ctx, int x, int y);
-	
-	void (*input_panel_event_callback_add)   (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
-	void (*input_panel_event_callback_del)   (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallbackFunc) (void *data, Ecore_IMF_Context *ctx, int value));
      };
 
    struct _Ecore_IMF_Context_Info

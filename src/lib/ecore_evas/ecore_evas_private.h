@@ -1,6 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
 #ifndef _ECORE_EVAS_PRIVATE_H
 #define _ECORE_EVAS_PRIVATE_H
 
@@ -37,6 +34,9 @@
 #  ifdef BUILD_ECORE_EVAS_XRENDER_XCB
 #   include <xcb/render.h>
 #   include <Evas_Engine_XRender_X11.h>
+#  endif
+#  ifdef BUILD_ECORE_EVAS_SOFTWARE_8_X11
+#   include <Evas_Engine_Software_8_X11.h>
 #  endif
 # endif
 # ifdef HAVE_ECORE_X_XLIB

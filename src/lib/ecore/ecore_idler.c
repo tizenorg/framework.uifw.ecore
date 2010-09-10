@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -16,7 +12,7 @@ struct _Ecore_Idler
 {
    EINA_INLIST;
    ECORE_MAGIC;
-   int        (*func) (void *data);
+   Ecore_Task_Cb func;
    void        *data;
    int          references;
    Eina_Bool    delete_me : 1;
@@ -43,7 +39,7 @@ static int          idlers_delete_me = 0;
  * Idlers are useful for progressively prossessing data without blocking.
  */
 EAPI Ecore_Idler *
-ecore_idler_add(int (*func) (void *data), const void *data)
+ecore_idler_add(Ecore_Task_Cb func, const void *data)
 {
    Ecore_Idler *ie;
 
@@ -73,6 +69,7 @@ ecore_idler_del(Ecore_Idler *idler)
 			 "ecore_idler_del");
 	return NULL;
      }
+   EINA_SAFETY_ON_TRUE_RETURN_VAL(idler->delete_me, NULL);
    idler->delete_me = 1;
    idlers_delete_me = 1;
    return idler->data;
@@ -112,7 +109,10 @@ _ecore_idler_call(void)
 	if (!ie->delete_me)
 	  {
 	     ie->references++;
-	     if (!ie->func(ie->data)) ecore_idler_del(ie);
+	     if (!ie->func(ie->data))
+	       {
+		  if (!ie->delete_me) ecore_idler_del(ie);
+	       }
 	     ie->references--;
 	  }
 	if (idler_current) /* may have changed in recursive main loops */

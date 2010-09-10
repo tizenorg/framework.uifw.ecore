@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -52,6 +48,14 @@
 #include "Ecore.h"
 #include "ecore_private.h"
 
+#ifdef HAVE_SYS_EPOLL_H
+# define HAVE_EPOLL
+# include <sys/epoll.h>
+#endif
+
+#ifdef USE_G_MAIN_LOOP
+#include <glib.h>
+#endif
 
 struct _Ecore_Fd_Handler
 {
@@ -59,11 +63,11 @@ struct _Ecore_Fd_Handler
    ECORE_MAGIC;
    int                      fd;
    Ecore_Fd_Handler_Flags   flags;
-   int                    (*func) (void *data, Ecore_Fd_Handler *fd_handler);
+   Ecore_Fd_Cb              func;
    void                    *data;
-   int                    (*buf_func) (void *data, Ecore_Fd_Handler *fd_handler);
+   Ecore_Fd_Cb              buf_func;
    void                    *buf_data;
-   void                   (*prep_func) (void *data, Ecore_Fd_Handler *fd_handler);
+   Ecore_Fd_Prep_Cb         prep_func;
    void                    *prep_data;
    int                      references;
    Eina_Bool                read_active : 1;
@@ -78,7 +82,7 @@ struct _Ecore_Win32_Handler
    EINA_INLIST;
    ECORE_MAGIC;
    HANDLE         h;
-   int          (*func) (void *data, Ecore_Win32_Handler *win32_handler);
+   Ecore_Fd_Win32_Cb func;
    void          *data;
    int            references;
    Eina_Bool      delete_me : 1;
@@ -87,13 +91,16 @@ struct _Ecore_Win32_Handler
 
 
 static int  _ecore_main_select(double timeout);
+static void _ecore_main_prepare_handlers(void);
 static void _ecore_main_fd_handlers_cleanup(void);
 #ifndef _WIN32
 static void _ecore_main_fd_handlers_bads_rem(void);
 #endif
 static void _ecore_main_fd_handlers_call(void);
 static int  _ecore_main_fd_handlers_buf_call(void);
+#ifndef USE_G_MAIN_LOOP
 static void _ecore_main_loop_iterate_internal(int once_only);
+#endif
 
 #ifdef _WIN32
 static int _ecore_main_win32_select(int nfds, fd_set *readfds, fd_set *writefds,
@@ -113,13 +120,306 @@ static int                  win32_handlers_delete_me = 0;
 #endif
 
 #ifdef _WIN32
-static int (*main_loop_select)(int , fd_set *, fd_set *, fd_set *, struct timeval *) = _ecore_main_win32_select;
+static Ecore_Select_Function main_loop_select = _ecore_main_win32_select;
 #else
-static int (*main_loop_select)(int , fd_set *, fd_set *, fd_set *, struct timeval *) = select;
+static Ecore_Select_Function main_loop_select = select;
 #endif
 
 static double            t1 = 0.0;
 static double            t2 = 0.0;
+
+#ifdef HAVE_EPOLL
+static int epoll_fd = -1;
+#endif
+
+#ifdef USE_G_MAIN_LOOP
+static GSource *ecore_epoll_source;
+static GPollFD ecore_epoll_fd;
+static guint ecore_epoll_id;
+static GMainLoop* ecore_main_loop;
+static gboolean ecore_idling;
+static gboolean ecore_fds_ready;
+#endif
+
+static inline int _ecore_poll_events_from_fdh(Ecore_Fd_Handler *fdh)
+{
+   int events = 0;
+#ifdef HAVE_EPOLL
+   if (fdh->flags & ECORE_FD_READ)  events |= EPOLLIN;
+   if (fdh->flags & ECORE_FD_WRITE) events |= EPOLLOUT;
+   if (fdh->flags & ECORE_FD_ERROR) events |= EPOLLERR;
+#endif
+   return events;
+}
+
+static inline int _ecore_main_fdh_epoll_add(Ecore_Fd_Handler *fdh)
+{
+   int r = 0;
+#ifdef HAVE_EPOLL
+   struct epoll_event ev = {0};
+
+   ev.events = _ecore_poll_events_from_fdh(fdh);
+   ev.data.ptr = fdh;
+   INF("adding poll on %d %08x", fdh->fd, ev.events);
+   r = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fdh->fd, &ev);
+#endif
+   return r;
+}
+
+static inline void _ecore_main_fdh_epoll_del(Ecore_Fd_Handler *fdh)
+{
+#ifdef HAVE_EPOLL
+   struct epoll_event ev = {0};
+   
+   INF("removing poll on %d", fdh->fd);
+   /* could get an EBADF if somebody closed the FD before removing it */
+   if ((epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fdh->fd, &ev) < 0) &&
+       (errno != EBADF))
+     {
+	ERR("Failed to delete epoll fd %d! (errno=%d)", fdh->fd, errno);
+     }
+#endif
+}
+
+static inline int _ecore_main_fdh_epoll_modify(Ecore_Fd_Handler *fdh)
+{
+   int r = 0;
+#ifdef HAVE_EPOLL
+   struct epoll_event ev = {0};
+
+   ev.events = _ecore_poll_events_from_fdh(fdh);
+   ev.data.ptr = fdh;
+   INF("modifing epoll on %d to %08x", fdh->fd, ev.events);
+   r = epoll_ctl(epoll_fd, EPOLL_CTL_MOD, fdh->fd, &ev);
+#endif
+   return r;
+}
+
+#ifdef HAVE_EPOLL
+static inline int _ecore_main_fdh_epoll_mark_active(void)
+{
+   struct epoll_event ev[32] = {0};
+   int i, ret;
+
+   ret = epoll_wait(epoll_fd, ev, sizeof(ev) / sizeof(struct epoll_event), 0);
+   if (ret < 0)
+     {
+        if (errno == EINTR) return -1;
+        ERR("epoll_wait failed %d", errno);
+        return -1;
+     }
+
+   for (i = 0; i < ret; i++)
+     {
+        Ecore_Fd_Handler *fdh;
+        
+        fdh = ev[i].data.ptr;
+        if (!ECORE_MAGIC_CHECK(fdh, ECORE_MAGIC_FD_HANDLER))
+          {
+             ECORE_MAGIC_FAIL(fdh, ECORE_MAGIC_FD_HANDLER,
+                              "_ecore_main_fdh_epoll_mark_active");
+             continue;
+          }
+        if (fdh->delete_me)
+          {
+             ERR("deleted fd in epoll");
+             continue;
+          }
+        if (ev->events & EPOLLIN)
+          fdh->read_active = 1;
+        if (ev->events & EPOLLOUT)
+          fdh->write_active = 1;
+        if (ev->events & EPOLLERR)
+          fdh->error_active = 1;
+     }
+
+   return ret;
+}
+#endif
+
+#ifdef USE_G_MAIN_LOOP
+
+/* like we are about to enter main_loop_select in  _ecore_main_select */
+static gboolean
+_ecore_main_gsource_prepare(GSource *source, gint *next_time)
+{
+   double t = _ecore_timer_next_get();
+   gboolean running;
+
+   INF("enter, next timeout in %.1f", t);
+   in_main_loop++;
+
+   if (!ecore_idling)
+     {
+         while (_ecore_timer_call(_ecore_loop_time));
+          _ecore_timer_cleanup();
+
+         /* when idling, busy loop checking the fds only */
+         if (!ecore_idling) _ecore_idle_enterer_call();
+     }
+
+   /* don't check fds if somebody quit */
+   running = g_main_loop_is_running(ecore_main_loop);
+   if (running)
+     {
+        /* only set idling state in dispatch */
+        if (ecore_idling && !_ecore_idler_exist())
+          {
+             if (_ecore_timers_exists())
+               {
+                  double t = _ecore_timer_next_get();
+                  *next_time = (t / 1000.0);
+               }
+             else
+               *next_time = -1;
+          }
+        else
+          *next_time = 0;
+
+        _ecore_main_prepare_handlers();
+     }
+
+   in_main_loop--;
+   INF("leave, timeout = %d", *next_time);
+
+   /* ready if we're not running (about to quit) */
+   return !running;
+}
+
+static gboolean
+_ecore_main_gsource_check(GSource *source)
+{
+   INF("enter");
+   in_main_loop++;
+
+   ecore_fds_ready = (_ecore_main_fdh_epoll_mark_active() > 0);
+   _ecore_main_fd_handlers_cleanup();
+
+   _ecore_loop_time = ecore_time_get();
+   _ecore_timer_enable_new();
+
+   in_main_loop--;
+   INF("leave");
+
+   return TRUE;	/* always dispatch */
+}
+
+/* like we just came out of main_loop_select in  _ecore_main_select */
+static gboolean
+_ecore_main_gsource_dispatch(GSource *source, GSourceFunc callback, gpointer user_data)
+{
+   gboolean events_ready, timers_ready, idlers_ready, signals_ready;
+   double next_time = _ecore_timer_next_get();
+
+   events_ready = _ecore_event_exist();
+   timers_ready = _ecore_timers_exists() && (0.0 <= next_time);
+   idlers_ready = _ecore_idler_exist();
+   signals_ready = (_ecore_signal_count_get() > 0);
+
+   in_main_loop++;
+   INF("enter idling=%d fds=%d events=%d signals=%d timers=%d (next=%.2f) idlers=%d",
+       ecore_idling, ecore_fds_ready, events_ready, signals_ready,
+       _ecore_timers_exists(), next_time, idlers_ready);
+
+   if (ecore_idling && events_ready)
+     {
+        INF("calling idle exiters");
+        _ecore_idle_exiter_call();
+        ecore_idling = 0;
+     }
+   else if (!ecore_idling && !events_ready)
+     {
+        INF("start idling");
+        ecore_idling = 1;
+     }
+
+   if (ecore_idling)
+     {
+        INF("calling idler");
+        _ecore_idler_call();
+
+        events_ready = _ecore_event_exist();
+        timers_ready = _ecore_timers_exists() && (0.0 <= next_time);
+        idlers_ready = _ecore_idler_exist();
+
+        if ((ecore_fds_ready || events_ready || timers_ready || idlers_ready || signals_ready))
+          {
+             INF("calling idle exiters");
+             _ecore_idle_exiter_call();
+             ecore_idling = 0;
+          }
+     }
+
+   /* process events */
+   if (!ecore_idling)
+     {
+        INF("work");
+        _ecore_main_fd_handlers_call();
+        _ecore_main_fd_handlers_buf_call();
+	while (_ecore_signal_count_get()) _ecore_signal_call();
+        _ecore_event_call();
+	_ecore_main_fd_handlers_cleanup();
+     }
+
+   in_main_loop--;
+
+   INF("leave");
+
+   return TRUE; /* what should be returned here? */
+}
+
+static void
+_ecore_main_gsource_finalize(GSource *source)
+{
+   INF("finalize");
+}
+
+static GSourceFuncs ecore_gsource_funcs = {
+   .prepare  = _ecore_main_gsource_prepare,
+   .check    = _ecore_main_gsource_check,
+   .dispatch = _ecore_main_gsource_dispatch,
+   .finalize = _ecore_main_gsource_finalize,
+};
+
+#endif
+
+void
+_ecore_main_loop_init(void)
+{
+   INF("enter");
+#ifdef HAVE_EPOLL
+   epoll_fd = epoll_create(1);
+   if (epoll_fd < 0)
+     CRIT("Failed to create epoll fd!");
+#endif
+
+#ifdef USE_G_MAIN_LOOP
+   ecore_epoll_source = g_source_new(&ecore_gsource_funcs, sizeof (GSource));
+   if (!ecore_epoll_source)
+     CRIT("Failed to create glib source for epoll!");
+   ecore_epoll_fd.fd = epoll_fd;
+   ecore_epoll_fd.events = G_IO_IN;
+   ecore_epoll_fd.revents = 0;
+   g_source_add_poll(ecore_epoll_source, &ecore_epoll_fd);
+   ecore_epoll_id = g_source_attach(ecore_epoll_source, NULL);
+   if (ecore_epoll_id <= 0)
+     CRIT("Failed to attach glib source to default context");
+#endif
+   INF("leave");
+}
+
+void
+_ecore_main_loop_shutdown(void)
+{
+#ifdef USE_G_MAIN_LOOP
+   g_source_destroy(ecore_epoll_source);
+#endif
+
+#ifdef HAVE_EPOLL
+   close(epoll_fd);
+#endif
+}
+
 
 /**
  * @defgroup Ecore_Main_Loop_Group Main Loop Functions
@@ -149,7 +449,11 @@ static double            t2 = 0.0;
 EAPI void
 ecore_main_loop_iterate(void)
 {
+#ifndef USE_G_MAIN_LOOP
    _ecore_main_loop_iterate_internal(1);
+#else
+    g_main_context_iteration(NULL, 1);
+#endif
 }
 
 /**
@@ -162,10 +466,15 @@ ecore_main_loop_iterate(void)
 EAPI void
 ecore_main_loop_begin(void)
 {
+#ifndef USE_G_MAIN_LOOP
    in_main_loop++;
    while (do_quit == 0) _ecore_main_loop_iterate_internal(0);
    do_quit = 0;
    in_main_loop--;
+#else
+   ecore_main_loop = g_main_loop_new(NULL, FALSE);
+   g_main_loop_run(ecore_main_loop);
+#endif
 }
 
 /**
@@ -176,7 +485,13 @@ ecore_main_loop_begin(void)
 EAPI void
 ecore_main_loop_quit(void)
 {
+#ifndef USE_G_MAIN_LOOP
    do_quit = 1;
+#else
+   INF("enter");
+   g_main_loop_quit(ecore_main_loop);
+   INF("leave");
+#endif
 }
 
 /**
@@ -193,7 +508,7 @@ ecore_main_loop_quit(void)
  * @ingroup Ecore_Main_Loop_Group
  */
 EAPI void
-ecore_main_loop_select_func_set(int (*func) (int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout))
+ecore_main_loop_select_func_set(Ecore_Select_Function func)
 {
    main_loop_select = func;
 }
@@ -249,7 +564,8 @@ ecore_main_loop_select_func_get(void)
  * @ingroup Ecore_FD_Handler_Group
  */
 EAPI Ecore_Fd_Handler *
-ecore_main_fd_handler_add(int fd, Ecore_Fd_Handler_Flags flags, int (*func) (void *data, Ecore_Fd_Handler *fd_handler), const void *data, int (*buf_func) (void *buf_data, Ecore_Fd_Handler *fd_handler), const void *buf_data)
+ecore_main_fd_handler_add(int fd, Ecore_Fd_Handler_Flags flags, Ecore_Fd_Cb func, const void *data,
+                          Ecore_Fd_Cb buf_func, const void *buf_data)
 {
    Ecore_Fd_Handler *fdh;
 
@@ -260,6 +576,12 @@ ecore_main_fd_handler_add(int fd, Ecore_Fd_Handler_Flags flags, int (*func) (voi
    ECORE_MAGIC_SET(fdh, ECORE_MAGIC_FD_HANDLER);
    fdh->fd = fd;
    fdh->flags = flags;
+   if (0 > _ecore_main_fdh_epoll_add(fdh))
+     {
+	ERR("Failed to add epoll fd %d (errno = %d)!", fd, errno);
+	free(fdh);
+	return NULL;
+     }
    fdh->read_active = 0;
    fdh->write_active = 0;
    fdh->error_active = 0;
@@ -276,9 +598,7 @@ ecore_main_fd_handler_add(int fd, Ecore_Fd_Handler_Flags flags, int (*func) (voi
 
 #ifdef _WIN32
 EAPI Ecore_Win32_Handler *
-ecore_main_win32_handler_add(void *h,
-                             int (*func) (void *data, Ecore_Win32_Handler *wh),
-                             const void *data)
+ecore_main_win32_handler_add(void *h, Ecore_Fd_Win32_Cb func, const void *data)
 {
    Ecore_Win32_Handler *wh;
 
@@ -298,8 +618,7 @@ ecore_main_win32_handler_add(void *h,
 }
 #else
 EAPI Ecore_Win32_Handler *
-ecore_main_win32_handler_add(void *h __UNUSED__,
-                             int (*func) (void *data, Ecore_Win32_Handler *wh) __UNUSED__,
+ecore_main_win32_handler_add(void *h __UNUSED__, Ecore_Fd_Win32_Cb func __UNUSED__,
                              const void *data __UNUSED__)
 {
    return NULL;
@@ -312,6 +631,11 @@ ecore_main_win32_handler_add(void *h __UNUSED__,
  * @return  The data pointer set using @ref ecore_main_fd_handler_add,
  *          for @p fd_handler on success.  @c NULL otherwise.
  * @ingroup Ecore_FD_Handler_Group
+ *
+ * Beware that if the fd is already closed, ecore may complain if it uses
+ * epoll internally, and that in some rare cases this may be able to cause
+ * crashes and instability. Remember to delete your fd handlers before the
+ * fd's they listen to are closed.
  */
 EAPI void *
 ecore_main_fd_handler_del(Ecore_Fd_Handler *fd_handler)
@@ -324,6 +648,7 @@ ecore_main_fd_handler_del(Ecore_Fd_Handler *fd_handler)
      }
    fd_handler->delete_me = 1;
    fd_handlers_delete_me = 1;
+   _ecore_main_fdh_epoll_del(fd_handler);
    return fd_handler->data;
 }
 
@@ -350,7 +675,7 @@ ecore_main_win32_handler_del(Ecore_Win32_Handler *win32_handler __UNUSED__)
 #endif
 
 EAPI void
-ecore_main_fd_handler_prepare_callback_set(Ecore_Fd_Handler *fd_handler, void (*func) (void *data, Ecore_Fd_Handler *fd_handler), const void *data)
+ecore_main_fd_handler_prepare_callback_set(Ecore_Fd_Handler *fd_handler, Ecore_Fd_Prep_Cb func, const void *data)
 {
    if (!ECORE_MAGIC_CHECK(fd_handler, ECORE_MAGIC_FD_HANDLER))
      {
@@ -423,6 +748,10 @@ ecore_main_fd_handler_active_set(Ecore_Fd_Handler *fd_handler, Ecore_Fd_Handler_
 	return;
      }
    fd_handler->flags = flags;
+   if (0 > _ecore_main_fdh_epoll_modify(fd_handler))
+     {
+       ERR("Failed to mod epoll fd %d!", fd_handler->fd);
+     }
 }
 
 void
@@ -464,6 +793,23 @@ _ecore_main_shutdown(void)
 #endif
 }
 
+static void
+_ecore_main_prepare_handlers(void)
+{
+   Ecore_Fd_Handler *fdh;
+
+   /* call the prepare callback for all handlers */
+   EINA_INLIST_FOREACH(fd_handlers, fdh)
+     {
+        if (!fdh->delete_me && fdh->prep_func)
+          {
+             fdh->references++;
+             fdh->prep_func (fdh->prep_data, fdh);
+             fdh->references--;
+          }
+     }
+}
+
 static int
 _ecore_main_select(double timeout)
 {
@@ -471,7 +817,6 @@ _ecore_main_select(double timeout)
    fd_set         rfds, wfds, exfds;
    int            max_fd;
    int            ret;
-   Ecore_Fd_Handler *fdh;
 
    t = NULL;
    if ((!finite(timeout)) || (timeout == 0.0))  /* finite() tests for NaN, too big, too small, and infinity.  */
@@ -502,15 +847,10 @@ _ecore_main_select(double timeout)
    FD_ZERO(&exfds);
 
    /* call the prepare callback for all handlers */
-   EINA_INLIST_FOREACH(fd_handlers, fdh)
-     {
-        if (!fdh->delete_me && fdh->prep_func)
-          {
-             fdh->references++;
-             fdh->prep_func (fdh->prep_data, fdh);
-             fdh->references--;
-          }
-     }
+   _ecore_main_prepare_handlers();
+#ifndef HAVE_EPOLL
+   Ecore_Fd_Handler *fdh;
+
    EINA_INLIST_FOREACH(fd_handlers, fdh)
      {
         if (!fdh->delete_me)
@@ -532,6 +872,12 @@ _ecore_main_select(double timeout)
                }
           }
      }
+#else /* HAVE_EPOLL */
+   /* polling on the epoll fd will wake when an fd in the epoll set is active */
+   FD_SET(epoll_fd, &rfds);
+   max_fd = epoll_fd;
+#endif /* HAVE_EPOLL */
+
    if (_ecore_signal_count_get()) return -1;
 
    ret = main_loop_select(max_fd + 1, &rfds, &wfds, &exfds, t);
@@ -541,22 +887,29 @@ _ecore_main_select(double timeout)
      {
 #ifndef _WIN32
 	if (errno == EINTR) return -1;
-	else if (errno == EBADF)
-          _ecore_main_fd_handlers_bads_rem();
+	else if (errno == EBADF) _ecore_main_fd_handlers_bads_rem();
 #endif
      }
    if (ret > 0)
      {
+#ifdef HAVE_EPOLL
+        _ecore_main_fdh_epoll_mark_active();
+#else /* HAVE_EPOLL */
+        Ecore_Fd_Handler *fdh;
+
 	EINA_INLIST_FOREACH(fd_handlers, fdh)
-	  if (!fdh->delete_me)
-	    {
-	       if (FD_ISSET(fdh->fd, &rfds))
-		 fdh->read_active = 1;
-	       if (FD_ISSET(fdh->fd, &wfds))
-		 fdh->write_active = 1;
-	       if (FD_ISSET(fdh->fd, &exfds))
-		 fdh->error_active = 1;
-	    }
+          {
+             if (!fdh->delete_me)
+               {
+                  if (FD_ISSET(fdh->fd, &rfds))
+                     fdh->read_active = 1;
+                  if (FD_ISSET(fdh->fd, &wfds))
+                     fdh->write_active = 1;
+                  if (FD_ISSET(fdh->fd, &exfds))
+                     fdh->error_active = 1;
+               }
+          }
+#endif /* HAVE_EPOLL */
 	_ecore_main_fd_handlers_cleanup();
 #ifdef _WIN32
 	_ecore_main_win32_handlers_cleanup();
@@ -638,10 +991,10 @@ _ecore_main_fd_handlers_cleanup(void)
 		  deleted_in_use++;
 		  continue;
 	       }
-
+             
 	     fd_handlers = (Ecore_Fd_Handler *)
-               eina_inlist_remove(EINA_INLIST_GET(fd_handlers),
-                                  EINA_INLIST_GET(fdh));
+                eina_inlist_remove(EINA_INLIST_GET(fd_handlers),
+                                   EINA_INLIST_GET(fdh));
 	     ECORE_MAGIC_SET(fdh, ECORE_MAGIC_NONE);
 	     free(fdh);
 	  }
@@ -670,10 +1023,10 @@ _ecore_main_win32_handlers_cleanup(void)
 		  deleted_in_use++;
 		  continue;
 	       }
-
+             
              win32_handlers = (Ecore_Win32_Handler *)
-               eina_inlist_remove(EINA_INLIST_GET(win32_handlers),
-                                  EINA_INLIST_GET(wh));
+                eina_inlist_remove(EINA_INLIST_GET(win32_handlers),
+                                   EINA_INLIST_GET(wh));
              ECORE_MAGIC_SET(wh, ECORE_MAGIC_NONE);
              free(wh);
           }
@@ -751,6 +1104,7 @@ _ecore_main_fd_handlers_buf_call(void)
    return ret;
 }
 
+#ifndef USE_G_MAIN_LOOP
 static void
 _ecore_main_loop_iterate_internal(int once_only)
 {
@@ -899,6 +1253,7 @@ _ecore_main_loop_iterate_internal(int once_only)
    if (once_only) _ecore_idle_enterer_call();
    in_main_loop--;
 }
+#endif
 
 #ifdef _WIN32
 static int

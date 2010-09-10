@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -59,14 +55,14 @@ struct _Ecore_Pipe
    int               fd_write;
    Ecore_Fd_Handler *fd_handler;
    const void       *data;
-   void            (*handler) (void *data, void *buffer, unsigned int nbyte);
+   Ecore_Pipe_Cb     handler;
    unsigned int      len;
    size_t            already_read;
    void             *passed_data;
 };
 
 
-static int _ecore_pipe_read(void *data, Ecore_Fd_Handler *fd_handler);
+static Eina_Bool _ecore_pipe_read(void *data, Ecore_Fd_Handler *fd_handler);
 
 /**
  * @defgroup Ecore_Pipe_Group Pipe wrapper
@@ -282,8 +278,7 @@ static int _ecore_pipe_read(void *data, Ecore_Fd_Handler *fd_handler);
  * @ingroup Ecore_Pipe_Group
  */
 EAPI Ecore_Pipe *
-ecore_pipe_add(void (*handler) (void *data, void *buffer, unsigned int nbyte),
-               const void *data)
+ecore_pipe_add(Ecore_Pipe_Cb handler, const void *data)
 {
    Ecore_Pipe *p;
    int         fds[2];
@@ -386,7 +381,7 @@ ecore_pipe_write_close(Ecore_Pipe *p)
  * @return       Returns EINA_TRUE on a successful write, EINA_FALSE on an error
  * @ingroup Ecore_Pipe_Group
  */
-EAPI int
+EAPI Eina_Bool
 ecore_pipe_write(Ecore_Pipe *p, const void *buffer, unsigned int nbytes)
 {
    ssize_t ret;
@@ -474,7 +469,7 @@ ecore_pipe_write(Ecore_Pipe *p, const void *buffer, unsigned int nbytes)
 
 /* Private function */
 
-static int
+static Eina_Bool
 _ecore_pipe_read(void *data, Ecore_Fd_Handler *fd_handler __UNUSED__)
 {
    Ecore_Pipe  *p;
