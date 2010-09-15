@@ -49,8 +49,8 @@
 #include "ecore_private.h"
 
 #ifdef HAVE_SYS_EPOLL_H
-//# define HAVE_EPOLL
-//# include <sys/epoll.h>
+# define HAVE_EPOLL
+# include <sys/epoll.h>
 #endif
 
 #ifdef USE_G_MAIN_LOOP
