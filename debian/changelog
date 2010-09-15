@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.51480slp2+build04) unstable; urgency=low
+
+  * add as-needed
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build04
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Wed, 15 Sep 2010 10:00:16 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build03) unstable; urgency=low
 
   * repackage for stopping EPOLL fucntionality

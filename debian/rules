@@ -13,6 +13,7 @@ DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb \
 	--disable-rpath \
 	--disable-openssl \
 	--disable-gnutls \
+	--disable-tslib \
 	--enable-doc \
 	--enable-simple-x11 \
 	--enable-ecore-evas-opengl-x11 \
@@ -25,8 +26,8 @@ DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb \
 	--disable-xim
 
 DEB_MAKE_CLEAN_TARGET := distclean
-CFLAGS += -fvisibility=hidden
-LDFLAGS += -fvisibility=hidden
+CFLAGS += -fvisibility=hidden -fPIC
+LDFLAGS += -fvisibility=hidden -Wl,--hash-style=both -Wl,--as-needed
 
 build/libecore-doc::
 	cd $(DEB_SRCDIR)/doc && make doc

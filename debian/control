@@ -9,7 +9,7 @@ Build-Depends: dpkg-dev, debhelper (>= 6), cdbs, libeina-dev (>= 0.0.2.060+svn20
  libeet-dev (>= 1.0.0), libevas-dev , libglib2.0-dev,
  libxcursor-dev, libxrender-dev, libxinerama-dev,
  libxrandr-dev, libxext-dev, libxcomposite-dev, libjpeg7-dev,
- libxdamage-dev, x11proto-xext-dev, libxtst-dev, doxygen, pkg-config, libtool, libcurl-dev, libts-calibration-dev
+ libxdamage-dev, x11proto-xext-dev, libxtst-dev, doxygen, pkg-config, libtool, libcurl-dev
 Standards-Version: 3.8.1
 Homepage: http://enlightenment.org
 
@@ -155,7 +155,7 @@ Depends: ${misc:Depends}, libecore (= ${binary:Version}),
          libecore-data (= ${binary:Version}),
          libeet-dev, libevas-dev (>= 0.9.9.060), libeina-dev, pkg-config, libcurl-dev,
          libxcursor-dev, libxrender-dev, libxinerama-dev, libxrandr-dev, libxext-dev,
-         libxcomposite-dev, libxdamage-dev, x11proto-xext-dev, libxtst-dev, libglib2.0-dev, libts-calibration-dev
+         libxcomposite-dev, libxdamage-dev, x11proto-xext-dev, libxtst-dev, libglib2.0-dev
 Description: Ecore headers and static libraries
  This is the core event abstraction layer and X abstraction layer that makes
  doing selections, Xdnd, general X stuff, and event loops, timeouts and idle
