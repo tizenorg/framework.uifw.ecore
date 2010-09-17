@@ -1404,3 +1404,15 @@ ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx, int x, int y)
    ctx->input_panel_x = x;
    ctx->input_panel_y = y;
 }
+
+EAPI void      
+ecore_imf_context_input_panel_shift_mode_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Shift_Mode mode)
+{
+   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
+     {
+	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_shift_mode_set");
+	return;
+     }
+
+   if (ctx->klass->input_panel_shift_mode_set) ctx->klass->input_panel_shift_mode_set(ctx, mode);
+}
