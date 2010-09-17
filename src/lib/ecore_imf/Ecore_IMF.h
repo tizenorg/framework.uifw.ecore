@@ -174,15 +174,15 @@ extern "C" {
    // will be deleted soon
    typedef struct 
      {
-        bool fUseImEffect;  /**< whether use Im effect or not */	
+        bool fUseImEffect;  /**< whether use Im effect or not */
      } ISE_STYLE;
 
    typedef enum
      {
-        ECORE_IMF_INPUT_PANEL_SHIFT_MODE_OFF,	/**< Off */
-        ECORE_IMF_INPUT_PANEL_SHIFT_MODE_ON,	/**< On */ 
-        ECORE_IMF_INPUT_PANEL_SHIFT_MODE_LOCK,	/**< Lock */
-     } Ecore_IMF_Input_Panel_Shift_Mode;
+        ECORE_IMF_INPUT_PANEL_CAPS_MODE_OFF,	/**< Off */
+        ECORE_IMF_INPUT_PANEL_CAPS_MODE_ON,	/**< On */ 
+        ECORE_IMF_INPUT_PANEL_CAPS_MODE_LOCK,	/**< Lock */
+     } Ecore_IMF_Input_Panel_Caps_Mode;
 
    typedef enum 
      {
@@ -488,7 +488,7 @@ extern "C" {
         int (*ise_set_active_ise_by_name) (Ecore_IMF_Context *ctx, const char* name); /**< will be deprecated */
         int (*ise_set_active_ise_by_uuid) (Ecore_IMF_Context *ctx, const char* uuid); /**< will be deprecated */
         int (*ise_get_iselist)            (Ecore_IMF_Context *ctx, char*** iselist);  /**< will be deprecated */
-        int (*input_panel_shift_mode_set) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Shift_Mode mode);
+        int (*input_panel_caps_mode_set)  (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Caps_Mode mode);
      };
 
    struct _Ecore_IMF_Context_Info
@@ -1237,7 +1237,7 @@ extern "C" {
     */
    EAPI void ecore_imf_context_input_panel_move  (Ecore_IMF_Context *ctx, int x, int y);
 
-   EAPI void ecore_imf_context_input_panel_shift_mode_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Shift_Mode mode);
+   EAPI void ecore_imf_context_input_panel_caps_mode_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Caps_Mode mode);
 
    /* The following entry points must be exported by each input method module
     */

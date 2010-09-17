@@ -1406,13 +1406,13 @@ ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx, int x, int y)
 }
 
 EAPI void      
-ecore_imf_context_input_panel_shift_mode_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Shift_Mode mode)
+ecore_imf_context_input_panel_caps_mode_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Caps_Mode mode)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_shift_mode_set");
+	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_caps_mode_set");
 	return;
      }
 
-   if (ctx->klass->input_panel_shift_mode_set) ctx->klass->input_panel_shift_mode_set(ctx, mode);
+   if (ctx->klass->input_panel_caps_mode_set) ctx->klass->input_panel_caps_mode_set(ctx, mode);
 }
