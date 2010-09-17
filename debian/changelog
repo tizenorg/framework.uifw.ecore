@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.51480slp2+build07) unstable; urgency=low
+
+  * Repackage for epoll disable
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build07
+
+ -- Hyoyoung Chang <hyoyoung.chang@samsung.com>  Fri, 17 Sep 2010 12:03:07 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build06) unstable; urgency=low
 
   * Repackage for epoll disable

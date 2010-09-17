@@ -185,10 +185,15 @@ static Eina_Bool _timer1(void *data)
 
 START_TEST(ecore_test_ecore_main_loop_timer_inner)
 {
+   Ecore_Timer *timer;
+   int ret;
    int times = 0;
 
-   ecore_init();
-   ecore_timer_add(1.0, _timer1, &times);
+   ret = ecore_init();
+   fail_if(ret != 1);
+
+   timer = ecore_timer_add(1.0, _timer1, &times);
+   fail_if(timer == NULL);
 
    /* BEGIN: outer mainloop */
    ecore_main_loop_begin();
@@ -201,7 +206,9 @@ END_TEST
 static Eina_Bool
 _fd_handler_cb(void *data, Ecore_Fd_Handler *handler __UNUSED__)
 {
+   /* FIXME: why setting val if it is overwritten just after and what is its purpose ??? */
    Eina_Bool *val = data;
+
    *val = EINA_TRUE;
    ecore_main_loop_quit();
    return EINA_FALSE;
@@ -242,7 +249,9 @@ END_TEST
 static Eina_Bool
 _event_handler_cb(void *data, int type __UNUSED__, void *event __UNUSED__)
 {
+   /* FIXME: why setting val if it is overwritten just after and what is its purpose ??? */
    Eina_Bool *val = data;
+
    *val = EINA_TRUE;
    ecore_main_loop_quit();
    return EINA_FALSE;
@@ -320,11 +329,13 @@ START_TEST(ecore_test_ecore_main_loop_event_recursive)
     */
    Ecore_Event *e;
    int type;
+   int ret;
 
    _log_dom = eina_log_domain_register("test", EINA_COLOR_CYAN);
 
    INF("main: begin");
-   ecore_init();
+   ret = ecore_init();
+   fail_if(ret != 1);
 
 
    type = ecore_event_type_new();
@@ -340,28 +351,6 @@ START_TEST(ecore_test_ecore_main_loop_event_recursive)
 }
 END_TEST
 
-/* TODO: change to HAVE_ECORE_X when xcb implementation is done */
-#ifdef HAVE_ECORE_X_XLIB
-
-START_TEST(ecore_test_ecore_x_bell)
-{
-   int ret = 0, i;
-   ecore_x_init(NULL);
-
-   printf("You should hear 3 beeps now.\n");
-   for (i=0; i < 3; i++)
-     {
-	ret = ecore_x_bell(0);
-	fail_if(ret != EINA_TRUE);
-	ecore_x_sync();
-	sleep(1);
-     }
-   ecore_x_shutdown();
-}
-END_TEST
-
-#endif
-
 void ecore_test_ecore(TCase *tc)
 {
    tcase_add_test(tc, ecore_test_ecore_init);
@@ -374,9 +363,4 @@ void ecore_test_ecore(TCase *tc)
    tcase_add_test(tc, ecore_test_ecore_main_loop_event);
    tcase_add_test(tc, ecore_test_ecore_main_loop_timer_inner);
    tcase_add_test(tc, ecore_test_ecore_main_loop_event_recursive);
-
-/* TODO: change to HAVE_ECORE_X when xcb implementation is done */
-#ifdef HAVE_ECORE_X_XLIB
-   tcase_add_test(tc, ecore_test_ecore_x_bell);
-#endif
 }
