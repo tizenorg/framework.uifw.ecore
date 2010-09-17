@@ -580,7 +580,6 @@ _ecore_x_selection_converter_text(char         *target,
    char *mystr;
    XICCEncodingStyle style;
 
-   fprintf(stderr, "## EX - sel1\n");
    if (!data || !size)
       return 0;
 
@@ -599,19 +598,13 @@ _ecore_x_selection_converter_text(char         *target,
    else
       return 0;
 
-   fprintf(stderr, "## EX - sel2\n");
-
    if (!(mystr = strdup(data)))
       return 0;
-
-   fprintf(stderr, "## EX - sel3\n");
 
 #ifdef X_HAVE_UTF8_STRING
    if (Xutf8TextListToTextProperty(_ecore_x_disp, &mystr, 1, style,
                                    &text_prop) == Success)
      {
-   fprintf(stderr, "## EX - sel3-1\n");
-
         int bufsize = strlen((char *)text_prop.value) + 1;
         *data_ret = malloc(bufsize);
         memcpy(*data_ret, text_prop.value, bufsize);
@@ -625,8 +618,6 @@ _ecore_x_selection_converter_text(char         *target,
    if (XmbTextListToTextProperty(_ecore_x_disp, &mystr, 1, style,
                                  &text_prop) == Success)
      {
-   fprintf(stderr, "## EX - sel4-1\n");
-
         int bufsize = strlen(text_prop.value) + 1;
         *data_ret = malloc(bufsize);
         memcpy(*data_ret, text_prop.value, bufsize);
@@ -639,13 +630,10 @@ _ecore_x_selection_converter_text(char         *target,
 #endif /* ifdef X_HAVE_UTF8_STRING */
    else
      {
-   fprintf(stderr, "## EX - sel4-2\n");
-
         free(mystr);
         return 0;
      }
 
-   fprintf(stderr, "## EX - sel5\n");
 
 } /* _ecore_x_selection_converter_text */
 
