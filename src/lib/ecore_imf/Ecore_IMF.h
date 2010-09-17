@@ -58,148 +58,155 @@ extern "C" {
    /* ecore_imf_context_ise_state_add_listener() flag */
    typedef enum 
      {
-	ISE_STATE_EVENT,                /**< ISE STATE Event */
-	ISE_MODE_EVENT,                 /**< ISE MODE Event */
-	ISE_LANGUAGE_EVENT,             /**< ISE LANGUAGE Event */
-	ISE_SHIFT_MODE_EVENT,           /**< ISE SHIFT MODE */
-	ISE_PREEDIT_MODE_EVENT,         /**< ISE PREEDIT MODE */
-	ISE_COMPLETION_MODE_EVENT,      /**< ISE COMPLETION MODE */
-	ISE_CUSTOM_INPUT_MODE_EVENT,    /**< ISE CUSTOM INPUT MODE */
+        ISE_STATE_EVENT,                /**< ISE STATE Event */
+        ISE_MODE_EVENT,                 /**< ISE MODE Event */
+        ISE_LANGUAGE_EVENT,             /**< ISE LANGUAGE Event */
+        ISE_SHIFT_MODE_EVENT,           /**< ISE SHIFT MODE */
+        ISE_PREEDIT_MODE_EVENT,         /**< ISE PREEDIT MODE */
+        ISE_COMPLETION_MODE_EVENT,      /**< ISE COMPLETION MODE */
+        ISE_CUSTOM_INPUT_MODE_EVENT,    /**< ISE CUSTOM INPUT MODE */
 
-	ISE_PRIVATE_CONTEXT_01,  /**< ISE PRIVATE CONTEXT */
-	ISE_PRIVATE_CONTEXT_02,  /**< ISE PRIVATE CONTEXT */
-	ISE_PRIVATE_CONTEXT_03,  /**< ISE PRIVATE CONTEXT */
-	ISE_PRIVATE_CONTEXT_04,  /**< ISE PRIVATE CONTEXT */
-	ISE_PRIVATE_CONTEXT_05,  /**< ISE PRIVATE CONTEXT */
-	ISE_PRIVATE_CONTEXT_06,  /**< ISE PRIVATE CONTEXT */
-	ISE_PRIVATE_CONTEXT_07,  /**< ISE PRIVATE CONTEXT */
-	ISE_PRIVATE_CONTEXT_08,  /**< ISE PRIVATE CONTEXT */
-	ISE_PRIVATE_CONTEXT_09,  /**< ISE PRIVATE CONTEXT */
-	ISE_PRIVATE_CONTEXT_10,  /**< ISE PRIVATE CONTEXT */
-	ISE_EVENT_INVALID
+        ISE_PRIVATE_CONTEXT_01,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_02,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_03,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_04,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_05,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_06,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_07,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_08,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_09,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_10,  /**< ISE PRIVATE CONTEXT */
+        ISE_EVENT_INVALID
      } ISE_EVENT;
 
    /* ecore_imf_context_input_panel_event_callback_add() flag */
    typedef enum 
      {
-	ECORE_IMF_INPUT_PANEL_STATE_EVENT,              /**< Input Panel STATE Event */
-	ECORE_IMF_INPUT_PANEL_MODE_EVENT,               /**< Input Panel MODE Event */
-	ECORE_IMF_INPUT_PANEL_LANGUAGE_EVENT,           /**< Input Panel LANGUAGE Event */
-	ECORE_IMF_INPUT_PANEL_SHIFT_MODE_EVENT,         /**< Input Panel SHIFT MODE */
-	ECORE_IMF_INPUT_PANEL_PREEDIT_MODE_EVENT,       /**< Input Panel PREEDIT MODE */
-	ECORE_IMF_INPUT_PANEL_COMPLETION_MODE_EVENT,    /**< Input Panel COMPLETION MODE */
-	ECORE_IMF_INPUT_PANEL_CUSTOM_INPUT_MODE_EVENT,  /**< Input Panel CUSTOM INPUT MODE */
+        ECORE_IMF_INPUT_PANEL_STATE_EVENT,              /**< Input Panel STATE Event */
+        ECORE_IMF_INPUT_PANEL_MODE_EVENT,               /**< Input Panel MODE Event */
+        ECORE_IMF_INPUT_PANEL_LANGUAGE_EVENT,           /**< Input Panel LANGUAGE Event */
+        ECORE_IMF_INPUT_PANEL_SHIFT_MODE_EVENT,         /**< Input Panel SHIFT MODE */
+        ECORE_IMF_INPUT_PANEL_PREEDIT_MODE_EVENT,       /**< Input Panel PREEDIT MODE */
+        ECORE_IMF_INPUT_PANEL_COMPLETION_MODE_EVENT,    /**< Input Panel COMPLETION MODE */
+        ECORE_IMF_INPUT_PANEL_CUSTOM_INPUT_MODE_EVENT,  /**< Input Panel CUSTOM INPUT MODE */
 
-	ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_01,       /**< Input Panel PRIVATE CONTEXT */
-	ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_02,       /**< Input Panel PRIVATE CONTEXT */
-	ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_03,       /**< Input Panel PRIVATE CONTEXT */
-	ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_04,       /**< Input Panel PRIVATE CONTEXT */
-	ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_05,       /**< Input Panel PRIVATE CONTEXT */
-	ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_06,       /**< Input Panel PRIVATE CONTEXT */
-	ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_07,       /**< Input Panel PRIVATE CONTEXT */
-	ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_08,       /**< Input Panel PRIVATE CONTEXT */
-	ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_09,       /**< Input Panel PRIVATE CONTEXT */
-	ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_10,       /**< Input Panel PRIVATE CONTEXT */
-	ECORE_IMF_INPUT_PANEL_EVENT_INVALID
+        ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_01,       /**< Input Panel PRIVATE CONTEXT */
+        ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_02,       /**< Input Panel PRIVATE CONTEXT */
+        ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_03,       /**< Input Panel PRIVATE CONTEXT */
+        ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_04,       /**< Input Panel PRIVATE CONTEXT */
+        ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_05,       /**< Input Panel PRIVATE CONTEXT */
+        ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_06,       /**< Input Panel PRIVATE CONTEXT */
+        ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_07,       /**< Input Panel PRIVATE CONTEXT */
+        ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_08,       /**< Input Panel PRIVATE CONTEXT */
+        ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_09,       /**< Input Panel PRIVATE CONTEXT */
+        ECORE_IMF_INPUT_PANEL_PRIVATE_CONTEXT_10,       /**< Input Panel PRIVATE CONTEXT */
+        ECORE_IMF_INPUT_PANEL_EVENT_INVALID
      } Ecore_IMF_Input_Panel_Event;
 
    // will be deleted soon. Use Ecore_IMF_Input_Panel_State instead.
    typedef enum 
      {
-	ISE_STATE_SHOW,         /**< Show ISE */
-	ISE_STATE_SHOW_ALWAYS,  /**< Show ISE always*/
-	ISE_STATE_HIDE,         /**< Hide ISE */
-	ISE_STATE_INVALID
+        ISE_STATE_SHOW,         /**< Show ISE */
+        ISE_STATE_SHOW_ALWAYS,  /**< Show ISE always*/
+        ISE_STATE_HIDE,         /**< Hide ISE */
+        ISE_STATE_INVALID
      } ISE_STATE;
 
    typedef enum 
      {
-	ECORE_IMF_INPUT_PANEL_STATE_SHOW,         /**< Show Input panel */
-	ECORE_IMF_INPUT_PANEL_STATE_HIDE,         /**< Hide Input panel */
-	ECORE_IMF_INPUT_PANEL_STATE_INVALID
+        ECORE_IMF_INPUT_PANEL_STATE_SHOW,         /**< Show Input panel */
+        ECORE_IMF_INPUT_PANEL_STATE_HIDE,         /**< Hide Input panel */
+        ECORE_IMF_INPUT_PANEL_STATE_INVALID
      } Ecore_IMF_Input_Panel_State;
 
    // will be deleted soon, Use Ecore_IMF_Input_Mode instead.
    typedef enum 
      {
-	ISE_MODE_NATIVE,        /**< Follow current locale mode */
-	ISE_MODE_ENGLISH,       /**< English mode*/
-	ISE_MODE_NUMBER,        /**< Number mode*/
-	ISE_MODE_INVALID
+        ISE_MODE_NATIVE,        /**< Follow current locale mode */
+        ISE_MODE_ENGLISH,       /**< English mode*/
+        ISE_MODE_NUMBER,        /**< Number mode*/
+        ISE_MODE_INVALID
      } ISE_MODE;
 
    typedef enum 
      {
-	ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL,          /**< Default 4x4 layout */
-	ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBER,          /**< Number layout */
-	ECORE_IMF_INPUT_PANEL_LAYOUT_EMAIL,           /**< Email layout */
-	ECORE_IMF_INPUT_PANEL_LAYOUT_URL,             /**< URL layout */
-	ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER,     /**< Phone Number layout */
-	ECORE_IMF_INPUT_PANEL_LAYOUT_IP,              /**< IP layout */
-	ECORE_IMF_INPUT_PANEL_LAYOUT_MONTH,           /**< Month layout */	
-	ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY,      /**< Number Only layout */
-	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_1 = 100,  /* Reserved for future use */
-	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_2,
-	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_3,
-	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_4,
-	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_5,
-	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_6,
-	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_7,
-	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_8,
-	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_9,
-	ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_10,	
-	ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID
+        ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL,          /**< Default 4x4 layout */
+        ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBER,          /**< Number layout */
+        ECORE_IMF_INPUT_PANEL_LAYOUT_EMAIL,           /**< Email layout */
+        ECORE_IMF_INPUT_PANEL_LAYOUT_URL,             /**< URL layout */
+        ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER,     /**< Phone Number layout */
+        ECORE_IMF_INPUT_PANEL_LAYOUT_IP,              /**< IP layout */
+        ECORE_IMF_INPUT_PANEL_LAYOUT_MONTH,           /**< Month layout */	
+        ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY,      /**< Number Only layout */
+        ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_1 = 100,  /* Reserved for future use */
+        ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_2,
+        ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_3,
+        ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_4,
+        ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_5,
+        ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_6,
+        ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_7,
+        ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_8,
+        ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_9,
+        ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_10,	
+        ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID
      } Ecore_IMF_Input_Panel_Layout;
 
    typedef enum
      {
-	ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC,  /**< Automatic */
-	ECORE_IMF_INPUT_PANEL_LANG_ALPHABET,   /**< Alphabet */
+        ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC,  /**< Automatic */
+        ECORE_IMF_INPUT_PANEL_LANG_ALPHABET    /**< Alphabet */
      } Ecore_IMF_Input_Panel_Lang;
 
    typedef enum
      {
-	ECORE_IMF_KEYBOARD_LANG_NATIVE,    /**< Native */
-	ECORE_IMF_KEYBOARD_LANG_ALPHABET,  /**< Alphabet */
+        ECORE_IMF_KEYBOARD_LANG_NATIVE,    /**< Native */
+        ECORE_IMF_KEYBOARD_LANG_ALPHABET   /**< Alphabet */
      } Ecore_IMF_Keyboard_Lang;
 
    typedef enum 
      {
-	ECORE_IMF_AUTOCORRECTION_DEFAULT,
-	ECORE_IMF_AUTOCORRECTION_NO,
-	ECORE_IMF_AUTOCORRECTION_YES,
-	ECORE_IMF_AUTOCORRECTION_INVALID
+        ECORE_IMF_AUTOCORRECTION_DEFAULT,
+        ECORE_IMF_AUTOCORRECTION_NO,
+        ECORE_IMF_AUTOCORRECTION_YES,
+        ECORE_IMF_AUTOCORRECTION_INVALID
      } Ecore_IMF_Autocorrection;
 
    // will be deleted soon
    typedef struct 
      {
-	bool fUseImEffect;  /**< whether use Im effect or not */	
+        bool fUseImEffect;  /**< whether use Im effect or not */	
      } ISE_STYLE;
+
+   typedef enum
+     {
+        ECORE_IMF_INPUT_PANEL_SHIFT_MODE_OFF,	/**< Off */
+        ECORE_IMF_INPUT_PANEL_SHIFT_MODE_ON,	/**< On */ 
+        ECORE_IMF_INPUT_PANEL_SHIFT_MODE_LOCK,	/**< Lock */
+     } Ecore_IMF_Input_Panel_Shift_Mode;
 
    typedef enum 
      {
-	ECORE_IMF_INPUT_PANEL_ORIENT_NONE,
-	ECORE_IMF_INPUT_PANEL_ORIENT_90_CW, /* Clockwise */
-	ECORE_IMF_INPUT_PANEL_ORIENT_180,
-	ECORE_IMF_INPUT_PANEL_ORIENT_90_CCW /* CounterClockwise */
+        ECORE_IMF_INPUT_PANEL_ORIENT_NONE,
+        ECORE_IMF_INPUT_PANEL_ORIENT_90_CW, /* Clockwise */
+        ECORE_IMF_INPUT_PANEL_ORIENT_180,
+        ECORE_IMF_INPUT_PANEL_ORIENT_90_CCW /* CounterClockwise */
      } Ecore_IMF_Input_Panel_Orient;
 
    typedef struct 
      {
-	int layout_idx;
-	int key_idx;
-	Eina_Bool disabled;
+        int layout_idx;
+        int key_idx;
+        Eina_Bool disabled;
      } Disable_Key_Item;
 
    typedef struct 
      {
-	int layout_idx;
-	int key_idx;
-	int type;
-	char data[128]; // label or image path
-	int key_value;
-	char key_string[32];
+        int layout_idx;
+        int key_idx;
+        int type;
+        char data[128]; // label or image path
+        int key_value;
+        char key_string[32];
      } Private_Key_Item;
 
    /* Events sent by the Input Method */
@@ -232,14 +239,14 @@ extern "C" {
 
    typedef enum
      {
-	ECORE_IMF_EVENT_MOUSE_DOWN,
-	ECORE_IMF_EVENT_MOUSE_UP,
-	ECORE_IMF_EVENT_MOUSE_IN,
-	ECORE_IMF_EVENT_MOUSE_OUT,
-	ECORE_IMF_EVENT_MOUSE_MOVE,
-	ECORE_IMF_EVENT_MOUSE_WHEEL,
-	ECORE_IMF_EVENT_KEY_DOWN,
-	ECORE_IMF_EVENT_KEY_UP
+        ECORE_IMF_EVENT_MOUSE_DOWN,
+        ECORE_IMF_EVENT_MOUSE_UP,
+        ECORE_IMF_EVENT_MOUSE_IN,
+        ECORE_IMF_EVENT_MOUSE_OUT,
+        ECORE_IMF_EVENT_MOUSE_MOVE,
+        ECORE_IMF_EVENT_MOUSE_WHEEL,
+        ECORE_IMF_EVENT_KEY_DOWN,
+        ECORE_IMF_EVENT_KEY_UP
      } Ecore_IMF_Event_Type;
 
    typedef enum
@@ -253,245 +260,244 @@ extern "C" {
 
    typedef enum
      {
-	ECORE_IMF_KEYBOARD_LOCK_NONE      = 0,      /**< No locks are active */
-	ECORE_IMF_KEYBOARD_LOCK_NUM       = 1 << 0, /**< "Num" lock is active */
-	ECORE_IMF_KEYBOARD_LOCK_CAPS      = 1 << 1, /**< "Caps" lock is active */
-	ECORE_IMF_KEYBOARD_LOCK_SCROLL    = 1 << 2  /**< "Scroll" lock is active */
+        ECORE_IMF_KEYBOARD_LOCK_NONE      = 0,      /**< No locks are active */
+        ECORE_IMF_KEYBOARD_LOCK_NUM       = 1 << 0, /**< "Num" lock is active */
+        ECORE_IMF_KEYBOARD_LOCK_CAPS      = 1 << 1, /**< "Caps" lock is active */
+        ECORE_IMF_KEYBOARD_LOCK_SCROLL    = 1 << 2  /**< "Scroll" lock is active */
      } Ecore_IMF_Keyboard_Locks;
 
    typedef enum
      {
-	ECORE_IMF_MOUSE_NONE              = 0,      /**< A single click */
-	ECORE_IMF_MOUSE_DOUBLE_CLICK      = 1 << 0, /**< A double click */
-	ECORE_IMF_MOUSE_TRIPLE_CLICK      = 1 << 1  /**< A triple click */
+        ECORE_IMF_MOUSE_NONE              = 0,      /**< A single click */
+        ECORE_IMF_MOUSE_DOUBLE_CLICK      = 1 << 0, /**< A double click */
+        ECORE_IMF_MOUSE_TRIPLE_CLICK      = 1 << 1  /**< A triple click */
      } Ecore_IMF_Mouse_Flags;
 
    typedef enum
      {
-	ECORE_IMF_INPUT_MODE_ALPHA        = 1 << 0,
-	ECORE_IMF_INPUT_MODE_NUMERIC      = 1 << 1,
-	ECORE_IMF_INPUT_MODE_SPECIAL      = 1 << 2,
-	ECORE_IMF_INPUT_MODE_HEXA         = 1 << 3,
-	ECORE_IMF_INPUT_MODE_TELE         = 1 << 4,
-	ECORE_IMF_INPUT_MODE_FULL         = (ECORE_IMF_INPUT_MODE_ALPHA | ECORE_IMF_INPUT_MODE_NUMERIC | ECORE_IMF_INPUT_MODE_SPECIAL),
-	ECORE_IMF_INPUT_MODE_INVISIBLE    = 1 << 29,
-	ECORE_IMF_INPUT_MODE_AUTOCAP      = 1 << 30
+        ECORE_IMF_INPUT_MODE_ALPHA        = 1 << 0,
+        ECORE_IMF_INPUT_MODE_NUMERIC      = 1 << 1,
+        ECORE_IMF_INPUT_MODE_SPECIAL      = 1 << 2,
+        ECORE_IMF_INPUT_MODE_HEXA         = 1 << 3,
+        ECORE_IMF_INPUT_MODE_TELE         = 1 << 4,
+        ECORE_IMF_INPUT_MODE_FULL         = (ECORE_IMF_INPUT_MODE_ALPHA | ECORE_IMF_INPUT_MODE_NUMERIC | ECORE_IMF_INPUT_MODE_SPECIAL),
+        ECORE_IMF_INPUT_MODE_INVISIBLE    = 1 << 29,
+        ECORE_IMF_INPUT_MODE_AUTOCAP      = 1 << 30
      } Ecore_IMF_Input_Mode;
 
    struct _Ecore_IMF_Event_Preedit_Start
      {
-	Ecore_IMF_Context *ctx;
+        Ecore_IMF_Context *ctx;
      };
 
    struct _Ecore_IMF_Event_Preedit_End
      {
-	Ecore_IMF_Context *ctx;
+        Ecore_IMF_Context *ctx;
      };
 
    struct _Ecore_IMF_Event_Preedit_Changed
      {
-	Ecore_IMF_Context *ctx;
+        Ecore_IMF_Context *ctx;
      };
 
    struct _Ecore_IMF_Event_Commit
      {
-	Ecore_IMF_Context *ctx;
-	char *str;
+        Ecore_IMF_Context *ctx;
+        char *str;
      };
 
    struct _Ecore_IMF_Event_Delete_Surrounding
      {
-	Ecore_IMF_Context *ctx;
-	int offset;
-	int n_chars;
+        Ecore_IMF_Context *ctx;
+        int offset;
+        int n_chars;
      };
 
    struct _Ecore_IMF_Event_Mouse_Down
      {
-	int button;                             /**< The button which has been pressed */
-	struct {
-	     int x, y;
-	} output;
-	struct {
-	     int x, y;
-	} canvas;
-	Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
-	Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
-	Ecore_IMF_Mouse_Flags        flags;     /**< The flags corresponding the mouse click (single, double or triple click) */
-	unsigned int                 timestamp; /**< The timestamp when the event occured */
+        int button;                             /**< The button which has been pressed */
+        struct {
+             int x, y;
+        } output;
+        struct {
+             int x, y;
+        } canvas;
+        Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
+        Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
+        Ecore_IMF_Mouse_Flags        flags;     /**< The flags corresponding the mouse click (single, double or triple click) */
+        unsigned int                 timestamp; /**< The timestamp when the event occured */
      };
 
    struct _Ecore_IMF_Event_Mouse_Up
      {
-	int button;                             /**< The button which has been pressed */
-	struct {
-	     int x, y;
-	} output;
-	struct {
-	     int x, y;
-	} canvas;
-	Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
-	Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
-	Ecore_IMF_Mouse_Flags        flags;     /**< The flags corresponding the mouse click (single, double or triple click) */
-	unsigned int                 timestamp; /**< The timestamp when the event occured */
+        int button;                             /**< The button which has been pressed */
+        struct {
+             int x, y;
+        } output;
+        struct {
+             int x, y;
+        } canvas;
+        Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
+        Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
+        Ecore_IMF_Mouse_Flags        flags;     /**< The flags corresponding the mouse click (single, double or triple click) */
+        unsigned int                 timestamp; /**< The timestamp when the event occured */
      };
 
    struct _Ecore_IMF_Event_Mouse_In
      {
-	int buttons;
-	struct {
-	     int x, y;
-	} output;
-	struct {
-	     int x, y;
-	} canvas;
-	Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
-	Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
-	unsigned int                 timestamp; /**< The timestamp when the event occured */
+        int buttons;
+        struct {
+             int x, y;
+        } output;
+        struct {
+             int x, y;
+        } canvas;
+        Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
+        Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
+        unsigned int                 timestamp; /**< The timestamp when the event occured */
      };
 
    struct _Ecore_IMF_Event_Mouse_Out
      {
-	int buttons;
-	struct {
-	     int x, y;
-	} output;
-	struct {
-	     int x, y;
-	} canvas;
-	Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
-	Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
-	unsigned int                 timestamp; /**< The timestamp when the event occured */
+        int buttons;
+        struct {
+             int x, y;
+        } output;
+        struct {
+             int x, y;
+        } canvas;
+        Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
+        Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
+        unsigned int                 timestamp; /**< The timestamp when the event occured */
      };
 
    struct _Ecore_IMF_Event_Mouse_Move
      {
-	int buttons;
-	struct {
-	     struct {
-		  int x, y;
-	     } output;
-	     struct {
-		  int x, y;
-	     } canvas;
-	} cur, prev;
-	Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
-	Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
-	unsigned int                 timestamp; /**< The timestamp when the event occured */
+        int buttons;
+        struct {
+             struct {
+                  int x, y;
+             } output;
+             struct {
+                  int x, y;
+             } canvas;
+        } cur, prev;
+        Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
+        Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
+        unsigned int                 timestamp; /**< The timestamp when the event occured */
      };
 
    struct _Ecore_IMF_Event_Mouse_Wheel
      {
-	int direction;                         /* 0 = default up/down wheel */
-	int z;                                 /* ...,-2,-1 = down, 1,2,... = up */
-	struct {
-	     int x, y;
-	} output;
-	struct {
-	     int x, y;
-	} canvas;
-	Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
-	Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
-	unsigned int                 timestamp; /**< The timestamp when the event occured */
+        int direction;                         /* 0 = default up/down wheel */
+        int z;                                 /* ...,-2,-1 = down, 1,2,... = up */
+        struct {
+             int x, y;
+        } output;
+        struct {
+             int x, y;
+        } canvas;
+        Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
+        Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
+        unsigned int                 timestamp; /**< The timestamp when the event occured */
      };
 
    struct _Ecore_IMF_Event_Key_Down
      {
-	const char                  *keyname;   /**< The string name of the key pressed */
-	Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
-	Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
-	const char                  *key;       /**< The logical key : (eg shift+1 == exclamation) */
-	const char                  *string;    /**< A UTF8 string if this keystroke has produced a visible string to be ADDED */
-	const char                  *compose;   /**< A UTF8 string if this keystroke has modified a string in the middle of being composed - this string replaces the previous one */
-	unsigned int                 timestamp; /**< The timestamp when the event occured */
-   };
+        const char                  *keyname;   /**< The string name of the key pressed */
+        Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
+        Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
+        const char                  *key;       /**< The logical key : (eg shift+1 == exclamation) */
+        const char                  *string;    /**< A UTF8 string if this keystroke has produced a visible string to be ADDED */
+        const char                  *compose;   /**< A UTF8 string if this keystroke has modified a string in the middle of being composed - this string replaces the previous one */
+        unsigned int                 timestamp; /**< The timestamp when the event occured */
+     };
 
    struct _Ecore_IMF_Event_Key_Up
      {
-	const char                  *keyname;   /**< The string name of the key pressed */
-	Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
-	Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
-	const char                  *key;       /**< The logical key : (eg shift+1 == exclamation) */
-	const char                  *string;    /**< A UTF8 string if this keystroke has produced a visible string to be ADDED */
-	const char                  *compose;   /**< A UTF8 string if this keystroke has modified a string in the middle of being composed - this string replaces the previous one */
-	unsigned int                 timestamp; /**< The timestamp when the event occured */
+        const char                  *keyname;   /**< The string name of the key pressed */
+        Ecore_IMF_Keyboard_Modifiers modifiers; /**< The keyboard modifiers active when the event has been emitted */
+        Ecore_IMF_Keyboard_Locks     locks;     /**< The keyboard locks active when the event has been emitted */
+        const char                  *key;       /**< The logical key : (eg shift+1 == exclamation) */
+        const char                  *string;    /**< A UTF8 string if this keystroke has produced a visible string to be ADDED */
+        const char                  *compose;   /**< A UTF8 string if this keystroke has modified a string in the middle of being composed - this string replaces the previous one */
+        unsigned int                 timestamp; /**< The timestamp when the event occured */
      };
 
    union _Ecore_IMF_Event
      {
-	Ecore_IMF_Event_Mouse_Down mouse_down;
-	Ecore_IMF_Event_Mouse_Up mouse_up;
-	Ecore_IMF_Event_Mouse_In mouse_in;
-	Ecore_IMF_Event_Mouse_Out mouse_out;
-	Ecore_IMF_Event_Mouse_Move mouse_move;
-	Ecore_IMF_Event_Mouse_Wheel mouse_wheel;
-	Ecore_IMF_Event_Key_Down key_down;
-	Ecore_IMF_Event_Key_Up key_up;
+        Ecore_IMF_Event_Mouse_Down mouse_down;
+        Ecore_IMF_Event_Mouse_Up mouse_up;
+        Ecore_IMF_Event_Mouse_In mouse_in;
+        Ecore_IMF_Event_Mouse_Out mouse_out;
+        Ecore_IMF_Event_Mouse_Move mouse_move;
+        Ecore_IMF_Event_Mouse_Wheel mouse_wheel;
+        Ecore_IMF_Event_Key_Down key_down;
+        Ecore_IMF_Event_Key_Up key_up;
      };
 
    struct _Ecore_IMF_Context_Class
      {
-	void (*add)                 (Ecore_IMF_Context *ctx);
-	void (*del)                 (Ecore_IMF_Context *ctx);
-	void (*client_window_set)   (Ecore_IMF_Context *ctx, void *window);
-	void (*client_canvas_set)   (Ecore_IMF_Context *ctx, void *canvas);
-	void (*show)                (Ecore_IMF_Context *ctx);
-	void (*hide)                (Ecore_IMF_Context *ctx);
-	void (*preedit_string_get)  (Ecore_IMF_Context *ctx, char **str, int *cursor_pos);
-	void (*focus_in)            (Ecore_IMF_Context *ctx);
-	void (*focus_out)           (Ecore_IMF_Context *ctx);
-	void (*reset)               (Ecore_IMF_Context *ctx);
-	void (*cursor_position_set) (Ecore_IMF_Context *ctx, int cursor_pos);
-	void (*use_preedit_set)     (Ecore_IMF_Context *ctx, int use_preedit);
-	void (*input_mode_set)      (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Mode input_mode);
-	int  (*filter_event)        (Ecore_IMF_Context *ctx, Ecore_IMF_Event_Type type, Ecore_IMF_Event *event);
+        void (*add)                 (Ecore_IMF_Context *ctx);
+        void (*del)                 (Ecore_IMF_Context *ctx);
+        void (*client_window_set)   (Ecore_IMF_Context *ctx, void *window);
+        void (*client_canvas_set)   (Ecore_IMF_Context *ctx, void *canvas);
+        void (*show)                (Ecore_IMF_Context *ctx);
+        void (*hide)                (Ecore_IMF_Context *ctx);
+        void (*preedit_string_get)  (Ecore_IMF_Context *ctx, char **str, int *cursor_pos);
+        void (*focus_in)            (Ecore_IMF_Context *ctx);
+        void (*focus_out)           (Ecore_IMF_Context *ctx);
+        void (*reset)               (Ecore_IMF_Context *ctx);
+        void (*cursor_position_set) (Ecore_IMF_Context *ctx, int cursor_pos);
+        void (*use_preedit_set)     (Ecore_IMF_Context *ctx, int use_preedit);
+        void (*input_mode_set)      (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Mode input_mode);
+        int  (*filter_event)        (Ecore_IMF_Context *ctx, Ecore_IMF_Event_Type type, Ecore_IMF_Event *event);
 
-	/* Input Panel Control APIs */
-//	int (*input_panel_show)	    (Ecore_IMF_Context *ctx);
-//	int (*input_panel_hide)	    (Ecore_IMF_Context *ctx);
-	int (*control_panel_show)   (Ecore_IMF_Context *ctx);
-	int (*control_panel_hide)   (Ecore_IMF_Context *ctx);
+        /* Input Panel Control APIs */
+        int (*control_panel_show)   (Ecore_IMF_Context *ctx);
+        int (*control_panel_hide)   (Ecore_IMF_Context *ctx);
 
-	int (*input_panel_layout_set)         (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout);
-	Ecore_IMF_Input_Panel_Layout (*input_panel_layout_get)         (Ecore_IMF_Context *ctx);
+        int (*input_panel_layout_set)         (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout);
+        Ecore_IMF_Input_Panel_Layout (*input_panel_layout_get)         (Ecore_IMF_Context *ctx);
 
-	int (*input_panel_language_set)       (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang);
-	Ecore_IMF_Input_Panel_Lang (*input_panel_language_get) (Ecore_IMF_Context *ctx); 
+        int (*input_panel_language_set)       (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang);
+        Ecore_IMF_Input_Panel_Lang (*input_panel_language_get) (Ecore_IMF_Context *ctx); 
 
-	int (*input_panel_imdata_set)         (Ecore_IMF_Context *ctx, const char* data, int len);
-	int (*input_panel_imdata_get)         (Ecore_IMF_Context *ctx, char* data, int *len);
+        int (*input_panel_imdata_set)         (Ecore_IMF_Context *ctx, const char* data, int len);
+        int (*input_panel_imdata_get)         (Ecore_IMF_Context *ctx, char* data, int *len);
 
-	void (*input_panel_use_effect_set)      (Ecore_IMF_Context *ctx, Eina_Bool use_effect);
-	int (*input_panel_orient_set)     (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation);
-	
-	void (*input_panel_move) (Ecore_IMF_Context *ctx, int x, int y);
-	int (*input_panel_geometry_get)       (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
-	int (*input_panel_private_key_set)    (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, const char* value);
-	void (*input_panel_key_disabled_set)  (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
-	
-	int (*input_panel_reset)              (Ecore_IMF_Context *ctx); /* Same as reset to default property*/
-	Ecore_IMF_Input_Panel_State (*input_panel_state_get)          (Ecore_IMF_Context *ctx);
+        void (*input_panel_use_effect_set)      (Ecore_IMF_Context *ctx, Eina_Bool use_effect);
+        int (*input_panel_orient_set)     (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation);
 
-	/* CallBack APIs  */
-	void (*input_panel_event_callback_add) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
-	void (*input_panel_event_callback_del) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallbackFunc) (void *data, Ecore_IMF_Context *ctx, int value));
+        void (*input_panel_move) (Ecore_IMF_Context *ctx, int x, int y);
+        int (*input_panel_geometry_get)       (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
+        int (*input_panel_private_key_set)    (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, const char* value);
+        void (*input_panel_key_disabled_set)  (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
 
-	/* ISF related APIs */
-	int (*ise_get_ise_language)       (Ecore_IMF_Context *ctx, const char* input_panel_name, char*** langlist);
-	int (*ise_set_isf_language)       (Ecore_IMF_Context *ctx, const char* lang);
-	int (*ise_get_active_isename)     (Ecore_IMF_Context *ctx, char* name);       /**< will be deprecated */
-	int (*ise_set_active_ise_by_name) (Ecore_IMF_Context *ctx, const char* name); /**< will be deprecated */
-	int (*ise_set_active_ise_by_uuid) (Ecore_IMF_Context *ctx, const char* uuid); /**< will be deprecated */
-	int (*ise_get_iselist)            (Ecore_IMF_Context *ctx, char*** iselist);  /**< will be deprecated */
+        int (*input_panel_reset)              (Ecore_IMF_Context *ctx); /* Same as reset to default property*/
+        Ecore_IMF_Input_Panel_State (*input_panel_state_get)          (Ecore_IMF_Context *ctx);
+
+        /* CallBack APIs  */
+        void (*input_panel_event_callback_add) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
+        void (*input_panel_event_callback_del) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallbackFunc) (void *data, Ecore_IMF_Context *ctx, int value));
+
+        /* ISF related APIs */
+        int (*ise_get_ise_language)       (Ecore_IMF_Context *ctx, const char* input_panel_name, char*** langlist);
+        int (*ise_set_isf_language)       (Ecore_IMF_Context *ctx, const char* lang);
+        int (*ise_get_active_isename)     (Ecore_IMF_Context *ctx, char* name);       /**< will be deprecated */
+        int (*ise_set_active_ise_by_name) (Ecore_IMF_Context *ctx, const char* name); /**< will be deprecated */
+        int (*ise_set_active_ise_by_uuid) (Ecore_IMF_Context *ctx, const char* uuid); /**< will be deprecated */
+        int (*ise_get_iselist)            (Ecore_IMF_Context *ctx, char*** iselist);  /**< will be deprecated */
+        int (*input_panel_shift_mode_set) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Shift_Mode mode);
      };
 
    struct _Ecore_IMF_Context_Info
      {
-	const char *id;              /* ID */
-	const char *description;     /* Human readable description */
-	const char *default_locales; /* Languages for which this context is the default, separated by : */
-	const char *canvas_type;     /* The canvas type used by the input method. Eg.: evas */
-	int         canvas_required; /* Whether the canvas usage is required for this input method */
+        const char *id;              /* ID */
+        const char *description;     /* Human readable description */
+        const char *default_locales; /* Languages for which this context is the default, separated by : */
+        const char *canvas_type;     /* The canvas type used by the input method. Eg.: evas */
+        int         canvas_required; /* Whether the canvas usage is required for this input method */
      };
 
    EAPI int                           ecore_imf_init(void);
@@ -1231,6 +1237,8 @@ extern "C" {
     */
    EAPI void ecore_imf_context_input_panel_move  (Ecore_IMF_Context *ctx, int x, int y);
 
+   EAPI void ecore_imf_context_input_panel_shift_mode_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Shift_Mode mode);
+
    /* The following entry points must be exported by each input method module
     */
 
@@ -1245,4 +1253,6 @@ extern "C" {
 #endif
 
 #endif
+
+/* vim:set ts=8 sw=3 sts=3 expandtab cino=>5n-2f0^-2{2(0W1st0 :*/
 

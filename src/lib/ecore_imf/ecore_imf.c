@@ -70,3 +70,6 @@ ecore_imf_shutdown(void)
    ecore_shutdown();
    return _ecore_imf_init_count;
 }
+
+/* vim:set ts=8 sw=3 sts=3 expandtab cino=>5n-2f0^-2{2(0W1st0 :*/
+
