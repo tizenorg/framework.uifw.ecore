@@ -379,6 +379,8 @@ typedef struct _Ecore_X_Event_Generic            Ecore_X_Event_Generic;
 typedef struct _Ecore_X_Randr_Screen_Size        Ecore_X_Randr_Screen_Size;
 typedef struct _Ecore_X_Randr_Screen_Size_MM     Ecore_X_Randr_Screen_Size_MM;
 
+typedef struct _Ecore_X_Xdnd_Position             Ecore_X_Xdnd_Position;
+
 struct _Ecore_X_Event_Mouse_In
 {
    int                  modifiers;
@@ -644,6 +646,15 @@ struct _Ecore_X_Event_Xdnd_Position
       int x, y;
    } position;
    Ecore_X_Atom   action;
+};
+
+struct _Ecore_X_Xdnd_Position 
+{
+   Ecore_X_Window win, prev;
+   struct
+   {
+      int x, y;
+   } position;
 };
 
 struct _Ecore_X_Event_Xdnd_Status
@@ -1227,6 +1238,8 @@ EAPI void                ecore_x_dnd_send_status(int               will_accept,
 EAPI void                ecore_x_dnd_send_finished(void);
 EAPI void                ecore_x_dnd_source_action_set(Ecore_X_Atom action);
 EAPI Ecore_X_Atom        ecore_x_dnd_source_action_get(void);
+EAPI void                ecore_x_dnd_callback_pos_update_set(void (*cb)(void *, Ecore_X_Xdnd_Position *data),
+							     const void *data);
 
 EAPI Ecore_X_Window      ecore_x_window_new(Ecore_X_Window parent,
                                             int            x,
