@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.51480slp2+build09) unstable; urgency=low
+
+  * repackaging
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build09
+
+ -- ChunEon Park <chuneon.park@samsung.com>  Mon, 20 Sep 2010 21:42:20 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build08) unstable; urgency=low
 
   * Add ecore_imf_context_input_panel_caps_mode_set
