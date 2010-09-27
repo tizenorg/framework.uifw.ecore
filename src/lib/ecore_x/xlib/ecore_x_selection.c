@@ -722,7 +722,7 @@ _ecore_x_selection_parse(const char *target, void *data, int size, int format)
         if (!strcmp(prs->target, target))
           {
              sel = prs->parse(target, data, size, format);
-             return sel;
+	     if (sel) return sel;
           }
      }
 
@@ -839,7 +839,7 @@ _ecore_x_selection_parser_text(const char *target __UNUSED__,
                                int format         __UNUSED__)
 {
    Ecore_X_Selection_Data_Text *sel;
-   char *data = _data;
+   unsigned char *data = _data;
 
    sel = calloc(1, sizeof(Ecore_X_Selection_Data_Text));
 
@@ -854,6 +854,7 @@ _ecore_x_selection_parser_text(const char *target __UNUSED__,
    sel->text = (char *)data;
    ECORE_X_SELECTION_DATA(sel)->length = size;
    ECORE_X_SELECTION_DATA(sel)->content = ECORE_X_SELECTION_CONTENT_TEXT;
+   ECORE_X_SELECTION_DATA(sel)->data = data;
    ECORE_X_SELECTION_DATA(sel)->free = _ecore_x_selection_data_text_free;
    return sel;
 } /* _ecore_x_selection_parser_text */
