@@ -174,9 +174,9 @@ ecore_imf_context_add(const char *id)
    ctx = ecore_imf_module_context_create(id);
    if (!ctx || !ctx->klass) return NULL;
    if (ctx->klass->add) ctx->klass->add(ctx);
-   /* default use_preedit is 1, so let's make sure it's
+   /* default use_preedit is EINA_TRUE, so let's make sure it's
     * set on the immodule */
-   ecore_imf_context_use_preedit_set(ctx, 1);
+   ecore_imf_context_use_preedit_set(ctx, EINA_TRUE);
    /* default input_mode is ECORE_IMF_INPUT_MODE_FULL, so let's make sure it's
     * set on the immodule */
    ecore_imf_context_input_mode_set(ctx, ECORE_IMF_INPUT_MODE_FULL);
@@ -455,8 +455,8 @@ ecore_imf_context_cursor_position_set(Ecore_IMF_Context *ctx, int cursor_pos)
 
 /**
  * Set whether the IM context should use the preedit string
- * to display feedback. If @use_preedit is 0 (default
- * is 1), then the IM context may use some other method to display
+ * to display feedback. If @use_preedit is EINA_FALSE (default
+ * is EINA_TRUE), then the IM context may use some other method to display
  * feedback, such as displaying it in a child of the root window.
  *
  * @param ctx An #Ecore_IMF_Context.
@@ -464,7 +464,7 @@ ecore_imf_context_cursor_position_set(Ecore_IMF_Context *ctx, int cursor_pos)
  * @ingroup Ecore_IMF_Context_Group
  */
 EAPI void
-ecore_imf_context_use_preedit_set(Ecore_IMF_Context *ctx, int use_preedit)
+ecore_imf_context_use_preedit_set(Ecore_IMF_Context *ctx, Eina_Bool use_preedit)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -487,7 +487,7 @@ ecore_imf_context_use_preedit_set(Ecore_IMF_Context *ctx, int use_preedit)
  * @ingroup Ecore_IMF_Context_Group
  */
 EAPI void
-ecore_imf_context_retrieve_surrounding_callback_set(Ecore_IMF_Context *ctx, int (*func)(void *data, Ecore_IMF_Context *ctx, char **text, int *cursor_pos), const void *data)
+ecore_imf_context_retrieve_surrounding_callback_set(Ecore_IMF_Context *ctx, Eina_Bool (*func)(void *data, Ecore_IMF_Context *ctx, char **text, int *cursor_pos), const void *data)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -547,30 +547,30 @@ ecore_imf_context_input_mode_get(Ecore_IMF_Context *ctx)
 
 /**
  * Allow an Ecore Input Context to internally handle an event.
- * If this function returns 1, then no further processing
+ * If this function returns EINA_TRUE, then no further processing
  * should be done for this event.
  *
  * Input methods must be able to accept all types of events (simply
- * returning 0 if the event was not handled), but there is no
+ * returning EINA_FALSE if the event was not handled), but there is no
  * obligation of any events to be submitted to this function.
  *
  * @param ctx An #Ecore_IMF_Context.
  * @param type The type of event defined by #Ecore_IMF_Event_Type.
  * @param event The event itself.
- * @return 1 if the event was handled; otherwise 0.
+ * @return EINA_TRUE if the event was handled; otherwise 0.
  * @ingroup Ecore_IMF_Context_Group
  */
-EAPI int
+EAPI Eina_Bool
 ecore_imf_context_filter_event(Ecore_IMF_Context *ctx, Ecore_IMF_Event_Type type, Ecore_IMF_Event *event)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
 	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
 			 "ecore_imf_context_filter_event");
-	return 0;
+	return EINA_FALSE;
      }
    if (ctx->klass->filter_event) return ctx->klass->filter_event(ctx, type, event);
-   return 0;
+   return EINA_FALSE;
 }
 
 /**
@@ -670,23 +670,23 @@ EAPI void *ecore_imf_context_data_get(Ecore_IMF_Context *ctx)
  * @param ctx An #Ecore_IMF_Context.
  * @param text Location to store a UTF-8 encoded string of text
  *             holding context around the insertion point.
- *             If the function returns 1, then you must free
+ *             If the function returns EINA_TRUE, then you must free
  *             the result stored in this location with free().
  * @param cursor_pos Location to store the position in characters of
  *                   the insertion cursor within @text.
- * @return 1 if surrounding text was provided; otherwise 0.
+ * @return EINA_TRUE if surrounding text was provided; otherwise EINA_FALSE.
  * @ingroup Ecore_IMF_Context_Module_Group
  */
-EAPI int
+EAPI Eina_Bool
 ecore_imf_context_surrounding_get(Ecore_IMF_Context *ctx, char **text, int *cursor_pos)
 {
-   int result = 0;
+   int result = EINA_FALSE;
 
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
 	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
 			 "ecore_imf_context_surrounding_get");
-	return 0;
+	return EINA_FALSE;
      }
 
    if (ctx->retrieve_surrounding_func)
