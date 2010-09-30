@@ -1,10 +1,10 @@
-ecore (1.0.0.001+svn.51480slp2+build11) unstable; urgency=low
+ecore (1.0.0.001+svn.51480slp2+build12) unstable; urgency=low
 
   * [ecore_imf] svn merge 52773
   * Git: 165.213.180.234:/git/slp/pkgs/ecore
-  * Tag: ecore_1.0.0.001+svn.51480slp2+build11 
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build12 
 
- -- Jihoon Kim <jihoon48.kim@samsung.com>  Wed, 29 Sep 2010 13:53:30 +0900
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Wed, 30 Sep 2010 09:56:30 +0900
 
 ecore (1.0.0.001+svn.51480slp2+build10) unstable; urgency=low
 
