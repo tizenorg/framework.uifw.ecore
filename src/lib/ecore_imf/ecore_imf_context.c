@@ -557,7 +557,7 @@ ecore_imf_context_input_mode_get(Ecore_IMF_Context *ctx)
  * @param ctx An #Ecore_IMF_Context.
  * @param type The type of event defined by #Ecore_IMF_Event_Type.
  * @param event The event itself.
- * @return EINA_TRUE if the event was handled; otherwise 0.
+ * @return EINA_TRUE if the event was handled; otherwise EINA_FALSE.
  * @ingroup Ecore_IMF_Context_Group
  */
 EAPI Eina_Bool
