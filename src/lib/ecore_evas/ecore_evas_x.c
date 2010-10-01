@@ -2977,15 +2977,6 @@ _ecore_evas_x_flush_post(void *data, Evas *e __UNUSED__, void *event_info __UNUS
                {
                   ecore_x_e_comp_sync_draw_done_send(ee->engine.x.win_root, 
                                                      ee->prop.window);
-                  #if _USE_WIN_ROT_EFFECT
-                  if (_rot_effect.wait_for_comp_reply)
-                    {
-                       _rot_effect.wait_for_comp_reply = EINA_FALSE;
-                       ee->engine.x.sync_val++;
-                       ecore_x_sync_counter_val_wait(ee->engine.x.sync_counter,
-                                                     ee->engine.x.sync_val);
-                    }
-                  #endif /* end of _USE_WIN_ROT_EFFECT */
                }
           }
      }
