@@ -1513,11 +1513,42 @@ _ecore_evas_x_rotation_set_internal(Ecore_Evas *ee, int rotation, int resize,
      }
 }
 
+/* added by gl77.lee 101001 - for EFL rotation effect */
+#define _USE_WIN_ROT_EFFECT 1
+
+#if _USE_WIN_ROT_EFFECT
+static void _ecore_evas_x_flush_pre(void *data, Evas *e __UNUSED__, void *event_info __UNUSED__);
+
+typedef struct _Ecore_Evas_X_Rotation_Effect Ecore_Evas_X_Rotation_Effect;
+struct _Ecore_Evas_X_Rotation_Effect
+{
+   Eina_Bool    wait_for_comp_reply;
+};
+
+static Ecore_Evas_X_Rotation_Effect _rot_effect =
+{
+   EINA_FALSE
+};
+
+static void
+_ecore_evas_x_rotation_effect_setup(void)
+{
+   _rot_effect.wait_for_comp_reply = EINA_TRUE;
+}
+#endif /* end of _USE_WIN_ROT_EFFECT */
+
 static void
 _ecore_evas_x_rotation_set(Ecore_Evas *ee, int rotation, int resize)
 {
    if (ee->rotation == rotation) return;
    if (!strcmp(ee->driver, "xrender_x11")) return;
+
+   #if _USE_WIN_ROT_EFFECT
+   int angles[2];
+   angles[0] = rotation;
+   angles[1] = ee->rotation;
+   #endif /* end of _USE_WIN_ROT_EFFECT */
+
    if (!strcmp(ee->driver, "opengl_x11"))
      {
 #ifdef BUILD_ECORE_EVAS_OPENGL_X11
@@ -1530,8 +1561,15 @@ _ecore_evas_x_rotation_set(Ecore_Evas *ee, int rotation, int resize)
 	  (ee, rotation, resize, (Evas_Engine_Info *)einfo);
 
 	/* added by doyoun.kang 100218 - for rotation */
-	ecore_x_window_prop_property_set (ee->prop.window, 
-		ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE, ECORE_X_ATOM_CARDINAL, 32, &rotation, 1);	
+        #if _USE_WIN_ROT_EFFECT
+        ecore_x_window_prop_property_set (ee->prop.window,
+                                          ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE,
+                                          ECORE_X_ATOM_CARDINAL, 32, &angles, 2);
+        #else
+	ecore_x_window_prop_property_set (ee->prop.window,
+                                          ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE,
+                                          ECORE_X_ATOM_CARDINAL, 32, &rotation, 1);
+        #endif
 #endif /* BUILD_ECORE_EVAS_OPENGL_X11 */
      }
    else if (!strcmp(ee->driver, "software_x11"))
@@ -1546,8 +1584,15 @@ _ecore_evas_x_rotation_set(Ecore_Evas *ee, int rotation, int resize)
 	  (ee, rotation, resize, (Evas_Engine_Info *)einfo);
 
 	/* added by doyoun.kang 100218 - for rotation */
-	ecore_x_window_prop_property_set (ee->prop.window, 
-		ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE, ECORE_X_ATOM_CARDINAL, 32, &rotation, 1);
+        #if _USE_WIN_ROT_EFFECT
+        ecore_x_window_prop_property_set (ee->prop.window,
+                                          ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE,
+                                          ECORE_X_ATOM_CARDINAL, 32, &angles, 2);
+        #else
+	ecore_x_window_prop_property_set (ee->prop.window,
+                                          ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE,
+                                          ECORE_X_ATOM_CARDINAL, 32, &rotation, 1);
+        #endif
 #endif /* BUILD_ECORE_EVAS_SOFTWARE_X11 */
      }
    else if (!strcmp(ee->driver,  "software_16_x11"))
@@ -1562,8 +1607,15 @@ _ecore_evas_x_rotation_set(Ecore_Evas *ee, int rotation, int resize)
 	  (ee, rotation, resize, (Evas_Engine_Info *)einfo);
 
 	/* added by doyoun.kang 100218 - for rotation */
-	ecore_x_window_prop_property_set (ee->prop.window, 
-		ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE, ECORE_X_ATOM_CARDINAL, 32, &rotation, 1);
+        #if _USE_WIN_ROT_EFFECT
+        ecore_x_window_prop_property_set (ee->prop.window,
+                                          ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE,
+                                          ECORE_X_ATOM_CARDINAL, 32, &angles, 2);
+        #else
+	ecore_x_window_prop_property_set (ee->prop.window,
+                                          ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE,
+                                          ECORE_X_ATOM_CARDINAL, 32, &rotation, 1);
+        #endif
 #endif /* BUILD_ECORE_EVAS_SOFTWARE_16_X11 */
      }
    else if (!strcmp(ee->driver,  "software_8_x11"))
@@ -1578,6 +1630,11 @@ _ecore_evas_x_rotation_set(Ecore_Evas *ee, int rotation, int resize)
 	   (ee, rotation, resize, (Evas_Engine_Info *)einfo);
 #endif /* BUILD_ECORE_EVAS_SOFTWARE_8_X11 */
      }
+
+   #if _USE_WIN_ROT_EFFECT
+   _ecore_evas_x_rotation_effect_setup();
+   _ecore_evas_x_flush_pre(ee, NULL, NULL);
+   #endif /* end of _USE_WIN_ROT_EFFECT */
 }
 
 static void
@@ -2920,6 +2977,15 @@ _ecore_evas_x_flush_post(void *data, Evas *e __UNUSED__, void *event_info __UNUS
                {
                   ecore_x_e_comp_sync_draw_done_send(ee->engine.x.win_root, 
                                                      ee->prop.window);
+                  #if _USE_WIN_ROT_EFFECT
+                  if (_rot_effect.wait_for_comp_reply)
+                    {
+                       _rot_effect.wait_for_comp_reply = EINA_FALSE;
+                       ee->engine.x.sync_val++;
+                       ecore_x_sync_counter_val_wait(ee->engine.x.sync_counter,
+                                                     ee->engine.x.sync_val);
+                    }
+                  #endif /* end of _USE_WIN_ROT_EFFECT */
                }
           }
      }
