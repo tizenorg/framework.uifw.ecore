@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.51480slp2+build15) unstable; urgency=low
+
+  * fixed epoll 
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build15
+
+ -- ChunEon Park <chuneon.park@samsung.com>  Tue, 05 Oct 2010 10:39:49 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build14) unstable; urgency=low
 
   * [ecore_x_events.c] fixed double / triple click
