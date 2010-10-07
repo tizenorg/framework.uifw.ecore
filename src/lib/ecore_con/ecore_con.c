@@ -184,10 +184,9 @@ ecore_con_shutdown(void)
  *
  * @param  compl_type The connection type.
  * @param  name       Name to associate with the socket.  It is used when
- *                    generating the socket name of a Unix socket.  Though
- *                    it is not used for the TCP socket, it still needs to
- *                    be a valid character array.  @c NULL will not be
- *                    accepted.
+ *                    generating the socket name of a Unix socket, or for
+ *                    determining what host to listen on for TCP sockets.
+ *                    @c NULL will not be accepted.
  * @param  port       Number to identify socket.  When a Unix socket is used,
  *                    it becomes part of the socket name.  When a TCP socket
  *                    is used, it is used as the TCP port.
@@ -508,6 +507,41 @@ ecore_con_server_clients_get(Ecore_Con_Server *svr)
      }
 
    return svr->clients;
+}
+
+/**
+ * Retrieves the name of server.
+ * @param   svr The given server.
+ * @return  The name of the server.
+ */
+EAPI const char *
+ecore_con_server_name_get(Ecore_Con_Server *svr)
+{
+   if (!ECORE_MAGIC_CHECK(svr, ECORE_MAGIC_CON_SERVER))
+     {
+        ECORE_MAGIC_FAIL(svr, ECORE_MAGIC_CON_SERVER,
+                         "ecore_con_server_name_get");
+        return NULL;
+     }
+
+   return svr->name;
+}
+
+/**
+ * Retrieves the server port in use.
+ * @param   svr The given server.
+ * @return  The server port in use.
+ */
+EAPI int
+ecore_con_server_port_get(Ecore_Con_Server *svr)
+{
+   if (!ECORE_MAGIC_CHECK(svr, ECORE_MAGIC_CON_SERVER))
+     {
+        ECORE_MAGIC_FAIL(svr, ECORE_MAGIC_CON_SERVER,
+                         "ecore_con_server_port_get");
+        return -1;
+     }
+   return svr->port;
 }
 
 /**
