@@ -1,3 +1,15 @@
+ecore (1.0.0.001+svn.51480slp2+build16) unstable; urgency=low
+
+  * fix documentation of ecore_imf 
+  * [src/lib/ecore_evas/Ecore_Evas.h] svn merge v51740.
+  * [svn merge] r51678~r51707
+  * [svn merge] Changeset 51650 - Revert and reapply badnull patch
+  * [ecore_evas] svn 51618 : Add UNUSED where missing.
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build16
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Wed, 13 Oct 2010 16:54:37 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build15) unstable; urgency=low
 
   * fixed epoll 
