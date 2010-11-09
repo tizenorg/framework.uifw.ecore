@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.51480slp2+build17) unstable; urgency=low
+
+  * [ecore_imf] ecore_imf_context_input_panel_language_set
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build17
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 09 Nov 2010 15:08:12 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build16) unstable; urgency=low
 
   * fix documentation of ecore_imf 
