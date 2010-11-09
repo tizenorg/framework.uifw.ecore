@@ -708,6 +708,7 @@ _ecore_imf_event_free_preedit(void *data __UNUSED__, void *event)
 
 /**
  * Adds ECORE_IMF_EVENT_PREEDIT_START to the event queue.
+ * ECORE_IMF_EVENT_PREEDIT_START should be added when a new preedit sequence starts.
  *
  * @param ctx An #Ecore_IMF_Context.
  * @ingroup Ecore_IMF_Context_Module_Group
@@ -732,6 +733,7 @@ ecore_imf_context_preedit_start_event_add(Ecore_IMF_Context *ctx)
 
 /**
  * Adds ECORE_IMF_EVENT_PREEDIT_END to the event queue.
+ * ECORE_IMF_EVENT_PREEDIT_END should be added when a new preedit sequence has been completed or canceled.
  *
  * @param ctx An #Ecore_IMF_Context.
  * @ingroup Ecore_IMF_Context_Module_Group
@@ -822,7 +824,9 @@ _ecore_imf_event_free_delete_surrounding(void *data __UNUSED__, void *event)
 }
 
 /**
- * Adds ECORE_IMF_EVENT_DELETE_SURROUNDING to the event queue.
+ * Asks the widget that the input context is attached to to delete characters around the cursor position 
+ * by adding the ECORE_IMF_EVENT_DELETE_SURROUNDING to the event queue. 
+ * Note that offset and n_chars are in characters not in bytes.
  *
  * @param ctx An #Ecore_IMF_Context.
  * @param offset The start offset of surrounding to be deleted.
@@ -923,23 +927,20 @@ ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_In
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_language_set");
         return;
      }
-   //   if (ctx->klass->ise_set_language) ctx->klass->ise_set_language(ctx, lang);
+   if (ctx->klass->input_panel_language_set) ctx->klass->input_panel_language_set(ctx, lang);
+   ctx->input_panel_lang = lang;   
 }
 
 EAPI Ecore_IMF_Input_Panel_Lang  
 ecore_imf_context_input_panel_language_get (Ecore_IMF_Context *ctx)
 {
-   Ecore_IMF_Input_Panel_Lang lang = ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC;
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_language_get");
-        return lang;
+        return ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC;
      }
 
-   if (ctx->klass->input_panel_language_get) 
-      lang = ctx->klass->input_panel_language_get(ctx);
-
-   return lang;
+   return ctx->input_panel_lang;
 }
 
 EAPI int  

@@ -46,6 +46,7 @@ struct _Ecore_IMF_Context
    void*                          window;
    void*                          client_canvas;
    Ecore_IMF_Input_Panel_Layout   input_panel_layout;
+   Ecore_IMF_Input_Panel_Lang     input_panel_lang;
    int                            use_effect;
    int                            input_panel_x;
    int                            input_panel_y;
