@@ -902,23 +902,6 @@ ecore_imf_context_control_panel_hide (Ecore_IMF_Context *ctx)
    if (ctx->klass->control_panel_hide) ctx->klass->control_panel_hide(ctx);
 }
 
-#if 0    
-EAPI Ecore_IMF_Input_Mode
-ecore_imf_context_input_panel_mode_get  (Ecore_IMF_Context *ctx)
-{
-	if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     	{
-		ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_mode_get");
-		return ECORE_IMF_INPUT_PANEL_MODE_INVALID;
-     	}
-	/*	
-   	if (ctx->klass->input_panel_mode_get) 
-		return ctx->klass->input_panel_mode_get(ctx, mode);
-	*/
-	return ctx->input_panel_mode;
-}
-#endif
-
 EAPI void  
 ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang)
 {
