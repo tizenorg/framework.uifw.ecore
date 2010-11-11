@@ -764,6 +764,83 @@ ecore_x_e_illume_quickpanel_position_update_send(Ecore_X_Window win)
       0);
 } /* ecore_x_e_illume_quickpanel_position_update_send */
 
+/* added by doyoun.kang - for sliding window */
+EAPI void 
+ecore_x_e_illume_sliding_win_state_set(Ecore_X_Window win,
+                                       unsigned int   is_visible)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   ecore_x_window_prop_card32_set(win, 
+                                  ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_STATE, 
+                                  &is_visible, 1);
+} /* ecore_x_e_illume_sliding_win_state_set */
+
+EAPI int 
+ecore_x_e_illume_sliding_win_state_get(Ecore_X_Window win)
+{
+   unsigned int is_visible = 0;
+   
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!ecore_x_window_prop_card32_get(win,
+                                       ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_STATE, 
+                                       &is_visible, 1))
+      return 0;
+
+   return is_visible;
+}
+
+EAPI void
+ecore_x_e_illume_sliding_win_geometry_set(Ecore_X_Window win,
+                                          int            x,
+                                          int            y,
+                                          int            w,
+                                          int            h)
+{
+   unsigned int geom[4];
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   geom[0] = x;
+   geom[1] = y;
+   geom[2] = w;
+   geom[3] = h;
+   ecore_x_window_prop_card32_set(win,
+                                  ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_GEOMETRY, 
+                                  geom, 4);
+} /* ecore_x_e_illume_sliding_win_geometry_set */
+
+EAPI int 
+ecore_x_e_illume_sliding_win_geometry_get(Ecore_X_Window win,
+                                          int           *x,
+                                          int           *y,
+                                          int           *w,
+                                          int           *h)
+{
+   int ret = 0;
+   unsigned int geom[4];
+   
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   ret = 
+     ecore_x_window_prop_card32_get(win, 
+                                    ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_GEOMETRY, 
+                                    geom, 4);
+   if (ret != 4)
+      return 0;
+   
+   if (x)
+      *x = geom[0];
+   
+   if (y)
+      *y = geom[1];
+   
+   if (w)
+      *w = geom[2];
+   
+   if (h)
+      *h = geom[3];
+   
+   return 1;
+}/* ecore_x_e_illume_sliding_win_geometry_get */
+
 EAPI void
 ecore_x_e_comp_sync_counter_set(Ecore_X_Window       win,
                                 Ecore_X_Sync_Counter counter)

@@ -2287,6 +2287,25 @@ EAPI void
                                           ecore_x_e_illume_quickpanel_position_update_send(
    Ecore_X_Window win);
 
+/* added by doyoun.kang - for sliding window */
+EAPI void                                 ecore_x_e_illume_sliding_win_state_set(
+   Ecore_X_Window win,
+   unsigned int   is_visible);
+EAPI int                                  ecore_x_e_illume_sliding_win_state_get(
+   Ecore_X_Window win);
+EAPI void                                 ecore_x_e_illume_sliding_win_geometry_set(
+   Ecore_X_Window win, 
+   int            x,
+   int            y,
+   int            w,
+   int            h);
+EAPI int                                  ecore_x_e_illume_sliding_win_geometry_get(
+   Ecore_X_Window win,
+   int           *x,
+   int           *y,
+   int           *w,
+   int           *h);
+
 EAPI void                                 ecore_x_e_comp_sync_counter_set(
    Ecore_X_Window       win,
    Ecore_X_Sync_Counter counter);

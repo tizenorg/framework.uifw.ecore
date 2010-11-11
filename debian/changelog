@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.51480slp2+build18) unstable; urgency=low
+
+  * [ecore_x] Add feature for sliding window
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build18
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Thu, 11 Nov 2010 10:53:35 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build17) unstable; urgency=low
 
   * [ecore_imf] ecore_imf_context_input_panel_language_set

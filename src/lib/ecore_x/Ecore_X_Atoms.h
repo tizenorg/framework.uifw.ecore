@@ -264,4 +264,8 @@ EAPI extern Ecore_X_Atom ECORE_X_ATOM_PARENT_BORDER_WINDOW;
 /* added by doyoun.kang - for indicator's state */
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_INDICATOR_STATE;
 
+/* added by doyoun.kang - for sliding window */
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_STATE;
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_GEOMETRY;
+
 #endif /* _ECORE_X_ATOMS_H */

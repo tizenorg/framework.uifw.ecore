@@ -291,3 +291,7 @@ EAPI Ecore_X_Atom ECORE_X_ATOM_PARENT_BORDER_WINDOW = 0;
 
 /* added by doyoun.kang - for indicator's state */
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_INDICATOR_STATE = 0;
+
+/* added by doyoun.kang - for sliding window */
+EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_STATE = 0;
+EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_GEOMETRY = 0;

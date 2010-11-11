@@ -297,7 +297,11 @@ _ecore_x_atoms_init(void)
       { "_ECORE_X_PARENT_BORDER_WINDOW", &ECORE_X_ATOM_PARENT_BORDER_WINDOW },
 
       /* added by doyoun.kang - for indicator's state */
-      { "_E_ILLUME_INDICATOR_STATE", &ECORE_X_ATOM_E_ILLUME_INDICATOR_STATE }
+      { "_E_ILLUME_INDICATOR_STATE", &ECORE_X_ATOM_E_ILLUME_INDICATOR_STATE },
+
+      /* added by doyoun.kang - for sliding window */
+      { "_E_ILLUME_SLIDING_WIN_STATE", &ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_STATE },
+      { "_E_ILLUME_SLIDING_WIN_GEOMETRY", &ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_GEOMETRY }
    };
    Atom *atoms;
    char **names;
