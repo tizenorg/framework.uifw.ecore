@@ -9,7 +9,7 @@ Build-Depends: dpkg-dev, debhelper (>= 6), cdbs, libeina-dev (>= 0.0.2.060+svn20
  libeet-dev (>= 1.0.0), libevas-dev , libglib2.0-dev,
  libxcursor-dev, libxrender-dev, libxinerama-dev,
  libxrandr-dev, libxext-dev, libxcomposite-dev, libjpeg7-dev,
- libxdamage-dev, x11proto-xext-dev, libxtst-dev, doxygen, pkg-config, libtool, libcurl-dev
+ libxdamage-dev, x11proto-xext-dev, libxtst-dev, doxygen, pkg-config, libtool, libcurl4-openssl-dev
 Standards-Version: 3.8.1
 Homepage: http://enlightenment.org
 
@@ -153,7 +153,7 @@ Depends: ${misc:Depends}, libecore (= ${binary:Version}),
          libecore-ipc (= ${binary:Version}),
          libecore-x (= ${binary:Version}),
          libecore-data (= ${binary:Version}),
-         libeet-dev, libevas-dev (>= 0.9.9.060), libeina-dev, pkg-config, libcurl-dev,
+         libeet-dev, libevas-dev (>= 0.9.9.060), libeina-dev, pkg-config, libcurl4-openssl-dev,
          libxcursor-dev, libxrender-dev, libxinerama-dev, libxrandr-dev, libxext-dev,
          libxcomposite-dev, libxdamage-dev, x11proto-xext-dev, libxtst-dev, libglib2.0-dev
 Description: Ecore headers and static libraries
