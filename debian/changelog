@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.51480slp2+build20) unstable; urgency=low
+
+  * [ecore_imf] support the attribute of imengine
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build20
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Mon, 22 Nov 2010 11:22:56 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build19) unstable; urgency=low
 
   * libcurl-dev -> libcurl4-openssl-dev

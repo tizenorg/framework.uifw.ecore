@@ -436,6 +436,23 @@ extern "C" {
         Ecore_IMF_Event_Key_Up key_up;
      };
 
+   typedef enum
+     {
+        ECORE_IMF_PREEDIT_TYPE_NONE = 0,
+        ECORE_IMF_PREEDIT_TYPE_SUB1 = 1,
+        ECORE_IMF_PREEDIT_TYPE_SUB2 = 2,
+        ECORE_IMF_PREEDIT_TYPE_SUB3 = 3
+     } Ecore_IMF_Preedit_Type;
+
+   typedef struct _Ecore_IMF_Preedit_Attr Ecore_IMF_Preedit_Attr;
+
+   struct _Ecore_IMF_Preedit_Attr
+     {
+        Ecore_IMF_Preedit_Type preedit_type;
+        unsigned int start_index;
+        unsigned int end_index; 
+     };
+
    struct _Ecore_IMF_Context_Class
      {
         void (*add)                 (Ecore_IMF_Context *ctx);
@@ -466,13 +483,13 @@ extern "C" {
         void (*input_panel_imdata_set)         (Ecore_IMF_Context *ctx, const char* data, int len);
         void (*input_panel_imdata_get)         (Ecore_IMF_Context *ctx, char* data, int *len);
 
-        void (*input_panel_use_effect_set)      (Ecore_IMF_Context *ctx, Eina_Bool use_effect);
-        void (*input_panel_orient_set)     (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation);
+        void (*input_panel_use_effect_set)     (Ecore_IMF_Context *ctx, Eina_Bool use_effect);
+        void (*input_panel_orient_set)         (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation);
 
         void (*input_panel_move) (Ecore_IMF_Context *ctx, int x, int y);
         void (*input_panel_geometry_get)       (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
         void (*input_panel_private_key_set)    (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, const char* value);
-        void (*input_panel_key_disabled_set)  (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
+        void (*input_panel_key_disabled_set)   (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
 
         void (*input_panel_reset)              (Ecore_IMF_Context *ctx); /* Same as reset to default property*/
         Ecore_IMF_Input_Panel_State (*input_panel_state_get)          (Ecore_IMF_Context *ctx);
@@ -488,7 +505,9 @@ extern "C" {
         int (*ise_set_active_ise_by_name) (Ecore_IMF_Context *ctx, const char* name); /**< will be deprecated */
         int (*ise_set_active_ise_by_uuid) (Ecore_IMF_Context *ctx, const char* uuid); /**< will be deprecated */
         int (*ise_get_iselist)            (Ecore_IMF_Context *ctx, char*** iselist);  /**< will be deprecated */
-        void (*input_panel_caps_mode_set)  (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Caps_Mode mode);
+        void (*input_panel_caps_mode_set) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Caps_Mode mode);
+
+        void (*preedit_string_with_attributes_get) (Ecore_IMF_Context *ctx, char **str, Eina_List **attrs, int *cursor_pos);
      };
 
    struct _Ecore_IMF_Context_Info
@@ -521,6 +540,7 @@ extern "C" {
    EINA_DEPRECATED EAPI void          ecore_imf_context_show(Ecore_IMF_Context *ctx);
    EINA_DEPRECATED EAPI void          ecore_imf_context_hide(Ecore_IMF_Context *ctx);
    EAPI void                          ecore_imf_context_preedit_string_get(Ecore_IMF_Context *ctx, char **str, int *cursor_pos);
+   EAPI void                          ecore_imf_context_preedit_string_with_attributes_get(Ecore_IMF_Context *ctx, char **str, Eina_List **attrs, int *cursor_pos);
    EAPI void                          ecore_imf_context_focus_in(Ecore_IMF_Context *ctx);
    EAPI void                          ecore_imf_context_focus_out(Ecore_IMF_Context *ctx);
    EAPI void                          ecore_imf_context_reset(Ecore_IMF_Context *ctx);
