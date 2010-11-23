@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.51480slp2+build24) unstable; urgency=low
+
+  * [Ecore_IMF.h] temp rollback about bool
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build24
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Tue, 23 Nov 2010 22:07:30 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build23) unstable; urgency=low
 
   * [ecore_imf] add ECORE_IMF_INPUT_PANEL_STATE_WILL_SHOW / HIDE
