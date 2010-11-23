@@ -30,6 +30,19 @@
 # endif
 #endif /* ! _WIN32 */
 
+/* Faked 'bool'.  */
+#ifndef __cplusplus
+# ifndef bool
+#  define bool int
+#  ifndef FALSE
+#   define FALSE 0
+#  endif
+#  ifndef TRUE 
+#   define TRUE 1
+#  endif
+# endif
+#endif
+
 /**
  * @file Ecore_IMF.h
  * @brief The file that provides the ISF IMCONTROL Structures and APIs
