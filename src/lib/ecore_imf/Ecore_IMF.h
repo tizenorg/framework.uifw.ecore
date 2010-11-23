@@ -69,6 +69,8 @@ extern "C" {
      {
         ECORE_IMF_INPUT_PANEL_STATE_SHOW,         /**< Show Input panel */
         ECORE_IMF_INPUT_PANEL_STATE_HIDE,         /**< Hide Input panel */
+        ECORE_IMF_INPUT_PANEL_STATE_WILL_SHOW,    /**< Input panel will be shown */
+        ECORE_IMF_INPUT_PANEL_STATE_WILL_HIDE,    /**< Input panel will be hidden */
         ECORE_IMF_INPUT_PANEL_STATE_INVALID
      } Ecore_IMF_Input_Panel_State;
 
