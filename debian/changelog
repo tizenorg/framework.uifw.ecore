@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.51480slp2+build22) unstable; urgency=low
+
+  * [ecore_imf] remove unused enum variables
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build22
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 23 Nov 2010 19:40:48 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build21) unstable; urgency=low
 
   * [ecore_imf] remove unused enum variables
