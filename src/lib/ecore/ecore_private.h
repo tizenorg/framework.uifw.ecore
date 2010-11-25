@@ -57,7 +57,7 @@ extern int _ecore_log_dom ;
 # define CLAMP(x, min, max) (((x) > (max)) ? (max) : (((x) < (min)) ? (min) : (x)))
 #endif
 
-#define EVAS_FRAME_QUEUING 1	/* for test */
+#define EVAS_FRAME_QUEUING 1 /* for test */
 
 #define READBUFSIZ 65536
 
@@ -100,22 +100,24 @@ EAPI void ecore_print_warning(const char *function, const char *sparam);
 #undef CHECK_PARAM_POINTER_RETURN
 #define CHECK_PARAM_POINTER_RETURN(sparam, param, ret) \
      if (!(param)) \
-	 { \
-	    ecore_print_warning(__FUNCTION__, sparam); \
-	    return ret; \
-	 }
+         { \
+            ecore_print_warning(__FUNCTION__, sparam); \
+            return ret; \
+         }
 
 #undef CHECK_PARAM_POINTER
 #define CHECK_PARAM_POINTER(sparam, param) \
      if (!(param)) \
-	 { \
-	    ecore_print_warning(__FUNCTION__, sparam); \
-	    return; \
-	 }
+         { \
+            ecore_print_warning(__FUNCTION__, sparam); \
+            return; \
+         }
 
 typedef unsigned int              Ecore_Magic;
 
 EAPI void          _ecore_magic_fail(const void *d, Ecore_Magic m, Ecore_Magic req_m, const char *fname);
+
+void          _ecore_time_init(void);
 
 void          _ecore_timer_shutdown(void);
 void          _ecore_timer_cleanup(void);
@@ -176,13 +178,6 @@ void          _ecore_animator_shutdown(void);
 
 void          _ecore_poller_shutdown(void);
 
-EAPI void         *_ecore_list2_append           (void *in_list, void *in_item);
-EAPI void         *_ecore_list2_prepend          (void *in_list, void *in_item);
-EAPI void         *_ecore_list2_append_relative  (void *in_list, void *in_item, void *in_relative);
-EAPI void         *_ecore_list2_prepend_relative (void *in_list, void *in_item, void *in_relative);
-EAPI void         *_ecore_list2_remove           (void *in_list, void *in_item);
-EAPI void         *_ecore_list2_find             (void *in_list, void *in_item);
-
 void          _ecore_fps_debug_init(void);
 void          _ecore_fps_debug_shutdown(void);
 void          _ecore_fps_debug_runtime_add(double t);
@@ -200,7 +195,7 @@ void _ecore_main_loop_init(void);
 void _ecore_main_loop_shutdown(void);
 
 extern int    _ecore_fps_debug;
-extern double _ecore_loop_time;
+extern double _ecore_time_loop_time;
 extern Eina_Bool _ecore_glib_always_integrate;
 
 #endif

@@ -17,21 +17,52 @@ These routines are used for Ecore Library interaction
 @author Chris Ross <chris\@darkrock.co.uk>
 @author Term <term\@twistedpath.org>
 @author Tilman Sauerbeck <tilman\@code-monkey.de>
+@author Ibukun Olumuyiwa <ibukun\@computer.org>
+@author Yuri <da2001\@hotmail.ru>
+@author Nicholas Curran <quasar\@bigblue.net.au>
+@author Howell Tam <pigeon\@pigeond.net>
 @author Nathan Ingersoll <rbdpngn\@users.sourceforge.net>
-@date 2000-2004
+@author Andrew Elcock <andy\@elcock.org>
+@author Kim Woelders <kim\@woelders.dk>
+@author Sebastian Dransfeld <sebastid\@tango.flipp.net>
+@author Simon Poole <simon.armlinux\@themalago.net>
+@author Jorge Luis Zapata Muga <jorgeluis.zapata\@gmail.com>
+@author dan sinclair <zero\@everburning.com>
+@author Michael 'Mickey' Lauer <mickey\@tm.informatik.uni-frankfurt.de>
+@author David 'onefang' Seikel <onefang\@gmail.com>
+@author Hisham 'CodeWarrior' Mardam Bey <hisham\@hisham.cc>
+@author Brian 'rephorm' Mattern <rephorm\@rephorm.com>
+@author Tim Horton <hortont424\@gmail.com>
+@author Arnaud de Turckheim 'quarium' <quarium\@gmail.com>
+@author Matt Barclay <mbarclay\@gmail.com>
+@author Peter Wehrfritz <peter.wehrfritz\@web.de>
+@author Albin "Lutin" Tonnerre <albin.tonnerre\@gmail.com>
+@author Vincent Torri <vincent.torri\@gmail.com>
+@author Lars Munch <lars\@segv.dk>
+@author Andre Dieb <andre.dieb\@gmail.com>
+@author Mathieu Taillefumier <mathieu.taillefumier\@free.fr>
+@author Rui Miguel Silva Seabra <rms\@1407.org>
+@author Saumsung Electronics
+@author Samsung SAIT
+@author Nicolas Aguirre <aguirre.nicolas\@gmail.com>
+@author Brett Nash <nash\@nash.id.au>
+@author Mike Blumenkrantz <mike\@zentific.com>
+@date 2000-2010
 
 @section intro Introduction
 
 Ecore is a library of convenience functions.
 
 The Ecore library provides the following modules:
-@li @link Ecore.h        Ecore - Main Loop and Job Functions. @endlink
-@li @link Ecore_Con.h    Ecore_Con - Connection functions. @endlink
-@li @link Ecore_Config.h Ecore_Config - Configuration functions. @endlink
+@li @ref Ecore_Group
+@li @ref Ecore_File_Group
+@li @ref Ecore_Con_Group
 @li @link Ecore_Evas.h   Ecore_Evas - Evas convenience functions. @endlink
-@li @link Ecore_Fb.h     Ecore_FB - Frame buffer convenience functions. @endlink
+@li @ref Ecore_FB_Group
 @li @link Ecore_Ipc.h    Ecore_IPC - Inter Process Communication functions. @endlink
 @li @link Ecore_X.h      Ecore_X - X Windows System wrapper. @endlink
+@li @ref Ecore_Win32_Group
+@li @ref Ecore_WinCE_Group
 
 @section compiling How to compile using Ecore?
 
@@ -96,7 +127,7 @@ file descriptors etc.
 Ecore also lets you have functions called when file descriptors become active
 for reading or writing, allowing for streamlined, non-blocking IO.
 
-Here is an exmaple of a simple program and its basic event loop flow:
+Here is an example of a simple program and its basic event loop flow:
 
 @image html  prog_flow.png
 
@@ -189,7 +220,7 @@ follows the same principles as shown in this example.
 
 */
 
-/**
+/*
 @page Ecore_Config_Page The Enlightened Property Library
 
 The Enlightened Property Library (Ecore_Config) is an adbstraction
@@ -208,53 +239,6 @@ The following examples show how to use the Enlightened Property Library:
 */
 
 /**
-@page Ecore_ADT_Page Ecore Abstract Data Types
-
-This page briefly describes the different abstract data types
-that are provided by the Ecore library for general usage.  You need to
-include the @link Ecore_Data.h Ecore_Data.h @endlink to use them.
-
-@section Ecore_ADT_List List
-
-A list is a simple data type where one each piece of data points to
-another piece of data.
-
-Associated modules that describe the List ADT include:
-@li @ref Ecore_Data_List_Creation_Group
-@li @ref Ecore_Data_List_Add_Item_Group
-@li @ref Ecore_Data_List_Remove_Item_Group
-@li @ref Ecore_Data_List_Traverse_Group
-@li @ref Ecore_Data_List_Node_Group
-
-Examples involving lists include:
-@li @link list_example.c list_example.c @endlink
-
-@section Ecore_ADT_DList Doubly Linked List
-
-A doubly linked list is like a linked list, only each piece of data
-can also point to the piece before it.  In other words, you can traverse
-a doubly linked list in both directions.
-
-Associated modules that describe the DList ADT include:
-@li @ref Ecore_Data_DList_Creation_Group
-@li @ref Ecore_Data_DList_Add_Item_Group
-@li @ref Ecore_Data_DList_Remove_Item_Group
-
-@section Ecore_ADT_Hash Hash
-
-A hash is an abstract data type where one value is associated with another
-value.  Instead of each element of the group being accessible using a
-number, each element is accessed using another object.
-
-Associated modules that describe the Hash ADT include:
-@li @ref Ecore_Data_Hash_ADT_Creation_Group
-@li @ref Ecore_Data_Hash_ADT_Destruction_Group
-@li @ref Ecore_Data_Hash_ADT_Data_Group
-
-@todo Finish this.
-*/
-
-/**
 @page X_Window_System_Page X Window System
 
 The Ecore library includes a wrapper for handling the X window system.
@@ -262,112 +246,40 @@ This page briefly explains what the X window system is and various terms
 that are used.
 */
 
-// GROUP DEFINITIONS
-
-/**
-@defgroup Ecore_Timer_Group Ecore Timer
-
-The timer allows callbacks to be called at specific intervals.
- */
-
-/**
-@defgroup Ecore_Job_Group Ecore Jobs
-
-You can queue jobs that are to be done by the main loop when the current
-event is dealt with.
-*/
-
-/**
-@defgroup Idle_Group Idle Handlers
-
-Callbacks that are called when the program enters or exits an idle state.
-
-The ecore main loop enters an idle state when it is waiting for timers
-to time out, data to come in on a file descriptor or any other event
-to occur.  You can set callbacks to be called when the main loop
-enters an idle state, during an idle state or just after the program
-wakes up.
-
-Enterer callbacks are good for updating your program's state, if it
-has a state engine.  Once all of the enterer handlers are called, the
-program will enter a "sleeping" state.
-
-Idler callbacks are called when the main loop has called all enterer
-handlers.  They are useful for interfaces that require polling and
-timers would be too slow to use.
-
-If no idler callbacks are specified, then the process literally goes
-to sleep.  Otherwise, the idler callbacks are called continuously
-while the loop is "idle", using as much CPU as is available to the
-process.
-
-Exiter callbacks are called when the main loop wakes up from an idle
-state.
-
-*/
-
-/**
-@defgroup Ecore_Config_Create_Group Ecore Config Create Functions
-
-Convenience functions that set default values, bounds, option values and
-descriptions in one call.
-*/
-
-/**
-@defgroup Ecore_Config_File_Group Ecore Config File Functions
-
-Functions that are used to load and save properties from and to files.
-*/
-
 // EXAMPLES
 
 /**
-@example args_example.c
+@example ecore_args_example.c
 Shows how to set and retrieve the program arguments.
 */
 
 /**
-@example con_server_example.c
-Shows how to write a simple server using the Ecore_Con library.
-*/
-
-/**
-@example con_client_example.c
-Shows how to write a simple client, that connects to the example server.
-*/
-
-/**
-@example event_handler_example.c
+@example ecore_event_handler_example.c
 Shows how to use event handlers.
 */
 
 /**
-@example timer_example.c
-Demonstrates use of the ecore_timer.
+@example ecore_fd_handler_example.c
+Shows how to use fd handlers.
 */
 
 /**
-@example config_basic_example.c
+@example ecore_timer_example.c
+Demonstrates use of the ecore_timer.
+*/
+
+/*
+@example ecore_config_basic_example.c
 Provides an example of how to use the basic configuration functions.
 See the file Ecore_Config.h for the full list of available functions.
 */
 
-/**
-@example config_listener_example.c
+/*
+@example ecore_config_listener_example.c
 Shows how to set up a listener to listen for configuration changes.
 */
 
 /**
-@example list_example.c
-Provides a basic example of how to append to and traverse a list.
-*/
-
-/**
-@example list_destroy_example.c
-Shows how to set and use a destructor for an Ecore_List.
-*/
-
-/**
-@example x_window_example.c
+@example ecore_x_window_example.c
 Shows the basics of using the X Windows system through Ecore functions.
 */

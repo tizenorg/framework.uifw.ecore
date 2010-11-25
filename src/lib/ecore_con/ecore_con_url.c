@@ -59,14 +59,6 @@
 #include "Ecore_Con.h"
 #include "ecore_con_private.h"
 
-/**
- * @defgroup Ecore_Con_Url_Group Ecore URL Connection Functions
- *
- * Utility functions that set up, use and shut down the Ecore URL
- * Connection library.
- * FIXME: write detailed description
- */
-
 int ECORE_CON_EVENT_URL_DATA = 0;
 int ECORE_CON_EVENT_URL_COMPLETE = 0;
 int ECORE_CON_EVENT_URL_PROGRESS = 0;
@@ -74,7 +66,7 @@ int ECORE_CON_EVENT_URL_PROGRESS = 0;
 #ifdef HAVE_CURL
 static Eina_Bool _ecore_con_url_fd_handler(void *data,
                                            Ecore_Fd_Handler *fd_handler);
-static int       _ecore_con_url_perform(Ecore_Con_Url *url_con);
+static Eina_Bool _ecore_con_url_perform(Ecore_Con_Url *url_con);
 static size_t    _ecore_con_url_header_cb(void *ptr, size_t size, size_t nitems,
                                           void *stream);
 static size_t    _ecore_con_url_data_cb(void *buffer,
@@ -89,13 +81,13 @@ static size_t    _ecore_con_url_read_cb(void *ptr, size_t size, size_t nitems,
 static void      _ecore_con_event_url_free(void *data __UNUSED__, void *ev);
 static int       _ecore_con_url_process_completed_jobs(
    Ecore_Con_Url *url_con_to_match);
-static Eina_Bool _ecore_con_url_idler_handler(void *data __UNUSED__);
+static Eina_Bool _ecore_con_url_idler_handler(void *data);
 
 static Ecore_Idler *_fd_idler_handler = NULL;
 static Eina_List *_url_con_list = NULL;
-static CURLM *curlm = NULL;
+static CURLM *_curlm = NULL;
 static fd_set _current_fd_set;
-static int init_count = 0;
+static int _init_count = 0;
 static Ecore_Timer *_curl_timeout = NULL;
 
 typedef struct _Ecore_Con_Url_Event Ecore_Con_Url_Event;
@@ -132,19 +124,29 @@ _url_complete_push_event(int type, void *ev)
 #endif
 
 /**
+ * @addtogroup Ecore_Con_Url_Group Ecore URL Connection Functions
+ *
+ * Utility functions that set up, use and shut down the Ecore URL
+ * Connection library.
+ *
+ * @todo write detailed description of Ecore_Con_Url
+ *
+ * @{
+ */
+
+/**
  * Initialises the Ecore_Con_Url library.
  * @return Number of times the library has been initialised without being
  *          shut down.
- * @ingroup Ecore_Con_Url_Group
  */
 EAPI int
 ecore_con_url_init(void)
 {
 #ifdef HAVE_CURL
-   init_count++;
+   _init_count++;
 
-   if (init_count > 1)
-      return init_count;
+   if (_init_count > 1)
+      return _init_count;
 
    if (!ECORE_CON_EVENT_URL_DATA)
      {
@@ -153,7 +155,7 @@ ecore_con_url_init(void)
         ECORE_CON_EVENT_URL_PROGRESS = ecore_event_type_new();
      }
 
-   if (!curlm)
+   if (!_curlm)
      {
         long ms;
 
@@ -161,21 +163,21 @@ ecore_con_url_init(void)
         if (curl_global_init(CURL_GLOBAL_NOTHING))
           {
              while (_url_con_list)
-                ecore_con_url_destroy(eina_list_data_get(_url_con_list));
+                ecore_con_url_free(eina_list_data_get(_url_con_list));
              return 0;
           }
 
-        curlm = curl_multi_init();
-        if (!curlm)
+        _curlm = curl_multi_init();
+        if (!_curlm)
           {
              while (_url_con_list)
-                ecore_con_url_destroy(eina_list_data_get(_url_con_list));
+                ecore_con_url_free(eina_list_data_get(_url_con_list));
 
-             init_count--;
+             _init_count--;
              return 0;
           }
 
-        curl_multi_timeout(curlm, &ms);
+        curl_multi_timeout(_curlm, &ms);
         if (ms <= 0)
            ms = 1000;
 
@@ -194,19 +196,18 @@ ecore_con_url_init(void)
 /**
  * Shuts down the Ecore_Con_Url library.
  * @return  Number of calls that still uses Ecore_Con_Url
- * @ingroup Ecore_Con_Url_Group
  */
 EAPI int
 ecore_con_url_shutdown(void)
 {
 #ifdef HAVE_CURL
-   if (!init_count)
+   if (!_init_count)
       return 0;
 
-   init_count--;
+   _init_count--;
 
-   if (init_count != 0)
-      return init_count;
+   if (_init_count != 0)
+      return _init_count;
 
    if (_fd_idler_handler)
       ecore_idler_del(_fd_idler_handler);
@@ -219,12 +220,12 @@ ecore_con_url_shutdown(void)
    _curl_timeout = NULL;
 
    while (_url_con_list)
-      ecore_con_url_destroy(eina_list_data_get(_url_con_list));
+      ecore_con_url_free(eina_list_data_get(_url_con_list));
 
-   if (curlm)
+   if (_curlm)
      {
-        curl_multi_cleanup(curlm);
-        curlm = NULL;
+        curl_multi_cleanup(_curlm);
+        _curlm = NULL;
      }
 
    curl_global_cleanup();
@@ -243,7 +244,6 @@ ecore_con_url_shutdown(void)
  *
  * @return NULL on error, a new Ecore_Con_Url on success.
  *
- * @ingroup Ecore_Con_Url_Group
  *
  * @see ecore_con_url_custom_new()
  * @see ecore_con_url_url_set()
@@ -253,13 +253,17 @@ ecore_con_url_new(const char *url)
 {
 #ifdef HAVE_CURL
    Ecore_Con_Url *url_con;
+   CURLcode ret;
 
-   if (!init_count)
+   if (!_init_count)
       return NULL;
 
    url_con = calloc(1, sizeof(Ecore_Con_Url));
    if (!url_con)
       return NULL;
+
+   url_con->fd = -1;
+   url_con->write_fd = -1;
 
    url_con->curl_easy = curl_easy_init();
    if (!url_con->curl_easy)
@@ -270,7 +274,20 @@ ecore_con_url_new(const char *url)
 
    ECORE_MAGIC_SET(url_con, ECORE_MAGIC_CON_URL);
 
-   ecore_con_url_url_set(url_con, url);
+   if (!ecore_con_url_url_set(url_con, url))
+     {
+        ecore_con_url_free(url_con);
+        return NULL;
+     }
+
+   ret = curl_easy_setopt(url_con->curl_easy, CURLOPT_ENCODING, "gzip,deflate");
+   if (ret != CURLE_OK)
+     {
+        ERR("Could not set CURLOPT_ENCODING to \"gzip,deflate\": %s",
+            curl_easy_strerror(ret));
+        ecore_con_url_free(url_con);
+        return NULL;
+     }
 
    curl_easy_setopt(url_con->curl_easy, CURLOPT_WRITEFUNCTION,
                     _ecore_con_url_data_cb);
@@ -293,13 +310,6 @@ ecore_con_url_new(const char *url)
    curl_easy_setopt(url_con->curl_easy, CURLOPT_TIMEOUT,        300);
    curl_easy_setopt(url_con->curl_easy, CURLOPT_FOLLOWLOCATION, 1);
 
-   curl_easy_setopt(url_con->curl_easy, CURLOPT_ENCODING,       "gzip,deflate");
-
-   url_con->fd = -1;
-   url_con->write_fd = -1;
-   url_con->additional_headers = NULL;
-   url_con->response_headers = NULL;
-
    return url_con;
 #else
    return NULL;
@@ -319,7 +329,6 @@ ecore_con_url_new(const char *url)
  *
  * @return NULL on error, a new Ecore_Con_Url on success.
  *
- * @ingroup Ecore_Con_Url_Group
  *
  * @see ecore_con_url_new()
  * @see ecore_con_url_url_set()
@@ -329,6 +338,7 @@ ecore_con_url_custom_new(const char *url, const char *custom_request)
 {
 #ifdef HAVE_CURL
    Ecore_Con_Url *url_con;
+   CURLcode ret;
 
    if (!url)
       return NULL;
@@ -341,7 +351,14 @@ ecore_con_url_custom_new(const char *url, const char *custom_request)
    if (!url_con)
       return NULL;
 
-   curl_easy_setopt(url_con->curl_easy, CURLOPT_CUSTOMREQUEST, custom_request);
+   ret = curl_easy_setopt(url_con->curl_easy, CURLOPT_CUSTOMREQUEST, custom_request);
+   if (ret != CURLE_OK)
+     {
+        ERR("Could not set a custom request string: %s",
+            curl_easy_strerror(ret));
+        ecore_con_url_free(url_con);
+        return NULL;
+     }
 
    return url_con;
 #else
@@ -354,22 +371,23 @@ ecore_con_url_custom_new(const char *url, const char *custom_request)
 /**
  * Destroys a Ecore_Con_Url connection object.
  *
- * @ingroup Ecore_Con_Url_Group
+ * @param url_con Connection object to free.
  *
  * @see ecore_con_url_new()
  */
 EAPI void
-ecore_con_url_destroy(Ecore_Con_Url *url_con)
+ecore_con_url_free(Ecore_Con_Url *url_con)
 {
 #ifdef HAVE_CURL
    char *s;
+   CURLMcode ret;
 
    if (!url_con)
       return;
 
    if (!ECORE_MAGIC_CHECK(url_con, ECORE_MAGIC_CON_URL))
      {
-        ECORE_MAGIC_FAIL(url_con, ECORE_MAGIC_CON_URL, "ecore_con_url_destroy");
+        ECORE_MAGIC_FAIL(url_con, ECORE_MAGIC_CON_URL, "ecore_con_url_free");
         return;
      }
 
@@ -384,11 +402,6 @@ ecore_con_url_destroy(Ecore_Con_Url *url_con)
         url_con->fd_handler = NULL;
      }
 
-   if (url_con->post)
-      curl_formfree(url_con->post);
-
-   url_con->post = NULL;
-
    if (url_con->curl_easy)
      {
         // FIXME: For an unknown reason, progress continue to arrive after destruction
@@ -397,9 +410,12 @@ ecore_con_url_destroy(Ecore_Con_Url *url_con)
 
         if (url_con->active)
           {
-             url_con->active = 0;
+             url_con->active = EINA_FALSE;
 
-             curl_multi_remove_handle(curlm, url_con->curl_easy);
+             ret = curl_multi_remove_handle(_curlm, url_con->curl_easy);
+             if (ret != CURLM_OK)
+               ERR("curl_multi_remove_handle failed: %s",
+                   curl_multi_strerror(ret));
           }
 
         curl_easy_cleanup(url_con->curl_easy);
@@ -408,9 +424,9 @@ ecore_con_url_destroy(Ecore_Con_Url *url_con)
    _url_con_list = eina_list_remove(_url_con_list, url_con);
    curl_slist_free_all(url_con->headers);
    EINA_LIST_FREE(url_con->additional_headers, s)
-   free(s);
+     free(s);
    EINA_LIST_FREE(url_con->response_headers, s)
-   free(s);
+     free(s);
    free(url_con->url);
    free(url_con);
 #else
@@ -425,22 +441,21 @@ ecore_con_url_destroy(Ecore_Con_Url *url_con)
  * @param url_con Connection object through which the request will be sent.
  * @param url URL that will receive the request
  *
- * @return 1 on success, 0 on error.
+ * @return EINA_TRUE on success, EINA_FALSE on error.
  *
- * @ingroup Ecore_Con_Url_Group
  */
-EAPI int
+EAPI Eina_Bool
 ecore_con_url_url_set(Ecore_Con_Url *url_con, const char *url)
 {
 #ifdef HAVE_CURL
    if (!ECORE_MAGIC_CHECK(url_con, ECORE_MAGIC_CON_URL))
      {
         ECORE_MAGIC_FAIL(url_con, ECORE_MAGIC_CON_URL, "ecore_con_url_url_set");
-        return 0;
+        return EINA_FALSE;
      }
 
    if (url_con->active)
-      return 0;
+      return EINA_FALSE;
 
    if (url_con->url)
       free(url_con->url);
@@ -455,11 +470,11 @@ ecore_con_url_url_set(Ecore_Con_Url *url_con, const char *url)
    else
       curl_easy_setopt(url_con->curl_easy, CURLOPT_URL, "");
 
-   return 1;
+   return EINA_TRUE;
 #else
-   return 0;
-   url_con = NULL;
-   url = NULL;
+   return EINA_FALSE;
+   (void)url;
+   (void)url_con;
 #endif
 }
 
@@ -472,7 +487,6 @@ ecore_con_url_url_set(Ecore_Con_Url *url_con, const char *url)
  * @param url_con Connection object to associate data.
  * @param data Data to be set.
  *
- * @ingroup Ecore_Con_Url_Group
  *
  * @see ecore_con_url_data_get()
  */
@@ -504,7 +518,6 @@ ecore_con_url_data_set(Ecore_Con_Url *url_con, void *data)
  * @param key Header key
  * @param value Header value
  *
- * @ingroup Ecore_Con_Url_Group
  *
  * @see ecore_con_url_send()
  * @see ecore_con_url_additional_headers_clear()
@@ -538,7 +551,7 @@ ecore_con_url_additional_header_add(Ecore_Con_Url *url_con, const char *key,
 #endif
 }
 
-/*
+/**
  * Cleans additional headers.
  *
  * Cleans additional headers associated with a connection object (previously
@@ -546,7 +559,6 @@ ecore_con_url_additional_header_add(Ecore_Con_Url *url_con, const char *key,
  *
  * @param url_con Connection object to clean additional headers.
  *
- * @ingroup Ecore_Con_Url_Group
  *
  * @see ecore_con_url_additional_header_add()
  * @see ecore_con_url_send()
@@ -565,7 +577,7 @@ ecore_con_url_additional_headers_clear(Ecore_Con_Url *url_con)
      }
 
    EINA_LIST_FREE(url_con->additional_headers, s)
-   free(s);
+     free(s);
 #else
    return;
    url_con = NULL;
@@ -578,11 +590,10 @@ ecore_con_url_additional_headers_clear(Ecore_Con_Url *url_con)
  * Retrieves data associated with a Ecore_Con_Url connection object (previously
  * set with ecore_con_url_data_set()).
  *
- * @param Connection object to retrieve data from.
+ * @param url_con Connection object to retrieve data from.
  *
  * @return Data associated with the given object.
  *
- * @ingroup Ecore_Con_Url_Group
  *
  * @see ecore_con_url_data_set()
  */
@@ -604,13 +615,18 @@ ecore_con_url_data_get(Ecore_Con_Url *url_con)
 }
 
 /**
- * FIXME
- * Sets the @ref Ecore_Con_Url object's condition/time members.
- * @ingroup Ecore_Con_Url_Group
+ * Sets whether HTTP requests should be conditional, dependent on
+ * modification time.
+ *
+ * @param url_con   Ecore_Con_Url to act upon.
+ * @param condition Condition to use for HTTP requests.
+ * @param timestamp Time since 1 Jan 1970 to use in the condition.
+ *
+ * @sa ecore_con_url_send()
  */
 EAPI void
 ecore_con_url_time(Ecore_Con_Url *url_con, Ecore_Con_Url_Time condition,
-                   time_t tm)
+                   double timestamp)
 {
 #ifdef HAVE_CURL
    if (!ECORE_MAGIC_CHECK(url_con, ECORE_MAGIC_CON_URL))
@@ -619,13 +635,13 @@ ecore_con_url_time(Ecore_Con_Url *url_con, Ecore_Con_Url_Time condition,
         return;
      }
 
-   url_con->condition = condition;
-   url_con->time = tm;
+   url_con->time_condition = condition;
+   url_con->timestamp = timestamp;
 #else
    return;
-   url_con = NULL;
-   condition = 0;
-   tm = 0;
+   (void)url_con;
+   (void)condition;
+   (void)timestamp;
 #endif
 }
 
@@ -639,7 +655,6 @@ ecore_con_url_time(Ecore_Con_Url *url_con, Ecore_Con_Url_Time condition,
  * @param url_con Connection object to set file
  * @param fd File descriptor associated with the file
  *
- * @ingroup Ecore_Con_Url_Group
  */
 EAPI void
 ecore_con_url_fd_set(Ecore_Con_Url *url_con, int fd)
@@ -665,7 +680,6 @@ ecore_con_url_fd_set(Ecore_Con_Url *url_con, int fd)
  *
  * @return Number of bytes received on request.
  *
- * @ingroup Ecore_Con_Url_Group
  *
  * @see ecore_con_url_send()
  */
@@ -697,7 +711,6 @@ ecore_con_url_received_bytes_get(Ecore_Con_Url *url_con)
  *
  * @return List of response headers. This list must not be modified by the user.
  *
- * @ingroup Ecore_Con_Url_Group
  */
 EAPI const Eina_List *
 ecore_con_url_response_headers_get(Ecore_Con_Url *url_con)
@@ -718,21 +731,21 @@ ecore_con_url_response_headers_get(Ecore_Con_Url *url_con)
  * @param password Password to use in authentication
  * @param safe Whether to use "safer" methods (eg, NOT http basic auth)
  *
- * @return 1 on success, 0 on error.
+ * @return #EINA_TRUE on success, #EINA_FALSE on error.
  *
- * @ingroup Ecore_Con_Url_Group
  */
-EAPI int
+EAPI Eina_Bool
 ecore_con_url_httpauth_set(Ecore_Con_Url *url_con, const char *username,
-                           const char *password,
-                           Eina_Bool safe)
+                           const char *password, Eina_Bool safe)
 {
 #ifdef HAVE_CURL
+   CURLcode ret;
+
    if (!ECORE_MAGIC_CHECK(url_con, ECORE_MAGIC_CON_URL))
      {
         ECORE_MAGIC_FAIL(url_con, ECORE_MAGIC_CON_URL,
                          "ecore_con_url_httpauth_set");
-        return 0;
+        return EINA_FALSE;
      }
 
 # if LIBCURL_VERSION_NUM >= 0x071301
@@ -744,14 +757,28 @@ ecore_con_url_httpauth_set(Ecore_Con_Url *url_con, const char *username,
         else
            curl_easy_setopt(url_con->curl_easy, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
 
-           curl_easy_setopt(url_con->curl_easy, CURLOPT_USERNAME, username);
-           curl_easy_setopt(url_con->curl_easy, CURLOPT_PASSWORD, password);
-        return 1;
-     }
+        ret = curl_easy_setopt(url_con->curl_easy, CURLOPT_USERNAME, username);
+        if (ret != CURLE_OK)
+          {
+             ERR("Could not set username for HTTP authentication: %s",
+                 curl_easy_strerror(ret));
+             return EINA_FALSE;
+          }
 
+        ret = curl_easy_setopt(url_con->curl_easy, CURLOPT_PASSWORD, password);
+        if (ret != CURLE_OK)
+          {
+             ERR("Could not set password for HTTP authentication: %s",
+                 curl_easy_strerror(ret));
+             return EINA_FALSE;
+          }
+
+        return EINA_TRUE;
+     }
 # endif
 #endif
-   return 0;
+
+   return EINA_FALSE;
 }
 
 /**
@@ -759,13 +786,12 @@ ecore_con_url_httpauth_set(Ecore_Con_Url *url_con, const char *username,
  *
  * @param url_con Connection object to perform a request on, previously created
  *                with ecore_con_url_new() or ecore_con_url_custom_new().
- * @param data Payload (data sent on the request)
- * @param length  Payload length
+ * @param data    Payload (data sent on the request)
+ * @param length  Payload length. If @c -1, rely on automatic length
+ *                calculation via @c strlen() on @p data.
  * @param content_type Content type of the payload (e.g. text/xml)
  *
- * @return 1 on success, 0 on error.
- *
- * @ingroup Ecore_Con_Url_Group
+ * @return #EINA_TRUE on success, #EINA_FALSE on error.
  *
  * @see ecore_con_url_custom_new()
  * @see ecore_con_url_additional_headers_clear()
@@ -773,9 +799,10 @@ ecore_con_url_httpauth_set(Ecore_Con_Url *url_con, const char *username,
  * @see ecore_con_url_data_set()
  * @see ecore_con_url_data_get()
  * @see ecore_con_url_response_headers_get()
+ * @see ecore_con_url_time()
  */
-EAPI int
-ecore_con_url_send(Ecore_Con_Url *url_con, const void *data, size_t length,
+EAPI Eina_Bool
+ecore_con_url_send(Ecore_Con_Url *url_con, const void *data, long length,
                    const char *content_type)
 {
 #ifdef HAVE_CURL
@@ -786,17 +813,18 @@ ecore_con_url_send(Ecore_Con_Url *url_con, const void *data, size_t length,
    if (!ECORE_MAGIC_CHECK(url_con, ECORE_MAGIC_CON_URL))
      {
         ECORE_MAGIC_FAIL(url_con, ECORE_MAGIC_CON_URL, "ecore_con_url_send");
-        return 0;
+        return EINA_FALSE;
      }
 
    if (url_con->active)
-      return 0;
+      return EINA_FALSE;
 
    if (!url_con->url)
-      return 0;
+      return EINA_FALSE;
 
    /* Free response headers from previous send() calls */
-   EINA_LIST_FREE(url_con->response_headers, s) free((char *)s);
+   EINA_LIST_FREE(url_con->response_headers, s)
+     free((char *)s);
    url_con->response_headers = NULL;
 
    curl_slist_free_all(url_con->headers);
@@ -804,20 +832,17 @@ ecore_con_url_send(Ecore_Con_Url *url_con, const void *data, size_t length,
 
    if (data)
      {
-        curl_easy_setopt(url_con->curl_easy, CURLOPT_POSTFIELDS,    data);
-        curl_easy_setopt(url_con->curl_easy, CURLOPT_POSTFIELDSIZE, length);
-
-        if (content_type && (strlen(content_type) < 200))
+        if ((content_type) && (strlen(content_type) < 200))
           {
-             sprintf(tmp, "Content-type: %s", content_type);
+             snprintf(tmp, sizeof(tmp), "Content-Type: %s", content_type);
              url_con->headers = curl_slist_append(url_con->headers, tmp);
           }
 
-             sprintf(tmp, "Content-length: %zu", length);
-        url_con->headers = curl_slist_append(url_con->headers, tmp);
+        curl_easy_setopt(url_con->curl_easy, CURLOPT_POSTFIELDS,    data);
+        curl_easy_setopt(url_con->curl_easy, CURLOPT_POSTFIELDSIZE, length);
      }
 
-   switch (url_con->condition)
+   switch (url_con->time_condition)
      {
       case ECORE_CON_URL_TIME_NONE:
          curl_easy_setopt(url_con->curl_easy, CURLOPT_TIMECONDITION,
@@ -827,35 +852,29 @@ ecore_con_url_send(Ecore_Con_Url *url_con, const void *data, size_t length,
       case ECORE_CON_URL_TIME_IFMODSINCE:
          curl_easy_setopt(url_con->curl_easy, CURLOPT_TIMECONDITION,
                           CURL_TIMECOND_IFMODSINCE);
-         curl_easy_setopt(url_con->curl_easy, CURLOPT_TIMEVALUE, url_con->time);
+         curl_easy_setopt(url_con->curl_easy, CURLOPT_TIMEVALUE,
+                          (long)url_con->timestamp);
          break;
 
       case ECORE_CON_URL_TIME_IFUNMODSINCE:
          curl_easy_setopt(url_con->curl_easy, CURLOPT_TIMECONDITION,
                           CURL_TIMECOND_IFUNMODSINCE);
-         curl_easy_setopt(url_con->curl_easy, CURLOPT_TIMEVALUE, url_con->time);
-         break;
-
-      case ECORE_CON_URL_TIME_LASTMOD:
-         curl_easy_setopt(url_con->curl_easy, CURLOPT_TIMECONDITION,
-                          CURL_TIMECOND_LASTMOD);
-         curl_easy_setopt(url_con->curl_easy, CURLOPT_TIMEVALUE, url_con->time);
+         curl_easy_setopt(url_con->curl_easy, CURLOPT_TIMEVALUE,
+                          (long)url_con->timestamp);
          break;
      }
 
    /* Additional headers */
    EINA_LIST_FOREACH(url_con->additional_headers, l, s)
-   url_con->headers = curl_slist_append(url_con->headers, s);
+     url_con->headers = curl_slist_append(url_con->headers, s);
 
    curl_easy_setopt(url_con->curl_easy, CURLOPT_HTTPHEADER, url_con->headers);
 
    url_con->received = 0;
 
-   int res = _ecore_con_url_perform(url_con);
-
-   return res;
+   return _ecore_con_url_perform(url_con);
 #else
-   return 0;
+   return EINA_FALSE;
    url_con = NULL;
    data = NULL;
    length = 0;
@@ -864,11 +883,17 @@ ecore_con_url_send(Ecore_Con_Url *url_con, const void *data, size_t length,
 }
 
 /**
- * Makes a FTP upload
- * @return  FIXME: To be more documented.
- * @ingroup Ecore_Con_Url_Group
+ * @brief Uploads a file to an ftp site.
+ * @param url_con The Ecore_Con_Url object to send with
+ * @param filename The path to the file to send
+ * @param user The username to log in with
+ * @param pass The password to log in with
+ * @param upload_dir The directory to which the file should be uploaded
+ * @return #EINA_TRUE on success, else #EINA_FALSE.
+ * Upload @p filename to an ftp server set in @p url_con using @p user
+ * and @p pass to directory @p upload_dir
  */
-EAPI int
+EAPI Eina_Bool
 ecore_con_url_ftp_upload(Ecore_Con_Url *url_con, const char *filename,
                          const char *user, const char *pass,
                          const char *upload_dir)
@@ -878,108 +903,89 @@ ecore_con_url_ftp_upload(Ecore_Con_Url *url_con, const char *filename,
    char userpwd[4096];
    FILE *fd;
    struct stat file_info;
+   CURLcode ret;
 
    if (!ECORE_MAGIC_CHECK(url_con, ECORE_MAGIC_CON_URL))
      {
         ECORE_MAGIC_FAIL(url_con,
                          ECORE_MAGIC_CON_URL,
                          "ecore_con_url_ftp_upload");
-        return 0;
+        return EINA_FALSE;
      }
 
    if (url_con->active)
-      return 0;
+      return EINA_FALSE;
 
    if (!url_con->url)
-      return 0;
+      return EINA_FALSE;
 
    if (filename)
      {
-        char tmp[PATH_MAX];
-
-                    snprintf(tmp, PATH_MAX, "%s", filename);
-
         if (stat(filename, &file_info))
-           return 0;
-
-        fd = fopen(filename, "rb");
-        if (upload_dir)
-                    snprintf(url, sizeof(url), "ftp://%s/%s/%s", url_con->url,
-                    upload_dir, basename(tmp));
-        else
-                    snprintf(url, sizeof(url), "ftp://%s/%s",    url_con->url,
-                    basename(tmp));
+           return EINA_FALSE;
 
         snprintf(userpwd, sizeof(userpwd), "%s:%s", user, pass);
+        ret = curl_easy_setopt(url_con->curl_easy, CURLOPT_USERPWD, userpwd);
+        if (ret != CURLE_OK)
+          {
+             ERR("Could not set username and password for FTP upload: %s",
+                 curl_easy_strerror(ret));
+             return EINA_FALSE;
+          }
+
+        char tmp[PATH_MAX];
+        snprintf(tmp, PATH_MAX, "%s", filename);
+
+        if (upload_dir)
+          snprintf(url, sizeof(url), "ftp://%s/%s/%s", url_con->url,
+                   upload_dir, basename(tmp));
+        else
+          snprintf(url, sizeof(url), "ftp://%s/%s",    url_con->url,
+                   basename(tmp));
+
+        if (!ecore_con_url_url_set(url_con, url))
+          return EINA_FALSE;
+
         curl_easy_setopt(url_con->curl_easy, CURLOPT_INFILESIZE_LARGE,
                          (curl_off_t)file_info.st_size);
-        curl_easy_setopt(url_con->curl_easy, CURLOPT_USERPWD,  userpwd);
         curl_easy_setopt(url_con->curl_easy, CURLOPT_UPLOAD,   1);
         curl_easy_setopt(url_con->curl_easy, CURLOPT_READFUNCTION,
                          _ecore_con_url_read_cb);
+
+        fd = fopen(filename, "rb");
+        if (!fd)
+          {
+             ERR("Could not open \"%s\" for FTP upload", filename);
+             return EINA_FALSE;
+          }
         curl_easy_setopt(url_con->curl_easy, CURLOPT_READDATA, fd);
-        ecore_con_url_url_set(url_con, url);
 
         return _ecore_con_url_perform(url_con);
      }
-   else
-      return 0;
 
+   return EINA_FALSE;
 #else
-   return 0;
-   url_con = NULL;
-   filename = NULL;
-   user = NULL;
-   pass = NULL;
-   upload_dir = NULL;
+   return EINA_FALSE;
+   (void)url_con;
+   (void)filename;
+   (void)user;
+   (void)pass;
+   (void)upload_dir;
 #endif
 }
 
 /**
- * Send a Curl httppost
- * @return 1 on success, 0 on error.
- * @ingroup Ecore_Con_Url_Group
- */
-EAPI int
-ecore_con_url_http_post_send(Ecore_Con_Url *url_con, void *httppost)
-{
-#ifdef HAVE_CURL
-   if (url_con->post)
-      curl_formfree(url_con->post);
-
-   url_con->post = NULL;
-
-   if (!ECORE_MAGIC_CHECK(url_con, ECORE_MAGIC_CON_URL))
-     {
-        ECORE_MAGIC_FAIL(url_con, ECORE_MAGIC_CON_URL,
-                         "ecore_con_url_http_post_send");
-        return 0;
-     }
-
-   url_con->post = httppost;
-
-   if (url_con->active)
-      return 0;
-
-   if (!url_con->url)
-      return 0;
-
-   curl_easy_setopt(url_con->curl_easy, CURLOPT_HTTPPOST, httppost);
-
-   return ecore_con_url_send(url_con, NULL, 0, NULL);
-#else
-   return 0;
-   url_con = NULL;
-#endif
-}
-
-/**
- * Enable or disable libcurl verbose output, useful for debug
- * @return  FIXME: To be more documented.
- * @ingroup Ecore_Con_Url_Group
+ * Toggle libcurl's verbose output.
+ *
+ * If @p verbose is @c EINA_TRUE, libcurl will output a lot of verbose
+ * information about its operations, which is useful for
+ * debugging. The verbose information will be sent to stderr.
+ *
+ * @param url_con Ecore_Con_Url instance which will be acted upon.
+ * @param verbose Whether or not to enable libcurl's verbose output.
  */
 EAPI void
-ecore_con_url_verbose_set(Ecore_Con_Url *url_con, int verbose)
+ecore_con_url_verbose_set(Ecore_Con_Url *url_con, Eina_Bool verbose)
 {
 #ifdef HAVE_CURL
    if (!ECORE_MAGIC_CHECK(url_con, ECORE_MAGIC_CON_URL))
@@ -995,23 +1001,19 @@ ecore_con_url_verbose_set(Ecore_Con_Url *url_con, int verbose)
    if (!url_con->url)
       return;
 
-   if (verbose ==
-       EINA_TRUE)
-      curl_easy_setopt(url_con->curl_easy, CURLOPT_VERBOSE,
-                       1);
-   else
-      curl_easy_setopt(url_con->curl_easy, CURLOPT_VERBOSE, 0);
-
+   curl_easy_setopt(url_con->curl_easy, CURLOPT_VERBOSE, (int)verbose);
+#else
+   (void)url_con;
+   (void)verbose;
 #endif
 }
 
 /**
  * Enable or disable EPSV extension
  * @return  FIXME: To be more documented.
- * @ingroup Ecore_Con_Url_Group
  */
 EAPI void
-ecore_con_url_ftp_use_epsv_set(Ecore_Con_Url *url_con, int use_epsv)
+ecore_con_url_ftp_use_epsv_set(Ecore_Con_Url *url_con, Eina_Bool use_epsv)
 {
 #ifdef HAVE_CURL
    if (!ECORE_MAGIC_CHECK(url_con, ECORE_MAGIC_CON_URL))
@@ -1027,15 +1029,15 @@ ecore_con_url_ftp_use_epsv_set(Ecore_Con_Url *url_con, int use_epsv)
    if (!url_con->url)
       return;
 
-   if (use_epsv ==
-       EINA_TRUE)
-      curl_easy_setopt(url_con->curl_easy, CURLOPT_FTP_USE_EPSV,
-                       1);
-   else
-      curl_easy_setopt(url_con->curl_easy, CURLOPT_FTP_USE_EPSV, 0);
-
+   curl_easy_setopt(url_con->curl_easy, CURLOPT_FTP_USE_EPSV, (int)use_epsv);
 #endif
+   (void)url_con;
+   (void)use_epsv;
 }
+
+/**
+ * @}
+ */
 
 #ifdef HAVE_CURL
 static int
@@ -1227,20 +1229,21 @@ _ecore_con_url_read_cb(void *ptr, size_t size, size_t nitems, void *stream)
    return retcode;
 }
 
-static int
+static Eina_Bool
 _ecore_con_url_perform(Ecore_Con_Url *url_con)
 {
    fd_set read_set, write_set, exc_set;
    int fd_max, fd;
    int flags, still_running;
    int completed_immediately = 0;
+   CURLMcode ret;
 
    _url_con_list = eina_list_append(_url_con_list, url_con);
 
-   url_con->active = 1;
-   curl_multi_add_handle(curlm, url_con->curl_easy);
+   url_con->active = EINA_TRUE;
+   curl_multi_add_handle(_curlm, url_con->curl_easy);
    /* This one can't be stopped, or the download never start. */
-   while (curl_multi_perform(curlm, &still_running) == CURLM_CALL_MULTI_PERFORM) ;
+   while (curl_multi_perform(_curlm, &still_running) == CURLM_CALL_MULTI_PERFORM) ;
 
    completed_immediately = _ecore_con_url_process_completed_jobs(url_con);
 
@@ -1257,7 +1260,14 @@ _ecore_con_url_perform(Ecore_Con_Url *url_con)
         FD_ZERO(&exc_set);
 
         /* Stupid curl, why can't I get the fd to the current added job? */
-        curl_multi_fdset(curlm, &read_set, &write_set, &exc_set, &fd_max);
+        ret = curl_multi_fdset(_curlm, &read_set, &write_set, &exc_set,
+                               &fd_max);
+        if (ret != CURLM_OK)
+          {
+             ERR("curl_multi_fdset failed: %s", curl_multi_strerror(ret));
+             return EINA_FALSE;
+          }
+
         for (fd = 0; fd <= fd_max; fd++)
           {
              if (!FD_ISSET(fd, &_current_fd_set))
@@ -1276,7 +1286,11 @@ _ecore_con_url_perform(Ecore_Con_Url *url_con)
                     {
                        long ms = 0;
 
-                       curl_multi_timeout(curlm, &ms);
+                       ret = curl_multi_timeout(_curlm, &ms);
+                       if (ret != CURLM_OK)
+                         ERR("curl_multi_timeout failed: %s",
+                             curl_multi_strerror(ret));
+
                        if (ms == 0)
                           ms = 1000;
 
@@ -1295,16 +1309,21 @@ _ecore_con_url_perform(Ecore_Con_Url *url_con)
           {
              /* Failed to set up an fd_handler */
              ecore_timer_freeze(_curl_timeout);
-             curl_multi_remove_handle(curlm, url_con->curl_easy);
-             url_con->active = 0;
+
+             ret = curl_multi_remove_handle(_curlm, url_con->curl_easy);
+             if (ret != CURLM_OK)
+               ERR("curl_multi_remove_handle failed: %s",
+                   curl_multi_strerror(ret));
+
+             url_con->active = EINA_FALSE;
              url_con->fd = -1;
-             return 0;
+             return EINA_FALSE;
           }
 
         ecore_timer_thaw(_curl_timeout);
      }
 
-   return 1;
+   return EINA_TRUE;
 }
 
 static Eina_Bool
@@ -1314,7 +1333,7 @@ _ecore_con_url_idler_handler(void *data)
    int done = 1, still_running;
 
    start = ecore_time_get();
-   while (curl_multi_perform(curlm, &still_running) == CURLM_CALL_MULTI_PERFORM)
+   while (curl_multi_perform(_curlm, &still_running) == CURLM_CALL_MULTI_PERFORM)
       /* make this not more than a frametime to keep interactivity high */
       if ((ecore_time_get() - start) > ecore_animator_frametime_get())
         {
@@ -1359,11 +1378,12 @@ _ecore_con_url_process_completed_jobs(Ecore_Con_Url *url_con_to_match)
    Ecore_Con_Url *url_con;
    Ecore_Con_Event_Url_Complete *e;
    CURLMsg *curlmsg;
+   CURLMcode ret;
    int n_remaining;
    int job_matched = 0;
 
    /* Loop jobs and check if any are done */
-   while ((curlmsg = curl_multi_info_read(curlm, &n_remaining)))
+   while ((curlmsg = curl_multi_info_read(_curlm, &n_remaining)))
      {
         if (curlmsg->msg != CURLMSG_DONE)
            continue;
@@ -1389,7 +1409,7 @@ _ecore_con_url_process_completed_jobs(Ecore_Con_Url *url_con_to_match)
                   }
 
                 _url_con_list = eina_list_remove(_url_con_list, url_con);
-                url_con->active = 0;
+                url_con->active = EINA_FALSE;
                 e = calloc(1, sizeof(Ecore_Con_Event_Url_Complete));
                 if (e)
                   {
@@ -1409,7 +1429,11 @@ _ecore_con_url_process_completed_jobs(Ecore_Con_Url *url_con_to_match)
                      _url_complete_push_event(ECORE_CON_EVENT_URL_COMPLETE, e);
                   }
 
-                curl_multi_remove_handle(curlm, url_con->curl_easy);
+                ret = curl_multi_remove_handle(_curlm, url_con->curl_easy);
+                if (ret != CURLM_OK)
+                  ERR("curl_multi_remove_handle failed: %s",
+                      curl_multi_strerror(ret));
+
                 break;
              }
         }

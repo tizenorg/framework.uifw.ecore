@@ -18,7 +18,7 @@ struct _Ecore_Animator
    void          *data;
 
    Eina_Bool     delete_me : 1;
-   Eina_Bool	 suspended : 1;
+   Eina_Bool     suspended : 1;
 };
 
 
@@ -30,11 +30,22 @@ static Ecore_Animator *animators = NULL;
 static double          animators_frametime = 1.0 / 30.0;
 
 /**
+ * @addtogroup Ecore_Group Ecore - Main Loop and Job Functions.
+ *
+ * @{
+ */
+
+/**
+ * @addtogroup Ecore_Animator_Group Ecore Animator functions
+ *
+ * @{
+ */
+
+/**
  * Add a animator to tick off at every animaton tick during main loop execution.
  * @param func The function to call when it ticks off
  * @param data The data to pass to the function
  * @return A handle to the new animator
- * @ingroup Ecore_Animator_Group
  *
  * This function adds a animator and returns its handle on success and NULL on
  * failure. The function @p func will be called every N seconds where N is the
@@ -74,7 +85,6 @@ ecore_animator_add(Ecore_Task_Cb func, const void *data)
  * Delete the specified animator from the animator list.
  * @param animator The animator to delete
  * @return The data pointer set for the animator
- * @ingroup Ecore_Animator_Group
  *
  * Delete the specified @p aqnimator from the set of animators that are executed
  * during main loop execution. This function returns the data parameter that
@@ -87,9 +97,9 @@ ecore_animator_del(Ecore_Animator *animator)
 {
    if (!ECORE_MAGIC_CHECK(animator, ECORE_MAGIC_ANIMATOR))
      {
-	ECORE_MAGIC_FAIL(animator, ECORE_MAGIC_ANIMATOR,
-			 "ecore_animator_del");
-	return NULL;
+        ECORE_MAGIC_FAIL(animator, ECORE_MAGIC_ANIMATOR,
+                         "ecore_animator_del");
+        return NULL;
      }
    if (animator->delete_me) return animator->data;
    animator->delete_me = EINA_TRUE;
@@ -101,7 +111,7 @@ ecore_animator_del(Ecore_Animator *animator)
  * Set the animator call interval in seconds.
  * @param frametime The time in seconds in between animator ticks.
  *
- * This function sets the time interval (in seconds) inbetween animator ticks.
+ * This function sets the time interval (in seconds) between animator ticks.
  */
 EAPI void
 ecore_animator_frametime_set(double frametime)
@@ -111,8 +121,8 @@ ecore_animator_frametime_set(double frametime)
    animators_frametime = frametime;
    if (timer)
      {
-	ecore_timer_del(timer);
-	timer = NULL;
+        ecore_timer_del(timer);
+        timer = NULL;
      }
    if (animators)
      timer = ecore_timer_add(animators_frametime, _ecore_animator, NULL);
@@ -122,7 +132,7 @@ ecore_animator_frametime_set(double frametime)
  * Get the animator call interval in seconds.
  * @return The time in second in between animator ticks.
  *
- * this function retrieves the time inbetween animator ticks, in seconds.
+ * this function retrieves the time between animator ticks, in seconds.
  */
 EAPI double
 ecore_animator_frametime_get(void)
@@ -133,7 +143,6 @@ ecore_animator_frametime_get(void)
 /**
  * Suspend the specified animator.
  * @param animator The animator to delete
- * @ingroup Ecore_Animator_Group
  *
  * The specified @p animator will be temporarly removed from the set of animators
  * that are executed during main loop execution.
@@ -143,9 +152,9 @@ ecore_animator_freeze(Ecore_Animator *animator)
 {
    if (!ECORE_MAGIC_CHECK(animator, ECORE_MAGIC_ANIMATOR))
      {
-	ECORE_MAGIC_FAIL(animator, ECORE_MAGIC_ANIMATOR,
-			 "ecore_animator_del");
-	return;
+        ECORE_MAGIC_FAIL(animator, ECORE_MAGIC_ANIMATOR,
+                         "ecore_animator_del");
+        return;
      }
    if (animator->delete_me) return;
    animator->suspended = EINA_TRUE;
@@ -154,7 +163,6 @@ ecore_animator_freeze(Ecore_Animator *animator)
 /**
  * Restore execution of the specified animator.
  * @param animator The animator to delete
- * @ingroup Ecore_Animator_Group
  *
  * The specified @p animator will be put back in the set of animators
  * that are executed during main loop execution.
@@ -164,9 +172,9 @@ ecore_animator_thaw(Ecore_Animator *animator)
 {
    if (!ECORE_MAGIC_CHECK(animator, ECORE_MAGIC_ANIMATOR))
      {
-	ECORE_MAGIC_FAIL(animator, ECORE_MAGIC_ANIMATOR,
-			 "ecore_animator_del");
-	return;
+        ECORE_MAGIC_FAIL(animator, ECORE_MAGIC_ANIMATOR,
+                         "ecore_animator_del");
+        return;
      }
    if (animator->delete_me) return;
    animator->suspended = EINA_FALSE;
@@ -177,17 +185,17 @@ _ecore_animator_shutdown(void)
 {
    if (timer)
      {
-	ecore_timer_del(timer);
-	timer = NULL;
+        ecore_timer_del(timer);
+        timer = NULL;
      }
    while (animators)
      {
-	Ecore_Animator *animator;
+        Ecore_Animator *animator;
 
-	animator = animators;
-	animators = (Ecore_Animator *) eina_inlist_remove(EINA_INLIST_GET(animators), EINA_INLIST_GET(animators));
-	ECORE_MAGIC_SET(animator, ECORE_MAGIC_NONE);
-	free(animator);
+        animator = animators;
+        animators = (Ecore_Animator *) eina_inlist_remove(EINA_INLIST_GET(animators), EINA_INLIST_GET(animators));
+        ECORE_MAGIC_SET(animator, ECORE_MAGIC_NONE);
+        free(animator);
      }
 }
 
@@ -198,36 +206,44 @@ _ecore_animator(void *data __UNUSED__)
 
    EINA_INLIST_FOREACH(animators, animator)
      {
-	if (!animator->delete_me && !animator->suspended)
-	  {
-	     if (!animator->func(animator->data))
-	       {
-		  animator->delete_me = EINA_TRUE;
-		  animators_delete_me++;
-	       }
-	  }
+        if (!animator->delete_me && !animator->suspended)
+          {
+             if (!animator->func(animator->data))
+               {
+                  animator->delete_me = EINA_TRUE;
+                  animators_delete_me++;
+               }
+          }
      }
    if (animators_delete_me)
      {
-	Ecore_Animator *l;
-	for(l = animators; l;)
-	  {
-	     animator = l;
-	     l = (Ecore_Animator *) EINA_INLIST_GET(l)->next;
-	     if (animator->delete_me)
-	       {
-		  animators = (Ecore_Animator *) eina_inlist_remove(EINA_INLIST_GET(animators), EINA_INLIST_GET(animator));
-		  ECORE_MAGIC_SET(animator, ECORE_MAGIC_NONE);
-		  free(animator);
-		  animators_delete_me--;
-		  if (animators_delete_me == 0) break;
-	       }
-	  }
+        Ecore_Animator *l;
+        for(l = animators; l;)
+          {
+             animator = l;
+             l = (Ecore_Animator *) EINA_INLIST_GET(l)->next;
+             if (animator->delete_me)
+               {
+                  animators = (Ecore_Animator *) eina_inlist_remove(EINA_INLIST_GET(animators), EINA_INLIST_GET(animator));
+                  ECORE_MAGIC_SET(animator, ECORE_MAGIC_NONE);
+                  free(animator);
+                  animators_delete_me--;
+                  if (animators_delete_me == 0) break;
+               }
+          }
      }
    if (!animators)
      {
-	timer = NULL;
-	return ECORE_CALLBACK_CANCEL;
+        timer = NULL;
+        return ECORE_CALLBACK_CANCEL;
      }
    return ECORE_CALLBACK_RENEW;
 }
+
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */

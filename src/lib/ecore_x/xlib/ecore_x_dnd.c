@@ -79,7 +79,7 @@ _ecore_x_dnd_shutdown(void)
    _ecore_x_dnd_init_count = 0;
 } /* _ecore_x_dnd_shutdown */
 
-static int
+static Eina_Bool
 _ecore_x_dnd_converter_copy(char *target  __UNUSED__,
                             void         *data,
                             int           size,
@@ -93,11 +93,11 @@ _ecore_x_dnd_converter_copy(char *target  __UNUSED__,
    XICCEncodingStyle style = XTextStyle;
 
    if (!data || !size)
-      return 0;
+      return EINA_FALSE;
 
    mystr = calloc(1, size + 1);
    if (!mystr)
-      return 0;
+      return EINA_FALSE;
 
    memcpy(mystr, data, size);
 
@@ -110,17 +110,17 @@ _ecore_x_dnd_converter_copy(char *target  __UNUSED__,
         *size_ret = bufsize;
         XFree(text_prop.value);
         free(mystr);
-        return 1;
+        return EINA_TRUE;
      }
    else
      {
         free(mystr);
-        return 0;
+        return EINA_FALSE;
      }
 } /* _ecore_x_dnd_converter_copy */
 
 EAPI void
-ecore_x_dnd_aware_set(Ecore_X_Window win, int on)
+ecore_x_dnd_aware_set(Ecore_X_Window win, Eina_Bool on)
 {
    Ecore_X_Atom prop_data = ECORE_X_DND_VERSION;
 
@@ -192,10 +192,10 @@ ecore_x_dnd_version_get(Ecore_X_Window win)
    return 0;
 } /* ecore_x_dnd_version_get */
 
-EAPI int
+EAPI Eina_Bool
 ecore_x_dnd_type_isset(Ecore_X_Window win, const char *type)
 {
-   int num, i, ret = 0;
+   int num, i, ret = EINA_FALSE;
    unsigned char *data;
    Ecore_X_Atom *atoms, atom;
 
@@ -211,7 +211,7 @@ ecore_x_dnd_type_isset(Ecore_X_Window win, const char *type)
      {
         if (atom == atoms[i])
           {
-             ret = 1;
+             ret = EINA_TRUE;
              break;
           }
      }
@@ -221,7 +221,7 @@ ecore_x_dnd_type_isset(Ecore_X_Window win, const char *type)
 } /* ecore_x_dnd_type_isset */
 
 EAPI void
-ecore_x_dnd_type_set(Ecore_X_Window win, const char *type, int on)
+ecore_x_dnd_type_set(Ecore_X_Window win, const char *type, Eina_Bool on)
 {
    Ecore_X_Atom atom;
    Ecore_X_Atom *oldset = NULL, *newset = NULL;
@@ -341,6 +341,29 @@ ecore_x_dnd_actions_set(Ecore_X_Window win,
      }
 } /* ecore_x_dnd_actions_set */
 
+/**
+ * The DND position update cb is called Ecore_X sends a DND position to a
+ * client.
+ *
+ * It essentially mirrors some of the data sent in the position message.
+ * Generally this cb should be set just before position update is called.
+ * Please note well you need to look after your own data pointer if someone
+ * trashes you position update cb set.
+ *
+ * It is considered good form to clear this when the dnd event finishes.
+ *
+ * @param cb Callback to updated each time ecore_x sends a position update.
+ * @param data User data.
+ */
+EAPI void
+ecore_x_dnd_callback_pos_update_set(
+                           void (*cb)(void *, Ecore_X_Xdnd_Position *data),
+			   const void *data)
+{
+   _posupdatecb = cb;
+   _posupdatedata = (void *)data; /* Discard the const early */
+}
+
 Ecore_X_DND_Source *
 _ecore_x_dnd_source_get(void)
 {
@@ -353,16 +376,16 @@ _ecore_x_dnd_target_get(void)
    return _target;
 } /* _ecore_x_dnd_target_get */
 
-EAPI int
+EAPI Eina_Bool
 ecore_x_dnd_begin(Ecore_X_Window source, unsigned char *data, int size)
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    if (!ecore_x_dnd_version_get(source))
-      return 0;
+      return EINA_FALSE;
 
    /* Take ownership of XdndSelection */
    if (!ecore_x_selection_xdnd_set(source, data, size))
-      return 0;
+      return EINA_FALSE;
 
    if (_version_cache)
      {
@@ -385,14 +408,14 @@ ecore_x_dnd_begin(Ecore_X_Window source, unsigned char *data, int size)
    _source->accepted_action = None;
    _source->dest = None;
 
-   return 1;
+   return EINA_TRUE;
 } /* ecore_x_dnd_begin */
 
-EAPI int
+EAPI Eina_Bool
 ecore_x_dnd_drop(void)
 {
    XEvent xev;
-   int status = 0;
+   int status = EINA_FALSE;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    if (_source->dest)
@@ -410,7 +433,7 @@ ecore_x_dnd_drop(void)
              xev.xclient.data.l[2] = _source->time;
              XSendEvent(_ecore_x_disp, _source->dest, False, 0, &xev);
              _source->state = ECORE_X_DND_SOURCE_DROPPED;
-             status = 1;
+             status = EINA_TRUE;
           }
         else
           {
@@ -436,8 +459,8 @@ ecore_x_dnd_drop(void)
 } /* ecore_x_dnd_drop */
 
 EAPI void
-ecore_x_dnd_send_status(int               will_accept,
-                        int               suppress,
+ecore_x_dnd_send_status(Eina_Bool         will_accept,
+                        Eina_Bool         suppress,
                         Ecore_X_Rectangle rectangle,
                         Ecore_X_Atom      action)
 {
@@ -529,30 +552,6 @@ ecore_x_dnd_source_action_get(void)
 {
    return _source->action;
 } /* ecore_x_dnd_source_action_get */
-
-/**  
- * The DND position update cb is called Ecore_X sends a DND position to a  
- * client.  
- *  
- * It essentially mirrors some of the data sent in the position message.  
- * Generally this cb should be set just before position update is called.  
- * Please note well you need to look after your own data pointer if someone  
- * trashes you position update cb set.  
- *  
- * It is considered good form to clear this when the dnd event finishes.  
- *  
- * @param cb Callback to updated each time ecore_x sends a position update.  
- * @param data User data.  
- */ 
-
-EAPI void
-ecore_x_dnd_callback_pos_update_set(
-	  		void (*cb)(void *, Ecore_X_Xdnd_Position *data), 
-			const void *data) 
-{
-   _posupdatecb = cb;
-   _posupdatedata = (void *)data; /* Discard the const early */ 	
-}
 
 void
 _ecore_x_dnd_drag(Ecore_X_Window root, int x, int y)
@@ -664,18 +663,22 @@ _ecore_x_dnd_drag(Ecore_X_Window root, int x, int y)
      }
 
    if (_posupdatecb)
-     {  
-        pos.position.x = x;  
-	pos.position.y = y;  
-	pos.win = win;  
-	pos.prev = _source->dest;  
-	_posupdatecb(_posupdatedata, &pos);  
-     } 
-				 
-   
+     {
+        pos.position.x = x;
+        pos.position.y = y;
+        pos.win = win;
+        pos.prev = _source->dest;
+        _posupdatecb(_posupdatedata, &pos);
+     }
+
    _source->prev.x = x;
    _source->prev.y = y;
    _source->prev.window = root;
    _source->dest = win;
+
+
 } /* _ecore_x_dnd_drag */
 
+
+
+/* vim:set ts=8 sw=3 sts=3 expandtab cino=>5n-2f0^-2{2(0W1st0 :*/

@@ -31,7 +31,8 @@ ecore_event_init(void)
    if (++_ecore_event_init_count != 1)
      return _ecore_event_init_count;
    
-   _ecore_input_log_dom = eina_log_domain_register("EcoreInput", ECORE_INPUT_DEFAULT_LOG_COLOR);
+   _ecore_input_log_dom = eina_log_domain_register
+     ("ecore_input", ECORE_INPUT_DEFAULT_LOG_COLOR);
    if(_ecore_input_log_dom < 0)
      {
        EINA_LOG_ERR("Impossible to create a log domain for the ecore input module.");
@@ -110,9 +111,9 @@ ecore_event_update_modifier(const char *key, Ecore_Event_Modifiers *modifiers, i
    for (i = 0; i < sizeof (matchs) / sizeof (Ecore_Event_Modifier_Match); i++)
      if (strcmp(matchs[i].key, key) == 0)
        {
-	  if (modifiers && matchs[i].modifier < modifiers->size)
-	    modifiers->array[matchs[i].modifier] += inc;
-	  return matchs[i].modifier;
+          if (modifiers && matchs[i].modifier < modifiers->size)
+            modifiers->array[matchs[i].modifier] += inc;
+          return matchs[i].modifier;
        }
 
    return ECORE_NONE;

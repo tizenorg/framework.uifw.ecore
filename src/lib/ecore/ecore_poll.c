@@ -52,21 +52,21 @@ _ecore_poller_next_tick_eval(void)
    min_interval = -1;
    for (i = 0; i < 15; i++)
      {
-	if (pollers[i])
-	  {
-	     min_interval = i;
-	     break;
-	  }
+        if (pollers[i])
+          {
+             min_interval = i;
+             break;
+          }
      }
    if (min_interval < 0)
      {
-	/* no pollers */
-	if (timer)
-	  {
-	     ecore_timer_del(timer);
-	     timer = NULL;
-	  }
-	return;
+        /* no pollers */
+        if (timer)
+          {
+             ecore_timer_del(timer);
+             timer = NULL;
+          }
+        return;
      }
    interval_incr = (1 << min_interval);
    interval = interval_incr * poll_interval;
@@ -76,28 +76,28 @@ _ecore_poller_next_tick_eval(void)
     * callback will adjust the timer interval at the end anyway */
    if (at_tick)
      {
-	if (!timer)
-	  timer = ecore_timer_add(interval, _ecore_poller_cb_timer, NULL);
+        if (!timer)
+          timer = ecore_timer_add(interval, _ecore_poller_cb_timer, NULL);
      }
    else
      {
-	double t;
+        double t;
 
-	if (!timer)
-	  timer = ecore_timer_add(interval, _ecore_poller_cb_timer, NULL);
-	else
-	  {
-	     t = ecore_time_get();
-	     if (interval != poll_cur_interval)
-	       {
-		  t -= last_tick; /* time since we last ticked */
-		  /* delete the timer and reset it to tick off in the new
-		   * time interval. at the tick this will be adjusted */
-		  ecore_timer_del(timer);
-		  timer = ecore_timer_add(interval - t,
-					  _ecore_poller_cb_timer, NULL);
-	       }
-	  }
+        if (!timer)
+          timer = ecore_timer_add(interval, _ecore_poller_cb_timer, NULL);
+        else
+          {
+             t = ecore_time_get();
+             if (interval != poll_cur_interval)
+               {
+                  t -= last_tick; /* time since we last ticked */
+                  /* delete the timer and reset it to tick off in the new
+                   * time interval. at the tick this will be adjusted */
+                  ecore_timer_del(timer);
+                  timer = ecore_timer_add(interval - t,
+                                          _ecore_poller_cb_timer, NULL);
+               }
+          }
      }
    poll_cur_interval = interval;
 }
@@ -116,9 +116,9 @@ _ecore_poller_cb_timer(void *data __UNUSED__)
     * 7, 16 etc. up to 32768) */
    for (i = 0; i < 15; i++)
      {
-	poller_counters[i] += interval_incr;
-	/* wrap back to 0 if we exceed out loop count for the counter */
-	if (poller_counters[i] >= (1 << i)) poller_counters[i] = 0;
+        poller_counters[i] += interval_incr;
+        /* wrap back to 0 if we exceed out loop count for the counter */
+        if (poller_counters[i] >= (1 << i)) poller_counters[i] = 0;
      }
 
    just_added_poller = 0;
@@ -126,49 +126,49 @@ _ecore_poller_cb_timer(void *data __UNUSED__)
    poller_walking++;
    for (i = 0; i < 15; i++)
      {
-	/* if the counter is @ 0 - this means that counter "went off" this
-	 * tick interval, so run all pollers hooked to that counter */
-	if (poller_counters[i] == 0)
-	  {
-	     EINA_INLIST_FOREACH(pollers[i], poller)
-	       {
-		  if (!poller->delete_me)
-		    {
-		       if (!poller->func(poller->data))
-			 {
-			    if (!poller->delete_me)
-			      {
-				 poller->delete_me = 1;
-				 poller_delete_count++;
-			      }
-			 }
-		    }
-	       }
-	  }
+        /* if the counter is @ 0 - this means that counter "went off" this
+         * tick interval, so run all pollers hooked to that counter */
+        if (poller_counters[i] == 0)
+          {
+             EINA_INLIST_FOREACH(pollers[i], poller)
+               {
+                  if (!poller->delete_me)
+                    {
+                       if (!poller->func(poller->data))
+                         {
+                            if (!poller->delete_me)
+                              {
+                                 poller->delete_me = 1;
+                                 poller_delete_count++;
+                              }
+                         }
+                    }
+               }
+          }
      }
    poller_walking--;
 
    /* handle deletes afterwards */
    if (poller_delete_count > 0)
      {
-	/* FIXME: walk all pollers and remove deleted ones */
-	for (i = 0; i < 15; i++)
-	  {
+        /* FIXME: walk all pollers and remove deleted ones */
+        for (i = 0; i < 15; i++)
+          {
              for (l = pollers[i]; l;)
-	       {
+               {
                   poller = l;
-		  l = (Ecore_Poller *) EINA_INLIST_GET(l)->next;
-		  if (poller->delete_me)
-		    {
-		       pollers[i] = (Ecore_Poller *) eina_inlist_remove(EINA_INLIST_GET(pollers[i]), EINA_INLIST_GET(poller));
-		       free(poller);
-		       poller_delete_count--;
-		       changes++;
-		       if (poller_delete_count <= 0) break;
-		    }
-	       }
-	     if (poller_delete_count <= 0) break;
-	  }
+                  l = (Ecore_Poller *) EINA_INLIST_GET(l)->next;
+                  if (poller->delete_me)
+                    {
+                       pollers[i] = (Ecore_Poller *) eina_inlist_remove(EINA_INLIST_GET(pollers[i]), EINA_INLIST_GET(poller));
+                       free(poller);
+                       poller_delete_count--;
+                       changes++;
+                       if (poller_delete_count <= 0) break;
+                    }
+               }
+             if (poller_delete_count <= 0) break;
+          }
      }
    /* if we deleted or added any pollers, then we need to re-evaluate our
     * minimum poll interval */
@@ -191,12 +191,20 @@ _ecore_poller_cb_timer(void *data __UNUSED__)
 }
 
 /**
- * @defgroup Ecore_Poll_Group Ecore Poll Functions
+ * @addtogroup Ecore_Group Ecore - Main Loop and Job Functions.
+ *
+ * @{
+ */
+
+/**
+ * @addtogroup Ecore_Poller_Group Ecore Poll functions
  *
  * These functions are for the need to poll information, but provide a shared
  * abstracted API to pool such polling to minimise wakeup and ensure all the
  * polling happens in as few spots as possible areound a core poll interval.
  * For now only 1 core poller type is supprted: ECORE_POLLER_CORE
+ *
+ * @{
  */
 
 
@@ -204,7 +212,6 @@ _ecore_poller_cb_timer(void *data __UNUSED__)
  * Sets the time between ticks (in seconds) for the given ticker clock.
  * @param   type The ticker type to adjust
  * @param   poll_time The time (in seconds) between ticks of the clock
- * @ingroup Ecore_Poller_Group
  *
  * This will adjust the time between ticks of the given ticker type defined
  * by @p type to the time period defined by @p poll_time.
@@ -220,7 +227,6 @@ ecore_poller_poll_interval_set(Ecore_Poller_Type type __UNUSED__, double poll_ti
  * Gets the time between ticks (in seconds) for the given ticker clock.
  * @param   type The ticker type to query
  * @return  The time in seconds between ticks of the ticker clock
- * @ingroup Ecore_Poller_Group
  *
  * This will get the time between ticks of the specifider ticker clock.
  */
@@ -238,7 +244,6 @@ ecore_poller_poll_interval_get(Ecore_Poller_Type type __UNUSED__)
  *               rescheduled for the next tick interval.
  * @param   data Data to pass to @p func when it is called.
  * @return  A poller object on success.  @c NULL on failure.
- * @ingroup Ecore_Poller_Group
  *
  * This function adds a poller callback that is to be called regularly
  * along with all other poller callbacks so the pollers are synchronized with
@@ -294,8 +299,8 @@ ecore_poller_add(Ecore_Poller_Type type __UNUSED__, int interval, Ecore_Task_Cb 
    ibit = -1;
    while (interval != 0)
      {
-	ibit++;
-	interval >>= 1;
+        ibit++;
+        interval >>= 1;
      }
    /* only allow up to 32768 - i.e. ibit == 15, so limit it */
    if (ibit > 15) ibit = 15;
@@ -320,7 +325,6 @@ ecore_poller_add(Ecore_Poller_Type type __UNUSED__, int interval, Ecore_Task_Cb 
  *
  * This allows the changing of a poller's polling interval.  It is useful when you want to alter
  * a poll rate without deleting and re-creating a poller.
- * @ingroup Ecore_Poller_Group
  */
 EAPI Eina_Bool
 ecore_poller_poller_interval_set(Ecore_Poller *poller, int interval)
@@ -364,7 +368,6 @@ ecore_poller_poller_interval_set(Ecore_Poller *poller, int interval)
  * @return Returns the interval, in ticks, that @p poller polls at
  *
  * This returns a poller's polling interval, or 0 on error.
- * @ingroup Ecore_Poller_Group
  */
 EAPI int
 ecore_poller_poller_interval_get(Ecore_Poller *poller)
@@ -392,7 +395,6 @@ ecore_poller_poller_interval_get(Ecore_Poller *poller)
  * @param   poller The poller to delete.
  * @return  The data pointer set for the timer when @ref ecore_poller_add was
  *          called.  @c NULL is returned if the function is unsuccessful.
- * @ingroup Ecore_Poller_Group
  *
  * Note: @p poller must be a valid handle. If the poller function has already
  * returned 0, the handle is no longer valid (and does not need to be delete).
@@ -425,6 +427,14 @@ ecore_poller_del(Ecore_Poller *poller)
    return data;
 }
 
+/**
+ * @}
+ */
+
+/**
+ * @}
+ */
+
 void
 _ecore_poller_shutdown(void)
 {
@@ -433,10 +443,10 @@ _ecore_poller_shutdown(void)
 
    for (i = 0; i < 15; i++)
      {
-	while ((poller = pollers[i]))
-	  {
-	     pollers[i] = (Ecore_Poller *) eina_inlist_remove(EINA_INLIST_GET(pollers[i]), EINA_INLIST_GET(pollers[i]));
-	     free(poller);
-	  }
+        while ((poller = pollers[i]))
+          {
+             pollers[i] = (Ecore_Poller *) eina_inlist_remove(EINA_INLIST_GET(pollers[i]), EINA_INLIST_GET(pollers[i]));
+             free(poller);
+          }
      }
 }

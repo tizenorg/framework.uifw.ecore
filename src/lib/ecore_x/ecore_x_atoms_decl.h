@@ -275,9 +275,10 @@ EAPI Ecore_X_Atom ECORE_X_ATOM_E_COMP_FLUSH = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_COMP_DUMP = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_COMP_PIXMAP = 0;
 
+EAPI Ecore_X_Atom ECORE_X_ATOM_E_USER_CREATED_WINDOW = 0;
+EAPI Ecore_X_Atom ECORE_X_ATOM_E_PARENT_BORDER_WINDOW = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED = 0;
-
-/* added by doyoun.kang 100218 - for rotation */
+EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_INDICATOR_STATE = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_AVAILABLE_ANGLE = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_OPERATOR = 0;
@@ -289,8 +290,6 @@ EAPI Ecore_X_Atom ECORE_X_ATOM_USER_CREATED_WINDOW = 0;
 /* added by gl77.lee - XID that points to the parent border window */
 EAPI Ecore_X_Atom ECORE_X_ATOM_PARENT_BORDER_WINDOW = 0;
 
-/* added by doyoun.kang - for indicator's state */
-EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_INDICATOR_STATE = 0;
 
 /* added by doyoun.kang - for sliding window */
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_STATE = 0;

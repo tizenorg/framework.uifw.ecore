@@ -201,6 +201,7 @@ struct _Ecore_Evas_Engine
       Ecore_X_GC     gc;
       Ecore_X_XRegion *damages;
       Ecore_X_Sync_Counter sync_counter;
+      Ecore_X_Window leader;
       int            sync_val; // bigger! this will screw up at 2 billion frames (414 days of continual rendering @ 60fps)
       int            screen_num;
       int            px, py, pw, ph;
@@ -246,17 +247,18 @@ struct _Ecore_Evas_Engine
 #ifdef BUILD_ECORE_EVAS_WIN32
    struct {
       Ecore_Win32_Window *parent;
-     struct {
-       unsigned char fullscreen : 1;
-     } state;
+      struct {
+         unsigned char region     : 1;
+         unsigned char fullscreen : 1;
+      } state;
    } win32;
 #endif
 #ifdef BUILD_ECORE_EVAS_SOFTWARE_16_WINCE
    struct {
       Ecore_WinCE_Window *window;
-     struct {
-       unsigned char fullscreen : 1;
-     } state;
+      struct {
+         unsigned char fullscreen : 1;
+      } state;
    } wince;
 #endif
 
@@ -379,6 +381,6 @@ void _ecore_evas_free(Ecore_Evas *ee);
 void _ecore_evas_idle_timeout_update(Ecore_Evas *ee);
 void _ecore_evas_mouse_move_process(Ecore_Evas *ee, int x, int y, unsigned int timestamp);
 
-extern int _ecore_evas_app_comp_sync;
+extern Eina_Bool _ecore_evas_app_comp_sync;
 
 #endif

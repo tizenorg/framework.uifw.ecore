@@ -186,7 +186,7 @@ EAPI extern Ecore_X_Atom ECORE_X_ATOM_SELECTION_PROP_PRIMARY;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_SELECTION_PROP_SECONDARY;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_SELECTION_PROP_CLIPBOARD;
 
-/* currenly E specific virtual keyboard extension, aim to submit to netwm spec
+/* currently E specific virtual keyboard extension, aim to submit to netwm spec
  * later */
 
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_VIRTUAL_KEYBOARD;
@@ -247,9 +247,11 @@ EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_SYNC_CANCEL;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_FLUSH;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_DUMP;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_PIXMAP;
-EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED;
 
-/* added by doyoun.kang 100218 - for rotation */
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_USER_CREATED_WINDOW;
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_PARENT_BORDER_WINDOW;
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED;
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_INDICATOR_STATE;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_AVAILABLE_ANGLE;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_OPERATOR;

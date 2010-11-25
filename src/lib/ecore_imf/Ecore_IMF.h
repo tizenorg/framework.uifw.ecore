@@ -54,6 +54,31 @@
 extern "C" {
 #endif
 
+   // will be deleted soon
+   /* ecore_imf_context_ise_state_add_listener() flag */
+   typedef enum 
+     {
+        ISE_STATE_EVENT,                /**< ISE STATE Event */
+        ISE_MODE_EVENT,                 /**< ISE MODE Event */
+        ISE_LANGUAGE_EVENT,             /**< ISE LANGUAGE Event */
+        ISE_SHIFT_MODE_EVENT,           /**< ISE SHIFT MODE */
+        ISE_PREEDIT_MODE_EVENT,         /**< ISE PREEDIT MODE */
+        ISE_COMPLETION_MODE_EVENT,      /**< ISE COMPLETION MODE */
+        ISE_CUSTOM_INPUT_MODE_EVENT,    /**< ISE CUSTOM INPUT MODE */
+
+        ISE_PRIVATE_CONTEXT_01,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_02,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_03,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_04,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_05,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_06,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_07,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_08,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_09,  /**< ISE PRIVATE CONTEXT */
+        ISE_PRIVATE_CONTEXT_10,  /**< ISE PRIVATE CONTEXT */
+        ISE_EVENT_INVALID
+     } ISE_EVENT;
+
    /* ecore_imf_context_input_panel_event_callback_add() flag */
    typedef enum 
      {
@@ -78,14 +103,30 @@ extern "C" {
         ECORE_IMF_INPUT_PANEL_EVENT_INVALID
      } Ecore_IMF_Input_Panel_Event;
 
+   // will be deleted soon. Use Ecore_IMF_Input_Panel_State instead.
+   typedef enum 
+     {
+        ISE_STATE_SHOW,         /**< Show ISE */
+        ISE_STATE_SHOW_ALWAYS,  /**< Show ISE always*/
+        ISE_STATE_HIDE,         /**< Hide ISE */
+        ISE_STATE_INVALID
+     } ISE_STATE;
+
    typedef enum 
      {
         ECORE_IMF_INPUT_PANEL_STATE_SHOW,         /**< Show Input panel */
         ECORE_IMF_INPUT_PANEL_STATE_HIDE,         /**< Hide Input panel */
-        ECORE_IMF_INPUT_PANEL_STATE_WILL_SHOW,    /**< Input panel will be shown */
-        ECORE_IMF_INPUT_PANEL_STATE_WILL_HIDE,    /**< Input panel will be hidden */
         ECORE_IMF_INPUT_PANEL_STATE_INVALID
      } Ecore_IMF_Input_Panel_State;
+
+   // will be deleted soon, Use Ecore_IMF_Input_Mode instead.
+   typedef enum 
+     {
+        ISE_MODE_NATIVE,        /**< Follow current locale mode */
+        ISE_MODE_ENGLISH,       /**< English mode*/
+        ISE_MODE_NUMBER,        /**< Number mode*/
+        ISE_MODE_INVALID
+     } ISE_MODE;
 
    typedef enum 
      {
@@ -129,6 +170,12 @@ extern "C" {
         ECORE_IMF_AUTOCORRECTION_YES,
         ECORE_IMF_AUTOCORRECTION_INVALID
      } Ecore_IMF_Autocorrection;
+
+   // will be deleted soon
+   typedef struct 
+     {
+        bool fUseImEffect;  /**< whether use Im effect or not */
+     } ISE_STYLE;
 
    typedef enum
      {

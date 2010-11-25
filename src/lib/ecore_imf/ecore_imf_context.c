@@ -90,7 +90,6 @@ ecore_imf_context_default_id_by_canvas_type_get(const char *canvas_type)
    int best_goodness = 0;
 
    id = getenv("ECORE_IMF_MODULE");
-   //printf ("id is %s \n", id);
    if (id)
      {
         if (strcmp(id, "none") == 0) return NULL;

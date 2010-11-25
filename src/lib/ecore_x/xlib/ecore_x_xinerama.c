@@ -38,8 +38,8 @@ ecore_x_xinerama_screen_count_get(void)
    return 0;
 } /* ecore_x_xinerama_screen_count_get */
 
-EAPI int
-ecore_x_xinerama_screen_geometry_get(int screen, int *x, int *y, int *w, int *h)
+EAPI Eina_Bool
+ecore_x_xinerama_screen_geometry_get(int screen __UNUSED__, int *x, int *y, int *w, int *h)
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 #ifdef ECORE_XINERAMA
@@ -63,7 +63,7 @@ ecore_x_xinerama_screen_geometry_get(int screen, int *x, int *y, int *w, int *h)
                   if (h)
                      *h = _xin_info[i].height;
 
-                  return 1;
+                  return EINA_TRUE;
                }
           }
      }
@@ -81,6 +81,6 @@ ecore_x_xinerama_screen_geometry_get(int screen, int *x, int *y, int *w, int *h)
    if (h)
       *h = DisplayHeight(_ecore_x_disp, 0);
 
-   return 0;
+   return EINA_FALSE;
 } /* ecore_x_xinerama_screen_geometry_get */
 

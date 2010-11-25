@@ -75,11 +75,18 @@ typedef enum _Ecore_Con_Ssl_Error
    ECORE_CON_SSL_ERROR_SSL2_NOT_SUPPORTED
 } Ecore_Con_Ssl_Error;
 
+typedef enum _Ecore_Con_Ssl_Handshake
+{
+   ECORE_CON_SSL_STATE_DONE = 0,
+   ECORE_CON_SSL_STATE_HANDSHAKING,
+   ECORE_CON_SSL_STATE_INIT
+} Ecore_Con_Ssl_State;
+
 struct _Ecore_Con_Client
 {
    ECORE_MAGIC;
    int fd;
-   Ecore_Con_Server *server;
+   Ecore_Con_Server *host_server;
    void *data;
    Ecore_Fd_Handler *fd_handler;
    int buf_size;
@@ -89,15 +96,20 @@ struct _Ecore_Con_Client
    int event_count;
    struct sockaddr *client_addr;
    int client_addr_len;
+   double start_time;
+   Ecore_Timer *until_deletion;
+   double disconnect_time;
 #if USE_GNUTLS
-   gnutls_session session;
+   gnutls_datum_t session_ticket;
+   gnutls_session_t session;
 #elif USE_OPENSSL
-   SSL_CTX *ssl_ctx;
    SSL *ssl;
    int ssl_err;
 #endif
-   char dead : 1;
-   char delete_me : 1;
+   Eina_Bool handshaking : 1;
+   Ecore_Con_Ssl_State ssl_state;
+   Eina_Bool dead : 1;
+   Eina_Bool delete_me : 1;
 };
 
 struct _Ecore_Con_Server
@@ -111,6 +123,7 @@ struct _Ecore_Con_Server
    void *data;
    Ecore_Fd_Handler *fd_handler;
    Eina_List *clients;
+   unsigned int client_count;
    int write_buf_size;
    int write_buf_offset;
    unsigned char *write_buf;
@@ -118,21 +131,31 @@ struct _Ecore_Con_Server
    int client_limit;
    pid_t ppid;
 #if USE_GNUTLS
-   gnutls_session session;
+   gnutls_session_t session;
    gnutls_anon_client_credentials_t anoncred_c;
    gnutls_anon_server_credentials_t anoncred_s;
+   gnutls_psk_client_credentials_t pskcred_c;
+   gnutls_psk_server_credentials_t pskcred_s;
    gnutls_certificate_credentials_t cert;
+   char *cert_file;
+   gnutls_dh_params_t dh_params;
 #elif USE_OPENSSL
    SSL_CTX *ssl_ctx;
    SSL *ssl;
    int ssl_err;
 #endif
+   double start_time;
+   double client_disconnect_time;
    char *ip;
-   char dead : 1;
-   char created : 1;
-   char connecting : 1;
-   char reject_excess_clients : 1;
-   char delete_me : 1;
+   Eina_Bool dead : 1;
+   Eina_Bool created : 1; /* EINA_TRUE if server is our listening server */
+   Eina_Bool connecting : 1; /* EINA_FALSE if just initialized or connected */
+   Eina_Bool handshaking : 1; /* EINA_TRUE if server is ssl handshaking */
+   Eina_Bool use_cert : 1; /* EINA_TRUE if using certificate auth */
+   Ecore_Con_Ssl_State ssl_state; /* current state of ssl handshake on the server */
+   Eina_Bool verify : 1; /* EINA_TRUE if certificates will be verified */
+   Eina_Bool reject_excess_clients : 1;
+   Eina_Bool delete_me : 1;
 };
 
 #ifdef HAVE_CURL
@@ -141,13 +164,12 @@ struct _Ecore_Con_Url
    ECORE_MAGIC;
    CURL *curl_easy;
    struct curl_slist *headers;
-   struct curl_httppost *post;
    Eina_List *additional_headers;
    Eina_List *response_headers;
    char *url;
 
-   Ecore_Con_Url_Time condition;
-   time_t time;
+   Ecore_Con_Url_Time time_condition;
+   double timestamp;
    void *data;
 
    Ecore_Fd_Handler *fd_handler;
@@ -157,7 +179,7 @@ struct _Ecore_Con_Url
    int received;
    int write_fd;
 
-   unsigned char active : 1;
+   Eina_Bool active : 1;
 };
 #endif
 
@@ -211,14 +233,9 @@ int                 ecore_con_info_mcast_listen(Ecore_Con_Server *svr,
 /* from ecore_con_ssl.c */
 Ecore_Con_Ssl_Error ecore_con_ssl_init(void);
 Ecore_Con_Ssl_Error ecore_con_ssl_shutdown(void);
-Eina_Bool           ecore_con_ssl_server_cert_add(const char *cert);
-Eina_Bool           ecore_con_ssl_client_cert_add(const char *cert_file,
-                                                  const char *crl_file,
-                                                  const char *key_file);
-void                ecore_con_ssl_server_prepare(Ecore_Con_Server *svr);
+Ecore_Con_Ssl_Error ecore_con_ssl_server_prepare(Ecore_Con_Server *svr, int ssl_type);
 Ecore_Con_Ssl_Error ecore_con_ssl_server_init(Ecore_Con_Server *svr);
 Ecore_Con_Ssl_Error ecore_con_ssl_server_shutdown(Ecore_Con_Server *svr);
-Ecore_Con_State     ecore_con_ssl_server_try(Ecore_Con_Server *svr);
 int                 ecore_con_ssl_server_read(Ecore_Con_Server *svr,
                                               unsigned char *buf,
                                               int size);
@@ -227,7 +244,6 @@ int                 ecore_con_ssl_server_write(Ecore_Con_Server *svr,
                                                int size);
 Ecore_Con_Ssl_Error ecore_con_ssl_client_init(Ecore_Con_Client *svr);
 Ecore_Con_Ssl_Error ecore_con_ssl_client_shutdown(Ecore_Con_Client *svr);
-Ecore_Con_State     ecore_con_ssl_client_try(Ecore_Con_Client *svr);
 int                 ecore_con_ssl_client_read(Ecore_Con_Client *svr,
                                               unsigned char *buf,
                                               int size);

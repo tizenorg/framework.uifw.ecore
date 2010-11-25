@@ -18,7 +18,7 @@ m4_define([lt_age], v_min)
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
 
-AC_INIT([ecore], [v_ver-alpha], [enlightenment-devel@lists.sourceforge.net])
+AC_INIT([ecore], [v_ver.beta], [enlightenment-devel@lists.sourceforge.net])
 AC_PREREQ([2.52])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_MACRO_DIR([m4])
@@ -201,6 +201,7 @@ case "$host_os" in
       want_signature="yes"
       want_inotify="yes"
       want_tslib="yes"
+      want_ecore_fb="yes"
       want_ecore_ipc="yes"
       want_ecore_imf="yes"
       want_ecore_x="yes"
@@ -361,6 +362,7 @@ case "$host_os" in
       EFL_ECORE_FILE_BUILD="-DEFL_ECORE_FILE_BUILD"
       EFL_ECORE_EVAS_BUILD="-DEFL_ECORE_EVAS_BUILD"
       EFL_ECORE_IMF_BUILD="-DEFL_ECORE_IMF_BUILD"
+      EFL_ECORE_IMF_EVAS_BUILD="-DEFL_ECORE_IMF_EVAS_BUILD"
       EFL_ECORE_INPUT_BUILD="-DEFL_ECORE_INPUT_BUILD"
       EFL_ECORE_INPUT_EVAS_BUILD="-DEFL_ECORE_INPUT_EVAS_BUILD"
       ;;
@@ -387,6 +389,7 @@ AC_SUBST(EFL_ECORE_BUILD)
 AC_SUBST(EFL_ECORE_FILE_BUILD)
 AC_SUBST(EFL_ECORE_EVAS_BUILD)
 AC_SUBST(EFL_ECORE_IMF_BUILD)
+AC_SUBST(EFL_ECORE_IMF_EVAS_BUILD)
 AC_SUBST(EFL_ECORE_INPUT_BUILD)
 AC_SUBST(EFL_ECORE_INPUT_EVAS_BUILD)
 AC_SUBST(EFL_ECORE_WINCE_BUILD)
@@ -407,11 +410,17 @@ case "$host_os" in
       dlopen_libs="-ldl"
       ;;
    *)
-      AC_CHECK_LIB(dl, dlopen, dlopen_libs=-ldl)
+      AC_CHECK_LIB([dl], [dlopen], [dlopen_libs=-ldl])
+      AC_SEARCH_LIBS([clock_gettime], [rt],
+         [
+          rt_libs=-lrt
+          AC_DEFINE(HAVE_CLOCK_GETTIME, [1], [Have clock_gettime()])
+         ])
       ;;
 esac
 AC_SUBST(WIN32_LIBS)
 AC_SUBST(dlopen_libs)
+AC_SUBST(rt_libs)
 
 # Eina library
 
@@ -903,13 +912,16 @@ m4_ifdef([AC_PROG_OBJC], [
 ])
 AC_SUBST(cocoa_ldflags)
 
-# check for epoll support
-AC_ARG_ENABLE(epoll, AC_HELP_STRING([--enable-epoll], [enable or disable epoll support]), [want_epoll=$enableval])  
-		     
-if test "x${want_epoll}" = "xyes" ; then  
-# check for epoll support  
-AC_CHECK_HEADERS([sys/epoll.h])  
-fi  
+want_epoll=yes
+AC_ARG_ENABLE(epoll,
+  AC_HELP_STRING([--enable-epoll], [enable or disable epoll support]),
+  [want_epoll=$enableval])
+
+if test "x${want_epoll}" = "xyes" ; then
+  # check for epoll support
+  AC_CHECK_HEADERS([sys/epoll.h])
+fi
+
 
 # basic pthread support
 

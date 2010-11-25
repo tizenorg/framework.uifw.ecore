@@ -1670,7 +1670,8 @@ ecore_config_init(const char *name)
 {
    char                *path;
    Ecore_Config_Prop   *list;
-   _ecore_config_log_dom = eina_log_domain_register("EcoreConfig", ECORE_CONFIG_DEFAULT_LOG_COLOR);
+   _ecore_config_log_dom = eina_log_domain_register
+     ("ecore_config", ECORE_CONFIG_DEFAULT_LOG_COLOR);
    if(_ecore_config_log_dom < 0) 
      {
        EINA_LOG_ERR("Impossible to create a log domain for the Ecore config module.");
@@ -1788,7 +1789,7 @@ _ecore_config_system_load(void)
 	  {
 	     snprintf(buf, PATH_MAX, "%s/.e/config.eet", p);
 	     if (ecore_config_file_load(buf) != 0) {
-		/* even if this file (system.eet) dosen't exist we can 
+		/* even if this file (system.eet) doesn't exist we can 
 		 * continue without it as it isn't striclty necessary.
 		*/
 		ecore_config_file_load(PACKAGE_DATA_DIR "/system.eet");

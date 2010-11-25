@@ -9,8 +9,8 @@
 #include "ecore_x_private.h"
 #include "ecore_x_randr.h"
 
-#define Ecore_X_Randr_None   0
-#define Ecore_X_Randr_Unset -1
+#define Ecore_X_Randr_None   (Ecore_X_Randr_Crtc)0
+#define Ecore_X_Randr_Unset  (Ecore_X_Randr_Crtc)-1
 
 #ifdef ECORE_XRANDR
 
@@ -39,7 +39,7 @@ extern int _randr_version;
 #endif
 
 /**
- * @Brief enable event selection. This enables basic interaction with
+ * @brief enable event selection. This enables basic interaction with
  * output/crtc events and requires RRandR >= 1.2.
  * @param win select this window's properties for RandRR events
  * @param on enable/disable selecting
@@ -82,7 +82,8 @@ _ecore_x_randr_crtc_validate(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc)
    int i;
    Eina_Bool ret = EINA_FALSE;
 
-   if ((crtc == Ecore_X_Randr_None) || (crtc == Ecore_X_Randr_Unset))
+   if ((crtc == Ecore_X_Randr_None) || 
+       (crtc == Ecore_X_Randr_Unset))
       return ret;
 
    if (_ecore_x_randr_root_validate(root) && crtc &&
@@ -385,7 +386,7 @@ ecore_x_randr_mode_info_get(Ecore_X_Window root, Ecore_X_Randr_Mode mode)
    int i;
 
    if (_ecore_x_randr_root_validate(root) &&
-       (res = _ecore_x_randr_get_screen_resources (_ecore_x_disp, root)))
+       (res = _ecore_x_randr_get_screen_resources(_ecore_x_disp, root)))
      {
         for (i = 0; i < res->nmode; i++)
           {
@@ -403,15 +404,14 @@ ecore_x_randr_mode_info_get(Ecore_X_Window root, Ecore_X_Randr_Mode mode)
                   ret->vSyncStart = res->modes[i].vSyncStart;
                   ret->vSyncEnd = res->modes[i].vSyncEnd;
                   ret->vTotal = res->modes[i].vTotal;
-                  if (!(ret->name =
-                           strndup(res->modes[i].name, res->modes[i].nameLength)))
+                  ret->name = NULL;
+                  ret->nameLength = 0;
+                  if (res->modes[i].nameLength > 0) 
                     {
-                       ret->name = NULL;
-                       ret->nameLength = 0;
+                       ret->nameLength = res->modes[i].nameLength;
+                       ret->name = strndup(res->modes[i].name, 
+                                           res->modes[i].nameLength);
                     }
-                  else
-                     ret->nameLength = res->modes[i].nameLength;
-
                   ret->modeFlags = res->modes[i].modeFlags;
                   break;
                }
@@ -436,12 +436,12 @@ ecore_x_randr_mode_info_free(Ecore_X_Randr_Mode_Info *mode_info)
 #ifdef ECORE_XRANDR
    RANDR_CHECK_1_2_RET();
    if (!mode_info)
-      return;
+     return;
 
    if (mode_info->name)
-      free(mode_info->name);
+     free(mode_info->name);
 
-      free(mode_info);
+   free(mode_info);
    mode_info = NULL;
 #endif
 }
@@ -635,7 +635,7 @@ ecore_x_randr_crtc_geometry_get(Ecore_X_Window root,
 }
 
 /*
- * @Brief sets the position of given CRTC within root window's screen
+ * @brief sets the position of given CRTC within root window's screen
  * @param root the window's screen to be queried
  * @param crtc the CRTC which's position within the mentioned screen is to be altered
  * @param x position on the x-axis (0 == left) of the screen. if x < 0 current value will be kept.
@@ -690,7 +690,7 @@ ecore_x_randr_crtc_pos_set(Ecore_X_Window root,
 }
 
 /**
- * @Brief Get the current set mode of a given CRTC
+ * @brief Get the current set mode of a given CRTC
  * @param root the window's screen to be queried
  * @param crtc the CRTC which's should be queried
  * @return currently set mode or - in case parameters are invalid -
@@ -724,16 +724,16 @@ ecore_x_randr_crtc_mode_get(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc)
 }
 
 /**
- * @Brief sets a mode for a CRTC and the outputs attached to it
+ * @brief sets a mode for a CRTC and the outputs attached to it
  * @param root the window's screen to be queried
  * @param crtc the CRTC which shall be set
  * @param outputs array of outputs which have to be compatible with the mode. If
  * NULL CRTC will be disabled.
  * @param noutputs number of outputs in array to be used. Use
  * Ecore_X_Randr_Unset (or -1) to use currently used outputs.
- * @para mode XID of the mode to be set. If set to 0 the CRTC will be disabled.
+ * @param mode XID of the mode to be set. If set to 0 the CRTC will be disabled.
  * If set to -1 the call will fail.
- * @return EINA_TRUE if mode setting was successfull. Else EINA_FALSE
+ * @return EINA_TRUE if mode setting was successful. Else EINA_FALSE
  */
 EAPI Eina_Bool
 ecore_x_randr_crtc_mode_set(Ecore_X_Window root,
@@ -1010,7 +1010,7 @@ ecore_x_randr_crtc_settings_set(Ecore_X_Window root,
                   outputs = NULL;
                   noutputs = 0;
                }
-             else if (noutputs == Ecore_X_Randr_Unset)
+             else if (noutputs == (int)Ecore_X_Randr_Unset)
                {
                   outputs = (Ecore_X_Randr_Output *)crtc_info->outputs;
                   noutputs = crtc_info->noutput;
@@ -1047,10 +1047,10 @@ ecore_x_randr_crtc_settings_set(Ecore_X_Window root,
 
 /**
  * @brief sets a CRTC relative to another one.
- * @crtc_r1 the CRTC to be positioned.
- * @crtc_r2 the CRTC the position should be relative to
- * @position the relation between the crtcs
- * @aligment in case CRTCs size differ, aligns CRTC1 accordingly at CRTC2's
+ * @param crtc_r1 the CRTC to be positioned.
+ * @param crtc_r2 the CRTC the position should be relative to
+ * @param position the relation between the crtcs
+ * @param alignment in case CRTCs size differ, aligns CRTC1 accordingly at CRTC2's
  * borders
  * @return EINA_TRUE if crtc could be successfully positioned. EINA_FALSE if
  * repositioning failed or if position of new crtc would be out of given screen's min/max bounds.
@@ -1425,9 +1425,9 @@ ecore_x_randr_output_possible_crtcs_get(Ecore_X_Window root, Ecore_X_Randr_Outpu
 /**
  * @brief gets the the outputs which might be used simultenously on the same
  * CRTC.
- * @root window that this information should be queried for.
- * @output the output which's clones we concern
- * @num number of possible clones
+ * @param root window that this information should be queried for.
+ * @param output the output which's clones we concern
+ * @param num number of possible clones
  */
 EAPI Ecore_X_Randr_Output *
 ecore_x_randr_output_clones_get(Ecore_X_Window root, Ecore_X_Randr_Output output, int *num)
@@ -1491,7 +1491,7 @@ ecore_x_randr_output_crtc_get(Ecore_X_Window root, Ecore_X_Randr_Output output)
 /**
  * @brief gets the given output's name as reported by X
  * @param root the window which's screen will be queried
- * @len length of returned c-string.
+ * @param len length of returned c-string.
  * @return name of the output as reported by X
  */
    EAPI char *
@@ -1512,9 +1512,8 @@ ecore_x_randr_output_name_get(Ecore_X_Window root,
 	/*
 	 * Actually the bewow command is correct, but due to a bug in libXrandr
 	 * it doesn't work. Therefor we stick with strlen().
-	 * Replace the line below with the following once
-	 * libXrandr >= git revision '25d793ab4ec111658e541c94eba4893a81d6a3b7'.
-	 * is shipped and standard.
+	 * Replace the line below with the following once this bug is
+	 * fixed within libXrandr.
 	 *
 	 *    *len = output_info->nameLen;
 	 *
@@ -1537,8 +1536,8 @@ ecore_x_randr_output_name_get(Ecore_X_Window root,
 /**
  * @brief gets the width and hight of a given mode
  * @param mode the mode which's size is to be looked up
- * @w width of given mode in px
- * @h height of given mode in px
+ * @param w width of given mode in px
+ * @param h height of given mode in px
  */
    EAPI void
 ecore_x_randr_mode_size_get(Ecore_X_Window root,
@@ -1577,12 +1576,12 @@ ecore_x_randr_mode_size_get(Ecore_X_Window root,
 }
 
 /**
- * @Brief gets the EDID information of an attached output if available.
+ * @brief gets the EDID information of an attached output if available.
  * Note that this information is not to be compared using ordinary string
  * comparison functions, since it includes 0-bytes.
  * @param root window this information should be queried from
- * @output the XID of the output
- * @length length of the byte-array. If NULL, request will fail.
+ * @param output the XID of the output
+ * @param length length of the byte-array. If NULL, request will fail.
  */
 EAPI unsigned char *
 ecore_x_randr_output_edid_get(Ecore_X_Window root,
@@ -1733,7 +1732,7 @@ ecore_x_randr_move_all_crtcs_but(Ecore_X_Window root,
 }
 
 /*
- * @Brief move given CRTCs belonging to the given root window's screen dx/dy pixels relative to their current position. The screen size will be automatically adjusted if neccessary and possible.
+ * @brief move given CRTCs belonging to the given root window's screen dx/dy pixels relative to their current position. The screen size will be automatically adjusted if necessary and possible.
  * @param root window which's screen's resources are used
  * @param crtcs list of CRTCs to be moved
  * @param ncrtc number of CRTCs in array
@@ -1769,14 +1768,14 @@ ecore_x_randr_move_crtcs(Ecore_X_Window root,
              i++)
           {
              if (((crtc_info[i]->x + dx) < 0) ||
-                 ((crtc_info[i]->x + crtc_info[i]->width + dx) > w_max)
+                 ((int)(crtc_info[i]->x + crtc_info[i]->width + dx) > w_max)
                  || ((crtc_info[i]->y + dy) < 0) ||
-                 ((crtc_info[i]->y + crtc_info[i]->height + dy) > h_max)
+                 ((int)(crtc_info[i]->y + crtc_info[i]->height + dy) > h_max)
                  )
                 goto _ecore_x_randr_move_crtcs_fail_free_crtc_info;
 
-             nw = MAX((crtc_info[i]->x + crtc_info[i]->width + dx), nw);
-             nh = MAX((crtc_info[i]->y + crtc_info[i]->height + dy), nh);
+             nw = MAX((int)(crtc_info[i]->x + crtc_info[i]->width + dx), nw);
+             nh = MAX((int)(crtc_info[i]->y + crtc_info[i]->height + dy), nh);
           }
         //not out of bounds
 
@@ -1868,10 +1867,10 @@ ecore_x_randr_screen_reset(Ecore_X_Window root)
 
 	enabled_crtcs[nenabled_crtcs++] = res->crtcs[i];
 
-        if ((crtc_info->x + crtc_info->width) > w_n)
+        if ((int)(crtc_info->x + crtc_info->width) > w_n)
            w_n = (crtc_info->x + crtc_info->width);
 
-        if ((crtc_info->y + crtc_info->height) > h_n)
+        if ((int)(crtc_info->y + crtc_info->height) > h_n)
            h_n = (crtc_info->y + crtc_info->height);
 
 	if (crtc_info->x < dx_min)
