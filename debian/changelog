@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.51480slp2+build26) unstable; urgency=low
+
+  * [ecore_imf] remove unused typedefs
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build26
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Fri, 26 Nov 2010 17:56:05 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build25) unstable; urgency=low
 
   * [SVN 54830 Merge]
