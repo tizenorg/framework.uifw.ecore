@@ -1,3 +1,12 @@
+ecore (1.0.0.001+svn.51480slp2+build20) unstable; urgency=low
+
+  * [SVN 54830 Merge]
+  * Update to SVN Revision 54830.
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build20
+
+ -- Juyung Seo <juyung.seo@samsung.com>  Fri, 26 Nov 2010 15:31:53 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build19) unstable; urgency=low
 
   * libcurl-dev -> libcurl4-openssl-dev
