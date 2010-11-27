@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.51480slp2+build27) unstable; urgency=low
+
+  * [ecore_evas.c] change FPS rate print it every 0.1 sec
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build27
+
+ -- Seokjae Jeong <seok.j.jeong@samsung.com>  Sat, 27 Nov 2010 15:06:21 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build26) unstable; urgency=low
 
   * [ecore_imf] remove unused typedefs
