@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.51480slp2+build28) unstable; urgency=low
+
+  * [ecore_evas] Patch code for rotation.
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build28
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Mon, 29 Nov 2010 10:14:56 +0900
+
 ecore (1.0.0.001+svn.51480slp2+build27) unstable; urgency=low
 
   * [ecore_evas.c] change FPS rate print it every 0.1 sec
