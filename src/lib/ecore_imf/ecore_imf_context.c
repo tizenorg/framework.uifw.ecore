@@ -212,6 +212,7 @@ EAPI void
 ecore_imf_context_del(Ecore_IMF_Context *ctx)
 {
    void *data;
+   Ecore_IMF_Input_Panel_State state;
 
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -219,6 +220,12 @@ ecore_imf_context_del(Ecore_IMF_Context *ctx)
                          "ecore_imf_context_del");
         return;
      }
+
+   state = ecore_imf_context_input_panel_state_get(ctx);
+
+   if (state == ECORE_IMF_INPUT_PANEL_STATE_SHOW)
+       ecore_imf_context_input_panel_hide(ctx);
+
    if (ctx->klass->del) ctx->klass->del(ctx);
    ECORE_MAGIC_SET(ctx, ECORE_MAGIC_NONE);
 	
