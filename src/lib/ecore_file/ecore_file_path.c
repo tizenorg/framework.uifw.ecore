@@ -2,6 +2,24 @@
 # include <config.h>
 #endif
 
+#undef alloca
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif defined __GNUC__
+# define alloca __builtin_alloca
+#elif defined _AIX
+# define alloca __alloca
+#elif defined _MSC_VER
+# include <malloc.h>
+# define alloca _alloca
+#else
+# include <stddef.h>
+# ifdef  __cplusplus
+extern "C"
+# endif
+void *alloca (size_t);
+#endif
+
 #include <stdio.h>
 #include <string.h>
 
@@ -23,20 +41,22 @@ ecore_file_path_shutdown(void)
    char *dir;
 
    EINA_LIST_FREE(__ecore_file_path_bin, dir)
-     free(dir);
+     eina_stringshare_del(dir);
 }
 
 Eina_List *
 _ecore_file_path_from_env(const char *env)
 {
    Eina_List *path = NULL;
-   char *env_path, *p, *last;
+   char *env_tmp, *env_path, *p, *last;
 
-   env_path = getenv(env);
-   if (!env_path)
+   env_tmp = getenv(env);
+   if (!env_tmp)
      return path;
 
-   env_path = strdup(env_path);
+   env_path = alloca(sizeof(char) * strlen(env_tmp) + 1);
+   memset(env_path, 0, strlen(env_tmp));
+   strcpy(env_path, env_tmp);
    last = env_path;
    for (p = env_path; *p; p++)
      {
@@ -46,14 +66,13 @@ _ecore_file_path_from_env(const char *env)
         if (!*p)
           {
              if (!ecore_file_path_dir_exists(last))
-               path = eina_list_append(path, strdup(last));
+               path = eina_list_append(path, eina_stringshare_add(last));
              last = p + 1;
           }
      }
    if (p > last)
-     path = eina_list_append(path, strdup(last));
+     path = eina_list_append(path, eina_stringshare_add(last));
 
-   free(env_path);
    return path;
 }
 

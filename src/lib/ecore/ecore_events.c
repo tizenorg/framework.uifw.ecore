@@ -57,6 +57,8 @@ static int event_handlers_num = 0;
 static int event_handlers_alloc_num = 0;
 static Eina_List *event_handlers_delete_list = NULL;
 
+static Ecore_Event_Handler *event_handlers_add_list = NULL;
+
 static Ecore_Event_Filter *event_filters = NULL;
 static Ecore_Event_Filter *event_filter_current = NULL;
 static Ecore_Event *event_filter_event_current = NULL;
@@ -141,7 +143,10 @@ ecore_event_handler_add(int type, Ecore_Event_Handler_Cb func, const void *data)
                event_handlers[i] = NULL;
           }
      }
-   event_handlers[type] = (Ecore_Event_Handler *) eina_inlist_append(EINA_INLIST_GET(event_handlers[type]), EINA_INLIST_GET(eh));
+   if (ecore_raw_event_type == type)
+     event_handlers_add_list = (Ecore_Event_Handler *)eina_inlist_append(EINA_INLIST_GET(event_handlers_add_list), EINA_INLIST_GET(eh));
+   else
+     event_handlers[type] = (Ecore_Event_Handler *)eina_inlist_append(EINA_INLIST_GET(event_handlers[type]), EINA_INLIST_GET(eh));
    return eh;
 }
 
@@ -168,6 +173,45 @@ ecore_event_handler_del(Ecore_Event_Handler *event_handler)
    event_handler->delete_me = 1;
    event_handlers_delete_list = eina_list_append(event_handlers_delete_list, event_handler);
    return event_handler->data;
+}
+
+/**
+ * @brief Get the data associated with an #Ecore_Event_Handler
+ * @param eh The event handler
+ * @return The data
+ * This function returns the data previously associated with @p eh.
+ */
+EAPI void *
+ecore_event_handler_data_get(Ecore_Event_Handler *eh)
+{
+   if (!ECORE_MAGIC_CHECK(eh, ECORE_MAGIC_EVENT_HANDLER))
+     {
+        ECORE_MAGIC_FAIL(eh, ECORE_MAGIC_EVENT_HANDLER, "ecore_event_handler_data_get");
+        return NULL;
+     }
+   return eh->data;
+}
+
+/**
+ * @brief Set the data associated with an #Ecore_Event_Handler
+ * @param eh The event handler
+ * @param data The data to associate
+ * @return The previous data
+ * This function sets @p data to @p eh and returns the old data pointer
+ * which was previously associated with @p eh.
+ */
+EAPI void *
+ecore_event_handler_data_set(Ecore_Event_Handler *eh, void *data)
+{
+   void *old;
+   if (!ECORE_MAGIC_CHECK(eh, ECORE_MAGIC_EVENT_HANDLER))
+     {
+        ECORE_MAGIC_FAIL(eh, ECORE_MAGIC_EVENT_HANDLER, "ecore_event_handler_data_set");
+        return NULL;
+     }
+   old = eh->data;
+   eh->data = data;
+   return old;
 }
 
 static void
@@ -586,7 +630,7 @@ _ecore_event_call(void)
 
              while ((event_handler_current) && (!e->delete_me))
                {
-                  Ecore_Event_Handler *eh = event_handler_current;
+                  eh = event_handler_current;
                   if (!eh->delete_me)
                     {
                        Eina_Bool ret;
@@ -607,6 +651,12 @@ _ecore_event_call(void)
                   if (event_handler_current) /* may have changed in recursive main loops */
                     event_handler_current = (Ecore_Event_Handler *)EINA_INLIST_GET(event_handler_current)->next;
                }
+          }
+        while (event_handlers_add_list)
+          {
+             eh = event_handlers_add_list;
+             event_handlers_add_list = (Ecore_Event_Handler *)eina_inlist_remove(EINA_INLIST_GET(event_handlers_add_list), EINA_INLIST_GET(eh));
+             event_handlers[eh->type] = (Ecore_Event_Handler *)eina_inlist_append(EINA_INLIST_GET(event_handlers[eh->type]), EINA_INLIST_GET(eh));
           }
         /* if no handlers were set for EXIT signal - then default is */
         /* to quit the main loop */

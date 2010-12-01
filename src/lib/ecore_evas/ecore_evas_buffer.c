@@ -611,6 +611,23 @@ ecore_evas_buffer_pixels_get(Ecore_Evas *ee)
 #endif
 }
 
+EAPI Evas *
+ecore_evas_object_evas_get(Evas_Object *obj)
+{
+   Ecore_Evas *ee;
+
+   ee = evas_object_data_get(obj, "Ecore_Evas");
+   if (!ee) return NULL;
+
+   return ecore_evas_get(ee);
+}
+
+EAPI Ecore_Evas *
+ecore_evas_object_ecore_evas_get(Evas_Object *obj)
+{
+   return evas_object_data_get(obj, "Ecore_Evas");
+}
+
 EAPI Evas_Object *
 ecore_evas_object_image_new(Ecore_Evas *ee_target)
 {
@@ -627,7 +644,9 @@ ecore_evas_object_image_new(Ecore_Evas *ee_target)
    if (!ee) return NULL;
 
    o = evas_object_image_add(ee_target->evas);
-
+   evas_object_image_content_hint_set(o, EVAS_IMAGE_CONTENT_HINT_DYNAMIC);
+   evas_object_image_colorspace_set(o, EVAS_COLORSPACE_ARGB8888);
+  
    ECORE_MAGIC_SET(ee, ECORE_MAGIC_EVAS);
 
    _ecore_evas_buffer_init();

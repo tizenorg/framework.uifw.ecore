@@ -16,6 +16,7 @@
  *   IN_ACCESS, IN_ATTRIB, IN_CLOSE_WRITE, IN_CLOSE_NOWRITE, IN_OPEN
  * - Read all events first, then call the callbacks. This will prevent several
  *   callbacks with the typic save cycle (delete file, new file)
+ * - Listen to IN_IGNORED, emitted when the watch is removed
  */
 
 #ifdef HAVE_INOTIFY
@@ -134,7 +135,8 @@ ecore_file_monitor_inotify_del(Ecore_File_Monitor *em)
 {
    int fd;
 
-   _monitors = ECORE_FILE_MONITOR(eina_inlist_remove(EINA_INLIST_GET(_monitors), EINA_INLIST_GET(em)));
+   if (_monitors)
+     _monitors = ECORE_FILE_MONITOR(eina_inlist_remove(EINA_INLIST_GET(_monitors), EINA_INLIST_GET(em)));
 
    fd = ecore_main_fd_handler_fd_get(_fdh);
    if (ECORE_FILE_MONITOR_INOTIFY(em)->wd)
@@ -195,10 +197,14 @@ _ecore_file_monitor_inotify_events(Ecore_File_Monitor *em, char *file, int mask)
    isdir = mask & IN_ISDIR;
 
 #if 0
-   _ecore_file_monitor_inotify_print(file, mask);
+   _ecore_file_monitor_inotify_print(buf, mask);
 #endif
 
-   if (mask & IN_MODIFY)
+   if (mask & IN_ATTRIB)
+     {
+        em->func(em->data, em, ECORE_FILE_EVENT_MODIFIED, buf);
+     }
+   if (mask & IN_CLOSE_WRITE)
      {
         if (!isdir)
           em->func(em->data, em, ECORE_FILE_EVENT_MODIFIED, buf);
@@ -263,7 +269,7 @@ static int
 _ecore_file_monitor_inotify_monitor(Ecore_File_Monitor *em, const char *path)
 {
    int mask;
-   mask = IN_MODIFY|
+   mask = IN_ATTRIB|IN_CLOSE_WRITE|
           IN_MOVED_FROM|IN_MOVED_TO|
           IN_DELETE|IN_CREATE|
           IN_DELETE_SELF|IN_MOVE_SELF|
@@ -310,38 +316,32 @@ _ecore_file_monitor_inotify_print(char *file, int mask)
    else
      type = "file";
 
+   if (mask & IN_ACCESS)
+     INF("Inotify accessed %s: %s", type, file);
    if (mask & IN_MODIFY)
-     {
-        WRN("Inotify modified %s: %s", type, file);
-     }
+     INF("Inotify modified %s: %s", type, file);
+   if (mask & IN_ATTRIB)
+     INF("Inotify attributes %s: %s", type, file);
+   if (mask & IN_CLOSE_WRITE)
+     INF("Inotify close write %s: %s", type, file);
+   if (mask & IN_CLOSE_NOWRITE)
+     INF("Inotify close write %s: %s", type, file);
+   if (mask & IN_OPEN)
+     INF("Inotify open %s: %s", type, file);
    if (mask & IN_MOVED_FROM)
-     {
-        WRN("Inotify moved from %s: %s", type, file);
-     }
+     INF("Inotify moved from %s: %s", type, file);
    if (mask & IN_MOVED_TO)
-     {
-        WRN("Inotify moved to %s: %s", type, file);
-     }
+     INF("Inotify moved to %s: %s", type, file);
    if (mask & IN_DELETE)
-     {
-        WRN("Inotify delete %s: %s", type, file);
-     }
+     INF("Inotify delete %s: %s", type, file);
    if (mask & IN_CREATE)
-     {
-        WRN("Inotify create %s: %s", type, file);
-     }
+     INF("Inotify create %s: %s", type, file);
    if (mask & IN_DELETE_SELF)
-     {
-        WRN("Inotify delete self %s: %s", type, file);
-     }
+     INF("Inotify delete self %s: %s", type, file);
    if (mask & IN_MOVE_SELF)
-     {
-        WRN("Inotify move self %s: %s", type, file);
-     }
+     INF("Inotify move self %s: %s", type, file);
    if (mask & IN_UNMOUNT)
-     {
-        WRN("Inotify unmount %s: %s", type, file);
-     }
+     INF("Inotify unmount %s: %s", type, file);
 }
 #endif
 #endif /* HAVE_INOTIFY */

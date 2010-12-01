@@ -228,7 +228,7 @@ ecore_imf_context_del(Ecore_IMF_Context *ctx)
 
    if (ctx->klass->del) ctx->klass->del(ctx);
    ECORE_MAGIC_SET(ctx, ECORE_MAGIC_NONE);
-	
+
    EINA_LIST_FREE(ctx->private_key_list, data)
       free(data);
 
@@ -380,7 +380,7 @@ ecore_imf_context_preedit_string_get(Ecore_IMF_Context *ctx, char **str, int *cu
      }
 }
 
-EAPI void                          
+EAPI void
 ecore_imf_context_preedit_string_with_attributes_get(Ecore_IMF_Context *ctx, char **str, Eina_List **attrs, int *cursor_pos)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -394,7 +394,7 @@ ecore_imf_context_preedit_string_with_attributes_get(Ecore_IMF_Context *ctx, cha
    else
      {
         if (str) *str = strdup("");
-		if (attrs) *attrs = NULL;
+        if (attrs) *attrs = NULL;
         if (cursor_pos) *cursor_pos = 0;
      }
 }
@@ -879,7 +879,7 @@ ecore_imf_context_delete_surrounding_event_add(Ecore_IMF_Context *ctx, int offse
 }
 
 /*** ImControl Related APIs */
-EAPI void  
+EAPI void
 ecore_imf_context_input_panel_show(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -891,7 +891,7 @@ ecore_imf_context_input_panel_show(Ecore_IMF_Context *ctx)
    if (ctx->klass->show) ctx->klass->show(ctx);
 }
 
-EAPI void  
+EAPI void
 ecore_imf_context_input_panel_hide(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -903,7 +903,7 @@ ecore_imf_context_input_panel_hide(Ecore_IMF_Context *ctx)
    if (ctx->klass->hide) ctx->klass->hide(ctx);
 }
 
-EAPI void  
+EAPI void
 ecore_imf_context_control_panel_show (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -915,7 +915,7 @@ ecore_imf_context_control_panel_show (Ecore_IMF_Context *ctx)
    if (ctx->klass->control_panel_show) ctx->klass->control_panel_show(ctx);
 }
 
-EAPI void  
+EAPI void
 ecore_imf_context_control_panel_hide (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -927,7 +927,7 @@ ecore_imf_context_control_panel_hide (Ecore_IMF_Context *ctx)
    if (ctx->klass->control_panel_hide) ctx->klass->control_panel_hide(ctx);
 }
 
-EAPI void  
+EAPI void
 ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -935,11 +935,12 @@ ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_In
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_language_set");
         return;
      }
+
    if (ctx->klass->input_panel_language_set) ctx->klass->input_panel_language_set(ctx, lang);
    ctx->input_panel_lang = lang;   
 }
 
-EAPI Ecore_IMF_Input_Panel_Lang  
+EAPI Ecore_IMF_Input_Panel_Lang
 ecore_imf_context_input_panel_language_get (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -951,7 +952,7 @@ ecore_imf_context_input_panel_language_get (Ecore_IMF_Context *ctx)
    return ctx->input_panel_lang;
 }
 
-EAPI int  
+EAPI int
 ecore_imf_context_ise_get_ise_language (Ecore_IMF_Context *ctx, const char* ise_name, char ***langlist)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -967,14 +968,13 @@ ecore_imf_context_ise_get_ise_language (Ecore_IMF_Context *ctx, const char* ise_
      }
 
    if (ctx->klass->ise_get_ise_language) 
-     {
-        return ctx->klass->ise_get_ise_language(ctx, ise_name, langlist);
-     }
+       return ctx->klass->ise_get_ise_language(ctx, ise_name, langlist);
    else 
       return -1;
 }
 
-EAPI void ecore_imf_context_keyboard_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Keyboard_Lang lang)
+EAPI void
+ecore_imf_context_keyboard_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Keyboard_Lang lang)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -984,9 +984,11 @@ EAPI void ecore_imf_context_keyboard_language_set (Ecore_IMF_Context *ctx, Ecore
 //   if (ctx->klass->ise_set_language) ctx->klass->ise_set_language(ctx, lang);
 }
 
-EAPI Ecore_IMF_Keyboard_Lang ecore_imf_context_keyboard_language_get (Ecore_IMF_Context *ctx)
+EAPI Ecore_IMF_Keyboard_Lang
+ecore_imf_context_keyboard_language_get (Ecore_IMF_Context *ctx)
 {
    Ecore_IMF_Keyboard_Lang lang = ECORE_IMF_KEYBOARD_LANG_NATIVE;
+
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_keyboard_language_get");
@@ -999,7 +1001,7 @@ EAPI Ecore_IMF_Keyboard_Lang ecore_imf_context_keyboard_language_get (Ecore_IMF_
    return lang;
 }
 
-EAPI void  
+EAPI void
 ecore_imf_context_ise_set_isf_language (Ecore_IMF_Context *ctx, const char* lang)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1017,7 +1019,7 @@ ecore_imf_context_ise_set_isf_language (Ecore_IMF_Context *ctx, const char* lang
    if (ctx->klass->ise_set_isf_language) ctx->klass->ise_set_isf_language(ctx, lang);
 }
 
-EAPI void  
+EAPI void
 ecore_imf_context_input_panel_imdata_set (Ecore_IMF_Context *ctx, const char * data, int len)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1035,7 +1037,7 @@ ecore_imf_context_input_panel_imdata_set (Ecore_IMF_Context *ctx, const char * d
    if (ctx->klass->input_panel_imdata_set) ctx->klass->input_panel_imdata_set(ctx, data, len);
 }
 
-EAPI void  
+EAPI void
 ecore_imf_context_input_panel_imdata_get (Ecore_IMF_Context *ctx, char * data, int *len)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1053,7 +1055,7 @@ ecore_imf_context_input_panel_imdata_get (Ecore_IMF_Context *ctx, char * data, i
    if (ctx->klass->input_panel_imdata_get) ctx->klass->input_panel_imdata_get(ctx, data, len);
 }
 
-EAPI void  
+EAPI void
 ecore_imf_context_input_panel_use_effect_set (Ecore_IMF_Context *ctx, Eina_Bool use_effect)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1066,7 +1068,7 @@ ecore_imf_context_input_panel_use_effect_set (Ecore_IMF_Context *ctx, Eina_Bool 
    ctx->use_effect = use_effect;
 }
 
-EAPI Eina_Bool  
+EAPI Eina_Bool
 ecore_imf_context_input_panel_use_effect_get (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1078,7 +1080,7 @@ ecore_imf_context_input_panel_use_effect_get (Ecore_IMF_Context *ctx)
    return ctx->use_effect;
 }
 
-EAPI void  
+EAPI void
 ecore_imf_context_input_panel_geometry_get (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1090,9 +1092,13 @@ ecore_imf_context_input_panel_geometry_get (Ecore_IMF_Context *ctx, int *x, int 
    if (ctx->klass->input_panel_geometry_get) ctx->klass->input_panel_geometry_get(ctx, x, y, w, h);
 }
 
-EAPI void  
+EAPI void
 ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, int key_value, const char* key_string)
 {
+   Private_Key_Item *key_item;
+   Eina_List *l;
+   Eina_Bool exist = EINA_FALSE;
+
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_private_key_set");
@@ -1105,21 +1111,18 @@ ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layou
         return;
      }
 
-   Private_Key_Item *key_item;
-   Eina_List *l;
-   Eina_Bool exist = EINA_FALSE;
-
    EINA_LIST_FOREACH(ctx->private_key_list, l, key_item)
      {
-        if (key_item && key_item->layout_idx == layout_index && key_item->key_idx == key_index)
+        if (key_item && key_item->layout_idx == layout_index && 
+            key_item->key_idx == key_index)
           {
              // if exist in the list
-             exist = EINA_TRUE;	  
+             exist = EINA_TRUE;
              if (label)
                {
                   key_item->type = 0;
                   strcpy(key_item->data, label);
-               }			
+               }
              else
                {
                   key_item->type = 1;
@@ -1141,7 +1144,7 @@ ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layou
           {
              key_item->type = 0;
              strcpy(key_item->data, label);
-          }			
+          }
         else
           {
              key_item->type = 1;
@@ -1165,8 +1168,8 @@ ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_private_key_list_get");
-	return NULL;
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_private_key_list_get");
+        return NULL;
      }
 
    return ctx->private_key_list;
@@ -1175,15 +1178,15 @@ ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx)
 EAPI void  
 ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled)
 {
+   Disable_Key_Item *key_item;
+   Eina_List *l;
+   Eina_Bool exist = EINA_FALSE;
+
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_key_disabled_set");
         return;
      }
-
-   Disable_Key_Item *key_item;
-   Eina_List *l;
-   Eina_Bool exist = EINA_FALSE;
 
    EINA_LIST_FOREACH(ctx->disabled_key_list, l, key_item)
      {
@@ -1212,10 +1215,10 @@ ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layo
 EAPI Eina_List *
 ecore_imf_context_input_panel_key_disabled_list_get  (Ecore_IMF_Context *ctx)
 {
-	return ctx->disabled_key_list;
+   return ctx->disabled_key_list;
 }
 
-EAPI void  
+EAPI void
 ecore_imf_context_input_panel_layout_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1246,7 +1249,7 @@ ecore_imf_context_input_panel_layout_get  (Ecore_IMF_Context *ctx)
      return ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID;
 }
 
-EAPI void      
+EAPI void
 ecore_imf_context_input_panel_reset (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1258,7 +1261,7 @@ ecore_imf_context_input_panel_reset (Ecore_IMF_Context *ctx)
    if (ctx->klass->input_panel_reset) ctx->klass->input_panel_reset(ctx);
 }
 
-EAPI void      
+EAPI void
 ecore_imf_context_input_panel_orient_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1271,7 +1274,7 @@ ecore_imf_context_input_panel_orient_set (Ecore_IMF_Context *ctx, Ecore_IMF_Inpu
    ctx->input_panel_orient = orientation;
 }
 
-EAPI Ecore_IMF_Input_Panel_Orient 
+EAPI Ecore_IMF_Input_Panel_Orient
 ecore_imf_context_input_panel_orient_get (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1309,6 +1312,7 @@ ecore_imf_context_ise_set_active_ise_by_name (Ecore_IMF_Context *ctx, const char
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_set_active_ise_by_name");
         return;
      }
+   
    if (!name)
      {
         printf ("input parameters error!!! \n");
@@ -1326,6 +1330,7 @@ ecore_imf_context_ise_set_active_ise_by_uuid (Ecore_IMF_Context *ctx, const char
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_set_active_ise_by_uuid");
         return;
      }
+
    if (!uuid)
      {
         printf ("input parameters error!!! \n");
@@ -1335,48 +1340,44 @@ ecore_imf_context_ise_set_active_ise_by_uuid (Ecore_IMF_Context *ctx, const char
    if (ctx->klass->ise_set_active_ise_by_uuid) ctx->klass->ise_set_active_ise_by_uuid(ctx, uuid);
 }
 
-EAPI int      
+EAPI int
 ecore_imf_context_ise_get_iselist (Ecore_IMF_Context *ctx,  char*** iselist)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_get_iselist");
-	return -1;
-     }	
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_get_iselist");
+        return -1;
+     }
 
    if (ctx->klass->ise_get_iselist) 
-     {
-        return ctx->klass->ise_get_iselist(ctx, iselist);
-     }
+      return ctx->klass->ise_get_iselist(ctx, iselist);
    else 
-     return -1;
+      return -1;
 }
 
-EAPI Ecore_IMF_Input_Panel_State      
+EAPI Ecore_IMF_Input_Panel_State
 ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx)
 {
    Ecore_IMF_Input_Panel_State state = ECORE_IMF_INPUT_PANEL_STATE_INVALID;
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_state_get");
-	return ECORE_IMF_INPUT_PANEL_STATE_INVALID;
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_state_get");
+        return ECORE_IMF_INPUT_PANEL_STATE_INVALID;
      }
 
    if (ctx->klass->input_panel_state_get) 
-     {
-        state = ctx->klass->input_panel_state_get(ctx);
-     }
-   
+      state = ctx->klass->input_panel_state_get(ctx);
+
    return state;   
 }
 
-EAPI void      
+EAPI void
 ecore_imf_context_input_panel_event_callback_add (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value), const void *data)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_event_callback_add");
-	return;
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_event_callback_add");
+        return;
      }
 
    if (ctx->klass->input_panel_event_callback_add) 
@@ -1390,8 +1391,8 @@ ecore_imf_context_input_panel_event_callback_del (Ecore_IMF_Context *ctx, Ecore_
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_event_callback_del");
-	return;
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_event_callback_del");
+        return;
      }
 
    if (ctx->klass->input_panel_event_callback_del) 
@@ -1400,13 +1401,13 @@ ecore_imf_context_input_panel_event_callback_del (Ecore_IMF_Context *ctx, Ecore_
      }
 }
 
-EAPI void      
+EAPI void
 ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx, int x, int y)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_move");
-	return;
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_move");
+        return;
      }
 
    if (ctx->klass->input_panel_move) ctx->klass->input_panel_move(ctx, x, y);
@@ -1414,13 +1415,13 @@ ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx, int x, int y)
    ctx->input_panel_y = y;
 }
 
-EAPI void      
+EAPI void
 ecore_imf_context_input_panel_caps_mode_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Caps_Mode mode)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-	ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_caps_mode_set");
-	return;
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_caps_mode_set");
+        return;
      }
 
    if (ctx->klass->input_panel_caps_mode_set) ctx->klass->input_panel_caps_mode_set(ctx, mode);

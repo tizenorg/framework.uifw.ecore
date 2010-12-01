@@ -1,36 +1,3 @@
-ecore (1.0.0.001+svn.51480slp2+build28) unstable; urgency=low
-
-  * [ecore_evas] Patch code for rotation.
-  * Git: 165.213.180.234:/git/slp/pkgs/ecore
-  * Tag: ecore_1.0.0.001+svn.51480slp2+build28
-
- -- Doyoun Kang <doyoun.kang@samsung.com>  Mon, 29 Nov 2010 10:14:56 +0900
-
-ecore (1.0.0.001+svn.51480slp2+build27) unstable; urgency=low
-
-  * [ecore_evas.c] change FPS rate print it every 0.1 sec
-  * Git: 165.213.180.234:/git/slp/pkgs/ecore
-  * Tag: ecore_1.0.0.001+svn.51480slp2+build27
-
- -- Seokjae Jeong <seok.j.jeong@samsung.com>  Sat, 27 Nov 2010 15:06:21 +0900
-
-ecore (1.0.0.001+svn.51480slp2+build26) unstable; urgency=low
-
-  * [ecore_imf] remove unused typedefs
-  * Git: 165.213.180.234:/git/slp/pkgs/ecore
-  * Tag: ecore_1.0.0.001+svn.51480slp2+build26
-
- -- Jihoon Kim <jihoon48.kim@samsung.com>  Fri, 26 Nov 2010 17:56:05 +0900
-
-ecore (1.0.0.001+svn.51480slp2+build25) unstable; urgency=low
-
-  * [SVN 54830 Merge]
-  * Update to SVN Revision 54830.
-  * Git: 165.213.180.234:/git/slp/pkgs/ecore
-  * Tag: ecore_1.0.0.001+svn.51480slp2+build25
-
- -- Juyung Seo <juyung.seo@samsung.com>  Fri, 26 Nov 2010 15:31:53 +0900
-
 ecore (1.0.0.001+svn.51480slp2+build19) unstable; urgency=low
 
   * libcurl-dev -> libcurl4-openssl-dev

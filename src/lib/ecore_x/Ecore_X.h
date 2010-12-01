@@ -604,7 +604,6 @@ struct _Ecore_X_Selection_Data
    unsigned char *data;
    int            length;
    int            format;
-
    int            (*free)(void *data);
 };
 

@@ -703,13 +703,13 @@ static const struct ecore_evas_engine _engines[] = {
 #endif
 
   /* Last chance to have a window */
+#ifdef BUILD_ECORE_EVAS_OPENGL_SDL
+  {"opengl_sdl", _ecore_evas_constructor_opengl_sdl},
+#endif
+
 #ifdef BUILD_ECORE_EVAS_SOFTWARE_SDL
   {"sdl", _ecore_evas_constructor_sdl},
   {"software_16_sdl", _ecore_evas_constructor_sdl16},
-#endif
-
-#ifdef BUILD_ECORE_EVAS_OPENGL_SDL
-  {"opengl_sdl", _ecore_evas_constructor_opengl_sdl},
 #endif
 
   /* independent */
@@ -2761,15 +2761,13 @@ _ecore_evas_fps_debug_rendertime_add(double t)
         rlapse = tim;
         flapse = frames;
      }
-   else if ((tim - rlapse) >= 0.1)
+   else if ((tim - rlapse) >= 0.5)
      {
-        printf("%.6f \t", tim);
         printf("FRAME: %i, FPS: %3.1f, RTIME %3.0f%%\n",
                frames,
                (frames - flapse) / (tim - rlapse),
                (100.0 * rtime) / (tim - rlapse)
                );
-        fflush(stdout);
         rlapse = tim;
         flapse = frames;
         rtime = 0.0;
