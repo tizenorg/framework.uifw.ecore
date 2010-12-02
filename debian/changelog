@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.55079slp2+build02) unstable; urgency=low
+
+  * remove epoll
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.55079slp2+build02
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Thu, 02 Dec 2010 17:28:23 +0900
+
 ecore (1.0.0.001+svn.55079slp2+build01) unstable; urgency=low
 
   * [SVN 55079 Merge]
