@@ -143,14 +143,18 @@ extern "C" {
         ECORE_IMF_INPUT_PANEL_ORIENT_90_CCW /* CounterClockwise */
      } Ecore_IMF_Input_Panel_Orient;
 
-   typedef struct 
+   typedef struct _Disable_Key_Item Disable_Key_Item;
+
+   struct _Disable_Key_Item
      {
         int layout_idx;
         int key_idx;
         Eina_Bool disabled;
-     } Disable_Key_Item;
+     };
 
-   typedef struct 
+   typedef struct _Private_Key_Item Private_Key_Item;
+
+   struct _Private_Key_Item
      {
         int layout_idx;
         int key_idx;
@@ -158,7 +162,7 @@ extern "C" {
         char data[128]; // label or image path
         int key_value;
         char key_string[32];
-     } Private_Key_Item;
+     };
 
    /* Events sent by the Input Method */
    typedef struct _Ecore_IMF_Event_Preedit_Start      Ecore_IMF_Event_Preedit_Start;
@@ -402,6 +406,15 @@ extern "C" {
         Ecore_IMF_Preedit_Type preedit_type;
         unsigned int start_index;
         unsigned int end_index; 
+     };
+
+   typedef struct _Ecore_IMF_Input_Panel_Event_Callback Ecore_IMF_Input_Panel_Event_Callback;
+
+   struct _Ecore_IMF_Input_Panel_Event_Callback
+     {
+        void (*func)(void *data, Ecore_IMF_Context *ctx, int value);
+        const void *data;
+        Ecore_IMF_Input_Panel_Event type;
      };
 
    struct _Ecore_IMF_Context_Class
@@ -1106,7 +1119,7 @@ extern "C" {
     * }
     * @endcode
     */
-   EAPI Ecore_IMF_Input_Panel_State ecore_imf_context_input_panel_state_get          (Ecore_IMF_Context *ctx);
+   EAPI Ecore_IMF_Input_Panel_State ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx);
    
    /**
     * Application can register a callback function which will be called if there is change in ise state,language,mode etc. 
@@ -1178,9 +1191,11 @@ extern "C" {
     * }
     * @endcode
     */
-   EAPI void ecore_imf_context_input_panel_key_disabled_set  (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
+   EAPI void ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
 
-   EAPI Eina_List *ecore_imf_context_input_panel_key_disabled_list_get  (Ecore_IMF_Context *ctx);
+   EAPI Eina_List *ecore_imf_context_input_panel_key_disabled_list_get (Ecore_IMF_Context *ctx);
+
+   EAPI Eina_List *ecore_imf_context_input_panel_event_callback_list_get (Ecore_IMF_Context *ctx);
 
    /**
     * Move the soft keyboard to the new position.
@@ -1206,7 +1221,7 @@ extern "C" {
     * }
     * @endcode
     */
-   EAPI void ecore_imf_context_input_panel_move  (Ecore_IMF_Context *ctx, int x, int y);
+   EAPI void ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx, int x, int y);
 
    EAPI void ecore_imf_context_input_panel_caps_mode_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Caps_Mode mode);
 

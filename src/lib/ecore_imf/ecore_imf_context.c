@@ -235,8 +235,12 @@ ecore_imf_context_del(Ecore_IMF_Context *ctx)
    EINA_LIST_FREE(ctx->disabled_key_list, data)
       free(data);
 
+   EINA_LIST_FREE(ctx->callbacks, data)
+      free(data);
+
    ctx->private_key_list = NULL;
    ctx->disabled_key_list = NULL;
+   ctx->callbacks = NULL;
 
    free(ctx);
 }
@@ -631,6 +635,8 @@ ecore_imf_context_new(const Ecore_IMF_Context_Class *ctxc)
    ctx->input_panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
    ctx->input_panel_orient = ECORE_IMF_INPUT_PANEL_ORIENT_NONE;
    ctx->use_effect = EINA_TRUE;
+   ctx->disabled_key_list = NULL;
+   ctx->private_key_list = NULL;
    ctx->callbacks = NULL;
    
    return ctx;
@@ -1105,7 +1111,7 @@ ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layou
         return;
      }
 
-   if (label == NULL && img_path == NULL)
+   if (!label && !img_path)
      {
         printf ("input parameters error!!! \n");
         return;
@@ -1213,9 +1219,27 @@ ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layo
 }
 
 EAPI Eina_List *
-ecore_imf_context_input_panel_key_disabled_list_get  (Ecore_IMF_Context *ctx)
+ecore_imf_context_input_panel_key_disabled_list_get (Ecore_IMF_Context *ctx)
 {
+   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
+     {
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_key_disabled_list_get");
+        return NULL;
+     }
+   
    return ctx->disabled_key_list;
+}
+
+EAPI Eina_List *
+ecore_imf_context_input_panel_event_callback_list_get (Ecore_IMF_Context *ctx)
+{
+   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
+     {
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_event_callback_list_get");
+        return NULL;
+     }
+   
+   return ctx->callbacks;
 }
 
 EAPI void
@@ -1372,8 +1396,10 @@ ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx)
 }
 
 EAPI void
-ecore_imf_context_input_panel_event_callback_add (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value), const void *data)
+ecore_imf_context_input_panel_event_callback_add (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), const void *data)
 {
+   Ecore_IMF_Input_Panel_Event_Callback *it;
+
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_event_callback_add");
@@ -1382,13 +1408,25 @@ ecore_imf_context_input_panel_event_callback_add (Ecore_IMF_Context *ctx, Ecore_
 
    if (ctx->klass->input_panel_event_callback_add) 
      {
-        ctx->klass->input_panel_event_callback_add(ctx, type, pEventCallBackFunc, data);
+        it = calloc(1, sizeof(Ecore_IMF_Input_Panel_Event_Callback));
+        if (!it) return;
+
+        it->func = func;
+        it->data = data;;
+        it->type = type;
+
+        ctx->callbacks = eina_list_append(ctx->callbacks, it);
+
+        ctx->klass->input_panel_event_callback_add(ctx, type, func, data);
      }
 }
 
 EAPI void
-ecore_imf_context_input_panel_event_callback_del (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value))
+ecore_imf_context_input_panel_event_callback_del (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value))
 {
+   Eina_List *l;
+   Ecore_IMF_Input_Panel_Event_Callback *it;
+
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_event_callback_del");
@@ -1397,7 +1435,20 @@ ecore_imf_context_input_panel_event_callback_del (Ecore_IMF_Context *ctx, Ecore_
 
    if (ctx->klass->input_panel_event_callback_del) 
      {
-        ctx->klass->input_panel_event_callback_del(ctx, type, pEventCallBackFunc);
+        for (l = ctx->callbacks; l;) 
+          {
+             it = (Ecore_IMF_Input_Panel_Event_Callback *)l->data;
+
+             if (it && it->func == func && it->type == type) 
+               {
+                  ctx->callbacks = eina_list_remove(ctx->callbacks, it);
+                  free(it);
+                  break;
+               }
+             l = l->next;
+          }
+
+        ctx->klass->input_panel_event_callback_del(ctx, type, func);
      }
 }
 
