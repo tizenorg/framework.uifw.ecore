@@ -55,7 +55,7 @@ extern "C" {
 #endif
 
    /* ecore_imf_context_input_panel_event_callback_add() flag */
-   typedef enum 
+   typedef enum
      {
         ECORE_IMF_INPUT_PANEL_STATE_EVENT,              /**< Input Panel STATE Event */
         ECORE_IMF_INPUT_PANEL_MODE_EVENT,               /**< Input Panel MODE Event */
@@ -78,14 +78,14 @@ extern "C" {
         ECORE_IMF_INPUT_PANEL_EVENT_INVALID
      } Ecore_IMF_Input_Panel_Event;
 
-   typedef enum 
+   typedef enum
      {
         ECORE_IMF_INPUT_PANEL_STATE_SHOW,         /**< Show Input panel */
         ECORE_IMF_INPUT_PANEL_STATE_HIDE,         /**< Hide Input panel */
         ECORE_IMF_INPUT_PANEL_STATE_INVALID
      } Ecore_IMF_Input_Panel_State;
 
-   typedef enum 
+   typedef enum
      {
         ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL,          /**< Default 4x4 layout */
         ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBER,          /**< Number layout */
@@ -93,7 +93,7 @@ extern "C" {
         ECORE_IMF_INPUT_PANEL_LAYOUT_URL,             /**< URL layout */
         ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER,     /**< Phone Number layout */
         ECORE_IMF_INPUT_PANEL_LAYOUT_IP,              /**< IP layout */
-        ECORE_IMF_INPUT_PANEL_LAYOUT_MONTH,           /**< Month layout */	
+        ECORE_IMF_INPUT_PANEL_LAYOUT_MONTH,           /**< Month layout */
         ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY,      /**< Number Only layout */
         ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_1 = 100,  /* Reserved for future use */
         ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_2,
@@ -104,7 +104,7 @@ extern "C" {
         ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_7,
         ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_8,
         ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_9,
-        ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_10,	
+        ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_10,
         ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID
      } Ecore_IMF_Input_Panel_Layout;
 
@@ -120,7 +120,7 @@ extern "C" {
         ECORE_IMF_KEYBOARD_LANG_ALPHABET   /**< Alphabet */
      } Ecore_IMF_Keyboard_Lang;
 
-   typedef enum 
+   typedef enum
      {
         ECORE_IMF_AUTOCORRECTION_DEFAULT,
         ECORE_IMF_AUTOCORRECTION_NO,
@@ -130,12 +130,12 @@ extern "C" {
 
    typedef enum
      {
-        ECORE_IMF_INPUT_PANEL_CAPS_MODE_OFF,	/**< Off */
-        ECORE_IMF_INPUT_PANEL_CAPS_MODE_ON,	/**< On */ 
+        ECORE_IMF_INPUT_PANEL_CAPS_MODE_OFF,    /**< Off */
+        ECORE_IMF_INPUT_PANEL_CAPS_MODE_ON,	    /**< On */
         ECORE_IMF_INPUT_PANEL_CAPS_MODE_LOCK,	/**< Lock */
      } Ecore_IMF_Input_Panel_Caps_Mode;
 
-   typedef enum 
+   typedef enum
      {
         ECORE_IMF_INPUT_PANEL_ORIENT_NONE,
         ECORE_IMF_INPUT_PANEL_ORIENT_90_CW, /* Clockwise */
@@ -405,7 +405,7 @@ extern "C" {
      {
         Ecore_IMF_Preedit_Type preedit_type;
         unsigned int start_index;
-        unsigned int end_index; 
+        unsigned int end_index;
      };
 
    typedef struct _Ecore_IMF_Input_Panel_Event_Callback Ecore_IMF_Input_Panel_Event_Callback;
@@ -442,7 +442,7 @@ extern "C" {
         Ecore_IMF_Input_Panel_Layout (*input_panel_layout_get)         (Ecore_IMF_Context *ctx);
 
         void (*input_panel_language_set)       (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang);
-        Ecore_IMF_Input_Panel_Lang (*input_panel_language_get) (Ecore_IMF_Context *ctx); 
+        Ecore_IMF_Input_Panel_Lang (*input_panel_language_get) (Ecore_IMF_Context *ctx);
 
         void (*input_panel_imdata_set)         (Ecore_IMF_Context *ctx, const char* data, int len);
         void (*input_panel_imdata_get)         (Ecore_IMF_Context *ctx, char* data, int *len);
@@ -605,7 +605,7 @@ extern "C" {
     * @param lang see Ecore_IMF_Input_Panel_Lang
     * @ingroup Ecore_IMF_Context_IMControl_Group
     * THIS API IS NOT SUPPORTED NOW
-    */    
+    */
    EAPI void ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang);
 
    /**
@@ -623,7 +623,7 @@ extern "C" {
     * @param lang see Ecore_IMF_Input_Panel_Lang
     * @ingroup Ecore_IMF_Context_IMControl_Group
     * THIS API IS NOT SUPPORTED NOW
-    */    
+    */
    EAPI void ecore_imf_context_keyboard_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Keyboard_Lang lang);
 
    /**
@@ -632,9 +632,9 @@ extern "C" {
     * @return Ecore_IMF_Input_Panel_Lang
     * @ingroup Ecore_IMF_Context_IMControl_Group
     * THIS API IS NOT SUPPORTED NOW
-    */    
+    */
    EAPI Ecore_IMF_Keyboard_Lang ecore_imf_context_keyboard_language_get (Ecore_IMF_Context *ctx);
-   
+
    /**
     * Get ISE Language of given ISE. -- Not supported for now --
     * @ingroup Ecore_IMF_Context_IMControl_Group
@@ -678,7 +678,7 @@ extern "C" {
     *     }
     * }
     * @endcode
-    */    
+    */
    EAPI void ecore_imf_context_input_panel_imdata_set       (Ecore_IMF_Context *ctx, const char * data, int len);
 
    /**
@@ -739,7 +739,7 @@ extern "C" {
     *     }
     * }
     * @endcode
-    */    
+    */
    EAPI void ecore_imf_context_input_panel_use_effect_set           (Ecore_IMF_Context *ctx, Eina_Bool use_effect);
 
    /**
@@ -770,7 +770,7 @@ extern "C" {
     *     return use_effect;
     * }
     * @endcode
-    */    
+    */
    EAPI Eina_Bool ecore_imf_context_input_panel_use_effect_get      (Ecore_IMF_Context *ctx);
 
    /**
@@ -834,7 +834,7 @@ extern "C" {
     *     }
     * }
     * @endcode
-    */    
+    */
    EAPI void ecore_imf_context_input_panel_private_key_set  (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, int key_value, const char* key_string);
 
    EAPI Eina_List *ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx);
@@ -966,8 +966,8 @@ extern "C" {
     *     }
     * }
     */
-    
-   EAPI Ecore_IMF_Input_Panel_Orient ecore_imf_context_input_panel_orient_get (Ecore_IMF_Context *ctx);   
+
+   EAPI Ecore_IMF_Input_Panel_Orient ecore_imf_context_input_panel_orient_get (Ecore_IMF_Context *ctx);
 
    /**
     * Get name of current active ISE.
@@ -1090,7 +1090,7 @@ extern "C" {
     *     //do imf irrelated things
     * }
     * @endcode
-    */    
+    */
    EAPI int ecore_imf_context_ise_get_iselist (Ecore_IMF_Context *ctx, char*** iselist);
 
    /**
@@ -1120,7 +1120,7 @@ extern "C" {
     * @endcode
     */
    EAPI Ecore_IMF_Input_Panel_State ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx);
-   
+
    /**
     * Application can register a callback function which will be called if there is change in ise state,language,mode etc. 
     * To use this API application should include Ecore_IMF.h header file.

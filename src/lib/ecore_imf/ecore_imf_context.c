@@ -638,7 +638,7 @@ ecore_imf_context_new(const Ecore_IMF_Context_Class *ctxc)
    ctx->disabled_key_list = NULL;
    ctx->private_key_list = NULL;
    ctx->callbacks = NULL;
-   
+
    return ctx;
 }
 
@@ -943,7 +943,7 @@ ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_In
      }
 
    if (ctx->klass->input_panel_language_set) ctx->klass->input_panel_language_set(ctx, lang);
-   ctx->input_panel_lang = lang;   
+   ctx->input_panel_lang = lang;
 }
 
 EAPI Ecore_IMF_Input_Panel_Lang
@@ -973,9 +973,9 @@ ecore_imf_context_ise_get_ise_language (Ecore_IMF_Context *ctx, const char* ise_
         return -1;
      }
 
-   if (ctx->klass->ise_get_ise_language) 
+   if (ctx->klass->ise_get_ise_language)
        return ctx->klass->ise_get_ise_language(ctx, ise_name, langlist);
-   else 
+   else
       return -1;
 }
 
@@ -1181,7 +1181,7 @@ ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx)
    return ctx->private_key_list;
 }
 
-EAPI void  
+EAPI void
 ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled)
 {
    Disable_Key_Item *key_item;
@@ -1226,7 +1226,7 @@ ecore_imf_context_input_panel_key_disabled_list_get (Ecore_IMF_Context *ctx)
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_key_disabled_list_get");
         return NULL;
      }
-   
+
    return ctx->disabled_key_list;
 }
 
@@ -1238,7 +1238,7 @@ ecore_imf_context_input_panel_event_callback_list_get (Ecore_IMF_Context *ctx)
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_event_callback_list_get");
         return NULL;
      }
-   
+
    return ctx->callbacks;
 }
 
@@ -1264,7 +1264,7 @@ ecore_imf_context_input_panel_layout_get  (Ecore_IMF_Context *ctx)
         return ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID;
      }
 
-   if (ctx->klass->input_panel_layout_get ) 
+   if (ctx->klass->input_panel_layout_get)
      {
         //	ctx->klass->input_panel_layout_get (ctx, &layout);
         return ctx->input_panel_layout;
@@ -1310,7 +1310,7 @@ ecore_imf_context_input_panel_orient_get (Ecore_IMF_Context *ctx)
    return ctx->input_panel_orient;
 }
 
-EAPI void      
+EAPI void
 ecore_imf_context_ise_get_active_isename (Ecore_IMF_Context *ctx, char* name)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1327,8 +1327,8 @@ ecore_imf_context_ise_get_active_isename (Ecore_IMF_Context *ctx, char* name)
 
    if (ctx->klass->ise_get_active_isename) ctx->klass->ise_get_active_isename(ctx, name);
 }
-    
-EAPI void      
+
+EAPI void
 ecore_imf_context_ise_set_active_ise_by_name (Ecore_IMF_Context *ctx, const char* name)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1336,7 +1336,7 @@ ecore_imf_context_ise_set_active_ise_by_name (Ecore_IMF_Context *ctx, const char
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_set_active_ise_by_name");
         return;
      }
-   
+
    if (!name)
      {
         printf ("input parameters error!!! \n");
@@ -1345,8 +1345,8 @@ ecore_imf_context_ise_set_active_ise_by_name (Ecore_IMF_Context *ctx, const char
 
    if (ctx->klass->ise_set_active_ise_by_name) ctx->klass->ise_set_active_ise_by_name(ctx, name);
 }
-    
-EAPI void      
+
+EAPI void
 ecore_imf_context_ise_set_active_ise_by_uuid (Ecore_IMF_Context *ctx, const char* uuid)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1373,9 +1373,9 @@ ecore_imf_context_ise_get_iselist (Ecore_IMF_Context *ctx,  char*** iselist)
         return -1;
      }
 
-   if (ctx->klass->ise_get_iselist) 
+   if (ctx->klass->ise_get_iselist)
       return ctx->klass->ise_get_iselist(ctx, iselist);
-   else 
+   else
       return -1;
 }
 
@@ -1389,10 +1389,10 @@ ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx)
         return ECORE_IMF_INPUT_PANEL_STATE_INVALID;
      }
 
-   if (ctx->klass->input_panel_state_get) 
+   if (ctx->klass->input_panel_state_get)
       state = ctx->klass->input_panel_state_get(ctx);
 
-   return state;   
+   return state;
 }
 
 EAPI void
@@ -1406,7 +1406,7 @@ ecore_imf_context_input_panel_event_callback_add (Ecore_IMF_Context *ctx, Ecore_
         return;
      }
 
-   if (ctx->klass->input_panel_event_callback_add) 
+   if (ctx->klass->input_panel_event_callback_add)
      {
         it = calloc(1, sizeof(Ecore_IMF_Input_Panel_Event_Callback));
         if (!it) return;
@@ -1433,13 +1433,13 @@ ecore_imf_context_input_panel_event_callback_del (Ecore_IMF_Context *ctx, Ecore_
         return;
      }
 
-   if (ctx->klass->input_panel_event_callback_del) 
+   if (ctx->klass->input_panel_event_callback_del)
      {
-        for (l = ctx->callbacks; l;) 
+        for (l = ctx->callbacks; l;)
           {
              it = (Ecore_IMF_Input_Panel_Event_Callback *)l->data;
 
-             if (it && it->func == func && it->type == type) 
+             if (it && it->func == func && it->type == type)
                {
                   ctx->callbacks = eina_list_remove(ctx->callbacks, it);
                   free(it);
