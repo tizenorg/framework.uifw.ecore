@@ -55,7 +55,7 @@ struct _Ecore_IMF_Context
    void                          *retrieve_surrounding_data;
    Eina_List                     *callbacks;
    Eina_List                     *disabled_key_list;
-   Eina_List                     *private_key_list;
+   Eina_List                     *private_key_list;	
 };
 
 struct _Ecore_IMF_Module

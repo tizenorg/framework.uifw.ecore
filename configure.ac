@@ -18,7 +18,7 @@ m4_define([lt_age], v_min)
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
 
-AC_INIT([ecore], [v_ver.beta2], [enlightenment-devel@lists.sourceforge.net])
+AC_INIT([ecore], [v_ver.beta3], [enlightenment-devel@lists.sourceforge.net])
 AC_PREREQ([2.52])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_MACRO_DIR([m4])
@@ -912,6 +912,7 @@ m4_ifdef([AC_PROG_OBJC], [
 ])
 AC_SUBST(cocoa_ldflags)
 
+want_epoll=yes
 AC_ARG_ENABLE(epoll,
   AC_HELP_STRING([--enable-epoll], [enable or disable epoll support]),
   [want_epoll=$enableval])
