@@ -373,11 +373,11 @@ error:
      free(svr->path);
 
 #ifndef _WIN32
-   if (svr->fd >= 0)
-     close(svr->fd);
-
    if (svr->fd_handler)
      ecore_main_fd_handler_del(svr->fd_handler);
+
+   if (svr->fd >= 0)
+     close(svr->fd);
 
    if (svr->write_buf)
      free(svr->write_buf);
@@ -425,7 +425,7 @@ ecore_con_server_connect(Ecore_Con_Type compl_type,
    Ecore_Con_Server *svr;
    Ecore_Con_Type type;
 
-   if (!name)
+   if ((!name) || (!name[0]))
      return NULL;
    /* local  user   socket: FILE:   ~/.ecore/[name]/[port] */
    /* local  system socket: FILE:   /tmp/.ecore_service|[name]|[port] */
@@ -494,11 +494,11 @@ error:
    if (svr->path)
      free(svr->path);
 
-   if (svr->fd >= 0)
-     close(svr->fd);
-
    if (svr->fd_handler)
      ecore_main_fd_handler_del(svr->fd_handler);
+
+   if (svr->fd >= 0)
+     close(svr->fd);
 
    ecore_con_ssl_server_shutdown(svr);
    free(svr);
@@ -1184,9 +1184,6 @@ _ecore_con_server_free(Ecore_Con_Server *svr)
      unlink(svr->path);
 
    ecore_con_ssl_server_shutdown(svr);
-   if (svr->fd >= 0)
-     close(svr->fd);
-
    if (svr->name)
      free(svr->name);
 
@@ -1199,6 +1196,9 @@ _ecore_con_server_free(Ecore_Con_Server *svr)
    if (svr->fd_handler)
      ecore_main_fd_handler_del(svr->fd_handler);
 
+   if (svr->fd >= 0)
+     close(svr->fd);
+
    servers = eina_list_remove(servers, svr);
    svr->data = NULL;
    free(svr);
@@ -1209,7 +1209,10 @@ _ecore_con_client_free(Ecore_Con_Client *cl)
 {
    double t_start, t;
 
-   if ((!cl->buf) && cl->delete_me && (!cl->dead) && (cl->event_count < 1))
+   if (cl->event_count > 0)
+     return;
+
+   if (cl->delete_me && (!cl->dead) && (cl->event_count < 1))
      {
         /* this is a catch-all for cases when a client is not properly killed. */
 
@@ -1228,8 +1231,7 @@ _ecore_con_client_free(Ecore_Con_Client *cl)
            return;
      }
 
-   if (cl->event_count > 0)
-     return;
+
    ECORE_MAGIC_SET(cl, ECORE_MAGIC_NONE);
    t_start = ecore_time_get();
    while ((cl->buf) && (!cl->dead))
@@ -1251,11 +1253,11 @@ _ecore_con_client_free(Ecore_Con_Client *cl)
    if (cl->host_server->type & ECORE_CON_SSL)
      ecore_con_ssl_client_shutdown(cl);
 
-   if (cl->fd >= 0)
-     close(cl->fd);
-
    if (cl->fd_handler)
      ecore_main_fd_handler_del(cl->fd_handler);
+
+   if (cl->fd >= 0)
+     close(cl->fd);
 
    if (cl->client_addr)
      free(cl->client_addr);
@@ -1608,7 +1610,6 @@ svr_try_connect_plain(Ecore_Con_Server *svr)
    int so_err = 0;
    unsigned int size = sizeof(int);
 
-   errno = 0;
    res = getsockopt(svr->fd, SOL_SOCKET, SO_ERROR, (void *)&so_err, &size);
 #ifdef _WIN32
    if (res == SOCKET_ERROR)
@@ -1769,9 +1770,12 @@ _ecore_con_svr_tcp_handler(void                        *data,
    return ECORE_CALLBACK_RENEW;
 
 error:
-   close(new_fd);
    if (cl && cl->fd_handler)
-     ecore_main_fd_handler_del(cl->fd_handler);
+     {
+        ecore_main_fd_handler_del(cl->fd_handler);
+        close(cl->fd);
+        free(cl);
+     }
    return ECORE_CALLBACK_RENEW;
 }
 
@@ -1796,22 +1800,18 @@ _ecore_con_cl_read(Ecore_Con_Server *svr)
 
    if (!(svr->type & ECORE_CON_SSL))
      {
-        errno = 0;
         num = read(svr->fd, buf, sizeof(buf));
-        if ((num > 0) || (errno == EAGAIN))
+        if ((num >= 0) || (errno == EAGAIN))
           lost_server = EINA_FALSE;
      }
    else
      {
        num = ecore_con_ssl_server_read(svr, buf, sizeof(buf));
-         if (num > 0)
+         if (num >= 0)
            lost_server = EINA_FALSE;
      }
 
-   if (lost_server)
-     _ecore_con_server_kill(svr);
-
-   if ((num > 0) && (!svr->delete_me))
+   if ((!svr->delete_me) && (num > 0))
    {
       Ecore_Con_Event_Server_Data *e;
 
@@ -1833,7 +1833,8 @@ _ecore_con_cl_read(Ecore_Con_Server *svr)
                       _ecore_con_event_server_data_free, NULL);
    }
 
-
+   if (lost_server)
+     _ecore_con_server_kill(svr);
 }
 
 static Eina_Bool
@@ -1932,31 +1933,28 @@ _ecore_con_cl_udp_handler(void             *data,
         return ECORE_CALLBACK_RENEW;
      }
 
-   errno = 0;
    num = read(svr->fd, buf, READBUFSIZ);
 
-   if ((errno == EIO) || (errno == EBADF) || (errno == EPIPE) || (errno == EINVAL) ||
-       (errno == ENOSPC) || (errno == ECONNREFUSED))
+   if ((!svr->delete_me) && (num >= 0))
+     {
+        inbuf = malloc(num);
+        EINA_SAFETY_ON_NULL_RETURN_VAL(inbuf, ECORE_CALLBACK_RENEW);
+
+        memcpy(inbuf, buf, num);
+
+        e = malloc(sizeof(Ecore_Con_Event_Server_Data));
+        EINA_SAFETY_ON_NULL_RETURN_VAL(e, ECORE_CALLBACK_RENEW);
+
+        svr->event_count++;
+        e->server = svr;
+        e->data = inbuf;
+        e->size = num;
+        ecore_event_add(ECORE_CON_EVENT_SERVER_DATA, e,
+                        _ecore_con_event_server_data_free, NULL);
+     }
+
+   if (num < 0 && (errno != EAGAIN) && (errno != EINTR))
      _ecore_con_server_kill(svr);
-
-   if ((num < 1) || (svr->delete_me))
-     return ECORE_CALLBACK_RENEW;
-
-   inbuf = malloc(num);
-   if (!inbuf)
-     return ECORE_CALLBACK_RENEW;
-
-   memcpy(inbuf, buf, num);
-
-   e = calloc(1, sizeof(Ecore_Con_Event_Server_Data));
-   EINA_SAFETY_ON_NULL_RETURN_VAL(e, ECORE_CALLBACK_RENEW);
-
-   svr->event_count++;
-   e->server = svr;
-   e->data = inbuf;
-   e->size = num;
-   ecore_event_add(ECORE_CON_EVENT_SERVER_DATA, e,
-                   _ecore_con_event_server_data_free, NULL);
 
    return ECORE_CALLBACK_RENEW;
 }
@@ -1986,7 +1984,6 @@ _ecore_con_svr_udp_handler(void             *data,
    if (!ecore_main_fd_handler_active_get(fd_handler, ECORE_FD_READ))
      return ECORE_CALLBACK_RENEW;
 
-   errno = 0;
 #ifdef _WIN32
    num = fcntl(svr->fd, F_SETFL, O_NONBLOCK);
    if (num >= 0)
@@ -2000,12 +1997,11 @@ _ecore_con_svr_udp_handler(void             *data,
               &client_addr_len);
 #endif
 
-   if ((errno == EIO) || (errno == EBADF) || (errno == EPIPE) ||
-       (errno == EINVAL) || (errno == ENOSPC) || (errno == ECONNREFUSED))
+   if (num < 0 && (errno != EAGAIN) && (errno != EINTR))
      {
         if (!svr->delete_me)
           {
-/* we lost our client! */
+              /* we lost our client! */
               Ecore_Con_Event_Client_Del *e;
 
               e = calloc(1, sizeof(Ecore_Con_Event_Client_Del));
@@ -2045,7 +2041,7 @@ _ecore_con_svr_udp_handler(void             *data,
    { /* indent to keep it all nicely separated */
       Ecore_Con_Event_Client_Add *add;
 
-      add = calloc(1, sizeof(Ecore_Con_Event_Client_Add));
+      add = malloc(sizeof(Ecore_Con_Event_Client_Add));
       EINA_SAFETY_ON_NULL_RETURN_VAL(add, ECORE_CALLBACK_RENEW);
 
       /*cl->event_count++;*/
@@ -2058,7 +2054,7 @@ _ecore_con_svr_udp_handler(void             *data,
 
    {
       Ecore_Con_Event_Client_Data *e;
-      e = calloc(1, sizeof(Ecore_Con_Event_Client_Data));
+      e = malloc(sizeof(Ecore_Con_Event_Client_Data));
       EINA_SAFETY_ON_NULL_RETURN_VAL(e, ECORE_CALLBACK_RENEW);
 
       svr->event_count++;
@@ -2102,16 +2098,38 @@ _ecore_con_svr_cl_read(Ecore_Con_Client *cl)
 
    if (!(cl->host_server->type & ECORE_CON_SSL))
      {
-        errno = 0;
         num = read(cl->fd, buf, sizeof(buf));
-        if ((num > 0) || (errno == EAGAIN))
+        if ((num >= 0) || (errno == EAGAIN) || (errno == EINTR))
           lost_client = EINA_FALSE;
      }
    else
      {
         num = ecore_con_ssl_client_read(cl, buf, sizeof(buf));
-        if (num > 0)
+        if (num >= 0)
           lost_client = EINA_FALSE;
+     }
+
+   if ((!cl->delete_me) && (num > 0))
+     {
+        Ecore_Con_Event_Client_Data *e;
+
+        e = malloc(sizeof(Ecore_Con_Event_Client_Data));
+        EINA_SAFETY_ON_NULL_RETURN(e);
+
+        cl->event_count++;
+        _ecore_con_cl_timer_update(cl);
+        e->client = cl;
+        e->data = malloc(num);
+        if (!e->data)
+          {
+             ERR("alloc!");
+             free(e);
+             return;
+          }
+        memcpy(e->data, buf, num);
+        e->size = num;
+        ecore_event_add(ECORE_CON_EVENT_CLIENT_DATA, e,
+                        _ecore_con_event_client_data_free, NULL);
      }
 
    if (lost_client)
@@ -2138,31 +2156,6 @@ _ecore_con_svr_cl_read(Ecore_Con_Client *cl)
         cl->fd_handler = NULL;
         return;
      }
-
-   if ((num > 0) && (!cl->delete_me))
-     {
-        Ecore_Con_Event_Client_Data *e;
-
-        e = malloc(sizeof(Ecore_Con_Event_Client_Data));
-        EINA_SAFETY_ON_NULL_RETURN(e);
-
-        cl->event_count++;
-        _ecore_con_cl_timer_update(cl);
-        e->client = cl;
-        e->data = malloc(num);
-        if (!e->data)
-          {
-             ERR("alloc!");
-             free(e);
-             return;
-          }
-        memcpy(e->data, buf, num);
-        e->size = num;
-        ecore_event_add(ECORE_CON_EVENT_CLIENT_DATA, e,
-                        _ecore_con_event_client_data_free, NULL);
-     }
-
-
 }
 
 static Eina_Bool
@@ -2229,14 +2222,16 @@ _ecore_con_server_flush(Ecore_Con_Server *svr)
    if (!svr->write_buf)
      return;
 
+   num = svr->write_buf_size - svr->write_buf_offset;
+
    /* check whether we need to write anything at all.
     * we must not write zero bytes with SSL_write() since it
     * causes undefined behaviour
     */
-   if (svr->write_buf_size == svr->write_buf_offset)
-     return;
-
-   num = svr->write_buf_size - svr->write_buf_offset;
+   /* we thank Tommy[D] for needing to check negative buffer sizes
+    * here because his system is amazing.
+    */
+   if (num <= 0) return;
 
    if (svr->handshaking)
      {
@@ -2253,8 +2248,8 @@ _ecore_con_server_flush(Ecore_Con_Server *svr)
 
    if (count < 0)
      {
-        /* we lost our server! */
-         _ecore_con_server_kill(svr);
+         if ((errno != EAGAIN) && (errno != EINTR))
+           _ecore_con_server_kill(svr);
          return;
      }
 
@@ -2291,6 +2286,7 @@ _ecore_con_client_flush(Ecore_Con_Client *cl)
    if (!count)
      {
         num = cl->buf_size - cl->buf_offset;
+        if (num <= 0) return;
         if (!(cl->host_server->type & ECORE_CON_SSL))
           count = write(cl->fd, cl->buf + cl->buf_offset, num);
         else
@@ -2299,29 +2295,27 @@ _ecore_con_client_flush(Ecore_Con_Client *cl)
 
    if (count < 0)
      {
-        if ((errno == EIO) || (errno == EBADF) || (errno == EPIPE) ||
-            (errno == EINVAL) || (errno == ENOSPC) || (errno == ECONNREFUSED))
-          if (!cl->delete_me)
-            {
-               /* we lost our client! */
-                Ecore_Con_Event_Client_Del *e;
+        if ((errno != EAGAIN) && (errno != EINTR) && (!cl->delete_me))
+          {
+             /* we lost our client! */
+              Ecore_Con_Event_Client_Del *e;
 
-                e = calloc(1, sizeof(Ecore_Con_Event_Client_Del));
-                EINA_SAFETY_ON_NULL_RETURN(e);
+              e = calloc(1, sizeof(Ecore_Con_Event_Client_Del));
+              EINA_SAFETY_ON_NULL_RETURN(e);
 
-                cl->event_count++;
-                _ecore_con_cl_timer_update(cl);
-                e->client = cl;
-                ecore_event_add(ECORE_CON_EVENT_CLIENT_DEL, e,
-                                _ecore_con_event_client_del_free, NULL);
+              cl->event_count++;
+              _ecore_con_cl_timer_update(cl);
+              e->client = cl;
+              ecore_event_add(ECORE_CON_EVENT_CLIENT_DEL, e,
+                              _ecore_con_event_client_del_free, NULL);
 
-                cl->dead = EINA_TRUE;
-                INF("Lost client %s", (cl->ip) ? cl->ip : "");
-                if (cl->fd_handler)
-                  ecore_main_fd_handler_del(cl->fd_handler);
+              cl->dead = EINA_TRUE;
+              INF("Lost client %s", (cl->ip) ? cl->ip : "");
+              if (cl->fd_handler)
+                ecore_main_fd_handler_del(cl->fd_handler);
 
-                cl->fd_handler = NULL;
-            }
+              cl->fd_handler = NULL;
+          }
 
         return;
      }
@@ -2336,7 +2330,7 @@ _ecore_con_client_flush(Ecore_Con_Client *cl)
         if (cl->fd_handler)
           ecore_main_fd_handler_active_set(cl->fd_handler, ECORE_FD_READ);
      }
-   else if (count < num)
+   else if ((count < num) && cl->fd_handler)
      ecore_main_fd_handler_active_set(cl->fd_handler, ECORE_FD_WRITE);
 }
 
@@ -2362,6 +2356,8 @@ _ecore_con_event_client_del_free(void *data __UNUSED__,
    Ecore_Con_Event_Client_Del *e;
 
    e = ev;
+   if (!e->client) return ;
+
    e->client->event_count--;
    if ((e->client->event_count <= 0) && (e->client->delete_me))
      ecore_con_client_del(e->client);
