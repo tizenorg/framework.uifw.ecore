@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.55755slp2+build01) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r55755
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.55755slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Mon, 03 Jan 2011 21:19:00 +0900
+
 ecore (1.0.0.001+svn.55594slp2+build02) unstable; urgency=low
 
   * Bug patch - ecore_x_xregion_is_empty()
