@@ -14,7 +14,6 @@ MAINTAINERCLEANFILES = \
 ABOUT-NLS \
 Makefile.in \
 aclocal.m4 \
-autom4te.cache \
 config.guess \
 config.h.in \
 config.h.in~ \
@@ -182,16 +181,5 @@ doc:
 	@echo "entering doc/"
 	make -C doc doc
 
-# Unit tests
-
-if EFL_ENABLE_TESTS
-
-check-local:
-	@./src/tests/ecore_suite
-
-else
-
-check-local:
-	@echo "reconfigure with --enable-tests"
-
-endif
+maintainer-clean-local:
+	rm -rf autom4te.cache

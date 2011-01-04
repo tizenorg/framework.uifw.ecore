@@ -1789,52 +1789,54 @@ _ecore_con_cl_read(Ecore_Con_Server *svr)
 
    /* only possible with non-ssl connections */
    if (svr->connecting && (svr_try_connect_plain(svr) != ECORE_CON_CONNECTED))
-     return;
+      return;
 
    if (svr->handshaking)
      {
         DBG("Continuing ssl handshake");
         if (!ecore_con_ssl_server_init(svr))
-          lost_server = EINA_FALSE;
+           lost_server = EINA_FALSE;
      }
-
+   
    if (!(svr->type & ECORE_CON_SSL))
      {
         num = read(svr->fd, buf, sizeof(buf));
-        if ((num >= 0) || (errno == EAGAIN))
-          lost_server = EINA_FALSE;
+        /* 0 is not a valid return value for a tcp socket */
+        if ((num > 0) || ((num < 0) && (errno == EAGAIN)))
+           lost_server = EINA_FALSE;
      }
    else
      {
-       num = ecore_con_ssl_server_read(svr, buf, sizeof(buf));
-         if (num >= 0)
+        num = ecore_con_ssl_server_read(svr, buf, sizeof(buf));
+        /* this is not an actual 0 return, 0 here just means non-fatal error such as EAGAIN */
+        if (num >= 0)
            lost_server = EINA_FALSE;
      }
-
+   
    if ((!svr->delete_me) && (num > 0))
-   {
-      Ecore_Con_Event_Server_Data *e;
-
-      e = malloc(sizeof(Ecore_Con_Event_Server_Data));
-      EINA_SAFETY_ON_NULL_RETURN(e);
-
-      svr->event_count++;
-      e->server = svr;
-      e->data = malloc(num);
-      if (!e->data)
-        {
-           ERR("alloc!");
-           free(e);
-           return;
-        }
-      memcpy(e->data, buf, num);
-      e->size = num;
-      ecore_event_add(ECORE_CON_EVENT_SERVER_DATA, e,
-                      _ecore_con_event_server_data_free, NULL);
-   }
+     {
+        Ecore_Con_Event_Server_Data *e;
+        
+        e = malloc(sizeof(Ecore_Con_Event_Server_Data));
+        EINA_SAFETY_ON_NULL_RETURN(e);
+        
+        svr->event_count++;
+        e->server = svr;
+        e->data = malloc(num);
+        if (!e->data)
+          {
+             ERR("alloc!");
+             free(e);
+             return;
+          }
+        memcpy(e->data, buf, num);
+        e->size = num;
+        ecore_event_add(ECORE_CON_EVENT_SERVER_DATA, e,
+                        _ecore_con_event_server_data_free, NULL);
+     }
 
    if (lost_server)
-     _ecore_con_server_kill(svr);
+      _ecore_con_server_kill(svr);
 }
 
 static Eina_Bool
@@ -1935,7 +1937,7 @@ _ecore_con_cl_udp_handler(void             *data,
 
    num = read(svr->fd, buf, READBUFSIZ);
 
-   if ((!svr->delete_me) && (num >= 0))
+   if ((!svr->delete_me) && (num > 0))
      {
         inbuf = malloc(num);
         EINA_SAFETY_ON_NULL_RETURN_VAL(inbuf, ECORE_CALLBACK_RENEW);
@@ -2099,12 +2101,14 @@ _ecore_con_svr_cl_read(Ecore_Con_Client *cl)
    if (!(cl->host_server->type & ECORE_CON_SSL))
      {
         num = read(cl->fd, buf, sizeof(buf));
-        if ((num >= 0) || (errno == EAGAIN) || (errno == EINTR))
+        /* 0 is not a valid return value for a tcp socket */
+        if ((num > 0) || ((num < 0) && ((errno == EAGAIN) || (errno == EINTR))))
           lost_client = EINA_FALSE;
      }
    else
      {
         num = ecore_con_ssl_client_read(cl, buf, sizeof(buf));
+        /* this is not an actual 0 return, 0 here just means non-fatal error such as EAGAIN */
         if (num >= 0)
           lost_client = EINA_FALSE;
      }
@@ -2356,7 +2360,7 @@ _ecore_con_event_client_del_free(void *data __UNUSED__,
    Ecore_Con_Event_Client_Del *e;
 
    e = ev;
-   if (!e->client) return ;
+   if (!e->client) return;
 
    e->client->event_count--;
    if ((e->client->event_count <= 0) && (e->client->delete_me))
