@@ -508,7 +508,13 @@ EAPI Eina_Bool         ecore_con_url_httpauth_set(Ecore_Con_Url *url_con,
                                                   const char *username,
                                                   const char *password,
                                                   Eina_Bool safe);
-EAPI Eina_Bool         ecore_con_url_send(Ecore_Con_Url *url_con,
+EINA_DEPRECATED EAPI Eina_Bool         ecore_con_url_send(Ecore_Con_Url *url_con,
+                                                          const void *data, long length,
+                                                          const char *content_type);
+EAPI Eina_Bool         ecore_con_url_get(Ecore_Con_Url *url_con,
+                                          const void *data, long length,
+                                          const char *content_type);
+EAPI Eina_Bool         ecore_con_url_post(Ecore_Con_Url *url_con,
                                           const void *data, long length,
                                           const char *content_type);
 EAPI void              ecore_con_url_time(Ecore_Con_Url *url_con,
@@ -524,6 +530,17 @@ EAPI void              ecore_con_url_verbose_set(Ecore_Con_Url *url_con,
                                                  Eina_Bool verbose);
 EAPI void              ecore_con_url_ftp_use_epsv_set(Ecore_Con_Url *url_con,
                                                       Eina_Bool use_epsv);
+
+EAPI void              ecore_con_url_cookies_init(Ecore_Con_Url *url_con);
+EAPI void              ecore_con_url_cookies_ignore_old_session_set(Ecore_Con_Url *url_con,
+                                                                    Eina_Bool ignore);
+EAPI void              ecore_con_url_cookies_clear(Ecore_Con_Url *url_con);
+EAPI void              ecore_con_url_cookies_session_clear(Ecore_Con_Url *url_con);
+EAPI void              ecore_con_url_cookies_file_add(Ecore_Con_Url *url_con,
+                                                      const char * const file_name);
+EAPI Eina_Bool         ecore_con_url_cookies_jar_file_set(Ecore_Con_Url *url_con,
+                                                          const char * const cookiejar_file);
+EAPI void              ecore_con_url_cookies_jar_write(Ecore_Con_Url *url_con);
 
 /**
  * @}
