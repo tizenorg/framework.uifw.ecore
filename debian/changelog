@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.56091slp2+build01) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r56091
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.56091slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Wed, 19 Jan 2011 16:16:45 +0900
+
 ecore (1.0.0.001+svn.55755slp2+build02) unstable; urgency=low
 
   * [ecore_imf] bug fix : hide keyboard in ecore_imf_context_del
