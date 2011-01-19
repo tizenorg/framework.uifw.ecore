@@ -2761,13 +2761,15 @@ _ecore_evas_fps_debug_rendertime_add(double t)
         rlapse = tim;
         flapse = frames;
      }
-   else if ((tim - rlapse) >= 0.5)
+   else if ((tim - rlapse) >= 0.1)
      {
+        printf("%.6f \t", tim);
         printf("FRAME: %i, FPS: %3.1f, RTIME %3.0f%%\n",
                frames,
                (frames - flapse) / (tim - rlapse),
                (100.0 * rtime) / (tim - rlapse)
                );
+        fflush(stdout);
         rlapse = tim;
         flapse = frames;
         rtime = 0.0;
