@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.56239slp2+build03) unstable; urgency=low
+
+  * ee->no_comp_sync = 0 
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.56239slp2+build03  
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Mon, 31 Jan 2011 18:26:53 +0900
+
 ecore (1.0.0.001+svn.56239slp2+build02) unstable; urgency=low
 
   * ee->no_comp_sync = 0 
