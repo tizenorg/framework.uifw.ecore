@@ -1,3 +1,12 @@
+ecore (1.0.0.001+svn.56239slp2+build04) unstable; urgency=low
+
+  * [ecore_evas_x.c] apply ECORE_EVAS_GL_SYNC_DRAW_DONE env.
+     + check whether GL driver sends SYNC_DRAW_DONE msg after buffer copy.
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.56239slp2+build04
+
+ -- Gwanglim Lee <gl77.lee@samsung.com>  Sat, 05 Feb 2011 17:29:55 +0900
+
 ecore (1.0.0.001+svn.56239slp2+build03) unstable; urgency=low
 
   * ee->no_comp_sync = 0 

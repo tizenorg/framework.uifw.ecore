@@ -1057,6 +1057,17 @@ _ecore_evas_x_event_window_show(void *data __UNUSED__, int type __UNUSED__, void
    ee = ecore_event_window_match(e->win);
    if (!ee) return ECORE_CALLBACK_PASS_ON; /* pass on event */
    if (e->win != ee->prop.window) return ECORE_CALLBACK_PASS_ON;
+   /* some GL drivers are doing buffer copy in a separate thread.
+    * we need to check whether GL driver sends SYNC_DRAW_DONE msg afger copying
+    * that are required in order to exactly render. - added by gl77.lee
+    */
+   if (ee->gl_sync_draw_done < 0)
+     {
+        if (getenv("ECORE_EVAS_GL_SYNC_DRAW_DONE"))
+           ee->gl_sync_draw_done = atoi(getenv("ECORE_EVAS_GL_SYNC_DRAW_DONE"));
+        else
+           ee->gl_sync_draw_done = 0;
+     }
    if (first_map_bug < 0)
      {
         if (getenv("ECORE_EVAS_GL_FIRST_MAP_BUG"))
@@ -3068,6 +3079,7 @@ _ecore_evas_x_flush_post(void *data, Evas *e __UNUSED__, void *event_info __UNUS
 
    if (ee->no_comp_sync) return;
    if (!_ecore_evas_app_comp_sync) return;
+   if (ee->gl_sync_draw_done) return; // added by gl77.lee
    if (ee->engine.x.sync_counter)
      {
         if (ee->engine.x.sync_began)
@@ -3501,6 +3513,8 @@ ecore_evas_gl_x11_options_new(const char *disp_name, Ecore_X_Window parent,
    if (!ee) return NULL;
 
    ECORE_MAGIC_SET(ee, ECORE_MAGIC_EVAS);
+
+   ee->gl_sync_draw_done = -1; // added by gl77.lee
 
    _ecore_evas_x_init();
 

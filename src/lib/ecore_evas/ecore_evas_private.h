@@ -349,8 +349,9 @@ struct _Ecore_Evas
 
    unsigned char ignore_events : 1;
    unsigned char manual_render : 1;
-   unsigned char registered : 1;
+   unsigned char registered    : 1;
    unsigned char no_comp_sync  : 1;
+   int           gl_sync_draw_done; // added by gl77.lee
 };
 
 #ifdef BUILD_ECORE_EVAS_X11
