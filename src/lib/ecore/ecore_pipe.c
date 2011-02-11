@@ -589,7 +589,8 @@ _ecore_pipe_read(void *data, Ecore_Fd_Handler *fd_handler __UNUSED__)
         /* catch the non error case first */
         if (ret == (ssize_t)(p->len - p->already_read))
           {
-             p->handler((void *)p->data, p->passed_data, p->len);
+             if (!p->delete_me)
+                p->handler((void *)p->data, p->passed_data, p->len);
              free(p->passed_data);
              /* reset all values to 0 */
              p->passed_data = NULL;
@@ -614,7 +615,7 @@ _ecore_pipe_read(void *data, Ecore_Fd_Handler *fd_handler __UNUSED__)
           }
 #ifndef _WIN32
         else if ((ret == PIPE_FD_ERROR) &&
-                  ((errno == EINTR || errno == EAGAIN)))
+                  ((errno == EINTR) || (errno == EAGAIN)))
            return ECORE_CALLBACK_RENEW;
         else
           {
