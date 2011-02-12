@@ -219,7 +219,6 @@ ecore_imf_context_del(Ecore_IMF_Context *ctx)
                          "ecore_imf_context_del");
         return;
      }
-
    if (ctx->klass->del) ctx->klass->del(ctx);
    ECORE_MAGIC_SET(ctx, ECORE_MAGIC_NONE);
 
@@ -873,6 +872,14 @@ ecore_imf_context_delete_surrounding_event_add(Ecore_IMF_Context *ctx, int offse
 }
 
 /*** ImControl Related APIs */
+
+/**
+ * Show the current active Input panel (virtual keyboard)with given state.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_input_panel_show(Ecore_IMF_Context *ctx)
 {
@@ -885,6 +892,13 @@ ecore_imf_context_input_panel_show(Ecore_IMF_Context *ctx)
    if (ctx->klass->show) ctx->klass->show(ctx);
 }
 
+/**
+ * Hide the current active ISE.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_input_panel_hide(Ecore_IMF_Context *ctx)
 {
@@ -897,6 +911,13 @@ ecore_imf_context_input_panel_hide(Ecore_IMF_Context *ctx)
    if (ctx->klass->hide) ctx->klass->hide(ctx);
 }
 
+/**
+ * Show control panel.
+ * @param ctx context used to map real loaded APIs
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ *
+ * ISE control panel shows ISE list and provides setup of each ISE
+ */
 EAPI void
 ecore_imf_context_control_panel_show (Ecore_IMF_Context *ctx)
 {
@@ -909,6 +930,13 @@ ecore_imf_context_control_panel_show (Ecore_IMF_Context *ctx)
    if (ctx->klass->control_panel_show) ctx->klass->control_panel_show(ctx);
 }
 
+/**
+ * Hide control panel.
+ * @param ctx context used to map real loaded APIs
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ *
+ * ISE control panel shows ISE list and provides setup of each ISE
+ */
 EAPI void
 ecore_imf_context_control_panel_hide (Ecore_IMF_Context *ctx)
 {
@@ -921,6 +949,12 @@ ecore_imf_context_control_panel_hide (Ecore_IMF_Context *ctx)
    if (ctx->klass->control_panel_hide) ctx->klass->control_panel_hide(ctx);
 }
 
+/**
+ * Set ISE Language before show ISE.
+ * @param ctx context used to map real loaded APIs
+ * @param lang see Ecore_IMF_Input_Panel_Lang
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang)
 {
@@ -934,6 +968,12 @@ ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_In
    ctx->input_panel_lang = lang;
 }
 
+/**
+ * Get ISE Language of current active ISE.
+ * @param ctx context used to map real loaded APIs
+ * @return Ecore_IMF_Input_Panel_Lang
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI Ecore_IMF_Input_Panel_Lang
 ecore_imf_context_input_panel_language_get (Ecore_IMF_Context *ctx)
 {
@@ -946,6 +986,10 @@ ecore_imf_context_input_panel_language_get (Ecore_IMF_Context *ctx)
    return ctx->input_panel_lang;
 }
 
+/**
+ * Get ISE Language of given ISE. -- Not supported for now --
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI int
 ecore_imf_context_ise_get_ise_language (Ecore_IMF_Context *ctx, const char* ise_name, char ***langlist)
 {
@@ -967,6 +1011,13 @@ ecore_imf_context_ise_get_ise_language (Ecore_IMF_Context *ctx, const char* ise_
       return -1;
 }
 
+/**
+ * Set keyboard language.
+ * @param ctx context used to map real loaded APIs
+ * @param lang see Ecore_IMF_Input_Panel_Lang
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * THIS API IS NOT SUPPORTED NOW
+ */
 EAPI void
 ecore_imf_context_keyboard_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Keyboard_Lang lang)
 {
@@ -978,6 +1029,13 @@ ecore_imf_context_keyboard_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Keybo
 //   if (ctx->klass->ise_set_language) ctx->klass->ise_set_language(ctx, lang);
 }
 
+/**
+ * Get keyboard language.
+ * @param ctx context used to map real loaded APIs
+ * @return Ecore_IMF_Input_Panel_Lang
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * THIS API IS NOT SUPPORTED NOW
+ */
 EAPI Ecore_IMF_Keyboard_Lang
 ecore_imf_context_keyboard_language_get (Ecore_IMF_Context *ctx)
 {
@@ -995,6 +1053,10 @@ ecore_imf_context_keyboard_language_get (Ecore_IMF_Context *ctx)
    return lang;
 }
 
+/**
+ * Set ISF Language. -- Not supported for now --
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_ise_set_isf_language (Ecore_IMF_Context *ctx, const char* lang)
 {
@@ -1013,6 +1075,18 @@ ecore_imf_context_ise_set_isf_language (Ecore_IMF_Context *ctx, const char* lang
    if (ctx->klass->ise_set_isf_language) ctx->klass->ise_set_isf_language(ctx, lang);
 }
 
+/**
+ * Set ISE Specific data before show ISE.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @param data data pointer
+ * @param len data length
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ *
+ * this API is used by applications to deliver specific data to ISE. 
+ * the data format MUST be negotiated by both application and ISE negotiate.
+ */
 EAPI void
 ecore_imf_context_input_panel_imdata_set (Ecore_IMF_Context *ctx, const char *data, int len)
 {
@@ -1031,6 +1105,15 @@ ecore_imf_context_input_panel_imdata_set (Ecore_IMF_Context *ctx, const char *da
    if (ctx->klass->input_panel_imdata_set) ctx->klass->input_panel_imdata_set(ctx, data, len);
 }
 
+/**
+ * Get ISE Specific data of current active ISE.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @param data data pointer
+ * @param len data length
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_input_panel_imdata_get (Ecore_IMF_Context *ctx, char * data, int *len)
 {
@@ -1049,6 +1132,17 @@ ecore_imf_context_input_panel_imdata_get (Ecore_IMF_Context *ctx, char * data, i
    if (ctx->klass->input_panel_imdata_get) ctx->klass->input_panel_imdata_get(ctx, data, len);
 }
 
+/**
+ * Set ISE whether animation effect is shown or not.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @param use_effect whether animation effect is shown or not
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ *
+ * this API is used by applications to deliver specific data to ISE. 
+ * the data format MUST be negotiated by both application and ISE negotiate.
+ */
 EAPI void
 ecore_imf_context_input_panel_use_effect_set (Ecore_IMF_Context *ctx, Eina_Bool use_effect)
 {
@@ -1062,6 +1156,17 @@ ecore_imf_context_input_panel_use_effect_set (Ecore_IMF_Context *ctx, Eina_Bool 
    ctx->use_effect = use_effect;
 }
 
+/**
+ * Get whether ISE supports animation effect or not when it is shown or hidden.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @param use_effect whether animation effect is shown or not
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ *
+ * this API is used by applications to deliver specific data to ISE. 
+ * the data format MUST be negotiated by both application and ISE negotiate.
+ */
 EAPI Eina_Bool
 ecore_imf_context_input_panel_use_effect_get (Ecore_IMF_Context *ctx)
 {
@@ -1074,6 +1179,17 @@ ecore_imf_context_input_panel_use_effect_get (Ecore_IMF_Context *ctx)
    return ctx->use_effect;
 }
 
+/**
+ * Get ISE position of current active ISE. 
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @param x top-left x co-ordinate of rectangle;
+ * @param y top-left y co-ordinate of rectangle;
+ * @param w width of rectangle ;
+ * @param h height of rectangle;
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_input_panel_geometry_get (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h)
 {
@@ -1086,6 +1202,19 @@ ecore_imf_context_input_panel_geometry_get (Ecore_IMF_Context *ctx, int *x, int 
    if (ctx->klass->input_panel_geometry_get) ctx->klass->input_panel_geometry_get(ctx, x, y, w, h);
 }
 
+/**
+ * Set ISE private key before show ISE.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * Since the second parameter of this API requires a layout index, so before using this API application has to set a specific layout and that layout index 
+ * should be passed in the 2nd argument of this API(see sample code).
+ * @param ctx context used to map real loaded APIs
+ * @param layout_index index of layout page to be set
+ * @param key_index index of key to be set
+ * @param label text label to be appeared on private key
+ * @param value value of key, If NULL it will use original value of key
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, int key_value, const char* key_string)
 {
@@ -1169,6 +1298,18 @@ ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx)
    return ctx->private_key_list;
 }
 
+/**
+ * Set the key to be disabled.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * Since the second parameter of this API requires a layout index, so before using this API application has to set a specific layout and that layout index 
+ * should be passed in the 2nd argument of this API(see sample code).
+ * @param ctx context used to map real loaded APIs
+ * @param layout_index index of layout page to be set
+ * @param key_index index of key to be set
+ * @param disabled The state
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled)
 {
@@ -1212,6 +1353,14 @@ ecore_imf_context_input_panel_key_disabled_list_get  (Ecore_IMF_Context *ctx)
    return ctx->disabled_key_list;
 }
 
+/**
+ * Set ISE Layout before show ISE.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @param layout see ECORE_IMF_INPUT_PANEL_LAYOUT
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_input_panel_layout_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout)
 {
@@ -1225,6 +1374,14 @@ ecore_imf_context_input_panel_layout_set (Ecore_IMF_Context *ctx, Ecore_IMF_Inpu
    ctx->input_panel_layout = layout;
 }
 
+/**
+ * Get ISE Layout of current active ISE.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @return layout see ECORE_IMF_INPUT_PANEL_LAYOUT
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI Ecore_IMF_Input_Panel_Layout
 ecore_imf_context_input_panel_layout_get  (Ecore_IMF_Context *ctx)
 {
@@ -1243,6 +1400,15 @@ ecore_imf_context_input_panel_layout_get  (Ecore_IMF_Context *ctx)
      return ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID;
 }
 
+/**
+ * Reset ISE Context including its Style. 
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * This is special function that should be called before calling any ecore_imf_context_set*** APIs to restore all default properties of ISE.
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ *
+ * NOTE: This API MUST be called before calling ecore_imf_context_input_panel_show().
+ */
 EAPI void
 ecore_imf_context_input_panel_reset (Ecore_IMF_Context *ctx)
 {
@@ -1255,6 +1421,14 @@ ecore_imf_context_input_panel_reset (Ecore_IMF_Context *ctx)
    if (ctx->klass->input_panel_reset) ctx->klass->input_panel_reset(ctx);
 }
 
+/**
+ * Set ISE screen orientation.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * To show the keypad in landscape mode application should first call this API with 2nd parameter as 90 or 270.
+ * After then only application should call ecore_imf_context_input_panel_show() function.
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_input_panel_orient_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation)
 {
@@ -1268,6 +1442,14 @@ ecore_imf_context_input_panel_orient_set (Ecore_IMF_Context *ctx, Ecore_IMF_Inpu
    ctx->input_panel_orient = orientation;
 }
 
+/**
+ * Get Input panel orientation.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * To show the keypad in landscape mode application should first call this API with 2nd parameter as 90 or 270.
+ * After then only application should call ecore_imf_context_input_panel_show() function.
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI Ecore_IMF_Input_Panel_Orient
 ecore_imf_context_input_panel_orient_get (Ecore_IMF_Context *ctx)
 {
@@ -1280,6 +1462,14 @@ ecore_imf_context_input_panel_orient_get (Ecore_IMF_Context *ctx)
    return ctx->input_panel_orient;
 }
 
+/**
+ * Get name of current active ISE.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @param name ISE name to be got
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_ise_get_active_isename (Ecore_IMF_Context *ctx, char* name)
 {
@@ -1298,6 +1488,15 @@ ecore_imf_context_ise_get_active_isename (Ecore_IMF_Context *ctx, char* name)
    if (ctx->klass->ise_get_active_isename) ctx->klass->ise_get_active_isename(ctx, name);
 }
 
+/**
+ * Set ISE by its name.
+ * To use this API application should include Ecore_IMF.h header file.
+ * Before calling this API, every application should call ecore_imf_init() to initialize the ecore_imf shared library.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @param name ISE name to be set
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_ise_set_active_ise_by_name (Ecore_IMF_Context *ctx, const char* name)
 {
@@ -1316,6 +1515,15 @@ ecore_imf_context_ise_set_active_ise_by_name (Ecore_IMF_Context *ctx, const char
    if (ctx->klass->ise_set_active_ise_by_name) ctx->klass->ise_set_active_ise_by_name(ctx, name);
 }
 
+/**
+ * Set ISE by its uuid.
+ * To use this API application should include Ecore_IMF.h header file.
+ * Before calling this API, every application should call ecore_imf_init() to initialize the ecore_imf shared library.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @param uuid ISE uuid to be set
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_ise_set_active_ise_by_uuid (Ecore_IMF_Context *ctx, const char* uuid)
 {
@@ -1334,6 +1542,16 @@ ecore_imf_context_ise_set_active_ise_by_uuid (Ecore_IMF_Context *ctx, const char
    if (ctx->klass->ise_set_active_ise_by_uuid) ctx->klass->ise_set_active_ise_by_uuid(ctx, uuid);
 }
 
+/**
+ * Get list of ISEs.
+ * To use this API application should include Ecore_IMF.h header file.
+ * Before calling this API, every application should call ecore_imf_init() to initialize the ecore_imf shared library.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @param iselist pointer to the list to be got.
+ * @return  int ise counter of iselist
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI int
 ecore_imf_context_ise_get_iselist (Ecore_IMF_Context *ctx, char*** iselist)
 {
@@ -1349,6 +1567,15 @@ ecore_imf_context_ise_get_iselist (Ecore_IMF_Context *ctx, char*** iselist)
       return -1;
 }
 
+/**
+ * Get state of current active ISE.
+ * To use this API application should include Ecore_IMF.h header file.
+ * Before calling this API, every application should call ecore_imf_init() to initialize the ecore_imf shared library.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs
+ * @param state see ISE_STATE
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI Ecore_IMF_Input_Panel_State
 ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx)
 {
@@ -1365,6 +1592,18 @@ ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx)
    return state;
 }
 
+/**
+ * Application can register a callback function which will be called if there is change in ise state,language,mode etc. 
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * @param ctx context used to map real loaded APIs.
+ * @param pEventCallback the callback function to be called 
+ * @param data application-ISE specific data.
+ * @return an integer unique to callabck registered.
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * In order to deregister the callback function registered application should follow the below step.
+ * ecore_imf_context_input_panel_event_callback_del (imf_context, ECORE_IMF_INPUT_PANEL_STATE_EVENT, _ise_event_callback);
+ */
 EAPI void
 ecore_imf_context_input_panel_event_callback_add (Ecore_IMF_Context *ctx,
                                                   Ecore_IMF_Input_Panel_Event type,
@@ -1400,6 +1639,17 @@ ecore_imf_context_input_panel_event_callback_del (Ecore_IMF_Context *ctx,
      }
 }
 
+/**
+ * Move the soft keyboard to the new position.
+ * To use this API application should include Ecore_IMF.h header file.
+ * The first parameter i.e Ecore_IMF_Context *ctx is used to map the ecore_imf API into real implemented API which is inside ISF.
+ * Since the second parameter of this API requires a layout index, so before using this API application has to set a specific layout and that layout index 
+ * should be passed in the 2nd argument of this API(see sample code).
+ * @param ctx context used to map real loaded APIs
+ * @param x X position to move the virtual keyboard to
+ * @param y Y position to move the virtual keyboard to
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx, int x, int y)
 {
