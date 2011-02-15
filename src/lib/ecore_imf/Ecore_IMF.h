@@ -43,13 +43,6 @@
 # endif
 #endif
 
-/**
- * @file Ecore_IMF.h
- * @brief The file that provides the ISF IMCONTROL Structures and APIs
- * @version   1.0
- * @ingroup   Ecore_IMF_Context_IMControl_Group
- */
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -426,7 +419,7 @@ struct _Ecore_IMF_Context_Class
    void (*control_panel_hide)   (Ecore_IMF_Context *ctx);
 
    void (*input_panel_layout_set)         (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout);
-   Ecore_IMF_Input_Panel_Layout (*input_panel_layout_get)         (Ecore_IMF_Context *ctx);
+   Ecore_IMF_Input_Panel_Layout (*input_panel_layout_get) (Ecore_IMF_Context *ctx);
 
    void (*input_panel_language_set)       (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang);
    Ecore_IMF_Input_Panel_Lang (*input_panel_language_get) (Ecore_IMF_Context *ctx);
@@ -443,7 +436,7 @@ struct _Ecore_IMF_Context_Class
    void (*input_panel_key_disabled_set)   (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
 
    void (*input_panel_reset)              (Ecore_IMF_Context *ctx); /* Same as reset to default property*/
-   Ecore_IMF_Input_Panel_State (*input_panel_state_get)          (Ecore_IMF_Context *ctx);
+   Ecore_IMF_Input_Panel_State (*input_panel_state_get) (Ecore_IMF_Context *ctx);
 
    /* CallBack APIs  */
    void (*input_panel_event_callback_add) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
