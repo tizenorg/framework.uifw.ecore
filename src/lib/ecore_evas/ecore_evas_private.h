@@ -351,6 +351,7 @@ struct _Ecore_Evas
    unsigned char manual_render : 1;
    unsigned char registered    : 1;
    unsigned char no_comp_sync  : 1;
+   unsigned char semi_sync  : 1;
    int           gl_sync_draw_done; // added by gl77.lee
 };
 

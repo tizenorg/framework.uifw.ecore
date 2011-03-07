@@ -3065,8 +3065,9 @@ _ecore_evas_x_flush_pre(void *data, Evas *e __UNUSED__, void *event_info __UNUSE
              ee->engine.x.sync_val++;
              if (!ee->engine.x.sync_cancel)
                {
-                  ecore_x_sync_counter_val_wait(ee->engine.x.sync_counter,
-                                                ee->engine.x.sync_val);
+                  if (!ee->semi_sync)
+                     ecore_x_sync_counter_val_wait(ee->engine.x.sync_counter,
+                                                   ee->engine.x.sync_val);
                }
           }
      }
@@ -3521,6 +3522,7 @@ ecore_evas_gl_x11_options_new(const char *disp_name, Ecore_X_Window parent,
    ee->engine.func = (Ecore_Evas_Engine_Func *)&_ecore_x_engine_func;
 
    ee->driver = "opengl_x11";
+   ee->semi_sync = 0; // gl engine doesnt need to sync - its whole swaps
    ee->no_comp_sync = 0; // gl engine doesnt need to sync - its whole swaps
    if (disp_name) ee->name = strdup(disp_name);
 
@@ -3618,8 +3620,8 @@ ecore_evas_gl_x11_new(const char *disp_name __UNUSED__, Ecore_X_Window parent __
    return NULL;
 }
 EAPI Ecore_Evas *
-ecore_evas_gl_x11_options_new(const char *disp_name, Ecore_X_Window parent,
-                              int x, int y, int w, int h, const int *opt)
+ecore_evas_gl_x11_options_new(const char *disp_name __UNUSED__, Ecore_X_Window parent __UNUSED__,
+                              int x __UNUSED__, int y __UNUSED__, int w __UNUSED__, int h __UNUSED__, const int *opt __UNUSED__)
 {
    return NULL;
 }
@@ -3726,7 +3728,7 @@ ecore_evas_gl_x11_pre_post_swap_callback_set(const Ecore_Evas *ee, void *data, v
 }
 #else
 EAPI void
-ecore_evas_gl_x11_pre_post_swap_callback_set(const Ecore_Evas *ee, void *data, void (*pre_cb) (void *data, Evas *e), void (*post_cb) (void *data, Evas *e))
+ecore_evas_gl_x11_pre_post_swap_callback_set(const Ecore_Evas *ee __UNUSED__, void *data __UNUSED__, void (*pre_cb) (void *data, Evas *e) __UNUSED__, void (*post_cb) (void *data, Evas *e) __UNUSED__)
 {
    return;
 }

@@ -43,8 +43,8 @@ struct _Ecore_IMF_Context
    const Ecore_IMF_Context_Class *klass;
    void                          *data;
    int                            input_mode;
-   void*                          window;
-   void*                          client_canvas;
+   void                          *window;
+   void                          *client_canvas;
    Ecore_IMF_Input_Panel_Layout   input_panel_layout;
    Ecore_IMF_Input_Panel_Lang     input_panel_lang;
    int                            use_effect;

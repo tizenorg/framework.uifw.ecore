@@ -282,7 +282,8 @@ ecore_x_image_put(Ecore_X_Image *im,
                   int h)
 {
    Ecore_X_GC tgc = 0;
-   
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
    if (!gc)
      {
         XGCValues gcv;
@@ -292,7 +293,8 @@ ecore_x_image_put(Ecore_X_Image *im,
         gc = tgc;
      }
    if (!im->xim) _ecore_x_image_shm_create(im);
-   XShmPutImage(_ecore_x_disp, draw, gc, im->xim, sx, sy, x, y, w, h, False);
+   if (im->xim) 
+     XShmPutImage(_ecore_x_disp, draw, gc, im->xim, sx, sy, x, y, w, h, False);
    if (tgc) ecore_x_gc_free(tgc);
 } /* ecore_x_image_put */
 

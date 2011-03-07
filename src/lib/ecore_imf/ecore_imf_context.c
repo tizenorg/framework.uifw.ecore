@@ -333,7 +333,7 @@ ecore_imf_context_client_canvas_get(Ecore_IMF_Context *ctx)
  * @param ctx An #Ecore_IMF_Context.
  * @ingroup Ecore_IMF_Context_Group
  */
-EINA_DEPRECATED EAPI void
+EAPI void
 ecore_imf_context_show(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -351,7 +351,7 @@ ecore_imf_context_show(Ecore_IMF_Context *ctx)
  * @param ctx An #Ecore_IMF_Context.
  * @ingroup Ecore_IMF_Context_Group
  */
-EINA_DEPRECATED EAPI void
+EAPI void
 ecore_imf_context_hide(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -560,7 +560,7 @@ ecore_imf_context_retrieve_surrounding_callback_set(Ecore_IMF_Context *ctx, Eina
  * @param input_mode The input mode to be used by @p ctx.
  * @ingroup Ecore_IMF_Context_Group
  */
-EINA_DEPRECATED EAPI void
+EAPI void
 ecore_imf_context_input_mode_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Mode input_mode)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -582,7 +582,7 @@ ecore_imf_context_input_mode_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Mode in
  * @return The input mode being used by @p ctx.
  * @ingroup Ecore_IMF_Context_Group
  */
-EINA_DEPRECATED EAPI Ecore_IMF_Input_Mode
+EAPI Ecore_IMF_Input_Mode
 ecore_imf_context_input_mode_get(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))

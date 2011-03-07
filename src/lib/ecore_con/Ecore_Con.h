@@ -148,6 +148,12 @@ typedef struct _Ecore_Con_Event_Client_Add Ecore_Con_Event_Client_Add;
 typedef struct _Ecore_Con_Event_Client_Del Ecore_Con_Event_Client_Del;
 
 /**
+ * @typedef Ecore_Con_Event_Client_Error
+ * Used as the @p data param for the corresponding event
+ */
+typedef struct _Ecore_Con_Event_Client_Error Ecore_Con_Event_Client_Error;
+
+/**
  * @typedef Ecore_Con_Event_Server_Add
  * Used as the @p data param for the corresponding event
  */
@@ -158,6 +164,12 @@ typedef struct _Ecore_Con_Event_Server_Add Ecore_Con_Event_Server_Add;
  * Used as the @p data param for the corresponding event
  */
 typedef struct _Ecore_Con_Event_Server_Del Ecore_Con_Event_Server_Del;
+
+/**
+ * @typedef Ecore_Con_Event_Server_Error
+ * Used as the @p data param for the corresponding event
+ */
+typedef struct _Ecore_Con_Event_Server_Error Ecore_Con_Event_Server_Error;
 
 /**
  * @typedef Ecore_Con_Event_Client_Data
@@ -208,6 +220,16 @@ struct _Ecore_Con_Event_Client_Del
 };
 
 /**
+ * @struct _Ecore_Con_Event_Client_Error
+ * Used as the @p data param for the @ref ECORE_CON_EVENT_CLIENT_ERROR event
+ */
+struct _Ecore_Con_Event_Client_Error
+{
+   Ecore_Con_Client *client; /** the client for which an error occurred */
+   char *error; /**< the error string describing what happened */
+};
+
+/**
  * @struct _Ecore_Con_Event_Server_Add
  * Used as the @p data param for the @ref ECORE_CON_EVENT_SERVER_ADD event
  */
@@ -223,6 +245,16 @@ struct _Ecore_Con_Event_Server_Add
 struct _Ecore_Con_Event_Server_Del
 {
    Ecore_Con_Server *server; /** the client that was lost */
+};
+
+/**
+ * @struct _Ecore_Con_Event_Server_Error
+ * Used as the @p data param for the @ref ECORE_CON_EVENT_SERVER_ERROR event
+ */
+struct _Ecore_Con_Event_Server_Error
+{
+   Ecore_Con_Server *server; /** the server for which an error occurred */
+   char *error; /**< the error string describing what happened */
 };
 
 /**
@@ -291,10 +323,14 @@ struct _Ecore_Con_Event_Url_Progress
 EAPI extern int ECORE_CON_EVENT_CLIENT_ADD;
 /** A client has disconnected from the server */
 EAPI extern int ECORE_CON_EVENT_CLIENT_DEL;
+/** A client experienced an error */
+EAPI extern int ECORE_CON_EVENT_CLIENT_ERROR;
 /** A server was created */
 EAPI extern int ECORE_CON_EVENT_SERVER_ADD;
 /** A server connection was lost */
 EAPI extern int ECORE_CON_EVENT_SERVER_DEL;
+/** A server experienced an error */
+EAPI extern int ECORE_CON_EVENT_SERVER_ERROR;
 /** A client connected to the server has sent data */
 EAPI extern int ECORE_CON_EVENT_CLIENT_DATA;
 /** A server connection object has data */
@@ -449,6 +485,7 @@ EAPI double            ecore_con_client_uptime_get(Ecore_Con_Client *cl);
 EAPI double            ecore_con_client_timeout_get(Ecore_Con_Client *cl);
 EAPI void              ecore_con_client_timeout_set(Ecore_Con_Client *cl, double timeout);
 EAPI Eina_Bool         ecore_con_client_connected_get(Ecore_Con_Client *cl);
+EAPI int               ecore_con_client_port_get(Ecore_Con_Client *cl);
 
 /**
  * @}
@@ -511,9 +548,7 @@ EAPI Eina_Bool         ecore_con_url_httpauth_set(Ecore_Con_Url *url_con,
 EINA_DEPRECATED EAPI Eina_Bool         ecore_con_url_send(Ecore_Con_Url *url_con,
                                                           const void *data, long length,
                                                           const char *content_type);
-EAPI Eina_Bool         ecore_con_url_get(Ecore_Con_Url *url_con,
-                                          const void *data, long length,
-                                          const char *content_type);
+EAPI Eina_Bool         ecore_con_url_get(Ecore_Con_Url *url_con);
 EAPI Eina_Bool         ecore_con_url_post(Ecore_Con_Url *url_con,
                                           const void *data, long length,
                                           const char *content_type);
@@ -541,6 +576,9 @@ EAPI void              ecore_con_url_cookies_file_add(Ecore_Con_Url *url_con,
 EAPI Eina_Bool         ecore_con_url_cookies_jar_file_set(Ecore_Con_Url *url_con,
                                                           const char * const cookiejar_file);
 EAPI void              ecore_con_url_cookies_jar_write(Ecore_Con_Url *url_con);
+
+EAPI void              ecore_con_url_ssl_verify_peer_set(Ecore_Con_Url *url_con,
+                                                         Eina_Bool verify);
 
 /**
  * @}

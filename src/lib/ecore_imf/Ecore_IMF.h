@@ -123,7 +123,7 @@ typedef enum
 
 typedef enum
 {
-   ECORE_IMF_INPUT_PANEL_CAPS_MODE_OFF,	    /**< Off */
+   ECORE_IMF_INPUT_PANEL_CAPS_MODE_OFF,     /**< Off */
    ECORE_IMF_INPUT_PANEL_CAPS_MODE_ON,      /**< On */
    ECORE_IMF_INPUT_PANEL_CAPS_MODE_LOCK,    /**< Lock */
 } Ecore_IMF_Input_Panel_Caps_Mode;
@@ -174,6 +174,9 @@ typedef union  _Ecore_IMF_Event                    Ecore_IMF_Event;
 typedef struct _Ecore_IMF_Context                  Ecore_IMF_Context;                  /**< An Input Method Context */
 typedef struct _Ecore_IMF_Context_Class            Ecore_IMF_Context_Class;            /**< An Input Method Context class */
 typedef struct _Ecore_IMF_Context_Info             Ecore_IMF_Context_Info;             /**< An Input Method Context info */
+
+/* Preedit attribute info */
+typedef struct _Ecore_IMF_Preedit_Attr             Ecore_IMF_Preedit_Attr;
 
 EAPI extern int ECORE_IMF_EVENT_PREEDIT_START;
 EAPI extern int ECORE_IMF_EVENT_PREEDIT_END;
@@ -228,6 +231,14 @@ typedef enum
    ECORE_IMF_INPUT_MODE_INVISIBLE    = 1 << 29,
    ECORE_IMF_INPUT_MODE_AUTOCAP      = 1 << 30
 } Ecore_IMF_Input_Mode;
+
+typedef enum
+{
+   ECORE_IMF_PREEDIT_TYPE_NONE,
+   ECORE_IMF_PREEDIT_TYPE_SUB1,
+   ECORE_IMF_PREEDIT_TYPE_SUB2,
+   ECORE_IMF_PREEDIT_TYPE_SUB3
+} Ecore_IMF_Preedit_Type;
 
 struct _Ecore_IMF_Event_Preedit_Start
 {
@@ -380,16 +391,6 @@ union _Ecore_IMF_Event
    Ecore_IMF_Event_Key_Up      key_up;
 };
 
-typedef enum
-{
-   ECORE_IMF_PREEDIT_TYPE_NONE = 0,
-   ECORE_IMF_PREEDIT_TYPE_SUB1 = 1,
-   ECORE_IMF_PREEDIT_TYPE_SUB2 = 2,
-   ECORE_IMF_PREEDIT_TYPE_SUB3 = 3
-} Ecore_IMF_Preedit_Type;
-
-typedef struct _Ecore_IMF_Preedit_Attr Ecore_IMF_Preedit_Attr;
-
 struct _Ecore_IMF_Preedit_Attr
 {
    Ecore_IMF_Preedit_Type preedit_type;
@@ -478,11 +479,11 @@ EAPI Ecore_IMF_Context            *ecore_imf_context_add(const char *id);
 EAPI const Ecore_IMF_Context_Info *ecore_imf_context_info_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_del(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_client_window_set(Ecore_IMF_Context *ctx, void *window);
-EAPI void*                         ecore_imf_context_client_window_get(Ecore_IMF_Context *ctx);
+EAPI void                         *ecore_imf_context_client_window_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_client_canvas_set(Ecore_IMF_Context *ctx, void *canvas);
-EAPI void*                         ecore_imf_context_client_canvas_get(Ecore_IMF_Context *ctx);
-EINA_DEPRECATED EAPI void          ecore_imf_context_show(Ecore_IMF_Context *ctx);
-EINA_DEPRECATED EAPI void          ecore_imf_context_hide(Ecore_IMF_Context *ctx);
+EAPI void                         *ecore_imf_context_client_canvas_get(Ecore_IMF_Context *ctx);
+EAPI void                          ecore_imf_context_show(Ecore_IMF_Context *ctx);
+EAPI void                          ecore_imf_context_hide(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_preedit_string_get(Ecore_IMF_Context *ctx, char **str, int *cursor_pos);
 EAPI void                          ecore_imf_context_preedit_string_with_attributes_get(Ecore_IMF_Context *ctx, char **str, Eina_List **attrs, int *cursor_pos);
 EAPI void                          ecore_imf_context_focus_in(Ecore_IMF_Context *ctx);
@@ -491,8 +492,8 @@ EAPI void                          ecore_imf_context_reset(Ecore_IMF_Context *ct
 EAPI void                          ecore_imf_context_cursor_position_set(Ecore_IMF_Context *ctx, int cursor_pos);
 EAPI void                          ecore_imf_context_use_preedit_set(Ecore_IMF_Context *ctx, Eina_Bool use_preedit);
 EAPI void                          ecore_imf_context_retrieve_surrounding_callback_set(Ecore_IMF_Context *ctx, Eina_Bool (*func)(void *data, Ecore_IMF_Context *ctx, char **text, int *cursor_pos), const void *data);
-EINA_DEPRECATED EAPI void          ecore_imf_context_input_mode_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Mode input_mode);
-EINA_DEPRECATED EAPI Ecore_IMF_Input_Mode          ecore_imf_context_input_mode_get(Ecore_IMF_Context *ctx);
+EAPI void                          ecore_imf_context_input_mode_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Mode input_mode);
+EAPI Ecore_IMF_Input_Mode          ecore_imf_context_input_mode_get(Ecore_IMF_Context *ctx);
 EAPI Eina_Bool                     ecore_imf_context_filter_event(Ecore_IMF_Context *ctx, Ecore_IMF_Event_Type type, Ecore_IMF_Event *event);
 
 /* plugin specific functions */
@@ -526,8 +527,8 @@ EAPI void                          ecore_imf_context_input_panel_reset(Ecore_IMF
 EAPI void                          ecore_imf_context_input_panel_orient_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient  orientation);
 EAPI Ecore_IMF_Input_Panel_Orient  ecore_imf_context_input_panel_orient_get(Ecore_IMF_Context *ctx);
 EAPI Ecore_IMF_Input_Panel_State   ecore_imf_context_input_panel_state_get(Ecore_IMF_Context *ctx);
-EAPI void                          ecore_imf_context_input_panel_event_callback_add(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallbackFunc) (void *data, Ecore_IMF_Context *ctx, int value), const void *data);
-EAPI void                          ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallbackFunc) (void *data, Ecore_IMF_Context *ctx, int value));
+EAPI void                          ecore_imf_context_input_panel_event_callback_add(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), const void *data);
+EAPI void                          ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
 EAPI void                          ecore_imf_context_input_panel_key_disabled_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
 EAPI Eina_List                    *ecore_imf_context_input_panel_key_disabled_list_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_input_panel_move(Ecore_IMF_Context *ctx, int x, int y);

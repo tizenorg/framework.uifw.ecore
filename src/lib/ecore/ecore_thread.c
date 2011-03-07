@@ -1024,7 +1024,7 @@ ecore_thread_check(Ecore_Thread *thread)
  * @param func_end The function that will be called in the main loop if the thread terminate correctly.
  * @param func_cancel The function that will be called in the main loop if the thread is cancelled.
  * @param data User context data to pass to all callback.
- * @param try_no_queue If you wan't to run outside of the thread pool.
+ * @param try_no_queue If you want to run outside of the thread pool.
  * @return A reference to the newly created thread instance, or NULL if it failed.
  *
  * ecore_thread_feedback_run provide a facility for easily managing heavy task in a
@@ -1032,7 +1032,7 @@ ecore_thread_check(Ecore_Thread *thread)
  * that will do the heavy work in another thread (so you should not use the
  * EFL in it except Eina and Eet if you are careful). The second one, func_notify,
  * will receive the data send from the thread function (func_heavy) by ecore_thread_notify
- * in the main loop (and so, can use all the EFL). Tje third, func_end,
+ * in the main loop (and so, can use all the EFL). The third, func_end,
  * that will be called in Ecore main loop when func_heavy is done. So you
  * can use all the EFL inside this function. The last one, func_cancel, will
  * be called in the main loop also, if the thread is cancelled or could not run at all.
