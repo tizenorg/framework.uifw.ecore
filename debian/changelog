@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.57453slp2+build03) unstable; urgency=low
+
+  * Package Uplaod : Rollback
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.57453slp2+build03
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Tue, 08 Mar 2011 12:38:42 +0900
+
 ecore (1.0.0.001+svn.57453slp2+build02) unstable; urgency=low
 
   * Package Upload : rollback
