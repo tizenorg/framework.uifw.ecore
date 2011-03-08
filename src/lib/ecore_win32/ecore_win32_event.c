@@ -802,7 +802,6 @@ _ecore_win32_event_keystroke_get(int    key,
        kn = "space";
        ks = "space";
        kc = "space";
-       break;
      case VK_F1:
        kn = "F1";
        ks = "F1";

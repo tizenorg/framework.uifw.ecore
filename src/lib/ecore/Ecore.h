@@ -50,7 +50,6 @@ extern "C" {
 #endif
 
   /**
-   * @file Ecore.h
    * @defgroup Ecore_Group Ecore - Main Loop and Job Functions.
    * @brief The file that provides the program utility, main loop and timer
    *        functions.
@@ -117,7 +116,6 @@ extern "C" {
 
    enum _Ecore_Exe_Flags /* flags for executing a child with its stdin and/or stdout piped back */
      {
-        ECORE_EXE_NONE = 0, /**< No exe flags at all */
         ECORE_EXE_PIPE_READ = 1, /**< Exe Pipe Read mask */
         ECORE_EXE_PIPE_WRITE = 2, /**< Exe Pipe Write mask */
         ECORE_EXE_PIPE_ERROR = 4, /**< Exe Pipe error mask */
@@ -266,9 +264,9 @@ extern "C" {
 
    struct _Ecore_Event_Signal_Exit /** Exit request event */
      {
-        Eina_Bool   interrupt : 1; /**< Set if the exit request was an interrupt  signal*/
-        Eina_Bool   quit      : 1; /**< set if the exit request was a quit signal */
-        Eina_Bool   terminate : 1; /**< Set if the exit request was a terminate singal */
+        unsigned int   interrupt : 1; /**< Set if the exit request was an interrupt  signal*/
+        unsigned int   quit      : 1; /**< set if the exit request was a quit signal */
+        unsigned int   terminate : 1; /**< Set if the exit request was a terminate singal */
         void          *ext_data; /**< Extension data - not used */
 
 #ifndef _WIN32
@@ -306,8 +304,8 @@ extern "C" {
         int           exit_code; /**< The exit code of the process */
         Ecore_Exe    *exe; /**< The handle to the exited process, or NULL if not found */
         int           exit_signal; /** < The signal that caused the process to exit */
-        Eina_Bool  exited    : 1; /** < set to 1 if the process exited of its own accord */
-        Eina_Bool  signalled : 1; /** < set to 1 id the process exited due to uncaught signal */
+        unsigned int  exited    : 1; /** < set to 1 if the process exited of its own accord */
+        unsigned int  signalled : 1; /** < set to 1 id the process exited due to uncaught signal */
         void         *ext_data; /**< Extension data - not used */
 #ifndef _WIN32
         siginfo_t     data; /**< Signal info */
@@ -440,7 +438,7 @@ extern "C" {
    EAPI void              ecore_main_loop_iterate(void);
 
    EAPI void              ecore_main_loop_select_func_set(Ecore_Select_Function func);
-   EAPI Ecore_Select_Function ecore_main_loop_select_func_get(void);
+   EAPI void             *ecore_main_loop_select_func_get(void);
 
    EAPI Eina_Bool         ecore_main_loop_glib_integrate(void);
    EAPI void              ecore_main_loop_glib_always_integrate_disable(void);

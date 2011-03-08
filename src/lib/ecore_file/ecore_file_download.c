@@ -32,8 +32,7 @@ struct _Ecore_File_Download_Job
 Ecore_File_Download_Job *_ecore_file_download_curl(const char *url, const char *dst,
                                                    Ecore_File_Download_Completion_Cb completion_cb,
                                                    Ecore_File_Download_Progress_Cb progress_cb,
-                                                   void *data,
-                                                   Eina_Hash *headers);
+                                                   void *data);
 
 static Eina_Bool _ecore_file_download_url_complete_cb(void *data, int type, void *event);
 static Eina_Bool _ecore_file_download_url_progress_cb(void *data, int type, void *event);
@@ -78,98 +77,8 @@ ecore_file_download_shutdown(void)
 #endif /* BUILD_ECORE_CON */
 }
 
-#ifdef BUILD_ECORE_CON
-# ifdef HAVE_CURL
-static Eina_Bool
-_ecore_file_download_headers_foreach_cb(const Eina_Hash *hash __UNUSED__, const void *key, void *data, void *fdata)
-{
-   Ecore_File_Download_Job *job = fdata;
-   ecore_con_url_additional_header_add(job->url_con, key, data);
-
-   return EINA_TRUE;
-}
-# endif
-#endif
-
-static Eina_Bool
-_ecore_file_download(const char *url,
-                     const char *dst,
-                     Ecore_File_Download_Completion_Cb completion_cb,
-                     Ecore_File_Download_Progress_Cb progress_cb,
-                     void *data,
-                     Ecore_File_Download_Job **job_ret,
-                     Eina_Hash *headers)
-{
-#ifdef BUILD_ECORE_CON
-   char *dir = ecore_file_dir_get(dst);
-
-   if (!ecore_file_is_dir(dir))
-     {
-        EINA_LOG_ERR("%s is not a directory", dir);
-        free(dir);
-        return EINA_FALSE;
-     }
-   free(dir);
-   if (ecore_file_exists(dst))
-     {
-        EINA_LOG_ERR("%s already exists", dst);
-        return EINA_FALSE;
-     }
-
-   if (!strncmp(url, "file://", 7))
-     {
-        /* FIXME: Maybe fork? Might take a while to copy.
-         * Check filesize? */
-        /* Just copy it */
-
-        url += 7;
-        /* skip hostname */
-        url = strchr(url, '/');
-        return ecore_file_cp(url, dst);
-     }
-# ifdef HAVE_CURL
-   else if ((!strncmp(url, "http://", 7)) || (!strncmp(url, "https://", 8)) ||
-            (!strncmp(url, "ftp://", 6)))
-     {
-        /* download */
-        Ecore_File_Download_Job *job;
-
-	job = _ecore_file_download_curl(url, dst, completion_cb, progress_cb, data, headers);
-        if(job_ret) *job_ret = job;
-        if(job)
-          return EINA_TRUE;
-        else
-          {
-             EINA_LOG_ERR("no job returned\n");
-             return EINA_FALSE;
-          }
-        return job ? EINA_TRUE : EINA_FALSE;
-     }
-# else
-   else if ((!strncmp(url, "http://", 7)) || (!strncmp(url, "https://", 8)) ||
-            (!strncmp(url, "ftp://", 6)))
-     {
-        (void)completion_cb;
-        (void)progress_cb;
-        (void)data;
-        (void)job_ret;
-        return EINA_FALSE;
-     }
-# endif
-   else
-     {
-        return EINA_FALSE;
-     }
-#else
-   completion_cb = NULL;
-   progress_cb = NULL;
-   data = NULL;
-   return EINA_FALSE;
-#endif /* BUILD_ECORE_CON */
-}
-
 /**
- * @addtogroup Ecore_File_Group Ecore_File - Files and directories convenience functions
+ * @addtogroup Ecore_File_Group Ecore_File - Files and direcotries convenience functions
  *
  * @{
  */
@@ -194,14 +103,13 @@ _ecore_file_download(const char *url,
  * @p data is passed to it. The @p status parameter of @p completion_cb 
  * will be filled with the status of the download (200, 404,...). The
  * @p progress_cb is called during the download operation, each time a
- * packet is received or when CURL wants. It can be used to display the
- * percentage of the downloaded file. Return 0 from this callback, if provided,
- * to continue the operation or anything else to abort the download. The only
- * operations that can be aborted are those with protocol 'http' or 'ftp'. In 
- * that case @p job_ret can be filled. It can be used with
- * ecore_file_download_abort() or ecore_file_download_abort_all() to
- * respectively abort one or all download operations. This function returns
- * EINA_TRUE if the download starts, EINA_FALSE otherwise.
+ * packet i received or when CURL wants. It can be used to display the
+ * percentage of the downloaded file. The only operations that can be
+ * aborted are those with protocol 'http' or 'ftp'. In that case @p job_ret
+ * can be filled. It can be used with ecore_file_download_abort() or
+ * ecore_file_download_abort_all() to respectively abort one or all
+ * download operations. This function returns EINA_TRUE if the
+ * download starts, EINA_FALSE otherwise.
  */
 EAPI Eina_Bool
 ecore_file_download(const char *url,
@@ -211,31 +119,61 @@ ecore_file_download(const char *url,
                     void *data,
                     Ecore_File_Download_Job **job_ret)
 {
-   return _ecore_file_download(url, dst, completion_cb, progress_cb, data, job_ret, NULL);
-}
+#ifdef BUILD_ECORE_CON
+   char *dir = ecore_file_dir_get(dst);
 
-/**
- * @brief Download the given url to the given destination with additional headers.
- *
- * @param  url The complete url to download.
- * @param  dst The local file to save the downloaded to.
- * @param  completion_cb A callback called on download complete.
- * @param  progress_cb A callback called during the download operation.
- * @param  data User data passed to both callbacks.
- * @param  job_ret Job used to abort the download.
- * @param  headers pointer of header lists.
- * @return EINA_TRUE if the download start or EINA_FALSE on failure
- */
-EAPI Eina_Bool
-ecore_file_download_full(const char *url,
-                         const char *dst,
-                         Ecore_File_Download_Completion_Cb completion_cb,
-                         Ecore_File_Download_Progress_Cb progress_cb,
-                         void *data,
-                         Ecore_File_Download_Job **job_ret,
-                         Eina_Hash *headers)
-{
-   return _ecore_file_download(url, dst, completion_cb, progress_cb, data, job_ret, headers);
+   if (!ecore_file_is_dir(dir))
+     {
+        free(dir);
+        return EINA_FALSE;
+     }
+   free(dir);
+   if (ecore_file_exists(dst)) return EINA_FALSE;
+
+   /* FIXME: Add handlers for http and ftp! */
+   if (!strncmp(url, "file://", 7))
+     {
+        /* FIXME: Maybe fork? Might take a while to copy.
+         * Check filesize? */
+        /* Just copy it */
+
+        url += 7;
+        /* skip hostname */
+        url = strchr(url, '/');
+        return ecore_file_cp(url, dst);
+     }
+# ifdef HAVE_CURL
+   else if ((!strncmp(url, "http://", 7)) ||
+            (!strncmp(url, "ftp://", 6)))
+     {
+        /* download */
+        Ecore_File_Download_Job *job;
+
+        job = _ecore_file_download_curl(url, dst, completion_cb, progress_cb, data);
+        if(job_ret) *job_ret = job;
+        return job ? EINA_TRUE : EINA_FALSE;
+     }
+# else
+   else if ((!strncmp(url, "http://", 7)) ||
+            (!strncmp(url, "ftp://", 6)))
+     {
+        (void)completion_cb;
+        (void)progress_cb;
+        (void)data;
+        (void)job_ret;
+        return EINA_FALSE;
+     }
+# endif
+   else
+     {
+        return EINA_FALSE;
+     }
+#else
+   completion_cb = NULL;
+   progress_cb = NULL;
+   data = NULL;
+   return EINA_FALSE;
+#endif /* BUILD_ECORE_CON */
 }
 
 /**
@@ -328,8 +266,7 @@ Ecore_File_Download_Job *
 _ecore_file_download_curl(const char *url, const char *dst,
                           Ecore_File_Download_Completion_Cb completion_cb,
                           Ecore_File_Download_Progress_Cb progress_cb,
-                          void *data,
-                          Eina_Hash *headers)
+                          void *data)
 {
    Ecore_File_Download_Job *job;
 
@@ -352,7 +289,6 @@ _ecore_file_download_curl(const char *url, const char *dst,
         return NULL;
      }
 
-   if (headers) eina_hash_foreach(headers, _ecore_file_download_headers_foreach_cb, job);
    ecore_con_url_fd_set(job->url_con, fileno(job->file));
    ecore_con_url_data_set(job->url_con, data);
 
@@ -362,7 +298,7 @@ _ecore_file_download_curl(const char *url, const char *dst,
    job->progress_cb = progress_cb;
    _job_list = eina_list_append(_job_list, job);
 
-   ecore_con_url_get(job->url_con);
+   ecore_con_url_get(job->url_con, NULL, 0, NULL);
 
    return job;
 }

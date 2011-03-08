@@ -54,8 +54,6 @@ void *alloca(size_t);
 # include <netdb.h>
 #endif
 
-#include <errno.h>
-
 #include "Ecore.h"
 #include "ecore_private.h"
 #include "ecore_con_private.h"
@@ -206,10 +204,7 @@ ecore_con_info_get(Ecore_Con_Server *svr,
    int fd[2];
 
    if (pipe(fd) < 0)
-     {
-        ecore_con_event_server_error(svr, strerror(errno));
-        return 0;
-     }
+     return 0;
 
    cbdata = calloc(1, sizeof(CB_Data));
    if (!cbdata)
@@ -227,7 +222,6 @@ ecore_con_info_get(Ecore_Con_Server *svr,
                                                  cbdata,
                                                  NULL, NULL)))
      {
-        ecore_con_event_server_error(svr, "Memory allocation failure");
         free(cbdata);
         close(fd[0]);
         close(fd[1]);
@@ -312,15 +306,7 @@ ecore_con_info_get(Ecore_Con_Server *svr,
    info_slaves = (CB_Data *)eina_inlist_append(EINA_INLIST_GET(
                                                  info_slaves),
                                                EINA_INLIST_GET(cbdata));
-   svr->infos = eina_list_append(svr->infos, cbdata);
    return 1;
-}
-
-void
-ecore_con_info_data_clear(void *info)
-{
-   CB_Data *cbdata = info;
-   cbdata->data = NULL;
 }
 
 static void
@@ -361,32 +347,15 @@ _ecore_con_info_readdata(CB_Data *cbdata)
 
              recv->info.ai_next = NULL;
 
-             if (cbdata->data)
-               {
-                  cbdata->cb_done(cbdata->data, recv);
-                  ecore_con_server_infos_del(cbdata->data, cbdata);
-               }
+             cbdata->cb_done(cbdata->data, recv);
 
              free(torecv);
           }
         else
-          {
-             if (cbdata->data)
-               {
-                  cbdata->cb_done(cbdata->data, NULL);
-                  ecore_con_server_infos_del(cbdata->data, cbdata);
-               }
-          }
+          cbdata->cb_done(cbdata->data, NULL);
      }
    else
-     {
-        if (cbdata->data)
-          {
-             ecore_con_event_server_error(cbdata->data, strerror(errno));
-             cbdata->cb_done(cbdata->data, NULL);
-             ecore_con_server_infos_del(cbdata->data, cbdata);
-          }
-     }
+     cbdata->cb_done(cbdata->data, NULL);
 
    cbdata->cb_done = NULL;
 }
@@ -399,7 +368,6 @@ _ecore_con_info_slave_free(CB_Data *cbdata)
    ecore_main_fd_handler_del(cbdata->fdh);
    ecore_event_handler_del(cbdata->handler);
    close(ecore_main_fd_handler_fd_get(cbdata->fdh));
-   if (cbdata->data) ecore_con_server_infos_del(cbdata->data, cbdata);
    free(cbdata);
 }
 
@@ -417,12 +385,8 @@ _ecore_con_info_data_handler(void             *data,
           _ecore_con_info_readdata(cbdata);
         else
           {
-             if (cbdata->data)
-               {
-                  cbdata->cb_done(cbdata->data, NULL);
-                  cbdata->cb_done = NULL;
-                  ecore_con_server_infos_del(cbdata->data, cbdata);
-               }
+             cbdata->cb_done(cbdata->data, NULL);
+             cbdata->cb_done = NULL;
           }
      }
 

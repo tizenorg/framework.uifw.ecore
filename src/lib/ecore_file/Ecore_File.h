@@ -44,7 +44,7 @@ extern "C" {
 #endif
 
 /**
- * @defgroup Ecore_File_Group Ecore_File - Files and directories convenience functions
+ * @defgroup Ecore_File_Group Ecore_File - Files and direcotries convenience functions
  *
  * @{
  */
@@ -73,8 +73,7 @@ typedef enum _Ecore_File_Event
    ECORE_FILE_EVENT_DELETED_FILE,      /**< Deleted file event. */
    ECORE_FILE_EVENT_DELETED_DIRECTORY, /**< Deleted directory event. */
    ECORE_FILE_EVENT_DELETED_SELF,      /**< Deleted monitored directory event. */
-   ECORE_FILE_EVENT_MODIFIED,          /**< Modified file or directory event. */
-   ECORE_FILE_EVENT_CLOSED             /**< Closed file event */
+   ECORE_FILE_EVENT_MODIFIED           /**< Modified file or directory event. */
 } Ecore_File_Event;
 
 /**
@@ -90,19 +89,8 @@ typedef void (*Ecore_File_Monitor_Cb)(void *data, Ecore_File_Monitor *em, Ecore_
 typedef void (*Ecore_File_Download_Completion_Cb)(void *data, const char *file, int status);
 
 /**
- * @typedef Ecore_File_Progress_Return
- * What to do with the download as a return from the 
- * Ecore_File_Download_Progress_Cb function, if provided.
- */
-typedef enum _Ecore_File_Progress_Return
-{
-   ECORE_FILE_PROGRESS_CONTINUE = 0,   /**< Continue the download. */
-   ECORE_FILE_PROGRESS_ABORT = 1       /**< Abort the download. */
-} Ecore_File_Progress_Return;
-
-/**
  * @typedef Ecore_File_Download_Progress_Cb
- * Callback type used while a download is in progress.
+ * Callback type used when a download is finished.
  */
 typedef int (*Ecore_File_Download_Progress_Cb)(void *data,
                                                const char *file,
@@ -167,14 +155,6 @@ EAPI Eina_Bool ecore_file_download(const char *url,
                                    Ecore_File_Download_Progress_Cb progress_cb,
                                    void *data,
                                    Ecore_File_Download_Job **job_ret);
-EAPI Eina_Bool ecore_file_download_full(const char *url,
-                                        const char *dst,
-                                        Ecore_File_Download_Completion_Cb completion_cb,
-                                        Ecore_File_Download_Progress_Cb progress_cb,
-                                        void *data,
-                                        Ecore_File_Download_Job **job_ret,
-                                        Eina_Hash *headers);
-
 EAPI void      ecore_file_download_abort_all(void);
 EAPI void      ecore_file_download_abort(Ecore_File_Download_Job *job);
 EAPI Eina_Bool ecore_file_download_protocol_available(const char *protocol);

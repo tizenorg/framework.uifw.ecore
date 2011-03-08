@@ -302,15 +302,7 @@ ecore_con_info_get(Ecore_Con_Server *svr,
                            cares);
      }
 
-   svr->infos = eina_list_append(svr->infos, cares);
    return 1;
-}
-
-void
-ecore_con_info_data_clear(void *info)
-{
-   Ecore_Con_CAres *cares = info;
-   cares->data = NULL;
 }
 
 static Eina_Bool
@@ -523,12 +515,11 @@ _ecore_con_info_ares_host_cb(Ecore_Con_CAres *arg,
       case ARES_ENODATA: /* no data returned */
       case ARES_ECONNREFUSED: /* connection refused */
       case ARES_ETIMEOUT: /* connection timed out */
-        ecore_con_event_server_error(arg->svr, ares_strerror(status));
         goto on_error;
 
       default:
-        ERR("Unknown status returned by c-ares: %i assuming error", status);
-        ecore_con_event_server_error(arg->svr, ares_strerror(status));
+        ERR("Unknown status returned by c-ares: %i assuming error",
+                status);
         goto on_error;
      }
 
@@ -538,11 +529,7 @@ on_mem_error:
    ERR("Not enough memory");
 
 on_error:
-   if (arg->data)
-     {
-        ecore_con_server_infos_del(arg->data, arg);
-        arg->done_cb(arg->data, NULL);
-     }
+   arg->done_cb(arg->data, NULL);
    free(arg);
 }
 
@@ -566,7 +553,7 @@ _ecore_con_info_ares_nameinfo(Ecore_Con_CAres *arg,
         else
           *arg->result->service = '\0';
 
-        if (arg->data) arg->done_cb(arg->data, arg->result);
+        arg->done_cb(arg->data, arg->result);
         break;
 
       case ARES_ENOTIMP:
@@ -574,14 +561,12 @@ _ecore_con_info_ares_nameinfo(Ecore_Con_CAres *arg,
       case ARES_ENOMEM:
       case ARES_EDESTRUCTION:
       case ARES_EBADFLAGS:
-        ecore_con_event_server_error(arg->svr, ares_strerror(status));
-        if (arg->data) arg->done_cb(arg->data, NULL);
+        arg->done_cb(arg->data, NULL);
         break;
      }
 
    free(arg->result->info.ai_addr);
    free(arg->result);
-   if (arg->data) ecore_con_server_infos_del(arg->data, arg);
    free(arg);
 }
 
