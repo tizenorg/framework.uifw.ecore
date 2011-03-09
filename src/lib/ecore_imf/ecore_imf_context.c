@@ -2,7 +2,6 @@
 # include <config.h>
 #endif
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
@@ -219,7 +218,6 @@ ecore_imf_context_del(Ecore_IMF_Context *ctx)
                          "ecore_imf_context_del");
         return;
      }
-
    if (ctx->klass->del) ctx->klass->del(ctx);
    ECORE_MAGIC_SET(ctx, ECORE_MAGIC_NONE);
 
@@ -259,7 +257,17 @@ ecore_imf_context_client_window_set(Ecore_IMF_Context *ctx, void *window)
    ctx->window = window;
 }
 
-EAPI void*
+/**
+ * Get the client window of the Input Method Context
+ *
+ * See @ref ecore_imf_context_client_window_set for more details.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @return Return the client window.
+ * @ingroup Ecore_IMF_Context_Group
+ * @since 1.1.0
+ */
+EAPI void *
 ecore_imf_context_client_window_get(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -297,7 +305,17 @@ ecore_imf_context_client_canvas_set(Ecore_IMF_Context *ctx, void *canvas)
    ctx->client_canvas = canvas;
 }
 
-EAPI void*
+/**
+ * Get the client canvas of the Input Method Context.
+ *
+ * See @ref ecore_imf_context_client_canvas_set for more details.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @return Return the client canvas.
+ * @ingroup Ecore_IMF_Context_Group
+ * @since 1.1.0
+ */
+EAPI void *
 ecore_imf_context_client_canvas_get(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -315,7 +333,7 @@ ecore_imf_context_client_canvas_get(Ecore_IMF_Context *ctx)
  * @param ctx An #Ecore_IMF_Context.
  * @ingroup Ecore_IMF_Context_Group
  */
-EINA_DEPRECATED EAPI void
+EAPI void
 ecore_imf_context_show(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -333,7 +351,7 @@ ecore_imf_context_show(Ecore_IMF_Context *ctx)
  * @param ctx An #Ecore_IMF_Context.
  * @ingroup Ecore_IMF_Context_Group
  */
-EINA_DEPRECATED EAPI void
+EAPI void
 ecore_imf_context_hide(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -374,6 +392,19 @@ ecore_imf_context_preedit_string_get(Ecore_IMF_Context *ctx, char **str, int *cu
      }
 }
 
+/**
+ * Retrieve the current preedit string, atrributes and
+ * cursor position for the Input Method Context.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param str Location to store the retrieved string. The
+ *            string retrieved must be freed with free().
+ * @param attrs an Eina_List of attributes
+ * @param cursor_pos Location to store position of cursor (in characters)
+ *                   within the preedit string.
+ * @ingroup Ecore_IMF_Context_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_preedit_string_with_attributes_get(Ecore_IMF_Context *ctx, char **str, Eina_List **attrs, int *cursor_pos)
 {
@@ -529,7 +560,7 @@ ecore_imf_context_retrieve_surrounding_callback_set(Ecore_IMF_Context *ctx, Eina
  * @param input_mode The input mode to be used by @p ctx.
  * @ingroup Ecore_IMF_Context_Group
  */
-EINA_DEPRECATED EAPI void
+EAPI void
 ecore_imf_context_input_mode_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Mode input_mode)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -551,7 +582,7 @@ ecore_imf_context_input_mode_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Mode in
  * @return The input mode being used by @p ctx.
  * @ingroup Ecore_IMF_Context_Group
  */
-EINA_DEPRECATED EAPI Ecore_IMF_Input_Mode
+EAPI Ecore_IMF_Input_Mode
 ecore_imf_context_input_mode_get(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -727,6 +758,7 @@ _ecore_imf_event_free_preedit(void *data __UNUSED__, void *event)
 
 /**
  * Adds ECORE_IMF_EVENT_PREEDIT_START to the event queue.
+ *
  * ECORE_IMF_EVENT_PREEDIT_START should be added when a new preedit sequence starts.
  *
  * @param ctx An #Ecore_IMF_Context.
@@ -752,6 +784,7 @@ ecore_imf_context_preedit_start_event_add(Ecore_IMF_Context *ctx)
 
 /**
  * Adds ECORE_IMF_EVENT_PREEDIT_END to the event queue.
+ *
  * ECORE_IMF_EVENT_PREEDIT_END should be added when a new preedit sequence has been completed or canceled.
  *
  * @param ctx An #Ecore_IMF_Context.
@@ -843,8 +876,10 @@ _ecore_imf_event_free_delete_surrounding(void *data __UNUSED__, void *event)
 }
 
 /**
+ * Adds ECORE_IMF_EVENT_DELETE_SURROUNDING to the event queue.
+ *
  * Asks the widget that the input context is attached to to delete characters around the cursor position 
- * by adding the ECORE_IMF_EVENT_DELETE_SURROUNDING to the event queue. 
+ * by adding the ECORE_IMF_EVENT_DELETE_SURROUNDING to the event queue.
  * Note that offset and n_chars are in characters not in bytes.
  *
  * @param ctx An #Ecore_IMF_Context.
@@ -873,60 +908,102 @@ ecore_imf_context_delete_surrounding_event_add(Ecore_IMF_Context *ctx, int offse
 }
 
 /*** ImControl Related APIs */
+
+/**
+ * Show the current active input panel (virtual keyboard).
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_show(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_show");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_show");
         return;
      }
 
    if (ctx->klass->show) ctx->klass->show(ctx);
 }
 
+/**
+ * Hide the current active input panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_hide(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_hide");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_hide");
         return;
      }
 
    if (ctx->klass->hide) ctx->klass->hide(ctx);
 }
 
+/**
+ * Show control panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_control_panel_show (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_control_panel_show");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_control_panel_show");
         return;
      }
 
    if (ctx->klass->control_panel_show) ctx->klass->control_panel_show(ctx);
 }
 
+/**
+ * Hide control panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_control_panel_hide (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_control_panel_hide");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_control_panel_hide");
         return;
      }
 
    if (ctx->klass->control_panel_hide) ctx->klass->control_panel_hide(ctx);
 }
 
+/**
+ * Set the language of input panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param lang the language to be set to the input panel.
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_language_set");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_language_set");
         return;
      }
 
@@ -934,32 +1011,44 @@ ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_In
    ctx->input_panel_lang = lang;
 }
 
+/**
+ * Get the language of input panel.
+ *
+ * See @ref ecore_imf_context_input_panel_language_set for more details.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @return Ecore_IMF_Input_Panel_Lang
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI Ecore_IMF_Input_Panel_Lang
 ecore_imf_context_input_panel_language_get (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_language_get");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_language_get");
         return ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC;
      }
 
    return ctx->input_panel_lang;
 }
 
+/**
+ * Get ISE Language of given ISE. -- Not supported for now --
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI int
 ecore_imf_context_ise_get_ise_language (Ecore_IMF_Context *ctx, const char* ise_name, char ***langlist)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_get_ise_language");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_ise_get_ise_language");
         return -1;
      }
 
-   if (!ise_name)
-     {
-        printf ("input parameters error!!! \n");
-        return -1;
-     }
+   if (!ise_name) return -1;
 
    if (ctx->klass->ise_get_ise_language)
        return ctx->klass->ise_get_ise_language(ctx, ise_name, langlist);
@@ -967,17 +1056,36 @@ ecore_imf_context_ise_get_ise_language (Ecore_IMF_Context *ctx, const char* ise_
       return -1;
 }
 
+/**
+ * Set keyboard language.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param lang see Ecore_IMF_Input_Panel_Lang
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * THIS API IS NOT SUPPORTED NOW
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_keyboard_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Keyboard_Lang lang)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_keyboard_language_set");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_keyboard_language_set");
         return;
      }
 //   if (ctx->klass->ise_set_language) ctx->klass->ise_set_language(ctx, lang);
 }
 
+/**
+ * Get keyboard language.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @return Ecore_IMF_Input_Panel_Lang
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * THIS API IS NOT SUPPORTED NOW
+ * @since 1.1.0
+ */
 EAPI Ecore_IMF_Keyboard_Lang
 ecore_imf_context_keyboard_language_get (Ecore_IMF_Context *ctx)
 {
@@ -985,7 +1093,8 @@ ecore_imf_context_keyboard_language_get (Ecore_IMF_Context *ctx)
 
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_keyboard_language_get");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_keyboard_language_get");
         return lang;
      }
 /*
@@ -995,99 +1104,165 @@ ecore_imf_context_keyboard_language_get (Ecore_IMF_Context *ctx)
    return lang;
 }
 
+/**
+ * Set ISF Language. -- Not supported for now --
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_ise_set_isf_language (Ecore_IMF_Context *ctx, const char* lang)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_set_isf_language");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_ise_set_isf_language");
         return;
      }
 
-   if (!lang)
-     {
-        printf ("input parameters error!!! \n");
-        return;
-     }
+   if (!lang) return;
 
-   if (ctx->klass->ise_set_isf_language) ctx->klass->ise_set_isf_language(ctx, lang);
+   if (ctx->klass->ise_set_isf_language)
+      ctx->klass->ise_set_isf_language(ctx, lang);
 }
 
+/**
+ * Set specific data to pass to input panel.
+ * this API is used by applications to deliver specific data to input panel.
+ * the data format MUST be negotiated by both application and input panel negotiate. 
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param data The specific data to be set to the input panel.
+ * @param len the length of data
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_imdata_set (Ecore_IMF_Context *ctx, const char *data, int len)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_imdata_set");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_imdata_set");
         return;
      }
 
-   if (!data || len <=0)
-     {
-        printf ("input parameters error!!! \n");
-        return;
-     }
+   if (!data || len <=0) return;
 
-   if (ctx->klass->input_panel_imdata_set) ctx->klass->input_panel_imdata_set(ctx, data, len);
+   if (ctx->klass->input_panel_imdata_set)
+      ctx->klass->input_panel_imdata_set(ctx, data, len);
 }
 
+/**
+ * Get specific data of the current active input panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param data The specific data to be got from the input panel
+ * @param len The length of data
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
-ecore_imf_context_input_panel_imdata_get (Ecore_IMF_Context *ctx, char * data, int *len)
+ecore_imf_context_input_panel_imdata_get (Ecore_IMF_Context *ctx, char *data, int *len)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_get_imdata");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_get_imdata");
         return;
      }
 
-   if (!data)
-     {
-        printf ("input parameters error!!! \n");
-        return;
-     }
+   if (!data) return;
 
-   if (ctx->klass->input_panel_imdata_get) ctx->klass->input_panel_imdata_get(ctx, data, len);
+   if (ctx->klass->input_panel_imdata_get) 
+      ctx->klass->input_panel_imdata_get(ctx, data, len);
 }
 
+/**
+ * Set whether animation effect of the input panel is shown or not.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param use_effect whether animation effect is shown or not
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_use_effect_set (Ecore_IMF_Context *ctx, Eina_Bool use_effect)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_use_effect_set");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_use_effect_set");
         return;
      }
 
-   if (ctx->klass->input_panel_use_effect_set) ctx->klass->input_panel_use_effect_set(ctx, use_effect);
+   if (ctx->klass->input_panel_use_effect_set)
+      ctx->klass->input_panel_use_effect_set(ctx, use_effect);
+
    ctx->use_effect = use_effect;
 }
 
+/**
+ * Get whether input panel supports animation effect or not when it is shown or hidden.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param use_effect whether animation effect is shown or not
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI Eina_Bool
 ecore_imf_context_input_panel_use_effect_get (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_use_effect_get");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_use_effect_get");
         return EINA_TRUE;
      }
 
    return ctx->use_effect;
 }
 
+/**
+ * Get position of current active input panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param x top-left x co-ordinate of rectangle;
+ * @param y top-left y co-ordinate of rectangle;
+ * @param w width of rectangle ;
+ * @param h height of rectangle;
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_geometry_get (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_geometry_get");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_geometry_get");
         return;
      }
 
-   if (ctx->klass->input_panel_geometry_get) ctx->klass->input_panel_geometry_get(ctx, x, y, w, h);
+   if (ctx->klass->input_panel_geometry_get)
+      ctx->klass->input_panel_geometry_get(ctx, x, y, w, h);
 }
 
+/**
+ * Set the private key of input panel.
+ * Since the second parameter of this API requires a layout index, so before using this API 
+ * application has to set a specific layout and that layout index should 
+ * be passed in the 2nd argument of this API.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param layout_index index of layout page to be set
+ * @param img_path the path of image file to be set
+ * @param key_index index of key to be set
+ * @param label text label to be appeared on private key
+ * @param value value of key, If NULL it will use original value of key
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
-ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, int key_value, const char* key_string)
+ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char *label, int key_value, const char *key_string)
 {
    Private_Key_Item *key_item;
    Eina_List *l;
@@ -1095,20 +1270,17 @@ ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layou
 
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_private_key_set");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_private_key_set");
         return;
      }
 
-   if (label == NULL && img_path == NULL)
-     {
-        printf ("input parameters error!!! \n");
-        return;
-     }
+   if ((!label) && (!img_path)) return;
 
    EINA_LIST_FOREACH(ctx->private_key_list, l, key_item)
      {
-        if (key_item && key_item->layout_idx == layout_index &&
-            key_item->key_idx == key_index)
+        if (key_item && (key_item->layout_idx == layout_index) &&
+            (key_item->key_idx == key_index))
           {
              // if exist in the list
              exist = EINA_TRUE;
@@ -1147,9 +1319,7 @@ ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layou
         key_item->key_value = key_value;
 
         if (key_string)
-          {
-             strcpy(key_item->key_string, key_string);
-          }
+            strcpy(key_item->key_string, key_string);
 
         ctx->private_key_list = eina_list_append(ctx->private_key_list, key_item);
      }
@@ -1157,18 +1327,39 @@ ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layou
 //   if (ctx->klass->input_panel_private_key_set) ctx->klass->input_panel_private_key_set(ctx, layout_index, key_index, img_path, label, value);
 }
 
+/**
+ * Get the list of private key.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @return Return the list of private key
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI Eina_List *
 ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_private_key_list_get");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_private_key_list_get");
         return NULL;
      }
 
    return ctx->private_key_list;
 }
 
+/**
+ * Set the key to be disabled.
+ * Since the second parameter of this API requires a layout index, so before using this API application has to set a specific layout and that layout index 
+ * should be passed in the 2nd argument of this API.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param layout_index index of layout page to be set
+ * @param key_index index of key to be set
+ * @param disabled The state
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled)
 {
@@ -1178,13 +1369,15 @@ ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layo
 
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_key_disabled_set");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_key_disabled_set");
         return;
      }
 
    EINA_LIST_FOREACH(ctx->disabled_key_list, l, key_item)
      {
-        if (key_item && key_item->layout_idx == layout_index && key_item->key_idx == key_index)
+        if (key_item && (key_item->layout_idx == layout_index) &&
+            (key_item->key_idx == key_index))
           {
              key_item->disabled = disabled;
              exist = EINA_TRUE;
@@ -1206,31 +1399,59 @@ ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layo
 //   if (ctx->klass->input_panel_key_disabled_set) ctx->klass->input_panel_key_disabled_set(ctx, layout_index, key_index, disabled);
 }
 
+/**
+ * Get the list of disabled keys.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @return Return the list of private key
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI Eina_List *
-ecore_imf_context_input_panel_key_disabled_list_get  (Ecore_IMF_Context *ctx)
+ecore_imf_context_input_panel_key_disabled_list_get (Ecore_IMF_Context *ctx)
 {
    return ctx->disabled_key_list;
 }
 
+/**
+ * Set the layout of input panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param layout see #ECORE_IMF_INPUT_PANEL_LAYOUT
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_layout_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_layout_set");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_layout_set");
         return;
      }
 
-   if (ctx->klass->input_panel_layout_set) ctx->klass->input_panel_layout_set(ctx, layout);
+   if (ctx->klass->input_panel_layout_set)
+      ctx->klass->input_panel_layout_set(ctx, layout);
+
    ctx->input_panel_layout = layout;
 }
 
+/**
+ * Get the layout of current active input panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @return layout see #Ecore_IMF_Input_Panel_Layout
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI Ecore_IMF_Input_Panel_Layout
 ecore_imf_context_input_panel_layout_get  (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_layout_get");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_layout_get");
         return ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID;
      }
 
@@ -1243,103 +1464,157 @@ ecore_imf_context_input_panel_layout_get  (Ecore_IMF_Context *ctx)
      return ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID;
 }
 
+/**
+ * Restore all default properties of input panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_reset (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_reset");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_reset");
         return;
      }
 
    if (ctx->klass->input_panel_reset) ctx->klass->input_panel_reset(ctx);
 }
 
+/**
+ * Set the screen orientation of input panel
+ * To show the keypad in landscape mode application should first call this API with 2nd parameter as 90 or 270.
+ * After then only application should call @ref ecore_imf_context_input_panel_show.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param orientation the orientation of input panel
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_orient_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_orient_set");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_orient_set");
         return;
      }
 
-   if (ctx->klass->input_panel_orient_set) ctx->klass->input_panel_orient_set(ctx, orientation*90);
+   if (ctx->klass->input_panel_orient_set)
+      ctx->klass->input_panel_orient_set(ctx, orientation*90);
+
    ctx->input_panel_orient = orientation;
 }
 
+/**
+ * Get the screen orientation of input panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @return The screen orientation of input panel
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI Ecore_IMF_Input_Panel_Orient
 ecore_imf_context_input_panel_orient_get (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_orient_get");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_orient_get");
         return ECORE_IMF_INPUT_PANEL_ORIENT_NONE;
      }
 
    return ctx->input_panel_orient;
 }
 
+/**
+ * Get name of current active input panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param name input panel name to be got
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_ise_get_active_isename (Ecore_IMF_Context *ctx, char* name)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_get_active_isename");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_ise_get_active_isename");
         return;
      }
 
-   if (!name)
-     {
-        printf ("input parameters error!!! \n");
-        return;
-     }
+   if (!name) return;
 
-   if (ctx->klass->ise_get_active_isename) ctx->klass->ise_get_active_isename(ctx, name);
+   if (ctx->klass->ise_get_active_isename)
+      ctx->klass->ise_get_active_isename(ctx, name);
 }
 
+/**
+ * Choose the active input panel by its name.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param name input panel name to be set
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_ise_set_active_ise_by_name (Ecore_IMF_Context *ctx, const char* name)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_set_active_ise_by_name");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_ise_set_active_ise_by_name");
         return;
      }
 
-   if (!name)
-     {
-        printf ("input parameters error!!! \n");
-        return;
-     }
+   if (!name) return;
 
-   if (ctx->klass->ise_set_active_ise_by_name) ctx->klass->ise_set_active_ise_by_name(ctx, name);
+   if (ctx->klass->ise_set_active_ise_by_name)
+      ctx->klass->ise_set_active_ise_by_name(ctx, name);
 }
 
+/**
+ * Set input panel by its uuid.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param uuid input panel uuid to be set
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI void
 ecore_imf_context_ise_set_active_ise_by_uuid (Ecore_IMF_Context *ctx, const char* uuid)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_set_active_ise_by_uuid");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_ise_set_active_ise_by_uuid");
         return;
      }
 
-   if (!uuid)
-     {
-        printf ("input parameters error!!! \n");
-        return;
-     }
+   if (!uuid) return;
 
-   if (ctx->klass->ise_set_active_ise_by_uuid) ctx->klass->ise_set_active_ise_by_uuid(ctx, uuid);
+   if (ctx->klass->ise_set_active_ise_by_uuid)
+      ctx->klass->ise_set_active_ise_by_uuid(ctx, uuid);
 }
 
+/**
+ * Get list of input panels.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param iselist pointer to the list to be got.
+ * @return  int ise counter of iselist
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ */
 EAPI int
 ecore_imf_context_ise_get_iselist (Ecore_IMF_Context *ctx, char*** iselist)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_ise_get_iselist");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_ise_get_iselist");
         return -1;
      }
 
@@ -1349,13 +1624,22 @@ ecore_imf_context_ise_get_iselist (Ecore_IMF_Context *ctx, char*** iselist)
       return -1;
 }
 
+/**
+ * Get state of current active input panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param The state of input panel.
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI Ecore_IMF_Input_Panel_State
 ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx)
 {
    Ecore_IMF_Input_Panel_State state = ECORE_IMF_INPUT_PANEL_STATE_INVALID;
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_state_get");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_state_get");
         return ECORE_IMF_INPUT_PANEL_STATE_INVALID;
      }
 
@@ -1365,47 +1649,80 @@ ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx)
    return state;
 }
 
+/**
+ * Register a callback function which will be called if there is change in input panel state,language,mode etc.
+ * In order to deregister the callback function 
+ * Use @ref ecore_imf_context_input_panel_event_callback_del.
+ *
+ * @param ctx An #Ecore_IMF_Context
+ * @param type event type
+ * @param func the callback function
+ * @param data application-input panel specific data.
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_event_callback_add (Ecore_IMF_Context *ctx,
                                                   Ecore_IMF_Input_Panel_Event type,
-                                                  void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value),
+                                                  void (*func) (void *data, Ecore_IMF_Context *ctx, int value),
                                                   const void *data)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_event_callback_add");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_event_callback_add");
         return;
      }
 
    if (ctx->klass->input_panel_event_callback_add)
      {
-        ctx->klass->input_panel_event_callback_add(ctx, type, pEventCallBackFunc, data);
+        ctx->klass->input_panel_event_callback_add(ctx, type, func, data);
      }
 }
 
+/**
+ * Unregister a callback function which will be called if there is change in input panel state,language,mode etc.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param func the callback function
+ * @param data application-input panel specific data.
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_event_callback_del (Ecore_IMF_Context *ctx,
                                                   Ecore_IMF_Input_Panel_Event type,
-                                                  void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value))
+                                                  void (*func) (void *data, Ecore_IMF_Context *ctx, int value))
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_event_callback_del");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_event_callback_del");
         return;
      }
 
    if (ctx->klass->input_panel_event_callback_del)
      {
-        ctx->klass->input_panel_event_callback_del(ctx, type, pEventCallBackFunc);
+        ctx->klass->input_panel_event_callback_del(ctx, type, func);
      }
 }
 
+/**
+ * Move the soft keyboard to the new position.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param x X position to move the input panel to
+ * @param y Y position to move the input panel to
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx, int x, int y)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_move");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_move");
         return;
      }
 
@@ -1414,13 +1731,22 @@ ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx, int x, int y)
    ctx->input_panel_y = y;
 }
 
+/**
+ * Set the caps mode of the input panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param mode the caps mode
+ * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @since 1.1.0
+ */
 EAPI void
 ecore_imf_context_input_panel_caps_mode_set (Ecore_IMF_Context *ctx,
                                              Ecore_IMF_Input_Panel_Caps_Mode mode)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,"ecore_imf_context_input_panel_caps_mode_set");
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_caps_mode_set");
         return;
      }
 

@@ -19,7 +19,7 @@
  *
  * Example Usage 1 (HTTP GET):
  *   ecore_con_url_url_set(url_con, "http://www.google.com");
- *   ecore_con_url_get(url_con, NULL, 0, NULL);
+ *   ecore_con_url_get(url_con);
  *
  * Example usage 2 (HTTP POST):
  *   ecore_con_url_url_set(url_con, "http://www.example.com/post_handler.cgi");
@@ -27,7 +27,7 @@
  *
  * Example Usage 3 (FTP download):
  *   ecore_con_url_url_set(url_con, "ftp://ftp.example.com/pub/myfile");
- *   ecore_con_url_get(url_con, NULL, 0, NULL);
+ *   ecore_con_url_get(url_con);
  *
  * Example Usage 4 (FTP upload as ftp://ftp.example.com/file):
  *   ecore_con_url_url_set(url_con, "ftp://ftp.example.com");
@@ -304,7 +304,7 @@ ecore_con_url_new(const char *url)
    curl_easy_setopt(url_con->curl_easy, CURLOPT_PROGRESSFUNCTION,
                     _ecore_con_url_progress_cb);
    curl_easy_setopt(url_con->curl_easy, CURLOPT_PROGRESSDATA, url_con);
-   curl_easy_setopt(url_con->curl_easy, CURLOPT_NOPROGRESS, EINA_TRUE);
+   curl_easy_setopt(url_con->curl_easy, CURLOPT_NOPROGRESS, EINA_FALSE);
 
    curl_easy_setopt(url_con->curl_easy, CURLOPT_HEADERFUNCTION,
                     _ecore_con_url_header_cb);
@@ -315,7 +315,6 @@ ecore_con_url_new(const char *url)
     * FIXME: Provide a means to change these timeouts
     */
    curl_easy_setopt(url_con->curl_easy, CURLOPT_CONNECTTIMEOUT, 30);
-   curl_easy_setopt(url_con->curl_easy, CURLOPT_TIMEOUT, 300);
    curl_easy_setopt(url_con->curl_easy, CURLOPT_FOLLOWLOCATION, 1);
 
    return url_con;
@@ -415,19 +414,19 @@ ecore_con_url_free(Ecore_Con_Url *url_con)
      {
         // FIXME: For an unknown reason, progress continue to arrive after destruction
         // this prevent any further call to the callback.
-            curl_easy_setopt(url_con->curl_easy, CURLOPT_PROGRESSFUNCTION, NULL);
-
-            if (url_con->active)
-              {
-                 url_con->active = EINA_FALSE;
-
-                 ret = curl_multi_remove_handle(_curlm, url_con->curl_easy);
-                 if (ret != CURLM_OK)
-                   ERR("curl_multi_remove_handle failed: %s",
-                       curl_multi_strerror(ret));
-              }
-
-            curl_easy_cleanup(url_con->curl_easy);
+        curl_easy_setopt(url_con->curl_easy, CURLOPT_PROGRESSFUNCTION, NULL);
+        
+        if (url_con->active)
+          {
+             url_con->active = EINA_FALSE;
+             
+             ret = curl_multi_remove_handle(_curlm, url_con->curl_easy);
+             if (ret != CURLM_OK)
+                ERR("curl_multi_remove_handle failed: %s",
+                    curl_multi_strerror(ret));
+          }
+        
+        curl_easy_cleanup(url_con->curl_easy);
      }
 
    _url_con_list = eina_list_remove(_url_con_list, url_con);
@@ -928,12 +927,7 @@ ecore_con_url_send(Ecore_Con_Url *url_con,
  * Sends a get request.
  *
  * @param url_con Connection object to perform a request on, previously created
- *                with ecore_con_url_new() or ecore_con_url_custom_new().
- * @param data    Payload (data sent on the request)
- * @param length  Payload length. If @c -1, rely on automatic length
- *                calculation via @c strlen() on @p data.
- * @param content_type Content type of the payload (e.g. text/xml)
- *
+ * 
  * @return #EINA_TRUE on success, #EINA_FALSE on error.
  *
  * @see ecore_con_url_custom_new()
@@ -946,12 +940,9 @@ ecore_con_url_send(Ecore_Con_Url *url_con,
  * @see ecore_con_url_post()
  */
 EAPI Eina_Bool
-ecore_con_url_get(Ecore_Con_Url *url_con,
-                   const void    *data,
-                   long           length,
-                   const char    *content_type)
+ecore_con_url_get(Ecore_Con_Url *url_con)
 {
-   return _ecore_con_url_send(url_con, MODE_GET, data, length, content_type);
+   return _ecore_con_url_send(url_con, MODE_GET, NULL, 0, NULL);
 }
 
 /**
@@ -1409,6 +1400,43 @@ ecore_con_url_ftp_use_epsv_set(Ecore_Con_Url *url_con,
 #endif
    (void)url_con;
    (void)use_epsv;
+}
+
+/**
+ * Toggle libcurl's verify peer's certificate option.
+ *
+ * If @p verify is @c EINA_TRUE, libcurl will verify
+ * the authenticity of the peer's certificate, otherwise
+ * it will not. Default behavior of libcurl is to check
+ * peer's certificate.
+ *
+ * @param url_con Ecore_Con_Url instance which will be acted upon.
+ * @param verify Whether or not libcurl will check peer's certificate.
+ * @since 1.1.0
+ */
+EAPI void
+ecore_con_url_ssl_verify_peer_set(Ecore_Con_Url *url_con,
+                              Eina_Bool      verify)
+{
+#ifdef HAVE_CURL
+   if (!ECORE_MAGIC_CHECK(url_con, ECORE_MAGIC_CON_URL))
+     {
+        ECORE_MAGIC_FAIL(url_con, ECORE_MAGIC_CON_URL,
+                         "ecore_con_url_ssl_verify_peer_set");
+        return;
+     }
+
+   if (url_con->active)
+     return;
+
+   if (!url_con->url)
+     return;
+
+   curl_easy_setopt(url_con->curl_easy, CURLOPT_SSL_VERIFYPEER, (int)verify);
+#else
+   (void)url_con;
+   (void)verify;
+#endif
 }
 
 /**

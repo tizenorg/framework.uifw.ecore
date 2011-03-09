@@ -24,7 +24,7 @@ static int _ecore_file_init_count = 0;
 /* externally accessible functions */
 
 /**
- * @addtogroup Ecore_File_Group Ecore_File - Files and direcotries convenience functions
+ * @addtogroup Ecore_File_Group Ecore_File - Files and directories convenience functions
  *
  * @{
  */
@@ -767,7 +767,7 @@ ecore_file_can_exec(const char *file)
 /**
  * @brief Get the path pointed by the given link.
  *
- * @param  link The name of the link.
+ * @param  lnk The name of the link.
  * @return The path pointed by link or NULL.
  *
  * This function returns the path pointed by @p link as a newly
@@ -776,12 +776,12 @@ ecore_file_can_exec(const char *file)
  * returned value must be freed.
  */
 EAPI char *
-ecore_file_readlink(const char *link)
+ecore_file_readlink(const char *lnk)
 {
    char buf[PATH_MAX];
    int count;
 
-   if ((count = readlink(link, buf, sizeof(buf) - 1)) < 0) return NULL;
+   if ((count = readlink(lnk, buf, sizeof(buf) - 1)) < 0) return NULL;
    buf[count] = 0;
    return strdup(buf);
 }
