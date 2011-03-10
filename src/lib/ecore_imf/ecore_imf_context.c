@@ -1172,7 +1172,7 @@ ecore_imf_context_input_panel_imdata_get (Ecore_IMF_Context *ctx, char *data, in
 
    if (!data) return;
 
-   if (ctx->klass->input_panel_imdata_get) 
+   if (ctx->klass->input_panel_imdata_get)
       ctx->klass->input_panel_imdata_get(ctx, data, len);
 }
 
