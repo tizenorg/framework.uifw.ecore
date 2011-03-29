@@ -761,8 +761,6 @@ _ecore_imf_event_free_preedit(void *data __UNUSED__, void *event)
  *
  * ECORE_IMF_EVENT_PREEDIT_START should be added when a new preedit sequence starts.
  *
- * ECORE_IMF_EVENT_PREEDIT_START should be added when a new preedit sequence starts.
- *
  * @param ctx An #Ecore_IMF_Context.
  * @ingroup Ecore_IMF_Context_Module_Group
  */
@@ -786,8 +784,6 @@ ecore_imf_context_preedit_start_event_add(Ecore_IMF_Context *ctx)
 
 /**
  * Adds ECORE_IMF_EVENT_PREEDIT_END to the event queue.
- *
- * ECORE_IMF_EVENT_PREEDIT_END should be added when a new preedit sequence has been completed or canceled.
  *
  * ECORE_IMF_EVENT_PREEDIT_END should be added when a new preedit sequence has been completed or canceled.
  *
@@ -881,10 +877,6 @@ _ecore_imf_event_free_delete_surrounding(void *data __UNUSED__, void *event)
 
 /**
  * Adds ECORE_IMF_EVENT_DELETE_SURROUNDING to the event queue.
- *
- * Asks the widget that the input context is attached to to delete characters around the cursor position 
- * by adding the ECORE_IMF_EVENT_DELETE_SURROUNDING to the event queue.
- * Note that offset and n_chars are in characters not in bytes.
  *
  * Asks the widget that the input context is attached to to delete characters around the cursor position 
  * by adding the ECORE_IMF_EVENT_DELETE_SURROUNDING to the event queue.
