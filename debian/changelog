@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.58047slp2+build02) unstable; urgency=low
+
+  * Rollback
+  * Git: slp-scm.sec.samsung.net:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.58047slp2+build02
+
+ -- Shinwoo Kim <cinoo.kim@samsung.com>  Tue, 29 Mar 2011 23:52:57 +0900
+
 ecore (1.0.0.001+svn.58047slp2+build01) unstable; urgency=low
 
   * [SVN EFL Migration] ecore in SLP is merged with SVN r58047
