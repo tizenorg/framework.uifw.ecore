@@ -81,7 +81,18 @@ _ecore_evas_x_protocols_set(Ecore_Evas *ee)
    if (ee->func.fn_delete_request)
       protos[num++] = ECORE_X_ATOM_WM_DELETE_WINDOW;
    protos[num++] = ECORE_X_ATOM_NET_WM_PING;
+   protos[num++] = ECORE_X_ATOM_NET_WM_SYNC_REQUEST;
    ecore_x_icccm_protocol_atoms_set(ee->prop.window, protos, num);
+   
+   if (!ee->engine.x.netwm_sync_counter)
+      ee->engine.x.netwm_sync_counter = ecore_x_sync_counter_new(0);
+   ////////
+     {
+        unsigned int tmp = ee->engine.x.netwm_sync_counter;
+        ecore_x_window_prop_card32_set(ee->prop.window, 
+                                       ECORE_X_ATOM_NET_WM_SYNC_REQUEST_COUNTER,
+                                       &tmp, 1);
+     }
 }
 
 static void
@@ -738,6 +749,15 @@ _ecore_evas_x_event_client_message(void *data __UNUSED__, int type __UNUSED__, v
         if (e->data.l[0] != (long)ee->prop.window) return ECORE_CALLBACK_PASS_ON;
         ee->engine.x.sync_began = 0;
         ee->engine.x.sync_cancel = 1;
+     }
+   else if ((e->message_type == ECORE_X_ATOM_WM_PROTOCOLS) &&
+            (e->data.l[0] == (int)ECORE_X_ATOM_NET_WM_SYNC_REQUEST))
+     {
+        ee = ecore_event_window_match(e->win);
+        if (!ee) return ECORE_CALLBACK_PASS_ON; /* pass on event */
+        ee->engine.x.netwm_sync_val_lo = (unsigned int)e->data.l[2];
+        ee->engine.x.netwm_sync_val_hi = (int)e->data.l[3];
+        ee->engine.x.netwm_sync_set = 1;
      }
    return ECORE_CALLBACK_PASS_ON;
 }
@@ -3078,19 +3098,28 @@ _ecore_evas_x_flush_post(void *data, Evas *e __UNUSED__, void *event_info __UNUS
 {
    Ecore_Evas *ee = data;
 
-   if (ee->no_comp_sync) return;
-   if (!_ecore_evas_app_comp_sync) return;
-   if (ee->gl_sync_draw_done) return; // added by gl77.lee
-   if (ee->engine.x.sync_counter)
+   if ((!ee->no_comp_sync) &&
+       (_ecore_evas_app_comp_sync) &&
+       (!ee->gl_sync_draw_done)) // added by gl77.lee
      {
-        if (ee->engine.x.sync_began)
+        if (ee->engine.x.sync_counter)
           {
-             if (!ee->engine.x.sync_cancel)
+             if (ee->engine.x.sync_began)
                {
-                  ecore_x_e_comp_sync_draw_done_send(ee->engine.x.win_root, 
-                                                     ee->prop.window);
+                  if (!ee->engine.x.sync_cancel)
+                    {
+                       ecore_x_e_comp_sync_draw_size_done_send
+                          (ee->engine.x.win_root, ee->prop.window, ee->w, ee->h);
+                    }
                }
           }
+     }
+   if (ee->engine.x.netwm_sync_set)
+     {
+        ecore_x_sync_counter_2_set(ee->engine.x.netwm_sync_counter, 
+                                   ee->engine.x.netwm_sync_val_hi, 
+                                   ee->engine.x.netwm_sync_val_lo);
+        ee->engine.x.netwm_sync_set = 0;
      }
 }
 #endif
