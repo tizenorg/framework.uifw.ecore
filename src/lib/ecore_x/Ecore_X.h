@@ -1549,6 +1549,11 @@ EAPI void                     ecore_x_window_shape_window_set_xy(
    Ecore_X_Window shape_win,
    int            x,
    int            y);
+EAPI void                     ecore_x_window_shape_window_set_xy(
+   Ecore_X_Window win,
+   Ecore_X_Window shape_win,
+   int            x,
+   int            y);
 EAPI void                     ecore_x_window_shape_rectangle_set(
    Ecore_X_Window win,
    int            x,
@@ -1559,10 +1564,51 @@ EAPI void                     ecore_x_window_shape_rectangles_set(
    Ecore_X_Window     win,
    Ecore_X_Rectangle *rects,
    int                num);
+EAPI void                     ecore_x_window_shape_input_rectangle_set(
+   Ecore_X_Window win,
+   int            x,
+   int            y,
+   int            w,
+   int            h);
+EAPI void                     ecore_x_window_shape_input_rectangles_set(
+   Ecore_X_Window     win,
+   Ecore_X_Rectangle *rects,
+   int                num);
+EAPI void                     ecore_x_window_shape_input_rectangle_add(
+   Ecore_X_Window win,
+   int            x,
+   int            y,
+   int            w,
+   int            h);
+EAPI void                     ecore_x_window_shape_rectangle_subtract(
+   Ecore_X_Window win,
+   int            x,
+   int            y,
+   int            w,
+   int            h);
+EAPI void                     ecore_x_window_shape_input_rectangle_subtract(
+   Ecore_X_Window win,
+   int            x,
+   int            y,
+   int            w,
+   int            h);
+EAPI void                     ecore_x_window_shape_input_window_set_xy(
+   Ecore_X_Window win,
+   Ecore_X_Window shape_win,
+   int            x,
+   int            y);
+EAPI void                     ecore_x_window_shape_input_window_set(
+   Ecore_X_Window win,
+   Ecore_X_Window shape_win);
 EAPI void                     ecore_x_window_shape_window_add(
    Ecore_X_Window win,
    Ecore_X_Window shape_win);
 EAPI void                     ecore_x_window_shape_window_add_xy(
+   Ecore_X_Window win,
+   Ecore_X_Window shape_win,
+   int            x,
+   int            y);
+EAPI void                     ecore_x_window_shape_input_window_add_xy(
    Ecore_X_Window win,
    Ecore_X_Window shape_win,
    int            x,
@@ -1579,7 +1625,17 @@ EAPI void                     ecore_x_window_shape_rectangle_clip(
    int            y,
    int            w,
    int            h);
+EAPI void                     ecore_x_window_shape_input_rectangle_clip(
+   Ecore_X_Window win,
+   int            x,
+   int            y,
+   int            w,
+   int            h);
 EAPI void                     ecore_x_window_shape_rectangles_add(
+   Ecore_X_Window     win,
+   Ecore_X_Rectangle *rects,
+   int                num);
+EAPI void                     ecore_x_window_shape_input_rectangles_add(
    Ecore_X_Window     win,
    Ecore_X_Rectangle *rects,
    int                num);
@@ -1587,6 +1643,9 @@ EAPI void                     ecore_x_window_shape_rectangles_get_prefetch(
    Ecore_X_Window window);
 EAPI void                     ecore_x_window_shape_rectangles_get_fetch(void);
 EAPI Ecore_X_Rectangle *      ecore_x_window_shape_rectangles_get(
+   Ecore_X_Window win,
+   int           *num_ret);
+EAPI Ecore_X_Rectangle *      ecore_x_window_shape_input_rectangles_get(
    Ecore_X_Window win,
    int           *num_ret);
 EAPI void                     ecore_x_window_shape_events_select(
