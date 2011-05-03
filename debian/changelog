@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.58224slp2+build03) unstable; urgency=low
+
+  * Package upload
+  * Git: slp-scm.sec.samsung.net:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.58224slp2+build03
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Tue, 03 May 2011 20:48:31 +0900
+
 ecore (1.0.0.001+svn.58224slp2+build02) unstable; urgency=low
 
   * Add shape input mask feature (upstream svn rev.58621)
