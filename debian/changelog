@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.58224slp2+build04) unstable; urgency=low
+
+  * Fixed _ecore_main_loop_iterate_internal. Upstream merge.
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.58224slp2+build04
+
+ -- Daniel Juyung Seo <juyung.seo@samsung.com>  Mon, 23 May 2011 14:20:58 +0900
+
 ecore (1.0.0.001+svn.58224slp2+build03) unstable; urgency=low
 
   * Package upload
