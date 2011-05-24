@@ -8,7 +8,6 @@ DEB_INSTALL_MANPAGES_libecore-bin := debian/ecore_config.1
 DEB_DH_STRIP_ARGS := --dbg-package=libecore-dbg
 DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb \
 	--disable-ecore-directfb \
-	--disable-ecore-evas-dfb \
 	--enable-ecore-evas-fb \
 	--disable-rpath \
 	--disable-openssl \
@@ -20,8 +19,6 @@ DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb \
 	--disable-ecore-evas-xrender-x11 \
 	--enable-curl \
 	--disable-openssl \
-	--enable-ecore-data \
-	--enable-ecore-config \
 	--enable-glib-integration-always \
 	--disable-xim
 
