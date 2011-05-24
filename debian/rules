@@ -19,7 +19,7 @@ DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb \
 	--disable-ecore-evas-xrender-x11 \
 	--enable-curl \
 	--disable-openssl \
-	--enable-glib-integration-always \
+	--enable-g-main-loop \
 	--disable-xim
 
 DEB_MAKE_CLEAN_TARGET := distclean
