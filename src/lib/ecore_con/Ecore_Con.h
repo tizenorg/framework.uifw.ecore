@@ -14,9 +14,13 @@
 # undef EAPI
 #endif
 
-#ifdef _MSC_VER
-# ifdef BUILDING_DLL
-#  define EAPI __declspec(dllexport)
+#ifdef _WIN32
+# ifdef EFL_ECORE_CON_BUILD
+#  ifdef DLL_EXPORT
+#   define EAPI __declspec(dllexport)
+#  else
+#   define EAPI
+#  endif
 # else
 #  define EAPI __declspec(dllimport)
 # endif
@@ -525,6 +529,10 @@ typedef enum _Ecore_Con_Url_Time
 
 EAPI int               ecore_con_url_init(void);
 EAPI int               ecore_con_url_shutdown(void);
+
+EAPI void              ecore_con_url_pipeline_set(Eina_Bool enable);
+EAPI Eina_Bool         ecore_con_url_pipeline_get(void);
+
 EAPI Ecore_Con_Url *   ecore_con_url_new(const char *url);
 EAPI Ecore_Con_Url *   ecore_con_url_custom_new(const char *url,
                                                 const char *custom_request);

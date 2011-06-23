@@ -80,29 +80,6 @@ typedef enum
 
 typedef enum
 {
-   ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL,          /**< Default 4x4 layout */
-   ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBER,          /**< Number layout */
-   ECORE_IMF_INPUT_PANEL_LAYOUT_EMAIL,           /**< Email layout */
-   ECORE_IMF_INPUT_PANEL_LAYOUT_URL,             /**< URL layout */
-   ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER,     /**< Phone Number layout */
-   ECORE_IMF_INPUT_PANEL_LAYOUT_IP,              /**< IP layout */
-   ECORE_IMF_INPUT_PANEL_LAYOUT_MONTH,           /**< Month layout */
-   ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY,      /**< Number Only layout */
-   ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_1 = 100,  /* Reserved for future use */
-   ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_2,
-   ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_3,
-   ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_4,
-   ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_5,
-   ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_6,
-   ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_7,
-   ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_8,
-   ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_9,
-   ECORE_IMF_INPUT_PANEL_LAYOUT_CUSTOM_10,
-   ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID
-} Ecore_IMF_Input_Panel_Layout;
-
-typedef enum
-{
    ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC,    /**< Automatic */
    ECORE_IMF_INPUT_PANEL_LANG_ALPHABET      /**< Alphabet */
 } Ecore_IMF_Input_Panel_Lang;
@@ -239,6 +216,27 @@ typedef enum
    ECORE_IMF_PREEDIT_TYPE_SUB2,
    ECORE_IMF_PREEDIT_TYPE_SUB3
 } Ecore_IMF_Preedit_Type;
+
+typedef enum
+{
+   ECORE_IMF_AUTOCAPITAL_TYPE_NONE,
+   ECORE_IMF_AUTOCAPITAL_TYPE_WORD,
+   ECORE_IMF_AUTOCAPITAL_TYPE_SENTENCE,
+   ECORE_IMF_AUTOCAPITAL_TYPE_ALLCHARACTER
+} Ecore_IMF_Autocapital_Type;
+
+typedef enum
+{
+   ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL,          /**< Default layout */
+   ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBER,          /**< Number layout */
+   ECORE_IMF_INPUT_PANEL_LAYOUT_EMAIL,           /**< Email layout */
+   ECORE_IMF_INPUT_PANEL_LAYOUT_URL,             /**< URL layout */
+   ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER,     /**< Phone Number layout */
+   ECORE_IMF_INPUT_PANEL_LAYOUT_IP,              /**< IP layout */
+   ECORE_IMF_INPUT_PANEL_LAYOUT_MONTH,           /**< Month layout */
+   ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY,      /**< Number Only layout */
+   ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID
+} Ecore_IMF_Input_Panel_Layout;
 
 struct _Ecore_IMF_Event_Preedit_Start
 {
@@ -453,6 +451,8 @@ struct _Ecore_IMF_Context_Class
    void (*input_panel_caps_mode_set) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Caps_Mode mode);
 
    void (*preedit_string_with_attributes_get) (Ecore_IMF_Context *ctx, char **str, Eina_List **attrs, int *cursor_pos);
+   void (*prediction_allow_set)(Ecore_IMF_Context *ctx, Eina_Bool prediction);
+   void (*autocapital_type_set)(Ecore_IMF_Context *ctx, Ecore_IMF_Autocapital_Type autocapital_type);
 };
 
 struct _Ecore_IMF_Context_Info
@@ -506,6 +506,10 @@ EAPI void                          ecore_imf_context_preedit_end_event_add(Ecore
 EAPI void                          ecore_imf_context_preedit_changed_event_add(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_commit_event_add(Ecore_IMF_Context *ctx, const char *str);
 EAPI void                          ecore_imf_context_delete_surrounding_event_add(Ecore_IMF_Context *ctx, int offset, int n_chars);
+EAPI void                          ecore_imf_context_prediction_allow_set(Ecore_IMF_Context *ctx, Eina_Bool prediction);
+EAPI Eina_Bool                     ecore_imf_context_prediction_allow_get(Ecore_IMF_Context *ctx);
+EAPI void                          ecore_imf_context_autocapital_type_set(Ecore_IMF_Context *ctx, Ecore_IMF_Autocapital_Type autocapital_type);
+EAPI Ecore_IMF_Autocapital_Type    ecore_imf_context_autocapital_type_get(Ecore_IMF_Context *ctx);
 
 EAPI void                          ecore_imf_context_control_panel_show(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_control_panel_hide(Ecore_IMF_Context *ctx);
@@ -516,7 +520,7 @@ EAPI void                          ecore_imf_context_input_panel_layout_set(Ecor
 EAPI Ecore_IMF_Input_Panel_Layout  ecore_imf_context_input_panel_layout_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_input_panel_language_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang);
 EAPI Ecore_IMF_Input_Panel_Lang    ecore_imf_context_input_panel_language_get(Ecore_IMF_Context *ctx);
-EAPI void                          ecore_imf_context_input_panel_imdata_set(Ecore_IMF_Context *ctx, const char * data, int len);
+EAPI void                          ecore_imf_context_input_panel_imdata_set(Ecore_IMF_Context *ctx, const char *data, int len);
 EAPI void                          ecore_imf_context_input_panel_imdata_get(Ecore_IMF_Context *ctx, char *data, int *len);
 EAPI void                          ecore_imf_context_input_panel_use_effect_set(Ecore_IMF_Context *ctx, Eina_Bool use_effect);
 EAPI Eina_Bool                     ecore_imf_context_input_panel_use_effect_get(Ecore_IMF_Context *ctx);

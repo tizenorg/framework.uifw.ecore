@@ -47,6 +47,10 @@ ecore_file_init()
 {
    if (++_ecore_file_init_count != 1)
      return _ecore_file_init_count;
+
+   if (!ecore_init())
+     return --_ecore_file_init_count;
+
    _ecore_file_log_dom = eina_log_domain_register
      ("ecore_file", ECORE_FILE_DEFAULT_LOG_COLOR);
    if(_ecore_file_log_dom < 0)
@@ -99,8 +103,12 @@ ecore_file_shutdown()
    ecore_file_download_shutdown();
    ecore_file_monitor_shutdown();
    ecore_file_path_shutdown();
+
    eina_log_domain_unregister(_ecore_file_log_dom);
    _ecore_file_log_dom = -1;
+
+   ecore_shutdown();
+
    return _ecore_file_init_count;
 }
 
@@ -242,7 +250,7 @@ ecore_file_mkdirs(const char **dirs)
  * returns -1 if @p dirs or @p base are @c NULL, or if @p base is
  * empty ("\0"). It returns 0 is @p base is not a directory or
  * invalid, or if it can't be created. Otherwise if returns the number
- * of suceesfully created directories. 
+ * of suceesfully created directories.
  */
 EAPI int
 ecore_file_mksubdirs(const char *base, const char **subdirs)
@@ -451,9 +459,9 @@ _ecore_file_mkpath_if_not_exists(const char *path)
  * @param  path The path to create
  * @return EINA_TRUE on success, EINA_FALSE otherwise.
  *
- * This function create @p path and all the subdirectories it
+ * This function creates @p path and all the subdirectories it
  * contains. The separator is '/' or '\'. If @p path exists, this
- * function returns EINA_TRUE immediatly. It returns EINA_TRUE on
+ * function returns EINA_TRUE immediately. It returns EINA_TRUE on
  * success, EINA_FALSE otherwise.
  */
 EAPI Eina_Bool
@@ -490,7 +498,7 @@ ecore_file_mkpath(const char *path)
  * and call ecore_file_mkpath(), hence on Windows, '\' must be
  * replaced by '/' before calling that function. This function
  * returns -1 if @p paths is @c NULL. Otherwise if returns the number
- * of suceesfully created directories. 
+ * of suceesfully created directories.
  */
 EAPI int
 ecore_file_mkpaths(const char **paths)
@@ -578,10 +586,10 @@ ecore_file_mv(const char *src, const char *dst)
                   char *dir;
 
                   dir = ecore_file_dir_get(dst);
-                  // Since we can't directly rename, try to 
+                  // Since we can't directly rename, try to
                   // copy to temp file in the dst directory
                   // and then rename.
-                  snprintf(buf, sizeof(buf), "%s/.%s.tmp.XXXXXX", 
+                  snprintf(buf, sizeof(buf), "%s/.%s.tmp.XXXXXX",
                            dir, ecore_file_file_get(dst));
                   free(dir);
                   fd = mkstemp(buf);
@@ -1095,7 +1103,7 @@ ecore_file_dir_is_empty(const char *dir)
              return 0;
           }
      }
-   
+
    closedir(dirp);
    return 1;
 }

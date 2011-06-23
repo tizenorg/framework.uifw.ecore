@@ -23,13 +23,13 @@
 
 static int _init_con_ssl_init_count = 0;
 
-#if USE_GNUTLS
-# ifdef EFL_HAVE_PTHREAD
-#include <pthread.h>
+#ifdef USE_GNUTLS
+# ifdef EINA_HAVE_THREADS
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
 # endif
 
 static int _client_connected = 0;
+
 # define SSL_SUFFIX(ssl_func) ssl_func ## _gnutls
 # define _ECORE_CON_SSL_AVAILABLE 1
 
@@ -49,9 +49,9 @@ static void
 _gnutls_print_errors(void *conn, int type, int ret)
 {
    char buf[1024];
-   
+
    if (!ret) return;
-   
+
    snprintf(buf, sizeof(buf), "GNUTLS error: %s - %s", gnutls_strerror_name(ret), gnutls_strerror(ret));
    if (type == ECORE_CON_EVENT_CLIENT_ERROR)
      ecore_con_event_client_error(conn, buf);
@@ -129,7 +129,7 @@ _openssl_print_errors(void *conn, int type)
           ecore_con_event_client_error(conn, buf);
         else
           ecore_con_event_server_error(conn, buf);
-        
+
      } while (1);
 }
 
@@ -422,7 +422,7 @@ ecore_con_ssl_server_crl_add(Ecore_Con_Server *svr,
 static Ecore_Con_Ssl_Error
 _ecore_con_ssl_init_gnutls(void)
 {
-#ifdef EFL_HAVE_PTHREAD
+#ifdef EINA_HAVE_THREADS
    if (gcry_control(GCRYCTL_SET_THREAD_CBS, &gcry_threads_pthread))
      WRN("YOU ARE USING PTHREADS, BUT I CANNOT INITIALIZE THREADSAFE GCRYPT OPERATIONS!");
 #endif

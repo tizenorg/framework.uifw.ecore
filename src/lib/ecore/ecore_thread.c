@@ -93,6 +93,7 @@ int _ecore_thread_win32_join(win32_thread *x, void **res)
       CloseHandle(x->thread);
     }
   if (res) *res = x->val;
+  free(x);
 
   return 0;
 }
@@ -168,7 +169,7 @@ typedef struct
   LONG readers_count;
   LONG writers_count;
   int readers;
-  int writers; 
+  int writers;
   LK(mutex);
   CD(cond_read);
   CD(cond_write);
@@ -677,7 +678,11 @@ _ecore_thread_worker(Ecore_Pthread_Data *pth)
    LKU(_ecore_pending_job_threads_mutex);
 
    /* Sleep a little to prevent premature death */
+#ifdef _WIN32
+   Sleep(1); /* around 50ms */
+#else
    usleep(200);
+#endif
 
    LKL(_ecore_pending_job_threads_mutex);
    if (_ecore_pending_job_threads || _ecore_pending_job_threads_feedback)
@@ -781,10 +786,10 @@ _ecore_thread_shutdown(void)
    /* Improve emergency shutdown */
    EINA_LIST_FREE(_ecore_active_job_threads, pth)
      {
-        Ecore_Pipe *p;
+        Ecore_Pipe *ep;
 
         PHA(pth->thread);
-        PHJ(pth->thread, p);
+        PHJ(pth->thread, ep);
 
         ecore_pipe_del(pth->p);
      }
@@ -1737,33 +1742,34 @@ ecore_thread_global_data_del(const char *key)
 EAPI void *
 ecore_thread_global_data_wait(const char *key, double seconds)
 {
-   double time = 0;
+   double tm = 0;
    Ecore_Thread_Data *ret = NULL;
+
    if (!key)
      return NULL;
 #ifdef EFL_HAVE_THREADS
    if (!_ecore_thread_global_hash)
      return NULL;
    if (seconds > 0)
-     time = ecore_time_get() + seconds;
+     tm = ecore_time_get() + seconds;
 
    while (1)
      {
 #ifndef _WIN32
         struct timespec t = { 0, 0 };
 
-        t.tv_sec = (long int)time;
-        t.tv_nsec = (long int)((time - (double)t.tv_sec) * 1000000000);
+        t.tv_sec = (long int)tm;
+        t.tv_nsec = (long int)((tm - (double)t.tv_sec) * 1000000000);
 #else
         struct timeval t = { 0, 0 };
 
-        t.tv_sec = (long int)time;
-        t.tv_usec = (long int)((time - (double)t.tv_sec) * 1000000);
+        t.tv_sec = (long int)tm;
+        t.tv_usec = (long int)((tm - (double)t.tv_sec) * 1000000);
 #endif
         LRWKRL(_ecore_thread_global_hash_lock);
         ret = eina_hash_find(_ecore_thread_global_hash, key);
         LRWKU(_ecore_thread_global_hash_lock);
-        if ((ret) || (!seconds) || ((seconds > 0) && (time <= ecore_time_get())))
+        if ((ret) || (!seconds) || ((seconds > 0) && (tm <= ecore_time_get())))
           break;
         LKL(_ecore_thread_global_hash_mutex);
         CDW(_ecore_thread_global_hash_cond, _ecore_thread_global_hash_mutex, &t);

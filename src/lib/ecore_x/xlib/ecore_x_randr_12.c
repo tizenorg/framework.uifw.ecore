@@ -16,10 +16,9 @@
 
 #define RANDR_1_2 ((1 << 16) | 2)
 
-#define RANDR_VALIDATE_ROOT(screen, \
-                            root) ((screen = \
-                                       XRRRootToScreen(_ecore_x_disp, \
-                                                       root)) != -1)
+#define RANDR_VALIDATE_ROOT(screen, root) \
+   ((screen = XRRRootToScreen(_ecore_x_disp, root)) != -1)
+
 #define RANDR_CHECK_1_2_RET(ret) if(_randr_version < RANDR_1_2) return ret
 
 #define RANDR_PROPERTY_EDID                     "EDID"
@@ -82,7 +81,7 @@ _ecore_x_randr_crtc_validate(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc)
    int i;
    Eina_Bool ret = EINA_FALSE;
 
-   if ((crtc == Ecore_X_Randr_None) || 
+   if ((crtc == Ecore_X_Randr_None) ||
        (crtc == Ecore_X_Randr_Unset))
       return ret;
 
@@ -837,7 +836,7 @@ ecore_x_randr_crtc_orientations_get(Ecore_X_Window root,
      }
    if (crtc_info)
       XRRFreeCrtcInfo(crtc_info);
-   
+
    if (res)
       XRRFreeScreenResources(res);
 
@@ -867,10 +866,10 @@ ecore_x_randr_crtc_orientation_get(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc)
      }
    if (crtc_info)
       XRRFreeCrtcInfo(crtc_info);
-   
+
    if (res)
       XRRFreeScreenResources(res);
-   
+
    return ret;
 #else
    return Ecore_X_Randr_None;
@@ -1496,10 +1495,8 @@ ecore_x_randr_output_crtc_get(Ecore_X_Window root, Ecore_X_Randr_Output output)
  * @param len length of returned c-string.
  * @return name of the output as reported by X
  */
-   EAPI char *
-ecore_x_randr_output_name_get(Ecore_X_Window root,
-      Ecore_X_Randr_Output output,
-      int *len)
+EAPI char *
+ecore_x_randr_output_name_get(Ecore_X_Window root, Ecore_X_Randr_Output output, int *len)
 {
 #ifdef ECORE_XRANDR
    RANDR_CHECK_1_2_RET(NULL);
@@ -1508,12 +1505,12 @@ ecore_x_randr_output_name_get(Ecore_X_Window root,
    char *ret = NULL;
 
    if ((output != Ecore_X_Randr_None)
-	 && (res = _ecore_x_randr_get_screen_resources(_ecore_x_disp, root))
-	 && (output_info = XRRGetOutputInfo(_ecore_x_disp, res, output)))
+       && (res = _ecore_x_randr_get_screen_resources(_ecore_x_disp, root))
+       && (output_info = XRRGetOutputInfo(_ecore_x_disp, res, output)))
      {
 	/*
-	 * Actually the bewow command is correct, but due to a bug in libXrandr
-	 * it doesn't work. Therefor we stick with strlen().
+	 * Actually the below command is correct, but due to a bug in libXrandr
+	 * it doesn't work. Therefore we stick with strlen().
 	 * Replace the line below with the following once this bug is
 	 * fixed within libXrandr.
 	 *
@@ -1541,11 +1538,8 @@ ecore_x_randr_output_name_get(Ecore_X_Window root,
  * @param w width of given mode in px
  * @param h height of given mode in px
  */
-   EAPI void
-ecore_x_randr_mode_size_get(Ecore_X_Window root,
-      Ecore_X_Randr_Mode mode,
-      int *w,
-      int *h)
+EAPI void
+ecore_x_randr_mode_size_get(Ecore_X_Window root, Ecore_X_Randr_Mode mode, int *w, int *h)
 {
 #ifdef ECORE_XRANDR
    RANDR_CHECK_1_2_RET();
@@ -1553,8 +1547,8 @@ ecore_x_randr_mode_size_get(Ecore_X_Window root,
    int i;
 
    if ((mode != Ecore_X_Randr_None)
-	 && (w || h)
-	 && (res = _ecore_x_randr_get_screen_resources(_ecore_x_disp, root)))
+       && (w || h)
+       && (res = _ecore_x_randr_get_screen_resources(_ecore_x_disp, root)))
      {
 	for (i = 0; i < res->nmode; i++)
 	  {
@@ -2085,4 +2079,104 @@ ecore_x_randr_output_backlight_level_set(Ecore_X_Window       root,
      }
 #endif
    return EINA_FALSE;
+}
+
+/*
+ * @brief get the outputs, which display a certain window
+ * @param window window the displaying outputs shall be found for
+ * @param num the number of outputs displaying the window
+ * @return array of outputs that display a certain window. NULL if no outputs
+ * was found that displays the specified window.
+ */
+
+EAPI Ecore_X_Randr_Output *
+ecore_x_randr_window_outputs_get(Ecore_X_Window window,
+                                 int *num)
+{
+#ifdef ECORE_XRANDR
+   Ecore_X_Window root;
+   Eina_Rectangle w_geo, c_geo;
+   Ecore_X_Randr_Crtc *crtcs;
+   Ecore_X_Randr_Mode mode;
+   Ecore_X_Randr_Output *outputs, *ret = NULL, *tret;
+   Window tw;
+   int ncrtcs, noutputs, i, nret = 0, rx = 0, ry = 0;
+
+   if (_randr_version < RANDR_1_2) goto _ecore_x_randr_current_output_get_fail;
+
+   ecore_x_window_geometry_get(window,
+                               &w_geo.x, &w_geo.y,
+                               &w_geo.w, &w_geo.h);
+
+   root = ecore_x_window_root_get(window);
+   crtcs = ecore_x_randr_crtcs_get(root, &ncrtcs);
+   if (!crtcs) goto _ecore_x_randr_current_output_get_fail;
+
+   /* now get window RELATIVE to root window - thats what matters. */
+   XTranslateCoordinates(_ecore_x_disp, window, root, 0, 0, &rx, &ry, &tw);
+   w_geo.x = rx;
+   w_geo.y = ry;
+
+   for (i = 0; i < ncrtcs; i++)
+     {
+        /* if crtc is not enabled, don't bother about it any further */
+        mode = ecore_x_randr_crtc_mode_get(root, crtcs[i]);
+        if (mode == Ecore_X_Randr_None) continue;
+
+        ecore_x_randr_crtc_geometry_get(root, crtcs[i],
+                                        &c_geo.x, &c_geo.y,
+                                        &c_geo.w, &c_geo.h);
+        if (eina_rectangles_intersect(&w_geo, &c_geo))
+          {
+             outputs = ecore_x_randr_crtc_outputs_get(root, crtcs[i],
+                                                      &noutputs);
+             /* The case below should be impossible, but for safety reasons
+              * remains */
+             if (!outputs)
+               {
+                  if (num) *num = 0;
+                  free(ret);
+                  free(crtcs);
+                  return NULL;
+               }
+             tret = realloc(ret, ((nret + noutputs) * sizeof(Ecore_X_Randr_Output)));
+             if (!tret)
+               {
+                  if (num) *num = 0;
+                  free(outputs);
+                  free(ret);
+                  free(crtcs);
+                  return NULL;
+               }
+             ret = tret;
+             memcpy(&ret[nret], outputs, (noutputs * sizeof(Ecore_X_Randr_Output)));
+             nret += noutputs;
+             free(outputs);
+          }
+     }
+   free(crtcs);
+
+   if (num) *num = nret;
+   return ret;
+
+_ecore_x_randr_current_output_get_fail:
+#endif
+   if (num) *num = 0;
+   return NULL;
+}
+
+/*
+ * @depricated bad naming. Use ecore_x_randr_window_outputs_get instead.
+ * @brief get the outputs, which display a certain window
+ * @param window window the displaying outputs shall be found for
+ * @param num the number of outputs displaying the window
+ * @return array of outputs that display a certain window. NULL if no outputs
+ * was found that displays the specified window.
+ */
+
+EINA_DEPRECATED EAPI Ecore_X_Randr_Output *
+ecore_x_randr_current_output_get(Ecore_X_Window window,
+                                 int *num)
+{
+   return ecore_x_randr_window_outputs_get(window, num);
 }

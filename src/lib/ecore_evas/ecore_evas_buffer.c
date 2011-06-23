@@ -32,7 +32,7 @@ _ecore_evas_buffer_free(Ecore_Evas *ee)
      }
    else
      {
-        ee->engine.buffer.free_func(ee->engine.buffer.data, 
+        ee->engine.buffer.free_func(ee->engine.buffer.data,
                                     ee->engine.buffer.pixels);
      }
    _ecore_evas_buffer_shutdown();
@@ -63,7 +63,7 @@ _ecore_evas_resize(Ecore_Evas *ee, int w, int h)
         if (ee->engine.buffer.pixels)
           ee->engine.buffer.free_func(ee->engine.buffer.data,
                                       ee->engine.buffer.pixels);
-        ee->engine.buffer.pixels = 
+        ee->engine.buffer.pixels =
           ee->engine.buffer.alloc_func(ee->engine.buffer.data,
                                        ee->w * ee->h * sizeof(int));
         stride = ee->w * sizeof(int);
@@ -140,22 +140,31 @@ _ecore_evas_buffer_render(Ecore_Evas *ee)
 static void
 _ecore_evas_buffer_coord_translate(Ecore_Evas *ee, Evas_Coord *x, Evas_Coord *y)
 {
-   Evas_Coord xx, yy, fx, fy, fw, fh;
+   Evas_Coord xx, yy, ww, hh, fx, fy, fw, fh;
 
-   evas_object_geometry_get(ee->engine.buffer.image, &xx, &yy, NULL, NULL);
+   evas_object_geometry_get(ee->engine.buffer.image, &xx, &yy, &ww, &hh);
    evas_object_image_fill_get(ee->engine.buffer.image, &fx, &fy, &fw, &fh);
 
    if (fw < 1) fw = 1;
-   xx = (*x - xx) - fx;
-   while (xx < 0) xx += fw;
-   while (xx > fw) xx -= fw;
-   *x = (ee->w * xx) / fw;
-
    if (fh < 1) fh = 1;
-   yy = (*y - yy) - fy;
-   while (yy < 0) yy += fh;
-   while (yy > fh) yy -= fh;
-   *y = (ee->h * yy) / fh;
+
+   if ((fx == 0) && (fy == 0) && (fw == ww) && (fh == hh))
+     {
+        *x = (ee->w * (*x - xx)) / fw;
+        *y = (ee->h * (*y - yy)) / fh;
+     }
+   else
+     {
+        xx = (*x - xx) - fx;
+        while (xx < 0) xx += fw;
+        while (xx > fw) xx -= fw;
+        *x = (ee->w * xx) / fw;
+
+        yy = (*y - yy) - fy;
+        while (yy < 0) yy += fh;
+        while (yy > fh) yy -= fh;
+        *y = (ee->h * yy) / fh;
+     }
 }
 
 static void
@@ -306,41 +315,41 @@ _ecore_evas_buffer_cb_key_down(void *data, Evas *e, Evas_Object *obj __UNUSED__,
    ee = data;
    ev = event_info;
    if (evas_key_modifier_is_set(evas_key_modifier_get(e), "Shift"))
-     evas_key_modifier_on(e, "Shift");
+     evas_key_modifier_on(ee->evas, "Shift");
    else
-     evas_key_modifier_off(e, "Shift");
+     evas_key_modifier_off(ee->evas, "Shift");
    if (evas_key_modifier_is_set(evas_key_modifier_get(e), "Control"))
-     evas_key_modifier_on(e, "Control");
+     evas_key_modifier_on(ee->evas, "Control");
    else
-     evas_key_modifier_off(e, "Control");
+     evas_key_modifier_off(ee->evas, "Control");
    if (evas_key_modifier_is_set(evas_key_modifier_get(e), "Alt"))
-     evas_key_modifier_on(e, "Alt");
+     evas_key_modifier_on(ee->evas, "Alt");
    else
-     evas_key_modifier_off(e, "Alt");
+     evas_key_modifier_off(ee->evas, "Alt");
    if (evas_key_modifier_is_set(evas_key_modifier_get(e), "Meta"))
-     evas_key_modifier_on(e, "Meta");
+     evas_key_modifier_on(ee->evas, "Meta");
    else
-     evas_key_modifier_off(e, "Meta");
+     evas_key_modifier_off(ee->evas, "Meta");
    if (evas_key_modifier_is_set(evas_key_modifier_get(e), "Hyper"))
-     evas_key_modifier_on(e, "Hyper");
+     evas_key_modifier_on(ee->evas, "Hyper");
    else
-     evas_key_modifier_off(e, "Hyper");
+     evas_key_modifier_off(ee->evas, "Hyper");
    if (evas_key_modifier_is_set(evas_key_modifier_get(e), "Super"))
-     evas_key_modifier_on(e, "Super");
+     evas_key_modifier_on(ee->evas, "Super");
    else
-     evas_key_modifier_off(e, "Super");
+     evas_key_modifier_off(ee->evas, "Super");
    if (evas_key_lock_is_set(evas_key_lock_get(e), "Scroll_Lock"))
-     evas_key_lock_on(e, "Scroll_Lock");
+     evas_key_lock_on(ee->evas, "Scroll_Lock");
    else
-     evas_key_lock_off(e, "Scroll_Lock");
+     evas_key_lock_off(ee->evas, "Scroll_Lock");
    if (evas_key_lock_is_set(evas_key_lock_get(e), "Num_Lock"))
-     evas_key_lock_on(e, "Num_Lock");
+     evas_key_lock_on(ee->evas, "Num_Lock");
    else
-     evas_key_lock_off(e, "Num_Lock");
+     evas_key_lock_off(ee->evas, "Num_Lock");
    if (evas_key_lock_is_set(evas_key_lock_get(e), "Caps_Lock"))
-     evas_key_lock_on(e, "Caps_Lock");
+     evas_key_lock_on(ee->evas, "Caps_Lock");
    else
-     evas_key_lock_off(e, "Caps_Lock");
+     evas_key_lock_off(ee->evas, "Caps_Lock");
    evas_event_feed_key_down(ee->evas, ev->keyname, ev->key, ev->string, ev->compose, ev->timestamp, NULL);
 }
 
@@ -353,41 +362,41 @@ _ecore_evas_buffer_cb_key_up(void *data, Evas *e, Evas_Object *obj __UNUSED__, v
    ee = data;
    ev = event_info;
    if (evas_key_modifier_is_set(evas_key_modifier_get(e), "Shift"))
-     evas_key_modifier_on(e, "Shift");
+     evas_key_modifier_on(ee->evas, "Shift");
    else
-     evas_key_modifier_off(e, "Shift");
+     evas_key_modifier_off(ee->evas, "Shift");
    if (evas_key_modifier_is_set(evas_key_modifier_get(e), "Control"))
-     evas_key_modifier_on(e, "Control");
+     evas_key_modifier_on(ee->evas, "Control");
    else
-     evas_key_modifier_off(e, "Control");
+     evas_key_modifier_off(ee->evas, "Control");
    if (evas_key_modifier_is_set(evas_key_modifier_get(e), "Alt"))
-     evas_key_modifier_on(e, "Alt");
+     evas_key_modifier_on(ee->evas, "Alt");
    else
-     evas_key_modifier_off(e, "Alt");
+     evas_key_modifier_off(ee->evas, "Alt");
    if (evas_key_modifier_is_set(evas_key_modifier_get(e), "Meta"))
-     evas_key_modifier_on(e, "Meta");
+     evas_key_modifier_on(ee->evas, "Meta");
    else
-     evas_key_modifier_off(e, "Meta");
+     evas_key_modifier_off(ee->evas, "Meta");
    if (evas_key_modifier_is_set(evas_key_modifier_get(e), "Hyper"))
-     evas_key_modifier_on(e, "Hyper");
+     evas_key_modifier_on(ee->evas, "Hyper");
    else
-     evas_key_modifier_off(e, "Hyper");
+     evas_key_modifier_off(ee->evas, "Hyper");
    if (evas_key_modifier_is_set(evas_key_modifier_get(e), "Super"))
-     evas_key_modifier_on(e, "Super");
+     evas_key_modifier_on(ee->evas, "Super");
    else
-     evas_key_modifier_off(e, "Super");
+     evas_key_modifier_off(ee->evas, "Super");
    if (evas_key_lock_is_set(evas_key_lock_get(e), "Scroll_Lock"))
-     evas_key_lock_on(e, "Scroll_Lock");
+     evas_key_lock_on(ee->evas, "Scroll_Lock");
    else
-     evas_key_lock_off(e, "Scroll_Lock");
+     evas_key_lock_off(ee->evas, "Scroll_Lock");
    if (evas_key_lock_is_set(evas_key_lock_get(e), "Num_Lock"))
-     evas_key_lock_on(e, "Num_Lock");
+     evas_key_lock_on(ee->evas, "Num_Lock");
    else
-     evas_key_lock_off(e, "Num_Lock");
+     evas_key_lock_off(ee->evas, "Num_Lock");
    if (evas_key_lock_is_set(evas_key_lock_get(e), "Caps_Lock"))
-     evas_key_lock_on(e, "Caps_Lock");
+     evas_key_lock_on(ee->evas, "Caps_Lock");
    else
-     evas_key_lock_off(e, "Caps_Lock");
+     evas_key_lock_off(ee->evas, "Caps_Lock");
    evas_event_feed_key_up(ee->evas, ev->keyname, ev->key, ev->string, ev->compose, ev->timestamp, NULL);
 }
 
@@ -481,8 +490,9 @@ static Ecore_Evas_Engine_Func _ecore_buffer_engine_func =
      NULL,
      NULL,
      NULL, //transparent
-     
-     NULL // render
+
+     NULL, // render
+     NULL  // screen_geometry_get
 };
 #endif
 
@@ -560,7 +570,7 @@ ecore_evas_buffer_allocfunc_new(int w, int h, void *(*alloc_func) (void *data, i
    evas_output_size_set(ee->evas, w, h);
    evas_output_viewport_set(ee->evas, 0, 0, w, h);
 
-   ee->engine.buffer.pixels = 
+   ee->engine.buffer.pixels =
      ee->engine.buffer.alloc_func
      (ee->engine.buffer.data, w * h * sizeof(int));
 
@@ -593,7 +603,7 @@ ecore_evas_buffer_allocfunc_new(int w, int h, void *(*alloc_func) (void *data, i
 
    ee->engine.func->fn_render = _ecore_evas_buffer_render;
    _ecore_evas_register(ee);
-   
+
    return ee;
 #else
    return NULL;
@@ -646,7 +656,7 @@ ecore_evas_object_image_new(Ecore_Evas *ee_target)
    o = evas_object_image_add(ee_target->evas);
    evas_object_image_content_hint_set(o, EVAS_IMAGE_CONTENT_HINT_DYNAMIC);
    evas_object_image_colorspace_set(o, EVAS_COLORSPACE_ARGB8888);
-  
+
    ECORE_MAGIC_SET(ee, ECORE_MAGIC_EVAS);
 
    _ecore_evas_buffer_init();
@@ -761,9 +771,9 @@ ecore_evas_object_image_new(Ecore_Evas *ee_target)
    evas_key_lock_add(ee->evas, "Scroll_Lock");
 
    ee_target->sub_ecore_evas = eina_list_append(ee_target->sub_ecore_evas, ee);
-   
+
    ee->engine.func->fn_render = _ecore_evas_buffer_render;
-   
+
    return o;
 #else
    return NULL;

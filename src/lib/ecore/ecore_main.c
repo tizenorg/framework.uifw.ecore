@@ -30,6 +30,16 @@
 # include <float.h>
 #endif
 
+#ifdef HAVE_ISFINITE
+# define ECORE_FINITE(t) isfinite(t)
+#else
+# ifdef _MSC_VER
+#  define ECORE_FINITE(t) _finite(t)
+# else
+#  define ECORE_FINITE(t) finite(t)
+# endif
+#endif
+
 #define FIX_HZ 1
 
 #ifdef FIX_HZ
@@ -94,11 +104,15 @@ struct _Ecore_Win32_Handler
 #endif
 
 
+#ifndef USE_G_MAIN_LOOP
 static int  _ecore_main_select(double timeout);
+#endif
 static void _ecore_main_prepare_handlers(void);
 static void _ecore_main_fd_handlers_cleanup(void);
 #ifndef _WIN32
+# ifndef USE_G_MAIN_LOOP
 static void _ecore_main_fd_handlers_bads_rem(void);
+# endif
 #endif
 static void _ecore_main_fd_handlers_call(void);
 static int  _ecore_main_fd_handlers_buf_call(void);
@@ -113,7 +127,9 @@ static void _ecore_main_win32_handlers_cleanup(void);
 #endif
 
 static int               in_main_loop = 0;
+#ifndef USE_G_MAIN_LOOP
 static int               do_quit = 0;
+#endif
 static Ecore_Fd_Handler *fd_handlers = NULL;
 static Ecore_Fd_Handler *fd_handler_current = NULL;
 static Eina_List        *fd_handlers_with_prep = NULL;
@@ -131,13 +147,15 @@ static Eina_Bool            win32_handlers_delete_me = EINA_FALSE;
 #endif
 
 #ifdef _WIN32
-static Ecore_Select_Function main_loop_select = _ecore_main_win32_select;
+Ecore_Select_Function main_loop_select = _ecore_main_win32_select;
 #else
-static Ecore_Select_Function main_loop_select = select;
+Ecore_Select_Function main_loop_select = select;
 #endif
 
+#ifndef USE_G_MAIN_LOOP
 static double            t1 = 0.0;
 static double            t2 = 0.0;
+#endif
 
 #ifdef HAVE_EPOLL
 static int epoll_fd = -1;
@@ -414,7 +432,7 @@ static inline int _ecore_main_fdh_poll_mark_active(void)
 
 /* like we are about to enter main_loop_select in  _ecore_main_select */
 static gboolean
-_ecore_main_gsource_prepare(GSource *source, gint *next_time)
+_ecore_main_gsource_prepare(GSource *source __UNUSED__, gint *next_time)
 {
    double t = _ecore_timer_next_get();
    gboolean running;
@@ -425,7 +443,7 @@ _ecore_main_gsource_prepare(GSource *source, gint *next_time)
    if (!ecore_idling)
      {
          while (_ecore_timer_call(_ecore_time_loop_time));
-          _ecore_timer_cleanup();
+         _ecore_timer_cleanup();
 
          /* when idling, busy loop checking the fds only */
          if (!ecore_idling) _ecore_idle_enterer_call();
@@ -441,7 +459,7 @@ _ecore_main_gsource_prepare(GSource *source, gint *next_time)
              if (_ecore_timers_exists())
                {
                   double t = _ecore_timer_next_get();
-                  *next_time = (t / 1000.0);
+                  *next_time = (t * 1000.0);
                }
              else
                *next_time = -1;
@@ -461,14 +479,14 @@ _ecore_main_gsource_prepare(GSource *source, gint *next_time)
 }
 
 static gboolean
-_ecore_main_gsource_check(GSource *source)
+_ecore_main_gsource_check(GSource *source __UNUSED__)
 {
    INF("enter");
    in_main_loop++;
 
    ecore_fds_ready = (_ecore_main_fdh_poll_mark_active() > 0);
    _ecore_main_fd_handlers_cleanup();
-
+   
    _ecore_time_loop_time = ecore_time_get();
    _ecore_timer_enable_new();
 
@@ -480,20 +498,20 @@ _ecore_main_gsource_check(GSource *source)
 
 /* like we just came out of main_loop_select in  _ecore_main_select */
 static gboolean
-_ecore_main_gsource_dispatch(GSource *source, GSourceFunc callback, gpointer user_data)
+_ecore_main_gsource_dispatch(GSource *source __UNUSED__, GSourceFunc callback __UNUSED__, gpointer user_data __UNUSED__)
 {
    gboolean events_ready, timers_ready, idlers_ready, signals_ready;
    double next_time = _ecore_timer_next_get();
 
    events_ready = _ecore_event_exist();
-   timers_ready = _ecore_timers_exists() && (0.0 <= next_time);
+   timers_ready = _ecore_timers_exists() && (0.0 >= next_time);
    idlers_ready = _ecore_idler_exist();
    signals_ready = (_ecore_signal_count_get() > 0);
 
    in_main_loop++;
    INF("enter idling=%d fds=%d events=%d signals=%d timers=%d (next=%.2f) idlers=%d",
        ecore_idling, ecore_fds_ready, events_ready, signals_ready,
-       _ecore_timers_exists(), next_time, idlers_ready);
+       timers_ready, next_time, idlers_ready);
 
    if (ecore_idling && events_ready)
      {
@@ -513,7 +531,7 @@ _ecore_main_gsource_dispatch(GSource *source, GSourceFunc callback, gpointer use
         _ecore_idler_call();
 
         events_ready = _ecore_event_exist();
-        timers_ready = _ecore_timers_exists() && (0.0 <= next_time);
+        timers_ready = _ecore_timers_exists() && (0.0 >= next_time);
         idlers_ready = _ecore_idler_exist();
 
         if ((ecore_fds_ready || events_ready || timers_ready || idlers_ready || signals_ready))
@@ -544,7 +562,7 @@ _ecore_main_gsource_dispatch(GSource *source, GSourceFunc callback, gpointer use
 }
 
 static void
-_ecore_main_gsource_finalize(GSource *source)
+_ecore_main_gsource_finalize(GSource *source __UNUSED__)
 {
    INF("finalize");
 }
@@ -1067,6 +1085,7 @@ _ecore_main_prepare_handlers(void)
      }
 }
 
+#ifndef USE_G_MAIN_LOOP
 static int
 _ecore_main_select(double timeout)
 {
@@ -1079,7 +1098,7 @@ _ecore_main_select(double timeout)
 #endif
 
    t = NULL;
-   if ((!finite(timeout)) || (timeout == 0.0)) /* finite() tests for NaN, too big, too small, and infinity.  */
+   if ((!ECORE_FINITE(timeout)) || (timeout == 0.0)) /* finite() tests for NaN, too big, too small, and infinity.  */
      {
         tv.tv_sec = 0;
         tv.tv_usec = 0;
@@ -1140,7 +1159,7 @@ _ecore_main_select(double timeout)
    if (_ecore_signal_count_get()) return -1;
 
    ret = main_loop_select(max_fd + 1, &rfds, &wfds, &exfds, t);
-
+   
    _ecore_time_loop_time = ecore_time_get();
    if (ret < 0)
      {
@@ -1178,8 +1197,10 @@ _ecore_main_select(double timeout)
      }
    return 0;
 }
+#endif
 
 #ifndef _WIN32
+# ifndef USE_G_MAIN_LOOP
 static void
 _ecore_main_fd_handlers_bads_rem(void)
 {
@@ -1228,14 +1249,15 @@ _ecore_main_fd_handlers_bads_rem(void)
     }
    if (found == 0)
      {
-# ifdef HAVE_GLIB
+#  ifdef HAVE_GLIB
         ERR("No bad fd found. Maybe a foreign fd from glib?");
-# else
+#  else
         ERR("No bad fd found. EEEK!");
-# endif
+#  endif
      }
    _ecore_main_fd_handlers_cleanup();
 }
+# endif
 #endif
 
 static void
@@ -1404,7 +1426,6 @@ _ecore_main_loop_iterate_internal(int once_only)
         _ecore_idle_enterer_call();
         have_event = 1;
         _ecore_main_select(0.0);
-        _ecore_time_loop_time = ecore_time_get();
         _ecore_timer_enable_new();
         goto process_events;
      }
@@ -1418,7 +1439,6 @@ _ecore_main_loop_iterate_internal(int once_only)
         if (_ecore_signal_count_get() > 0) have_signal = 1;
         if (have_signal || have_event)
           {
-             _ecore_time_loop_time = ecore_time_get();
              _ecore_timer_enable_new();
              goto process_events;
           }
@@ -1433,7 +1453,6 @@ _ecore_main_loop_iterate_internal(int once_only)
      {
         have_event = 1;
         _ecore_main_select(0.0);
-        _ecore_time_loop_time = ecore_time_get();
         _ecore_timer_enable_new();
         goto process_events;
      }
@@ -1441,7 +1460,6 @@ _ecore_main_loop_iterate_internal(int once_only)
      {
         _ecore_idle_enterer_call();
         in_main_loop--;
-        _ecore_time_loop_time = ecore_time_get();
         _ecore_timer_enable_new();
         return;
      }
@@ -1457,7 +1475,6 @@ _ecore_main_loop_iterate_internal(int once_only)
    _ecore_timer_enable_new();
    if (do_quit)
      {
-        _ecore_time_loop_time = ecore_time_get();
         in_main_loop--;
         _ecore_timer_enable_new();
         return;
@@ -1480,11 +1497,11 @@ _ecore_main_loop_iterate_internal(int once_only)
                {
                   for (;;)
                     {
+                       _ecore_time_loop_time = ecore_time_get();
                        if (!_ecore_idler_call()) goto start_loop;
-                       if (_ecore_main_select(0.0) > 0) have_event = 1;
+                       if (_ecore_main_select(0.0) > 0) break;
                        if (_ecore_event_exist()) break;
-                       if (_ecore_signal_count_get() > 0) have_signal = 1;
-                       if (have_event || have_signal) break;
+                       if (_ecore_signal_count_get() > 0) break;
                        if (_ecore_timers_exists()) goto start_loop;
                        if (do_quit) break;
                     }
@@ -1503,10 +1520,11 @@ _ecore_main_loop_iterate_internal(int once_only)
                {
                   for (;;)
                     {
+                       _ecore_time_loop_time = ecore_time_get();
                        if (!_ecore_idler_call()) goto start_loop;
-                       if (_ecore_main_select(0.0) > 0) have_event = 1;
+                       if (_ecore_main_select(0.0) > 0) break;
                        if (_ecore_event_exist()) break;
-                       if (_ecore_signal_count_get() > 0) have_signal = 1;
+                       if (_ecore_signal_count_get() > 0) break;
                        if (have_event || have_signal) break;
                        next_time = _ecore_timer_next_get();
                        if (next_time <= 0) break;
@@ -1514,7 +1532,6 @@ _ecore_main_loop_iterate_internal(int once_only)
                     }
                }
           }
-        _ecore_time_loop_time = ecore_time_get();
      }
    if (_ecore_fps_debug) t1 = ecore_time_get();
    /* we came out of our "wait state" so idle has exited */

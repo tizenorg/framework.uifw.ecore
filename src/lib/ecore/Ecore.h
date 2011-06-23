@@ -1,3 +1,288 @@
+/** 
+@brief Ecore Library Public API Calls
+ 
+These routines are used for Ecore Library interaction
+*/
+
+/**
+
+@mainpage Ecore
+
+@image html  e.png
+
+@version @PACKAGE_VERSION@
+@author Carsten Haitzler <raster@rasterman.com>
+@author Tom Gilbert <tom@linuxbrit.co.uk>
+@author Burra <burra@colorado.edu>
+@author Chris Ross <chris@darkrock.co.uk>
+@author Term <term@twistedpath.org>
+@author Tilman Sauerbeck <tilman@code-monkey.de>
+@author Ibukun Olumuyiwa <ibukun@computer.org>
+@author Yuri <da2001@hotmail.ru>
+@author Nicholas Curran <quasar@bigblue.net.au>
+@author Howell Tam <pigeon@pigeond.net>
+@author Nathan Ingersoll <rbdpngn@users.sourceforge.net>
+@author Andrew Elcock <andy@elcock.org>
+@author Kim Woelders <kim@woelders.dk>
+@author Sebastian Dransfeld <sebastid@tango.flipp.net>
+@author Simon Poole <simon.armlinux@themalago.net>
+@author Jorge Luis Zapata Muga <jorgeluis.zapata@gmail.com>
+@author dan sinclair <zero@everburning.com>
+@author Michael 'Mickey' Lauer <mickey@tm.informatik.uni-frankfurt.de>
+@author David 'onefang' Seikel <onefang@gmail.com>
+@author Hisham 'CodeWarrior' Mardam Bey <hisham@hisham.cc>
+@author Brian 'rephorm' Mattern <rephorm@rephorm.com>
+@author Tim Horton <hortont424@gmail.com>
+@author Arnaud de Turckheim 'quarium' <quarium@gmail.com>
+@author Matt Barclay <mbarclay@gmail.com>
+@author Peter Wehrfritz <peter.wehrfritz@web.de>
+@author Albin "Lutin" Tonnerre <albin.tonnerre@gmail.com>
+@author Vincent Torri <vincent.torri@gmail.com>
+@author Lars Munch <lars@segv.dk>
+@author Andre Dieb <andre.dieb@gmail.com>
+@author Mathieu Taillefumier <mathieu.taillefumier@free.fr>
+@author Rui Miguel Silva Seabra <rms@1407.org>
+@author Samsung Electronics
+@author Samsung SAIT
+@author Nicolas Aguirre <aguirre.nicolas@gmail.com>
+@author Brett Nash <nash@nash.id.au>
+@author Mike Blumenkrantz <mike@zentific.com>
+@author Leif Middelschulte <leif.middelschulte@gmail.com>
+@author Mike McCormack <mj.mccormack@samsung.com>
+@author Sangho Park <gouache95@gmail.com>
+@author Jihoon Kim <jihoon48.kim@samsung.com> <imfine98@gmail.com>
+@author Daniel Juyung Seo <seojuyung2@gmail.com> <juyung.seo@samsung.com>
+@date 2000-2011
+
+@section intro Introduction
+
+Ecore is a library of convenience functions.
+
+The Ecore library provides the following modules:
+@li @ref Ecore_Group
+@li @ref Ecore_File_Group
+@li @ref Ecore_Con_Group
+@li @link Ecore_Evas.h   Ecore_Evas - Evas convenience functions. @endlink
+@li @ref Ecore_FB_Group
+@li @link Ecore_Ipc.h    Ecore_IPC - Inter Process Communication functions. @endlink
+@li @link Ecore_X.h      Ecore_X - X Windows System wrapper. @endlink
+@li @ref Ecore_Win32_Group
+@li @ref Ecore_WinCE_Group
+
+@section compiling How to compile using Ecore?
+pkgconfig (.pc) files are installed for every ecore module.
+Thus, to compile using any of them, you can use something like the following:
+
+@verbatim
+gcc *.c $(pkg-config ecore ecore-$x ecore-$y [...] --cflags --libs)
+@endverbatim
+
+@section install How is it installed?
+
+Suggested configure options for evas for a Linux desktop X display:
+
+@verbatim
+./configure \
+--enable-ecore-x \
+--enable-ecore-fb \
+--enable-ecore-evas \
+--enable-ecore-evas-gl \
+--enable-ecore-con \
+--enable-ecore-ipc
+make CFLAGS="-O9 -mpentiumpro -march=pentiumpro -mcpu=pentiumpro"
+@endverbatim
+
+@todo (1.0) Document API
+*/
+
+/*
+@page Ecore_Main_Loop_Page The Ecore Main Loop
+
+@section intro What is Ecore?
+
+Ecore is a clean and tiny event loop library with many modules to do lots of
+convenient things for a programmer, to save time and effort.
+
+It's small and lean, designed to work on embedded systems all the way to
+large and powerful multi-cpu workstations. It serialises all system signals,
+events etc. into a single event queue, that is easily processed without
+needing to worry about concurrency. A properly written, event-driven program
+using this kind of programming doesn't need threads, nor has to worry about
+concurrency. It turns a program into a state machine, and makes it very
+robust and easy to follow.
+
+Ecore gives you other handy primitives, such as timers to tick over for you
+and call specified functions at particular times so the programmer can use
+this to do things, like animate, or time out on connections or tasks that take
+too long etc.
+
+Idle handlers are provided too, as well as calls on entering an idle state
+(often a very good time to update the state of the program). All events that
+enter the system are passed to specific callback functions that the program
+sets up to handle those events. Handling them is simple and other Ecore
+modules produce more events on the queue, coming from other sources such as
+file descriptors etc.
+
+Ecore also lets you have functions called when file descriptors become active
+for reading or writing, allowing for streamlined, non-blocking IO.
+
+Here is an example of a simple program and its basic event loop flow:
+
+@image html  prog_flow.png
+
+
+
+@section work How does Ecore work?
+
+Ecore is very easy to learn and use. All the function calls are designed to
+be easy to remember, explicit in describing what they do, and heavily
+name-spaced. Ecore programs can start and be very simple.
+
+For example:
+
+@code
+#include <Ecore.h>
+
+int main(int argc, const char **argv)
+{
+  ecore_init();
+  ecore_app_args_set(argc, argv);
+  ecore_main_loop_begin();
+  ecore_shutdown();
+  return 0;
+}
+@endcode
+
+This program is very simple and does't check for errors, but it does start up
+and begin a main loop waiting for events or timers to tick off. This program
+doesn't set up any, but now we can expand on this simple program a little
+more by adding some event handlers and timers.
+
+@code
+#include <Ecore.h>
+
+Ecore_Timer         *timer1     = NULL;
+Ecore_Event_Handler *handler1   = NULL;
+double               start_time = 0.0;
+
+int timer_func(void *data)
+{
+  printf("Tick timer. Sec: %3.2f\n", ecore_time_get() - start_time);
+  return 1;
+}
+
+int exit_func(void *data, int ev_type, void *ev)
+{
+  Ecore_Event_Signal_Exit *e;
+
+  e = (Ecore_Event_Signal_Exit *)ev;
+  if (e->interrupt)      printf("Exit: interrupt\n");
+  else if (e->quit)      printf("Exit: quit\n");
+  else if (e->terminate) printf("Exit: terminate\n");
+  ecore_main_loop_quit();
+  return 1;
+}
+
+int main(int argc, const char **argv)
+{
+  ecore_init();
+  ecore_app_args_set(argc, argv);  
+  start_time = ecore_time_get();
+  handler1 = ecore_event_handler_add(ECORE_EVENT_SIGNAL_EXIT, exit_func, NULL);
+  timer1 = ecore_timer_add(0.5, timer_func, NULL);  
+  ecore_main_loop_begin();
+  ecore_shutdown();
+  return 0;
+}
+@endcode
+
+In the previous example, we initialize our application and get the time at
+which our program has started so we can calculate an offset. We set
+up a timer to tick off in 0.5 seconds, and since it returns 1, will
+keep ticking off every 0.5 seconds until it returns 0, or is deleted
+by hand. An event handler is set up to call a function - exit_func(),
+whenever an event of type ECORE_EVENT_SIGNAL_EXIT is received (CTRL-C
+on the command line will cause such an event to happen). If this event
+occurs it tells you what kind of exit signal was received, and asks
+the main loop to quit when it is finished by calling
+ecore_main_loop_quit().
+
+The handles returned by ecore_timer_add() and ecore_event_handler_add() are 
+only stored here as an example. If you don't need to address the timer or 
+event handler again you don't need to store the result, so just call the 
+function, and don't assign the result to any variable.
+
+This program looks slightly more complex than needed to do these simple
+things, but in principle, programs don't get any more complex. You add more
+event handlers, for more events, will have more timers and such, BUT it all
+follows the same principles as shown in this example.
+
+*/
+
+/*
+@page Ecore_Config_Page The Enlightened Property Library
+
+The Enlightened Property Library (Ecore_Config) is an adbstraction
+from the complexities of writing your own configuration. It provides
+many features using the Enlightenment 17 development libraries.
+
+To use the library, you:
+@li Set the default values of your properties.
+@li Load the configuration from a file.  You must set the default values
+    first, so that the library knows the correct type of each argument.
+
+The following examples show how to use the Enlightened Property Library:
+@li @link config_basic_example.c config_basic_example.c @endlink
+@li @link config_listener_example.c config_listener_example.c @endlink
+
+*/
+
+/**
+@page X_Window_System_Page X Window System
+
+The Ecore library includes a wrapper for handling the X window system.
+This page briefly explains what the X window system is and various terms
+that are used.
+*/
+
+// EXAMPLES
+
+/**
+@example ecore_args_example.c
+Shows how to set and retrieve the program arguments.
+*/
+
+/**
+@example ecore_event_handler_example.c
+Shows how to use event handlers.
+*/
+
+/**
+@example ecore_fd_handler_example.c
+Shows how to use fd handlers.
+*/
+
+/**
+@example ecore_timer_example.c
+Demonstrates use of the ecore_timer.
+*/
+
+/*
+@example ecore_config_basic_example.c
+Provides an example of how to use the basic configuration functions.
+See the file Ecore_Config.h for the full list of available functions.
+*/
+
+/*
+@example ecore_config_listener_example.c
+Shows how to set up a listener to listen for configuration changes.
+*/
+
+/**
+@example ecore_x_window_example.c
+Shows the basics of using the X Windows system through Ecore functions.
+*/
+
 #ifndef _ECORE_H
 #define _ECORE_H
 
@@ -146,7 +431,29 @@ extern "C" {
         ECORE_POLLER_CORE = 0 /**< The core poller interval */
      };
    typedef enum _Ecore_Poller_Type Ecore_Poller_Type;
+   
+   enum _Ecore_Pos_Map /* Position mappings */
+     {
+        ECORE_POS_MAP_LINEAR,     /**< Linear 0.0 -> 1.0 */
+        ECORE_POS_MAP_ACCELERATE, /**< Start slow then speed up */
+        ECORE_POS_MAP_DECELERATE, /**< Start fast then slow down */
+        ECORE_POS_MAP_SINUSOIDAL, /**< Start slow, speed up then slow down at end */
+        ECORE_POS_MAP_ACCELERATE_FACTOR, /**< Start slow then speed up, v1 being a power factor, 0.0 being linear, 1.0 being normal accelerate, 2.0 being much more pronounced accelerate (squared), 3.0 being cubed, etc. */
+        ECORE_POS_MAP_DECELERATE_FACTOR, /**< Start fast then slow down, v1 being a power factor, 0.0 being linear, 1.0 being normal decelerate, 2.0 being much more pronounced decelerate (squared), 3.0 being cubed, etc. */
+        ECORE_POS_MAP_SINUSOIDAL_FACTOR, /**< Start slow, speed up then slow down at end, v1 being a power factor, 0.0 being linear, 1.0 being normal sinusoidal, 2.0 being much more pronounced sinusoidal (squared), 3.0 being cubed, etc. */
+        ECORE_POS_MAP_DIVISOR_INTERP, /**< Start at gradient * v1, interpolated via power of v2 curve */
+        ECORE_POS_MAP_BOUNCE, /**< Start at 0.0 then "drop" like a ball bouncing to the ground at 1.0, and bounce v2 times, with decay factor of v1 */
+        ECORE_POS_MAP_SPRING  /**< Start at 0.0 then "wobble" like a sping rest position 1.0, and wobble v2 times, with decay factor of v1 */
+     };
+   typedef enum _Ecore_Pos_Map Ecore_Pos_Map;
 
+   enum _Ecore_Animator_Source /* Timing sources for animators */
+     {
+        ECORE_ANIMATOR_SOURCE_TIMER, /**< The default system clock/timer based animator that ticks every "frametime" seconds */
+        ECORE_ANIMATOR_SOURCE_CUSTOM /**< A custom animator trigger that you need to call ecore_animator_trigger() to make it tick */
+     };
+   typedef enum _Ecore_Animator_Source Ecore_Animator_Source;
+   
    typedef struct _Ecore_Exe                   Ecore_Exe; /**< A handle for spawned processes */
    typedef struct _Ecore_Timer                 Ecore_Timer; /**< A handle for timers */
    typedef struct _Ecore_Idler                 Ecore_Idler; /**< A handle for idlers */
@@ -218,9 +525,14 @@ extern "C" {
   typedef void (*Ecore_Thread_Notify_Cb) (void *data, Ecore_Thread *thread, void *msg_data);
    /**
     * @typedef Ecore_Task_Cb Ecore_Task_Cb
-    * A callback run for a task (timer, idler, poller, animater, etc)
+    * A callback run for a task (timer, idler, poller, animator, etc)
     */
    typedef Eina_Bool (*Ecore_Task_Cb) (void *data);
+   /**
+    * @typedef Ecore_Timeline_Cb Ecore_Timeline_Cb
+    * A callback run for a task (animators with runtimes)
+    */
+   typedef Eina_Bool (*Ecore_Timeline_Cb) (void *data, double pos);
    /**
     * @typedef Ecore_Cb Ecore_Cb
     * A generic callback called as a hook when a certain point in execution is reached.
@@ -397,6 +709,7 @@ extern "C" {
    EAPI const char *ecore_exe_tag_get(const Ecore_Exe *exe);
    EAPI const char *ecore_exe_cmd_get(const Ecore_Exe *exe);
    EAPI void       *ecore_exe_data_get(const Ecore_Exe *exe);
+   EAPI void       *ecore_exe_data_set(Ecore_Exe *exe, void *data);
    EAPI Ecore_Exe_Flags ecore_exe_flags_get(const Ecore_Exe *exe);
    EAPI void        ecore_exe_pause(Ecore_Exe *exe);
    EAPI void        ecore_exe_continue(Ecore_Exe *exe);
@@ -473,6 +786,9 @@ extern "C" {
    EAPI Eina_Bool    ecore_pipe_write(Ecore_Pipe *p, const void *buffer, unsigned int nbytes);
    EAPI void         ecore_pipe_write_close(Ecore_Pipe *p);
    EAPI void         ecore_pipe_read_close(Ecore_Pipe *p);
+   EAPI void         ecore_pipe_thaw(Ecore_Pipe *p);
+   EAPI void         ecore_pipe_freeze(Ecore_Pipe *p);
+   EAPI int          ecore_pipe_wait(Ecore_Pipe *p, int message_count, double wait);
 
   /**
    * @}
@@ -542,6 +858,7 @@ extern "C" {
    EAPI double       ecore_timer_pending_get(Ecore_Timer *timer);
    EAPI double       ecore_timer_precision_get(void);
    EAPI void         ecore_timer_precision_set(double precision);
+   EAPI char        *ecore_timer_dump(void);
 
   /**
    * @}
@@ -554,12 +871,19 @@ extern "C" {
    */
 
    EAPI Ecore_Animator *ecore_animator_add(Ecore_Task_Cb func, const void *data);
+   EAPI Ecore_Animator *ecore_animator_timeline_add(double runtime, Ecore_Timeline_Cb func, const void *data);
    EAPI void           *ecore_animator_del(Ecore_Animator *animator);
    EAPI void            ecore_animator_freeze(Ecore_Animator *animator);
    EAPI void            ecore_animator_thaw(Ecore_Animator *animator);
    EAPI void            ecore_animator_frametime_set(double frametime);
    EAPI double          ecore_animator_frametime_get(void);
-
+   EAPI double          ecore_animator_pos_map(double pos, Ecore_Pos_Map map, double v1, double v2);
+   EAPI void            ecore_animator_source_set(Ecore_Animator_Source source);
+   EAPI Ecore_Animator_Source ecore_animator_source_get(void);
+   EAPI void            ecore_animator_custom_source_tick_begin_callback_set(Ecore_Cb func, const void *data);
+   EAPI void            ecore_animator_custom_source_tick_end_callback_set(Ecore_Cb func, const void *data);
+   EAPI void            ecore_animator_custom_tick(void);
+         
   /**
    * @}
    */

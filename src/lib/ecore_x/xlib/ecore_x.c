@@ -744,7 +744,7 @@ ecore_x_fd_get(void)
 /**
  * Retrieves the Ecore_X_Screen handle used for the current X connection.
  * @return  The current default screen.
- * @ingroup Ecore_Xcb_Display_Attr_Group
+ * @ingroup Ecore_X_Display_Attr_Group
  */
 EAPI Ecore_X_Screen *
 ecore_x_default_screen_get(void)
@@ -752,6 +752,28 @@ ecore_x_default_screen_get(void)
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    return (Ecore_X_Screen *)DefaultScreenOfDisplay(_ecore_x_disp);
 } /* ecore_x_default_screen_get */
+
+/**
+ * Retrieves the size of an Ecore_X_Screen.
+ * @param screen the handle to the screen to query.
+ * @param w where to return the width. May be NULL. Returns 0 on errors.
+ * @param h where to return the height. May be NULL. Returns 0 on errors.
+ * @ingroup Ecore_X_Display_Attr_Group
+ * @see ecore_x_default_screen_get()
+ *
+ * @since 1.1
+ */
+EAPI void
+ecore_x_screen_size_get(const Ecore_X_Screen *screen, int *w, int *h)
+{
+   Screen *s = (Screen *)screen;
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (w) *w = 0;
+   if (h) *h = 0;
+   if (!s) return;
+   if (w) *w = s->width;
+   if (h) *h = s->height;
+}
 
 /**
  * Sets the timeout for a double and triple clicks to be flagged.
@@ -1518,7 +1540,7 @@ _ecore_x_window_grab_remove(Ecore_X_Window win)
 {
    int i, shuffle = 0;
    Window *t;
-   
+
    if (_ecore_window_grabs_num > 0)
      {
         for (i = 0; i < _ecore_window_grabs_num; i++)
@@ -1635,7 +1657,7 @@ _ecore_x_key_grab_remove(Ecore_X_Window win)
 {
    int i, shuffle = 0;
    Window *t;
-   
+
    if (_ecore_key_grabs_num > 0)
      {
         for (i = 0; i < _ecore_key_grabs_num; i++)

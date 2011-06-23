@@ -59,11 +59,12 @@ VMAJ=v_maj
 AC_SUBST(VMAJ)
 
 m4_ifdef([AM_GNU_GETTEXT_VERSION], [
-AM_GNU_GETTEXT_VERSION([0.12.1])
+AM_GNU_GETTEXT_VERSION([0.14])
 ])
 
 m4_ifdef([AM_GNU_GETTEXT], [
 AM_GNU_GETTEXT([external])
+po_makefile_in=po/Makefile.in
 AM_CONDITIONAL([HAVE_PO], [true])
 ],[
 AM_CONDITIONAL([HAVE_PO], [false])
@@ -108,7 +109,7 @@ want_glib="no"
 
 # core modules
 want_ecore_con="yes"
-want_ecore_ipc="no"
+want_ecore_ipc="yes"
 want_ecore_file="yes"
 #want_ecore_config="no"
 want_ecore_imf="no"
@@ -156,7 +157,6 @@ want_ecore_evas_software_ddraw="no"
 want_ecore_evas_direct3d="no"
 want_ecore_evas_opengl_glew="no"
 want_ecore_evas_software_16_ddraw="no"
-want_ecore_evas_cocoa="no"
 want_ecore_evas_software_sdl="no"
 want_ecore_evas_gl_sdl="no"
 want_ecore_evas_directfb="no"
@@ -166,6 +166,7 @@ want_ecore_evas_software_16_wince="no"
 case "$host_os" in
    mingw32ce* | cegcc*)
       want_ecore_con="no"
+      want_ecore_ipc="no"
       want_ecore_wince="yes"
       want_ecore_evas_software_16_wince="yes"
       ;;
@@ -188,10 +189,8 @@ case "$host_os" in
       want_glib="auto"
       want_gnutls="auto"
       want_openssl="auto"
-      want_ecore_ipc="yes"
       want_ecore_imf="yes"
       want_ecore_cocoa="yes"
-      want_ecore_evas_cocoa="yes"
       want_ecore_evas_software_sdl="yes"
       want_ecore_evas_gl_sdl="yes"
       ;;
@@ -206,7 +205,6 @@ case "$host_os" in
       want_inotify="yes"
       want_tslib="yes"
       want_ecore_fb="yes"
-      want_ecore_ipc="yes"
       want_ecore_imf="yes"
       want_ecore_x="yes"
       want_ecore_evas_software_x11="yes"
@@ -347,6 +345,19 @@ else
 fi
 AC_SUBST(pkgconfig_requires_private)
 
+### Checks for some build time option
+have_backtrace="no"
+AC_CHECK_FUNCS([backtrace], [have_backtrace="yes"], [])
+
+want_ecore_timer_dump="yes"
+
+AC_ARG_ENABLE([ecore-timer-dump],
+   [AC_HELP_STRING([--disable-ecore-timer-dump], [disable tracking of timer allocation. @<:@default=enable@:>@])],
+   [want_ecore_timer_dump=$enableval], [])
+
+if test "x$want_ecore_timer_dump" = "xyes" -a "x$have_backtrace" = "xyes"; then
+   AC_DEFINE(WANT_ECORE_TIMER_DUMP, [1], [Want Ecore_Timer dump infrastructure])
+fi
 
 ### Checks for libraries
 
@@ -363,12 +374,13 @@ case "$host_os" in
       requirements_ecore_imf_evas="evil ${requirements_ecore_imf_evas}"
       EFL_ECORE_BUILD="-DEFL_ECORE_BUILD"
       EFL_ECORE_CON_BUILD="-DEFL_ECORE_CON_BUILD"
-      EFL_ECORE_FILE_BUILD="-DEFL_ECORE_FILE_BUILD"
       EFL_ECORE_EVAS_BUILD="-DEFL_ECORE_EVAS_BUILD"
+      EFL_ECORE_FILE_BUILD="-DEFL_ECORE_FILE_BUILD"
       EFL_ECORE_IMF_BUILD="-DEFL_ECORE_IMF_BUILD"
       EFL_ECORE_IMF_EVAS_BUILD="-DEFL_ECORE_IMF_EVAS_BUILD"
       EFL_ECORE_INPUT_BUILD="-DEFL_ECORE_INPUT_BUILD"
       EFL_ECORE_INPUT_EVAS_BUILD="-DEFL_ECORE_INPUT_EVAS_BUILD"
+      EFL_ECORE_IPC_BUILD="-DEFL_ECORE_IPC_BUILD"
       ;;
 esac
 
@@ -391,12 +403,13 @@ esac
 
 AC_SUBST(EFL_ECORE_BUILD)
 AC_SUBST(EFL_ECORE_CON_BUILD)
-AC_SUBST(EFL_ECORE_FILE_BUILD)
 AC_SUBST(EFL_ECORE_EVAS_BUILD)
+AC_SUBST(EFL_ECORE_FILE_BUILD)
 AC_SUBST(EFL_ECORE_IMF_BUILD)
 AC_SUBST(EFL_ECORE_IMF_EVAS_BUILD)
 AC_SUBST(EFL_ECORE_INPUT_BUILD)
 AC_SUBST(EFL_ECORE_INPUT_EVAS_BUILD)
+AC_SUBST(EFL_ECORE_IPC_BUILD)
 AC_SUBST(EFL_ECORE_WINCE_BUILD)
 AC_SUBST(EFL_ECORE_WIN32_BUILD)
 AC_SUBST(EFL_ECORE_SDL_BUILD)
@@ -1003,34 +1016,56 @@ AC_ISC_POSIX
 AC_FUNC_ALLOCA
 AC_CHECK_FUNCS(gettimeofday strlcpy)
 
-have_atfile_source=auto
-AC_ARG_ENABLE(atfile-source,
-        AC_HELP_STRING([--disable-atfile-source],
-                       [disable use of atfile source functions as openat and mkdirat @<:@default=detect@:>@]),
-        [have_atfile_source=$enableval], [have_atfile_source=auto])
+AC_COMPILE_IFELSE(
+   [AC_LANG_PROGRAM(
+       [[
+#include <math.h>
+       ]],
+       [[
+int i = isfinite(0);
+       ]])],
+   [
+    AC_DEFINE(HAVE_ISFINITE, 1, [Define to 1 if you have `isfinite', as a function or macro.])
+    have_isfinite="yes"
+   ],
+   [have_isfinite="no"])
 
-if test "x$have_atfile_source" != "xno"; then
-        AC_CHECK_FUNCS(mkdirat,
-                [
-                have_atfile_source=yes
-                AC_DEFINE(HAVE_ATFILE_SOURCE, 1, [mkdirat exists])
-                ],
-                [
-                if test "x$have_atfile_source" = "xyes"; then
-                        AC_MSG_ERROR([required atfile-source but no mkdirat()])
-                fi
-                have_atfile_source=no
-                ])
+AC_MSG_CHECKING([for isfinite])
+AC_MSG_RESULT([${have_isfinite}])
+
+have_atfile_source=auto
+AC_ARG_ENABLE([atfile-source],
+   [AC_HELP_STRING([--disable-atfile-source],
+       [disable use of atfile source functions as openat and mkdirat @<:@default=detect@:>@])],
+   [
+    if test "x${enableval}" = "xyes" ; then
+       have_atfile_source="yes"
+    else
+       have_atfile_source="no"
+    fi],
+   [have_atfile_source=auto])
+
+if ! test "x${have_atfile_source}" = "xno" ; then
+   AC_CHECK_FUNCS(mkdirat,
+      [
+       have_atfile_source="yes"
+       AC_DEFINE(HAVE_ATFILE_SOURCE, 1, [mkdirat exists])
+      ],
+      [
+       if test "x${have_atfile_source}" = "xyes" ; then
+          AC_MSG_ERROR([required atfile-source but no mkdirat()])
+       fi
+       have_atfile_source="no"
+      ])
 fi
 
 ### Checks for optionnal feature
-AC_CHECK_FUNC(mallinfo,
-	[
-	  have_mallinfo=yes
-	  AC_DEFINE(HAVE_MALLINFO, 1, [Gather memory statistic])
-	], [
-	  have_mallinfo=no
-	])
+AC_CHECK_FUNC([mallinfo],
+   [
+    have_mallinfo="yes"
+    AC_DEFINE(HAVE_MALLINFO, 1, [Gather memory statistic])
+   ],
+   [have_mallinfo="no"])
 
 ### Ecore modules
 
@@ -1322,14 +1357,6 @@ if test "x${have_ecore_evas_software_gdi}" = "xyes" -o \
    requirements_ecore_evas="ecore-win32 >= 1.0.0 ${requirements_ecore_evas}"
 fi
 
-# ecore_evas_cocoa
-
-ECORE_EVAS_CHECK_MODULE([cocoa],
-   [${want_ecore_evas_cocoa}],
-   [Cocoa],
-   [${have_ecore_cocoa}],
-   [requirements_ecore_evas="ecore-cocoa >= 1.0.0 ${requirements_ecore_evas}"])
-
 # ecore_evas_software_sdl
 
 ECORE_EVAS_CHECK_MODULE([software-sdl],
@@ -1411,6 +1438,7 @@ ecore-wince.pc
 ecore.pc
 doc/ecore.dox
 doc/Makefile
+doc/Doxyfile
 src/Makefile
 src/bin/Makefile
 src/lib/Makefile
@@ -1436,9 +1464,8 @@ src/lib/ecore_x/xcb/Makefile
 src/tests/Makefile
 README
 ecore.spec
+$po_makefile_in
 ])
-
-m4_ifdef([AM_GNU_GETTEXT], [AC_CONFIG_FILES([po/Makefile.in])])
 
 AC_OUTPUT
 
@@ -1455,6 +1482,7 @@ echo "    GLib support...............: $have_glib"
 echo "    Always integrate GLib......: $want_glib_integration_always"
 echo "    Use g_main_loop............: $want_g_main_loop"
 echo "    Gathering memory statistic.: $have_mallinfo"
+echo "    Gathering timer allocation.: $want_ecore_timer_dump"
 echo "  Ecore_Con....................: $have_ecore_con"
 if test "x$have_ecore_con" = "xyes" ; then
   echo $ECHO_N "    OpenSSL....................: $have_openssl $ECHO_C"
@@ -1559,7 +1587,6 @@ if test "x${have_ecore_evas}" = "xyes" ; then
   echo "    Software DirectDraw........: $have_ecore_evas_software_ddraw"
   echo "    Direct3D...................: $have_ecore_evas_direct3d"
   echo "    OpenGL Glew................: $have_ecore_evas_opengl_glew"
-  echo "    Cocoa......................: $have_ecore_evas_cocoa"
   echo "    Software SDL...............: $have_ecore_evas_software_sdl"
   echo "    OpenGL SDL.................: $have_ecore_evas_opengl_sdl"
   echo "    DirectFB...................: $have_ecore_evas_directfb"

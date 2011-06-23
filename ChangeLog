@@ -108,3 +108,109 @@
         * Ecore_X gains some more x sync counter controls and Ecore_Evas
         now uses the netwm sync protocol to get wm's to only configure
         as fast as it can keep drawing.
+
+2011-04-05  Leif Middelschulte
+
+       * Add ecore_x_randr_edid_* data extraction and validation functions
+       for EDID structures.
+
+2011-04-01  Cedric Bail
+
+	* Add ecore_con_url_pipeline_set and ecore_con_url_pipeline_get for
+	HTTP 1.1 pipelining support.
+
+2011-04-05  Cedric Bail
+
+	* Remove Ecore_Evas Cocoa backend that use depreacted Evas Quartz
+	backend.
+
+2011-04-11  Hannes Janetzek
+
+	* Fix removal of windows from ignore_list with ecore_x_window_ignore_set
+
+2011-04-13  Doyun Kang
+
+	* Ecore_X + Ecore_Evas: Add more support for shape input setting
+
+2011-04-15  Carsten Haitzler (The Rasterman)
+
+        * Fix bug in Ecore_Evas setting modifiers for
+        sub-buffer-canvas. They never got set. Now they do.
+
+2011-04-19 Mike Blumenkrantz
+
+        * Add ecore_exe_data_set
+
+2011-04-20  Carsten Haitzler (The Rasterman)
+
+        * Added ecore animator timeline, where animator runs for a
+        specified time (in seconds) and then stops, but it also passes
+        the position in the timeline (as a 0.0 to 1.0 value) to the
+        callback which it can then use the new pos map call to map to
+        some ease in/out, bounce, spring or whatever position.
+
+2011-04-28  Eduardo Felipe Castegnaro
+
+        * Add a monotonic clock implementation for Mac OS X to fix warning.
+        Mac OS X does not provide an implementation of clock_gettime()
+        even though it's POSIX, but it does provide a fast high-resolution
+        monotonic clock through mach specific APIs that are perfectly suited
+        for usage in ecore_timer.
+
+2011-04-20  Jihoon Kim
+
+        * Ecore_IMF: Added support for auto-capitalization and prediction
+        control API's
+
+2011-05-03  Carsten Haitzler (The Rasterman)
+
+        * Fixed null pointer dereference in selection notification
+        handling in Ecore_X.
+
+2011-05-12  Carsten Haitzler (The Rasterman)
+
+        * Add a custom Ecore Animator source and tick ability to be able
+        to plug in external animator tick sources like vblank interrupts
+        and so on.
+
+2011-05-14  Cedric Bail
+
+	* Sync GNUTLS threads activation with Eina.
+
+2011-05-14  Vincent Torri
+
+	* Make ecore_con work on Windows (only the local connections
+	need a port)
+	* Make ecore_ipc compile on Windows
+
+2011-05-17  Cedric Bail
+
+	* Add ecore_timer_dump.
+
+2011-05-19  Carsten Haitzler (The Rasterman)
+
+        * Fix Ecore_X shadow tree search handling to respect shape and
+        shape input of windows.
+
+2011-05-20  Daniel Juyung Seo (SeoZ)
+
+        * Ecore ecore_main.c: Fixed ecore_main_loop
+        (_ecore_main_loop_iterate_internal). This fixes fd handler pending
+        issue when ecore_idler callback adds ecore_job/event.
+        * Ecore ecore_main.c: Refactoring _ecore_main_loop_iterate_internal().
+
+2011-05-27  Gustavo Sverzut Barbieri (k-s)
+
+	* Ecore_X: introduce ecore_x_screen_size_get()
+	* Ecore_Evas: be safer when returning Ecore_Evas* from
+	  ecore_evas_ecore_evas_get()
+	* Ecore_Evas: introduce ecore_evas_screen_geometry_get()
+
+2011-05-30  Cedric Bail
+
+	* Add ecore_pipe_freeze/thaw to suspend and restart watching the pipe
+	inside the main loop.
+
+2011-06-09  Cedric Bail
+
+	* Add ecore_pipe_wait (should only called from outside of the main loop).

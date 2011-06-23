@@ -96,6 +96,7 @@ static CURLM *_curlm = NULL;
 static fd_set _current_fd_set;
 static int _init_count = 0;
 static Ecore_Timer *_curl_timeout = NULL;
+static Eina_Bool pipelining = EINA_FALSE;
 
 typedef struct _Ecore_Con_Url_Event Ecore_Con_Url_Event;
 struct _Ecore_Con_Url_Event
@@ -239,6 +240,35 @@ ecore_con_url_shutdown(void)
    curl_global_cleanup();
 #endif
    return 1;
+}
+
+/**
+ * Enable or disable HTTP 1.1 pipelining.
+ * @param enable EINA_TRUE will turn it on, EINA_FALSE will disable it.
+ */
+EAPI void
+ecore_con_url_pipeline_set(Eina_Bool enable)
+{
+#ifdef HAVE_CURL
+  if (enable)
+    curl_multi_setopt(_curlm, CURLMOPT_PIPELINING, 1);
+  else
+    curl_multi_setopt(_curlm, CURLMOPT_PIPELINING, 1);
+  pipelining = enable;
+#endif
+}
+
+/**
+ * Is HTTP 1.1 pipelining enable ?
+ * @return EINA_TRUE if it is enable.
+ */
+EAPI Eina_Bool
+ecore_con_url_pipeline_get(void)
+{
+#ifdef HAVE_CURL
+  return pipelining;
+#endif
+  return EINA_FALSE;
 }
 
 /**
@@ -415,17 +445,17 @@ ecore_con_url_free(Ecore_Con_Url *url_con)
         // FIXME: For an unknown reason, progress continue to arrive after destruction
         // this prevent any further call to the callback.
         curl_easy_setopt(url_con->curl_easy, CURLOPT_PROGRESSFUNCTION, NULL);
-        
+
         if (url_con->active)
           {
              url_con->active = EINA_FALSE;
-             
+
              ret = curl_multi_remove_handle(_curlm, url_con->curl_easy);
              if (ret != CURLM_OK)
                 ERR("curl_multi_remove_handle failed: %s",
                     curl_multi_strerror(ret));
           }
-        
+
         curl_easy_cleanup(url_con->curl_easy);
      }
 
@@ -846,12 +876,12 @@ _ecore_con_url_send(Ecore_Con_Url *url_con,
                   snprintf(tmp, sizeof(tmp), "Content-Type: %s", content_type);
                   url_con->headers = curl_slist_append(url_con->headers, tmp);
                }
-             
+
              curl_easy_setopt(url_con->curl_easy, CURLOPT_POSTFIELDS, data);
              curl_easy_setopt(url_con->curl_easy, CURLOPT_POSTFIELDSIZE, length);
           }
      }
-   
+
    switch (url_con->time_condition)
      {
       case ECORE_CON_URL_TIME_NONE:
@@ -927,7 +957,7 @@ ecore_con_url_send(Ecore_Con_Url *url_con,
  * Sends a get request.
  *
  * @param url_con Connection object to perform a request on, previously created
- * 
+ *
  * @return #EINA_TRUE on success, #EINA_FALSE on error.
  *
  * @see ecore_con_url_custom_new()
@@ -1441,19 +1471,19 @@ ecore_con_url_ssl_verify_peer_set(Ecore_Con_Url *url_con,
 
 /**
  * Set a custom CA to trust for SSL/TLS connections.
- * 
+ *
  * Specify the path of a file (in PEM format) containing one or more
  * CA certificate(s) to use for the validation of the server certificate.
- * 
+ *
  * This function can also disable CA validation if @p ca_path is @c NULL.
  * However, the server certificate still needs to be valid for the connection
  * to succeed (i.e., the certificate must concern the server the
  * connection is made to).
- * 
+ *
  * @param url_con Connection object that will use the custom CA.
  * @param ca_path Path to a CA certificate(s) file or @c NULL to disable
  *                CA validation.
- * 
+ *
  * @return  @c 0 on success. When cURL is used, non-zero return values
  *          are equal to cURL error codes.
  */
@@ -1689,7 +1719,11 @@ _ecore_con_url_read_cb(void  *ptr,
         return 0;
      }
 
+#ifdef _WIN32
+   INF("*** We read %Iu bytes from file", retcode);
+#else
    INF("*** We read %zu bytes from file", retcode);
+#endif
    return retcode;
 }
 
