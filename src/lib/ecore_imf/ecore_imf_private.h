@@ -57,6 +57,7 @@ struct _Ecore_IMF_Context
    Eina_List                     *disabled_key_list;
    Eina_List                     *private_key_list;
    Eina_Bool                      allow_prediction : 1;
+   Eina_Bool                      input_panel_enabled : 1;
    Eina_Bool                      use_effect : 1;
 };
 

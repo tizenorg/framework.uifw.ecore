@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.60286slp2+build02) unstable; urgency=low
+
+  * [ecore_imf] add ecore_imf_context_input_panel_enalbed_set, get API
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.60286slp2+build02
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Sat, 25 Jun 2011 15:11:35 +0900
+
 ecore (1.0.0.001+svn.60286slp2+build01) unstable; urgency=low
 
   * [SVN EFL Migration] ecore in SLP is merged with SVN r60286
