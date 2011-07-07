@@ -106,8 +106,9 @@ struct _Ecore_Con_Client
    SSL *ssl;
    int ssl_err;
 #endif
-   Eina_Bool handshaking : 1;
    Ecore_Con_Ssl_State ssl_state;
+   Eina_Bool handshaking : 1;
+   Eina_Bool upgrade : 1;
    Eina_Bool dead : 1;
    Eina_Bool delete_me : 1;
 };
@@ -146,15 +147,20 @@ struct _Ecore_Con_Server
    int ssl_err;
 #endif
    double start_time;
+   Ecore_Timer *until_deletion;
+   double disconnect_time;
    double client_disconnect_time;
    const char *ip;
    Eina_Bool dead : 1;
    Eina_Bool created : 1; /* EINA_TRUE if server is our listening server */
    Eina_Bool connecting : 1; /* EINA_FALSE if just initialized or connected */
    Eina_Bool handshaking : 1; /* EINA_TRUE if server is ssl handshaking */
+   Eina_Bool upgrade : 1;
+   Eina_Bool ssl_prepared : 1;
    Eina_Bool use_cert : 1; /* EINA_TRUE if using certificate auth */
    Ecore_Con_Ssl_State ssl_state; /* current state of ssl handshake on the server */
    Eina_Bool verify : 1; /* EINA_TRUE if certificates will be verified */
+   Eina_Bool verify_basic : 1; /* EINA_TRUE if certificates will be verified only against the hostname */
    Eina_Bool reject_excess_clients : 1;
    Eina_Bool delete_me : 1;
 #ifdef _WIN32
@@ -223,8 +229,7 @@ void ecore_con_event_client_error(Ecore_Con_Client *cl, const char *error);
 Eina_Bool ecore_con_local_listen(Ecore_Con_Server *svr);
 Eina_Bool ecore_con_local_connect(Ecore_Con_Server *svr,
                             Eina_Bool (*cb_done)(void *data,
-                                                 Ecore_Fd_Handler *fd_handler),
-                            void (*cb_free)(void *data, void *ev));
+                                                 Ecore_Fd_Handler *fd_handler));
 Eina_Bool ecore_con_local_win32_server_flush(Ecore_Con_Server *svr);
 Eina_Bool ecore_con_local_win32_client_flush(Ecore_Con_Client *cl);
 void      ecore_con_local_win32_server_del(Ecore_Con_Server *svr);
@@ -237,9 +242,7 @@ int ecore_con_local_connect(Ecore_Con_Server *svr,
                             Eina_Bool (*cb_done)(
                                void *data,
                                Ecore_Fd_Handler *fd_handler),
-                            void *data,
-                            void (*cb_free)(
-                               void *data, void *ev));
+                            void *data);
 int ecore_con_local_listen(Ecore_Con_Server *svr,
                            Eina_Bool (*cb_listen)(
                               void *data,
@@ -266,6 +269,9 @@ int                 ecore_con_info_mcast_listen(Ecore_Con_Server *svr,
                                                 Ecore_Con_Info_Cb done_cb,
                                                 void *data);
 void                ecore_con_info_data_clear(void *info);
+
+void ecore_con_event_server_add(Ecore_Con_Server *svr);
+
 
 /* from ecore_con_ssl.c */
 Ecore_Con_Ssl_Error ecore_con_ssl_init(void);

@@ -1,0 +1,60 @@
+MAINTAINERCLEANFILES = Makefile.in
+
+pkglibdir = $(datadir)/$(PACKAGE)/examples
+
+AM_CPPFLAGS = \
+-I. \
+-I$(top_srcdir)/src/lib/ecore \
+-I$(top_srcdir)/src/lib/ecore_con \
+@GLIB_CFLAGS@ @EVIL_CFLAGS@ @EINA_CFLAGS@ @WIN32_CPPFLAGS@ @EFL_ECORE_BUILD@
+
+ECOREBASELDADD = \
+	$(top_builddir)/src/lib/ecore/libecore.la \
+	@dlopen_libs@ @EINA_LIBS@ @EVIL_LIBS@ @GLIB_LIBS@ @WIN32_LIBS@ @LTLIBINTL@ @EFL_PTHREAD_LIBS@ @rt_libs@ -lm
+
+
+LDADD = \
+	$(ECOREBASELDADD)
+
+SRCS = \
+	ecore_fd_handler_example.c \
+	ecore_poller_example.c \
+	ecore_event_example.c \
+	ecore_idler_example.c \
+	ecore_timer_example.c \
+	ecore_time_functions_example.c \
+	ecore_job_example.c \
+	ecore_con_lookup_example.c \
+	client_bench.c \
+	server_bench.c \
+	ecore_con_client_example.c \
+	ecore_con_server_example.c \
+	ecore_fd_handler_gnutls_example.c \
+	ecore_file_download_example.c \
+	ecore_pipe_simple_example.c \
+	ecore_pipe_gstreamer_example.c
+
+EXTRA_DIST = $(SRCS)
+
+pkglib_PROGRAMS =
+
+if EFL_INSTALL_EXAMPLES
+filesdir = $(datadir)/$(PACKAGE)/examples
+files_DATA = $(SRCS)
+endif
+
+if EFL_BUILD_EXAMPLES
+pkglib_PROGRAMS += \
+	ecore_fd_handler_example \
+	ecore_poller_example \
+	ecore_event_example \
+	ecore_idler_example \
+	ecore_job_example \
+	ecore_timer_example \
+	ecore_time_functions_example \
+	ecore_pipe_simple_example \
+	ecore_con_lookup_example
+
+ecore_con_lookup_example_LDADD = $(ECOREBASELDADD) $(top_builddir)/src/lib/ecore_con/libecore_con.la
+endif
+

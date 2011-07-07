@@ -41,11 +41,16 @@ static int                 idle_enterers_delete_me = 0;
  * @param   data The data to be passed to the @p func call
  * @return  A handle to the idle enterer callback if successful.  Otherwise,
  *          NULL is returned.
+ * @note The function func will be called every time the main loop is entering
+ * idle state, as long as it returns 1 (or ECORE_CALLBACK_RENEW). A return of 0
+ * (or ECORE_CALLBACK_CANCEL) deletes the idle enterer.
  */
 EAPI Ecore_Idle_Enterer *
 ecore_idle_enterer_add(Ecore_Task_Cb func, const void *data)
 {
    Ecore_Idle_Enterer *ie;
+
+   ECORE_MAIN_LOOP_ASSERT();
 
    if (!func) return NULL;
    ie = calloc(1, sizeof(Ecore_Idle_Enterer));
@@ -63,11 +68,16 @@ ecore_idle_enterer_add(Ecore_Task_Cb func, const void *data)
  * @param   data The data to be passed to the @p func call
  * @return  A handle to the idle enterer callback if successful.  Otherwise,
  *          NULL is returned.
+ * @note The function func will be called every time the main loop is entering
+ * idle state, as long as it returns 1 (or ECORE_CALLBACK_RENEW). A return of 0
+ * (or ECORE_CALLBACK_CANCEL) deletes the idle enterer.
  */
 EAPI Ecore_Idle_Enterer *
 ecore_idle_enterer_before_add(Ecore_Task_Cb func, const void *data)
 {
    Ecore_Idle_Enterer *ie;
+
+   ECORE_MAIN_LOOP_ASSERT();
 
    if (!func) return NULL;
    ie = calloc(1, sizeof(Ecore_Idle_Enterer));
@@ -88,6 +98,8 @@ ecore_idle_enterer_before_add(Ecore_Task_Cb func, const void *data)
 EAPI void *
 ecore_idle_enterer_del(Ecore_Idle_Enterer *idle_enterer)
 {
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!ECORE_MAGIC_CHECK(idle_enterer, ECORE_MAGIC_IDLE_ENTERER))
      {
         ECORE_MAGIC_FAIL(idle_enterer, ECORE_MAGIC_IDLE_ENTERER,

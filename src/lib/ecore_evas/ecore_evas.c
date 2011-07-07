@@ -10,6 +10,10 @@
 # include <unistd.h>
 #endif
 
+#ifdef HAVE_EVIL
+# include <Evil.h>
+#endif
+
 #include "Ecore.h"
 #include "ecore_private.h"
 #include "Ecore_Input.h"
@@ -82,11 +86,7 @@ ecore_evas_engine_type_supported_get(Ecore_Evas_Engine_Type engine)
         return 0;
 #endif
       case ECORE_EVAS_ENGINE_XRENDER_X11:
-#ifdef BUILD_ECORE_EVAS_XRENDER_X11
-        return 1;
-#else
         return 0;
-#endif
       case ECORE_EVAS_ENGINE_OPENGL_X11:
 #ifdef BUILD_ECORE_EVAS_OPENGL_X11
         return 1;
@@ -100,11 +100,7 @@ ecore_evas_engine_type_supported_get(Ecore_Evas_Engine_Type engine)
         return 0;
 #endif
       case ECORE_EVAS_ENGINE_XRENDER_XCB:
-#ifdef BUILD_ECORE_EVAS_XRENDER_XCB
-        return 1;
-#else
         return 0;
-#endif
       case ECORE_EVAS_ENGINE_SOFTWARE_GDI:
 #ifdef BUILD_ECORE_EVAS_SOFTWARE_GDI
         return 1;
@@ -415,22 +411,6 @@ _ecore_evas_constructor_cocoa(int x, int y, int w, int h, const char *extra_opti
 }
 #endif
 
-#ifdef BUILD_ECORE_EVAS_XRENDER_X11
-static Ecore_Evas *
-_ecore_evas_constructor_xrender_x11(int x, int y, int w, int h, const char *extra_options)
-{
-   unsigned int parent = 0;
-   char *disp_name = NULL;
-   Ecore_Evas *ee;
-
-   _ecore_evas_parse_extra_options_x(extra_options, &disp_name, &parent);
-   ee = ecore_evas_xrender_x11_new(disp_name, parent, x, y, w, h);
-   free(disp_name);
-
-   return ee;
-}
-#endif
-
 #ifdef BUILD_ECORE_EVAS_OPENGL_X11
 static Ecore_Evas *
 _ecore_evas_constructor_opengl_x11(int x, int y, int w, int h, const char *extra_options)
@@ -657,12 +637,6 @@ static const struct ecore_evas_engine _engines[] = {
 #endif
 #ifdef BUILD_ECORE_EVAS_SOFTWARE_8_X11
   {"software_8_x11", _ecore_evas_constructor_software_8_x11},
-#endif
-#ifdef BUILD_ECORE_EVAS_XRENDER_X11
-  {"xrender_x11", _ecore_evas_constructor_xrender_x11},
-#endif
-#ifdef BUILD_ECORE_EVAS_XRENDER_XCB
-  {"xrender_xcb", _ecore_evas_constructor_xrender_x11},
 #endif
 #ifdef BUILD_ECORE_EVAS_SOFTWARE_16_X11
   {"software_16_x11", _ecore_evas_constructor_software_16_x11},
@@ -2715,10 +2689,17 @@ void
 _ecore_evas_fps_debug_init(void)
 {
    char buf[4096];
+   const char *tmp;
 
    _ecore_evas_fps_debug_init_count++;
    if (_ecore_evas_fps_debug_init_count > 1) return;
-   snprintf(buf, sizeof(buf), "/tmp/.ecore_evas_fps_debug-%i", (int)getpid());
+
+#ifndef HAVE_EVIL
+   tmp = "/tmp";
+#else
+   tmp = evil_tmpdir_get ();
+#endif /* HAVE_EVIL */
+   snprintf(buf, sizeof(buf), "%s/.ecore_evas_fps_debug-%i", tmp, (int)getpid());
    _ecore_evas_fps_debug_fd = open(buf, O_CREAT | O_TRUNC | O_RDWR, 0644);
    if (_ecore_evas_fps_debug_fd < 0)
      {
@@ -2797,15 +2778,13 @@ _ecore_evas_fps_debug_rendertime_add(double t)
         rlapse = tim;
         flapse = frames;
      }
-   else if ((tim - rlapse) >= 0.1)
+   else if ((tim - rlapse) >= 0.5)
      {
-        printf("%.6f \t", tim);
         printf("FRAME: %i, FPS: %3.1f, RTIME %3.0f%%\n",
                frames,
                (frames - flapse) / (tim - rlapse),
                (100.0 * rtime) / (tim - rlapse)
                );
-        fflush(stdout);
         rlapse = tim;
         flapse = frames;
         rtime = 0.0;

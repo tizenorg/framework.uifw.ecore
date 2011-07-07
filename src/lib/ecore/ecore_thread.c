@@ -345,6 +345,7 @@ struct _Ecore_Pthread_Worker
    Eina_Bool feedback_run : 1;
    Eina_Bool kill : 1;
    Eina_Bool reschedule : 1;
+   Eina_Bool no_queue : 1;
 };
 
 #ifdef EFL_HAVE_THREADS
@@ -394,6 +395,9 @@ static Eina_Bool have_main_loop_thread = 0;
 static Eina_Trash *_ecore_thread_worker_trash = NULL;
 static int _ecore_thread_worker_count = 0;
 
+static void *_ecore_thread_worker(Ecore_Pthread_Data *pth);
+static Ecore_Pthread_Worker *_ecore_thread_worker_new(void);
+
 static void
 _ecore_thread_worker_free(Ecore_Pthread_Worker *worker)
 {
@@ -420,7 +424,10 @@ _ecore_thread_pipe_free(void *data __UNUSED__, void *event)
 {
    Ecore_Pipe *p = event;
 
-   eina_array_push(_ecore_thread_pipe, p);
+   if (eina_array_count_get(_ecore_thread_pipe) < 50)
+     eina_array_push(_ecore_thread_pipe, p);
+   else
+     ecore_pipe_del(p);
    eina_threads_shutdown();
 }
 
@@ -432,12 +439,40 @@ _ecore_thread_pipe_del(void *data __UNUSED__, int type __UNUSED__, void *event _
 }
 
 static void
-_ecore_thread_end(Ecore_Pthread_Data *pth, __UNUSED__ Ecore_Thread *work)
+_ecore_thread_end(Ecore_Pthread_Data *pth, Ecore_Thread *work)
 {
+   Ecore_Pthread_Worker *worker = (Ecore_Pthread_Worker *) work;
    Ecore_Pipe *p;
+
+   if (!worker->feedback_run || (worker->feedback_run && !worker->no_queue))
+     _ecore_thread_count--;
 
    if (PHJ(pth->thread, p) != 0)
      return ;
+
+   if (eina_list_count(_ecore_pending_job_threads) > 0
+       && (unsigned int) _ecore_thread_count < eina_list_count(_ecore_pending_job_threads)
+       && _ecore_thread_count < _ecore_thread_count_max)
+     {
+        /* One more thread should be created. */
+        INF("spawning threads because of still pending jobs.");
+
+        pth->death_job = _ecore_thread_worker_new();
+        if (!pth->p || !pth->death_job) goto end;
+
+        eina_threads_init();
+
+        if (PHC(pth->thread, _ecore_thread_worker, pth) == 0)
+          {
+             _ecore_thread_count++;
+             return ;
+          }
+
+        eina_threads_shutdown();
+
+     end:
+        if (pth->death_job) _ecore_thread_worker_free(pth->death_job);
+     }
 
    _ecore_active_job_threads = eina_list_remove(_ecore_active_job_threads, pth);
 
@@ -659,10 +694,6 @@ _ecore_thread_worker(Ecore_Pthread_Data *pth)
 
    eina_sched_prio_drop();
 
-   LKL(_ecore_pending_job_threads_mutex);
-   _ecore_thread_count++;
-   LKU(_ecore_pending_job_threads_mutex);
-
  restart:
    if (_ecore_pending_job_threads) _ecore_short_job(pth->p);
    if (_ecore_pending_job_threads_feedback) _ecore_feedback_job(pth->p, pth->thread);
@@ -690,7 +721,6 @@ _ecore_thread_worker(Ecore_Pthread_Data *pth)
         LKU(_ecore_pending_job_threads_mutex);
         goto restart;
      }
-   _ecore_thread_count--;
    LKU(_ecore_pending_job_threads_mutex);
 
    work = pth->death_job;
@@ -734,6 +764,11 @@ _ecore_thread_worker_new(void)
 void
 _ecore_thread_init(void)
 {
+#ifdef EFL_HAVE_THREADS
+   main_loop_thread = PHS();
+   have_main_loop_thread = 1;
+#endif
+
    _ecore_thread_count_max = eina_cpu_count();
    if (_ecore_thread_count_max <= 0)
      _ecore_thread_count_max = 1;
@@ -743,8 +778,6 @@ _ecore_thread_init(void)
 
 #ifdef EFL_HAVE_THREADS
    del_handler = ecore_event_handler_add(ECORE_THREAD_PIPE_DEL, _ecore_thread_pipe_del, NULL);
-   main_loop_thread = PHS();
-   have_main_loop_thread = 1;
 
    LKI(_ecore_pending_job_threads_mutex);
    LRWKI(_ecore_thread_global_hash_lock);
@@ -812,40 +845,22 @@ _ecore_thread_shutdown(void)
    _ecore_thread_pipe = NULL;
 }
 
-/**
- * @addtogroup Ecore_Group Ecore - Main Loop and Job Functions.
- *
- * @{
- */
+void
+_ecore_thread_assert_main_loop_thread(const char *function)
+{
+   Eina_Bool good;
+#ifdef EFL_HAVE_THREADS
+   good = (main_loop_thread == PHS());
+#else
+   good = Eina_True;
+#endif
+   if (!good)
+     {
+        EINA_LOG_CRIT("Call to %s from wrong thread!", function);
+        abort();
+     }
+}
 
-/**
- * @addtogroup Ecore_Thread_Group Ecore Thread functions
- *
- * These functions allow for ecore-managed threads which integrate with ecore's main loop.
- *
- * @{
- */
-
-/**
- * @brief Run some blocking code in a parallel thread to avoid locking the main loop.
- * @param func_blocking The function that should run in another thread.
- * @param func_end The function that will be called in the main loop if the thread terminate correctly.
- * @param func_cancel The function that will be called in the main loop if the thread is cancelled.
- * @param data User context data to pass to all callback.
- * @return A reference to the newly created thread instance, or NULL if it failed.
- *
- * ecore_thread_run provide a facility for easily managing blocking task in a
- * parallel thread. You should provide three function. The first one, func_blocking,
- * that will do the blocking work in another thread (so you should not use the
- * EFL in it except Eina if you are careful). The second one, func_end,
- * that will be called in Ecore main loop when func_blocking is done. So you
- * can use all the EFL inside this function. The last one, func_cancel, will
- * be called in the main loop if the thread is cancelled or could not run at all.
- *
- * Be aware, that you can't make assumption on the result order of func_end
- * after many call to ecore_thread_run, as we start as much thread as the
- * host CPU can handle.
- */
 EAPI Ecore_Thread *
 ecore_thread_run(Ecore_Thread_Cb func_blocking,
                  Ecore_Thread_Cb func_end,
@@ -903,7 +918,10 @@ ecore_thread_run(Ecore_Thread_Cb func_blocking,
    eina_threads_init();
 
    if (PHC(pth->thread, _ecore_thread_worker, pth) == 0)
-      return (Ecore_Thread *) work;
+     {
+        _ecore_thread_count++;
+        return (Ecore_Thread *) work;
+     }
 
    eina_threads_shutdown();
 
@@ -951,23 +969,6 @@ ecore_thread_run(Ecore_Thread_Cb func_blocking,
 #endif
 }
 
-/**
- * @brief Cancel a running thread.
- * @param thread The thread to cancel.
- * @return Will return EINA_TRUE if the thread has been cancelled,
- *         EINA_FALSE if it is pending.
- *
- * ecore_thread_cancel give the possibility to cancel a task still running. It
- * will return EINA_FALSE, if the destruction is delayed or EINA_TRUE if it is
- * cancelled after this call.
- *
- * This function work in the main loop and in the thread, but you should not pass
- * the Ecore_Thread variable from main loop to the worker thread in any structure.
- * You should always use the one passed to the Ecore_Thread_Heavy_Cb.
- *
- * func_end, func_cancel will destroy the handler, so don't use it after.
- * And if ecore_thread_cancel return EINA_TRUE, you should not use Ecore_Thread also.
- */
 EAPI Eina_Bool
 ecore_thread_cancel(Ecore_Thread *thread)
 {
@@ -1038,14 +1039,6 @@ ecore_thread_cancel(Ecore_Thread *thread)
 #endif
 }
 
-/**
- * @brief Tell if a thread was canceled or not.
- * @param thread The thread to test.
- * @return EINA_TRUE if the thread is cancelled,
- *         EINA_FALSE if it is not.
- *
- * You can use this function in main loop and in the thread.
- */
 EAPI Eina_Bool
 ecore_thread_check(Ecore_Thread *thread)
 {
@@ -1055,34 +1048,6 @@ ecore_thread_check(Ecore_Thread *thread)
    return worker->cancel;
 }
 
-/**
- * @brief Run some heavy code in a parallel thread to avoid locking the main loop.
- * @param func_heavy The function that should run in another thread.
- * @param func_notify The function that will receive the data send by func_heavy in the main loop.
- * @param func_end The function that will be called in the main loop if the thread terminate correctly.
- * @param func_cancel The function that will be called in the main loop if the thread is cancelled.
- * @param data User context data to pass to all callback.
- * @param try_no_queue If you want to run outside of the thread pool.
- * @return A reference to the newly created thread instance, or NULL if it failed.
- *
- * ecore_thread_feedback_run provide a facility for easily managing heavy task in a
- * parallel thread. You should provide four functions. The first one, func_heavy,
- * that will do the heavy work in another thread (so you should not use the
- * EFL in it except Eina and Eet if you are careful). The second one, func_notify,
- * will receive the data send from the thread function (func_heavy) by ecore_thread_feedback
- * in the main loop (and so, can use all the EFL). The third, func_end,
- * that will be called in Ecore main loop when func_heavy is done. So you
- * can use all the EFL inside this function. The last one, func_cancel, will
- * be called in the main loop also, if the thread is cancelled or could not run at all.
- *
- * Be aware, that you can't make assumption on the result order of func_end
- * after many call to ecore_feedback_run, as we start as much thread as the
- * host CPU can handle.
- *
- * If you set try_no_queue, it will try to run outside of the thread pool, this can bring
- * the CPU down, so be careful with that. Of course if it can't start a new thread, it will
- * try to use one from the pool.
- */
 EAPI Ecore_Thread *ecore_thread_feedback_run(Ecore_Thread_Cb func_heavy,
                                              Ecore_Thread_Notify_Cb func_notify,
                                              Ecore_Thread_Cb func_end,
@@ -1126,10 +1091,17 @@ EAPI Ecore_Thread *ecore_thread_feedback_run(Ecore_Thread_Cb func_heavy,
 
         worker->u.feedback_run.direct_pipe = _ecore_thread_pipe_get();
         worker->u.feedback_run.direct_worker = _ecore_thread_worker_new();
+        worker->no_queue = EINA_TRUE;
+
+	eina_threads_init();
 
         if (PHC(t, _ecore_direct_worker, worker) == 0)
            return (Ecore_Thread *) worker;
+
+	eina_threads_shutdown();
      }
+
+   worker->no_queue = EINA_FALSE;
 
    LKL(_ecore_pending_job_threads_mutex);
    _ecore_pending_job_threads_feedback = eina_list_append(_ecore_pending_job_threads_feedback, worker);
@@ -1153,7 +1125,10 @@ EAPI Ecore_Thread *ecore_thread_feedback_run(Ecore_Thread_Cb func_heavy,
    eina_threads_init();
 
    if (PHC(pth->thread, _ecore_thread_worker, pth) == 0)
-      return (Ecore_Thread *) worker;
+     {
+        _ecore_thread_count++;
+        return (Ecore_Thread *) worker;
+     }
 
    eina_threads_shutdown();
 
@@ -1217,18 +1192,6 @@ EAPI Ecore_Thread *ecore_thread_feedback_run(Ecore_Thread_Cb func_heavy,
 #endif
 }
 
-/**
- * @brief Send data to main loop from worker thread.
- * @param thread The current Ecore_Thread context to send data from
- * @param data Data to be transmitted to the main loop
- * @return EINA_TRUE if data was successfully send to main loop,
- *         EINA_FALSE if anything goes wrong.
- *
- * After a succesfull call, the data should be considered owned
- * by the main loop.
- *
- * You should use this function only in the func_heavy call.
- */
 EAPI Eina_Bool
 ecore_thread_feedback(Ecore_Thread *thread, const void *data)
 {
@@ -1251,17 +1214,6 @@ ecore_thread_feedback(Ecore_Thread *thread, const void *data)
 #endif
 }
 
-/**
- * @brief Plan to recall the heavy function once it exist it.
- * @param thread The current Ecore_Thread context to reschedule
- * @return EINA_TRUE if data was successfully send to main loop,
- *         EINA_FALSE if anything goes wrong.
- *
- * After a succesfull call, you can still do what you want in your thread, it
- * will only reschedule it once you exit the heavy loop.
- *
- * You should use this function only in the func_heavy call.
- */
 EAPI Eina_Bool
 ecore_thread_reschedule(Ecore_Thread *thread)
 {
@@ -1277,12 +1229,6 @@ ecore_thread_reschedule(Ecore_Thread *thread)
    return EINA_TRUE;
 }
 
-/**
- * @brief Get number of active thread jobs
- * @return Number of active threads running jobs
- * This returns the number of threads currently running jobs through the
- * ecore_thread api.
- */
 EAPI int
 ecore_thread_active_get(void)
 {
@@ -1293,12 +1239,6 @@ ecore_thread_active_get(void)
 #endif
 }
 
-/**
- * @brief Get number of pending (short) thread jobs
- * @return Number of pending threads running "short" jobs
- * This returns the number of threads currently running jobs through the
- * ecore_thread_run api call.
- */
 EAPI int
 ecore_thread_pending_get(void)
 {
@@ -1313,12 +1253,6 @@ ecore_thread_pending_get(void)
 #endif
 }
 
-/**
- * @brief Get number of pending feedback thread jobs
- * @return Number of pending threads running "feedback" jobs
- * This returns the number of threads currently running jobs through the
- * ecore_thread_feedback_run api call.
- */
 EAPI int
 ecore_thread_pending_feedback_get(void)
 {
@@ -1333,12 +1267,6 @@ ecore_thread_pending_feedback_get(void)
 #endif
 }
 
-/**
- * @brief Get number of pending thread jobs
- * @return Number of pending threads running jobs
- * This returns the number of threads currently running jobs through the
- * ecore_thread_run and ecore_thread_feedback_run api calls combined.
- */
 EAPI int
 ecore_thread_pending_total_get(void)
 {
@@ -1353,24 +1281,12 @@ ecore_thread_pending_total_get(void)
 #endif
 }
 
-/**
- * @brief Get the max number of threads that can run simultaneously
- * @return Max number of threads ecore will run
- * This returns the total number of threads that ecore will attempt to run
- * simultaneously.
- */
 EAPI int
 ecore_thread_max_get(void)
 {
    return _ecore_thread_count_max;
 }
 
-/**
- * @brief Set the max number of threads that can run simultaneously
- * @param num The new maximum
- * This sets the maximum number of threads that ecore will try to run
- * simultaneously.  This number cannot be < 1 or >= 2x the number of active cpus.
- */
 EAPI void
 ecore_thread_max_set(int num)
 {
@@ -1381,24 +1297,12 @@ ecore_thread_max_set(int num)
    _ecore_thread_count_max = num;
 }
 
-/**
- * @brief Reset the max number of threads that can run simultaneously
- * This resets the maximum number of threads that ecore will try to run
- * simultaneously to the number of active cpus.
- */
 EAPI void
 ecore_thread_max_reset(void)
 {
    _ecore_thread_count_max = eina_cpu_count();
 }
 
-/**
- * @brief Get the number of threads which are available to be used
- * @return The number of available threads
- * This returns the number of threads slots that ecore has currently available.
- * Assuming that you haven't changed the max number of threads with @ref ecore_thread_max_set
- * this should be equal to (num_cpus - (active_running + active_feedback_running))
- */
 EAPI int
 ecore_thread_available_get(void)
 {
@@ -1413,21 +1317,6 @@ ecore_thread_available_get(void)
 #endif
 }
 
-/**
- * @brief Add data to the thread for subsequent use
- * @param thread The thread context to add to
- * @param key The name string to add the data with
- * @param value The data to add
- * @param cb The callback to free the data with
- * @param direct If true, this will not copy the key string (like eina_hash_direct_add)
- * @return EINA_TRUE on success, EINA_FALSE on failure
- * This adds data to the thread context, allowing the thread
- * to retrieve and use it without complicated mutexing.  This function can only be called by a
- * *_run thread INSIDE the thread and will return EINA_FALSE in any case but success.
- * All data added to the thread will be freed with its associated callback (if present)
- * upon thread termination.  If no callback is specified, it is expected that the user will free the
- * data, but this is most likely not what you want.
- */
 EAPI Eina_Bool
 ecore_thread_local_data_add(Ecore_Thread *thread, const char *key, void *value, Eina_Free_Cb cb, Eina_Bool direct)
 {
@@ -1463,19 +1352,6 @@ ecore_thread_local_data_add(Ecore_Thread *thread, const char *key, void *value, 
 #endif
 }
 
-/**
- * @brief Modify data in the thread, or add if not found
- * @param thread The thread context
- * @param key The name string to add the data with
- * @param value The data to add
- * @param cb The callback to free the data with
- * @return The old data associated with @p key on success if modified, NULL if added
- * This adds/modifies data in the thread context, adding only if modify fails.
- * This function can only be called by a *_run thread INSIDE the thread.
- * All data added to the thread pool will be freed with its associated callback (if present)
- * upon thread termination.  If no callback is specified, it is expected that the user will free the
- * data, but this is most likely not what you want.
- */
 EAPI void *
 ecore_thread_local_data_set(Ecore_Thread *thread, const char *key, void *value, Eina_Free_Cb cb)
 {
@@ -1509,15 +1385,6 @@ ecore_thread_local_data_set(Ecore_Thread *thread, const char *key, void *value, 
 #endif
 }
 
-/**
- * @brief Find data in the thread's data
- * @param thread The thread context
- * @param key The name string the data is associated with
- * @return The value, or NULL on error
- * This finds data in the thread context that has been previously added with @ref ecore_thread_local_data_add
- * This function can only be called by a *_run thread INSIDE the thread, and will return NULL
- * in any case but success.
- */
 
 EAPI void *
 ecore_thread_local_data_find(Ecore_Thread *thread, const char *key)
@@ -1540,15 +1407,6 @@ ecore_thread_local_data_find(Ecore_Thread *thread, const char *key)
 #endif
 }
 
-/**
- * @brief Delete data from the thread's data
- * @param thread The thread context
- * @param key The name string the data is associated with
- * @return EINA_TRUE on success, EINA_FALSE on failure
- * This deletes the data pointer from the thread context which was previously added with @ref ecore_thread_local_data_add
- * This function can only be called by a *_run thread INSIDE the thread, and will return EINA_FALSE
- * in any case but success.  Note that this WILL free the data if a callback was specified.
- */
 EAPI Eina_Bool
 ecore_thread_local_data_del(Ecore_Thread *thread, const char *key)
 {
@@ -1569,18 +1427,6 @@ ecore_thread_local_data_del(Ecore_Thread *thread, const char *key)
 #endif
 }
 
-/**
- * @brief Add data to the global data
- * @param key The name string to add the data with
- * @param value The data to add
- * @param cb The optional callback to free the data with once ecore is shut down
- * @param direct If true, this will not copy the key string (like eina_hash_direct_add)
- * @return EINA_TRUE on success, EINA_FALSE on failure
- * This adds data to the global thread data, and will return EINA_FALSE in any case but success.
- * All data added to global can be manually freed, or a callback can be provided with @p cb which will
- * be called upon ecore_thread shutting down.  Note that if you have manually freed data that a callback
- * was specified for, you will most likely encounter a segv later on.
- */
 EAPI Eina_Bool
 ecore_thread_global_data_add(const char *key, void *value, Eina_Free_Cb cb, Eina_Bool direct)
 {
@@ -1616,19 +1462,6 @@ ecore_thread_global_data_add(const char *key, void *value, Eina_Free_Cb cb, Eina
 #endif
 }
 
-/**
- * @brief Add data to the global data
- * @param key The name string to add the data with
- * @param value The data to add
- * @param cb The optional callback to free the data with once ecore is shut down
- * @return An Ecore_Thread_Data on success, NULL on failure
- * This adds data to the global thread data and returns NULL, or replaces the previous data
- * associated with @p key and returning the previous data if it existed.  To see if an error occurred,
- * one must use eina_error_get.
- * All data added to global can be manually freed, or a callback can be provided with @p cb which will
- * be called upon ecore_thread shutting down.  Note that if you have manually freed data that a callback
- * was specified for, you will most likely encounter a segv later on.
- */
 EAPI void *
 ecore_thread_global_data_set(const char *key, void *value, Eina_Free_Cb cb)
 {
@@ -1665,18 +1498,6 @@ ecore_thread_global_data_set(const char *key, void *value, Eina_Free_Cb cb)
 #endif
 }
 
-/**
- * @brief Find data in the global data
- * @param key The name string the data is associated with
- * @return The value, or NULL on error
- * This finds data in the global data that has been previously added with @ref ecore_thread_global_data_add
- * This function will return NULL in any case but success.
- * All data added to global can be manually freed, or a callback can be provided with @p cb which will
- * be called upon ecore_thread shutting down.  Note that if you have manually freed data that a callback
- * was specified for, you will most likely encounter a segv later on.
- * @note Keep in mind that the data returned can be used by multiple threads at a time, so you will most likely want to mutex
- * if you will be doing anything with it.
- */
 
 EAPI void *
 ecore_thread_global_data_find(const char *key)
@@ -1696,14 +1517,6 @@ ecore_thread_global_data_find(const char *key)
 #endif
 }
 
-/**
- * @brief Delete data from the global data
- * @param key The name string the data is associated with
- * @return EINA_TRUE on success, EINA_FALSE on failure
- * This deletes the data pointer from the global data which was previously added with @ref ecore_thread_global_data_add
- * This function will return EINA_FALSE in any case but success.
- * Note that this WILL free the data if an @c Eina_Free_Cb was specified when the data was added.
- */
 EAPI Eina_Bool
 ecore_thread_global_data_del(const char *key)
 {
@@ -1727,18 +1540,6 @@ ecore_thread_global_data_del(const char *key)
 #endif
 }
 
-/**
- * @brief Find data in the global data and optionally wait for the data if not found
- * @param key The name string the data is associated with
- * @param seconds The amount of time in seconds to wait for the data.  If 0, the call will be async and not wait for data.
- * If < 0 the call will wait indefinitely for the data.
- * @return The value, or NULL on failure
- * This finds data in the global data that has been previously added with @ref ecore_thread_global_data_add
- * This function will return NULL in any case but success.
- * Use @p seconds to specify the amount of time to wait.  Use > 0 for an actual wait time, 0 to not wait, and < 0 to wait indefinitely.
- * @note Keep in mind that the data returned can be used by multiple threads at a time, so you will most likely want to mutex
- * if you will be doing anything with it.
- */
 EAPI void *
 ecore_thread_global_data_wait(const char *key, double seconds)
 {
@@ -1781,11 +1582,3 @@ ecore_thread_global_data_wait(const char *key, double seconds)
    return NULL;
 #endif
 }
-
-/**
- * @}
- */
-
-/**
- * @}
- */

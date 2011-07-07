@@ -81,6 +81,36 @@ static void *_ecore_event_del(Ecore_Event *event);
 /**
  * @addtogroup Ecore_Event_Group Ecore Event functions
  *
+ * Ecore events are used to wake up the Ecore main loop to warn about state
+ * changes, tasks completed, data available for reading or writing, etc. They
+ * are the base of the event oriented programming.
+ *
+ * The idea is to write many functions (callbacks) that will be registered to
+ * specific events, and called when these events happen. This way, when the
+ * system state changes (a mouse click is detected, a key is pressed, or the
+ * content of a file changes, for example), the respective callbacks will be
+ * called with some information about that event. Usually the function/callback
+ * will have a data pointer to the event info (the position in the screen where
+ * the mouse was clicked, the name of the key that was pressed, or the name of
+ * the file that has changed).
+ *
+ * The basic usage, when one needs to watch for an existing event, is to
+ * register a callback to it using ecore_event_add(). Of course it's necessary
+ * to know beforehand what are the types of events that the system/library will
+ * emmit.  This should be available with the documentation from that
+ * system/library.
+ *
+ * When writing a library or group of functions that need to inform about
+ * something, and you already are running on top of a main loop, it is usually a
+ * good approach to use events. This way you allow others to register as many
+ * callbacks as necessary to this event, and don't have to care about who is
+ * registering to it. The functions ecore_event_type_new() and ecore_event_add()
+ * are available for this purpose.
+ *
+ * Example that deals with events:
+ *
+ * @li @ref ecore_event_example_c
+ *
  * @{
  */
 
@@ -101,9 +131,9 @@ static void *_ecore_event_del(Ecore_Event *event);
  * provided in this call as the @p data parameter.
  *
  * When the callback @p func is called, it must return 1 or 0. If it returns
- * 1 (or ECORE_CALLBACK_RENEW), It will keep being called as per normal, for
+ * 1 (or ECORE_CALLBACK_PASS_ON), It will keep being called as per normal, for
  * each handler set up for that event type. If it returns 0 (or
- * ECORE_CALLBACK_CANCEL), it will cease processing handlers for that particular
+ * ECORE_CALLBACK_DONE), it will cease processing handlers for that particular
  * event, so all handler set to handle that event type that have not already
  * been called, will not be.
  */
@@ -111,6 +141,8 @@ EAPI Ecore_Event_Handler *
 ecore_event_handler_add(int type, Ecore_Event_Handler_Cb func, const void *data)
 {
    Ecore_Event_Handler *eh;
+
+   ECORE_MAIN_LOOP_ASSERT();
 
    if (!func) return NULL;
    if ((type <= ECORE_EVENT_NONE) || (type >= event_id_max)) return NULL;
@@ -163,6 +195,8 @@ ecore_event_handler_add(int type, Ecore_Event_Handler_Cb func, const void *data)
 EAPI void *
 ecore_event_handler_del(Ecore_Event_Handler *event_handler)
 {
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!ECORE_MAGIC_CHECK(event_handler, ECORE_MAGIC_EVENT_HANDLER))
      {
         ECORE_MAGIC_FAIL(event_handler, ECORE_MAGIC_EVENT_HANDLER,
@@ -179,11 +213,15 @@ ecore_event_handler_del(Ecore_Event_Handler *event_handler)
  * @brief Get the data associated with an #Ecore_Event_Handler
  * @param eh The event handler
  * @return The data
- * This function returns the data previously associated with @p eh.
+ *
+ * This function returns the data previously associated with @p eh by
+ * ecore_event_handler_add().
  */
 EAPI void *
 ecore_event_handler_data_get(Ecore_Event_Handler *eh)
 {
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!ECORE_MAGIC_CHECK(eh, ECORE_MAGIC_EVENT_HANDLER))
      {
         ECORE_MAGIC_FAIL(eh, ECORE_MAGIC_EVENT_HANDLER, "ecore_event_handler_data_get");
@@ -197,20 +235,24 @@ ecore_event_handler_data_get(Ecore_Event_Handler *eh)
  * @param eh The event handler
  * @param data The data to associate
  * @return The previous data
+ *
  * This function sets @p data to @p eh and returns the old data pointer
- * which was previously associated with @p eh.
+ * which was previously associated with @p eh by ecore_event_handler_add().
  */
 EAPI void *
-ecore_event_handler_data_set(Ecore_Event_Handler *eh, void *data)
+ecore_event_handler_data_set(Ecore_Event_Handler *eh, const void *data)
 {
    void *old;
+
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!ECORE_MAGIC_CHECK(eh, ECORE_MAGIC_EVENT_HANDLER))
      {
         ECORE_MAGIC_FAIL(eh, ECORE_MAGIC_EVENT_HANDLER, "ecore_event_handler_data_set");
         return NULL;
      }
    old = eh->data;
-   eh->data = data;
+   eh->data = (void *)data;
    return old;
 }
 
@@ -241,6 +283,8 @@ _ecore_event_generic_free (void *data __UNUSED__, void *event)
 EAPI Ecore_Event *
 ecore_event_add(int type, void *ev, Ecore_End_Cb func_free, void *data)
 {
+   ECORE_MAIN_LOOP_ASSERT();
+
 /*   if (!ev) return NULL;*/
    if (type <= ECORE_EVENT_NONE) return NULL;
    if (type >= event_id_max) return NULL;
@@ -262,6 +306,8 @@ ecore_event_add(int type, void *ev, Ecore_End_Cb func_free, void *data)
 EAPI void *
 ecore_event_del(Ecore_Event *event)
 {
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!ECORE_MAGIC_CHECK(event, ECORE_MAGIC_EVENT))
      {
         ECORE_MAGIC_FAIL(event, ECORE_MAGIC_EVENT, "ecore_event_del");
@@ -285,6 +331,8 @@ ecore_event_del(Ecore_Event *event)
 EAPI int
 ecore_event_type_new(void)
 {
+   ECORE_MAIN_LOOP_ASSERT();
+
    event_id_max++;
    return event_id_max - 1;
 }
@@ -314,6 +362,8 @@ ecore_event_filter_add(Ecore_Data_Cb func_start, Ecore_Filter_Cb func_filter, Ec
 {
    Ecore_Event_Filter *ef;
 
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!func_filter) return NULL;
    ef = calloc(1, sizeof(Ecore_Event_Filter));
    if (!ef) return NULL;
@@ -338,6 +388,8 @@ ecore_event_filter_add(Ecore_Data_Cb func_start, Ecore_Filter_Cb func_filter, Ec
 EAPI void *
 ecore_event_filter_del(Ecore_Event_Filter *ef)
 {
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!ECORE_MAGIC_CHECK(ef, ECORE_MAGIC_EVENT_FILTER))
      {
         ECORE_MAGIC_FAIL(ef, ECORE_MAGIC_EVENT_FILTER, "ecore_event_filter_del");

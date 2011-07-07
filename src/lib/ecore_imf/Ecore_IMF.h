@@ -80,12 +80,6 @@ typedef enum
 
 typedef enum
 {
-   ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC,    /**< Automatic */
-   ECORE_IMF_INPUT_PANEL_LANG_ALPHABET      /**< Alphabet */
-} Ecore_IMF_Input_Panel_Lang;
-
-typedef enum
-{
    ECORE_IMF_KEYBOARD_LANG_NATIVE,  /**< Native */
    ECORE_IMF_KEYBOARD_LANG_ALPHABET /**< Alphabet */
 } Ecore_IMF_Keyboard_Lang;
@@ -237,6 +231,12 @@ typedef enum
    ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY,      /**< Number Only layout */
    ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID
 } Ecore_IMF_Input_Panel_Layout;
+
+typedef enum
+{
+   ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC,    /**< Automatic */
+   ECORE_IMF_INPUT_PANEL_LANG_ALPHABET      /**< Alphabet */
+} Ecore_IMF_Input_Panel_Lang;
 
 struct _Ecore_IMF_Event_Preedit_Start
 {
@@ -412,15 +412,14 @@ struct _Ecore_IMF_Context_Class
    void (*use_preedit_set)     (Ecore_IMF_Context *ctx, Eina_Bool use_preedit);
    void (*input_mode_set)      (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Mode input_mode);
    Eina_Bool (*filter_event)   (Ecore_IMF_Context *ctx, Ecore_IMF_Event_Type type, Ecore_IMF_Event *event);
-
-   /* Input Panel Control APIs */
+   void (*preedit_string_with_attributes_get) (Ecore_IMF_Context *ctx, char **str, Eina_List **attrs, int *cursor_pos);
+   void (*prediction_allow_set)(Ecore_IMF_Context *ctx, Eina_Bool prediction);
+   void (*autocapital_type_set)(Ecore_IMF_Context *ctx, Ecore_IMF_Autocapital_Type autocapital_type);
    void (*control_panel_show)   (Ecore_IMF_Context *ctx);
    void (*control_panel_hide)   (Ecore_IMF_Context *ctx);
-
-   void (*input_panel_layout_set)         (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout);
+   void (*input_panel_layout_set) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout);
    Ecore_IMF_Input_Panel_Layout (*input_panel_layout_get) (Ecore_IMF_Context *ctx);
-
-   void (*input_panel_language_set)       (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang);
+   void (*input_panel_language_set) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang);
    Ecore_IMF_Input_Panel_Lang (*input_panel_language_get) (Ecore_IMF_Context *ctx);
 
    void (*input_panel_imdata_set)         (Ecore_IMF_Context *ctx, const char* data, int len);
@@ -449,10 +448,6 @@ struct _Ecore_IMF_Context_Class
    int (*ise_set_active_ise_by_uuid) (Ecore_IMF_Context *ctx, const char* uuid); /**< will be deprecated */
    int (*ise_get_iselist)            (Ecore_IMF_Context *ctx, char*** iselist);  /**< will be deprecated */
    void (*input_panel_caps_mode_set) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Caps_Mode mode);
-
-   void (*preedit_string_with_attributes_get) (Ecore_IMF_Context *ctx, char **str, Eina_List **attrs, int *cursor_pos);
-   void (*prediction_allow_set)(Ecore_IMF_Context *ctx, Eina_Bool prediction);
-   void (*autocapital_type_set)(Ecore_IMF_Context *ctx, Ecore_IMF_Autocapital_Type autocapital_type);
 };
 
 struct _Ecore_IMF_Context_Info

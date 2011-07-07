@@ -1,0 +1,615 @@
+/**
+ * @page Examples Examples
+ *
+ * Here is a page with some Ecore examples explained:
+ *
+ * @li @ref ecore_time_functions_example_c
+ * @li @ref ecore_timer_example_c
+ * @li @ref ecore_idler_example_c
+ * @li @ref ecore_job_example_c
+ * @li @ref ecore_event_example_c
+ * @li @ref ecore_fd_handler_example_c
+ * @li @ref ecore_poller_example_c
+ * @li @ref ecore_con_lookup_example_c
+ *
+ */
+
+/**
+ * @page ecore_time_functions_example_c ecore_time - Differences between time functions
+ *
+ * This example shows the difference between calling ecore_time_get(),
+ * ecore_loop_time_get() and ecore_time_unix_get().
+ *
+ * It initializes ecore, then sets a timer with a callback that, when called,
+ * will retrieve the system time using these 3 different functions. After
+ * displaying the time, it sleeps for 1 second, then call display the time
+ * again using the 3 functions.
+ *
+ * Since everything occurs inside the same mainloop iteration, the internal
+ * ecore time variable will not be updated, and calling ecore_loop_time_get()
+ * before and after the sleep() call will return the same result.
+ *
+ * The two other functions will return a difference of 1 second, as expected.
+ * But ecore_time_unix_get() returns the number of seconds since 00:00:00 1st
+ * January 1970, while ecore_time_get() will return the time since a
+ * unspecified point, but that never goes back in time, even when the timezone
+ * of the machine changes.
+ *
+ * @note The usage of ecore_loop_time_get() should be preferred against the
+ * two other functions, for most time calculations, since it won't produce a
+ * system call to get the current time. Use ecore_time_unix_get() when you need
+ * to know the current time and date, and ecore_time_get() when you need a
+ * monotonic and more precise time than ecore_loop_time_get().
+ *
+ * @include ecore_time_functions_example.c
+ */
+
+/**
+ * @page ecore_timer_example_c ecore timers - Scheduled events
+ * @dontinclude ecore_timer_example.c
+ *
+ * This example shows how to setup timer callbacks. It starts a timer that will
+ * tick (expire) every 1 second, and then setup other timers that will expire
+ * only once, but each of them will affect the firts timer still executing with
+ * a different API, to demonstrate its usage. To see the full code for this
+ * example, click @ref ecore_timer_example.c "here".
+ *
+ * To demonstrate this, let's define some constants that will determine at which
+ * time each timer will expire:
+ *
+ * @until INTERVAL1
+ *
+ * These constants should tell by themselves what will be the behavior of the
+ * program, but I'll explain it anyway. The first timer is set to tick every 1
+ * second, but all the other timers until the 6th one will be started
+ * concurrently at the beginning of the program. Each of them will expire at the
+ * specified time in these constants:
+ *
+ * @li The timer2, after 3 seconds of the program being executed, will add a delay
+ * of 3 seconds to timer1;
+ * @li The timer3 will pause timer1 at 8.2 seconds;
+ * @li timer4 will resume timer1 at 11.0 seconds;
+ * @li timer5 will will change the interval of timer1 to 2 seconds;
+ * @li timer6 will stop timer1 and start timer7 and timer8, with 1.1 and 1.2
+ * seconds of interval, respectively; it also sets the precision to 0.2 seconds;
+ * @li timer7 and timer8 will just print their expiration time.
+ *
+ * @until ecore_time_get
+ * @until }
+ *
+ * As almost all the other examples, we create a context structure to pass to
+ * our callbacks, so they can have access to the other timers. We also store the
+ * time of the program start in @c _initial_time, and use the function
+ * @c _get_current_time to retrieve the current time relative to that time. This
+ * will help demonstrate what is going on.
+ *
+ * Now, the behavior and relationship between the timers that was described
+ * above is dictated by the following timer callbacks:
+ *
+ * @until _timer6_cb
+ * @until }
+ *
+ * It's possible to see the same behavior as other Ecore callbacks here,
+ * returning @ref ECORE_CALLBACK_RENEW when the timer needs to continue ticking,
+ * and @ref ECORE_CALLBACK_CANCEL when it needs to stop its execution. Also
+ * notice that later on our program we are checking for the timers pointers in
+ * the context to see if they are still executing before deleting them, so we
+ * need to set these timer pointers to @c NULL when we are returning @ref
+ * ECORE_CALLBACK_CANCEL. Otherwise the pointer would still be not @c NULL, but
+ * pointing to something that is invalid, since the timer would have already
+ * expired without renewing.
+ *
+ * Now the main code, which will start the timers:
+ *
+ * @until ecore_shutdown
+ * @until }
+ *
+ * This code is very simple. Just after starting the library, it will save the
+ * current time to @c _initial_time, start all timers from 1 to 6, and begin the
+ * main loop. Everything should be running right now, displaying the time which
+ * each timer is expiring, and what it is doing to affect the other timers.
+ *
+ * After returning from the main loop, every timer is checked to see if it's
+ * still alive and, in that case, deleted, before finalizing the library. This
+ * is not really necessary, since ecore_shutdown() will already delete them for
+ * you, but it's good practice if you have other things going on after this
+ * point that could restart the main loop.
+ *
+ */
+
+/**
+ * @page ecore_idler_example_c ecore idle state - Idlers, enterers and exiters
+ *
+ * This example demonstrates how to manage the idle state of the main loop. Once
+ * a program knows that the main loop is going to enter in idle state, it could
+ * start doing some processing until getting out of this state.
+ *
+ * To exemplify this, we also add events and a timer to this program, so we can
+ * see the idle exiter callback being called before processing the event and/or
+ * timer, the event/timer callback being called (processed), then the idle
+ * enterer being called before entering in idle state again. Once in idle, the
+ * main loop keeps calling the idler callback continuously until a new event or
+ * timer is received.
+ *
+ * First, we declare a struct that will be used as context to be passed to
+ * every callback. It's not useful everywhere, since this example is very
+ * simple and doesn't do anything other than printing messages, but using this
+ * context will make it a little bit more real. Our context will be used to
+ * delete the timer, idler, idle enterer and exiter, and the event handler, and
+ * also to count how many times the idler was called.
+ *
+ * Then we start declaring callbacks for the idle enterer, idle exiter and the
+ * idler itself. Idle enterer and exiter callbacks just print a message saying
+ * that they were called, while the idler, in addition to printing a message
+ * too, also sends an event every 10 times that it is called, incrementing the
+ * context count variable. This event will be used to make the main loop exit
+ * the idle state and call the event callback.
+ *
+ * These callbacks return @ref ECORE_CALLBACK_RENEW, since we want them to keep
+ * being called every time the main loop changes to/from idle state. Otherwise,
+ * if we didn't want them to be called again, they should return @ref
+ * ECORE_CALLBACK_CANCEL.
+ *
+ * The next function declared is the event callback @c _event_handler_cb. It
+ * will check if the idler was called more than 100 times already @c
+ * (ctxt->count > 100), and will delete the idler, idle enterer and exiter, the
+ * timer (if it still exists), and request that the main loop stop running. Then
+ * it returns @ref ECORE_CALLBACK_DONE to indicate that the event shouldn't be
+ * handled by any other callback.
+ *
+ * Finally, we add a callback to the timer, that will just print a message when
+ * it is called, and this will happen only once (@ref ECORE_CALLBACK_CANCEL is
+ * being returned). This timer callback is just here to show that the main loop
+ * gets out of idle state when processing timers too.
+ *
+ * The @b main function is simple, just creates a new type of event that we will
+ * use to demonstrate the event handling together with the idle state, adds the
+ * callbacks that we declared so far, fill the context struct, and starts
+ * running the main loop.
+ *
+ * @note We use timer and event callbacks to demonstrate the idle state
+ * changing, but it also happens for file descriptor handlers, pipe handlers,
+ * etc.
+ *
+ * @include ecore_idler_example.c
+ */
+
+/**
+ * @page ecore_job_example_c ecore_job - Queuing tasks
+ *
+ * This example shows how an @ref Ecore_Job can be added, how it can be
+ * deleted, and that they always execute in the added order.
+ *
+ * First, 2 callback functions are declared, one that prints strings passed to
+ * it in the @c data pointer, and another one that quits the main loop. In the
+ * @c main function, 3 jobs are added using the first callback, and another one
+ * is added using the second one.
+ *
+ * Then the second added job is deleted just to demonstrate the usage of
+ * ecore_job_del(), and the main loop is finally started. Run this example to
+ * see that @c job1, @c job3 and @c job_quit are ran, in this order.
+ *
+ * @include ecore_job_example.c
+ */
+
+/**
+ * @page ecore_event_example_c ecore events and handlers - Setup and use
+ * This example shows how to create a new type of event, setup some event
+ * handlers to it, fire the event and have the callbacks called. After
+ * finishing, we delete the event handlers so no memory will leak.
+ *
+ * See the full source code for this example @ref ecore_event_example.c "here".
+ *
+ * Let's start the example from the beginning:
+ *
+ * @dontinclude ecore_event_example.c
+ * @until _event_type
+ *
+ * First thing is to declare a struct that will be passed as context to the
+ * event handlers. In this structure we will store the event handler pointers,
+ * and two strings that will be used by the first event handler. We also will
+ * use a global integer to store the event type used for our event. It is
+ * initialized with 0 in the beginning because the event wasn't created yet.
+ * Later, in the main function we will use ecore_event_type_new() to associate
+ * another value to it. Now the event handler callbacks:
+ *
+ * @until }
+ *
+ * This is the first event handler callback. It prints the event data received
+ * by the event, and the data passed to this handler when it was added.  Notice
+ * that this callback already knows that the event data is an integer pointer,
+ * and that the handler data is a string. It knows about the first one because
+ * this is based on the type of event that is going to be handled, and the
+ * second because it was passed to the ecore_event_handler_add() function when
+ * registering the event handler.
+ *
+ * Another interesting point about this callback is that it returns @ref
+ * ECORE_CALLBACK_DONE (0) if the event data is even, swallowing the event and
+ * don't allowing any other callback to be called after this one for this event.
+ * Otherwise it returns @ref ECORE_CALLBACK_PASS_ON, allowing the event to be
+ * handled by other event handlers registered for this event. This makes the
+ * second event handler be called just for "odd" events.
+ *
+ * @until ECORE_CALLBACK_DONE
+ * @until }
+ *
+ * The second event handler will check if the event data is equal to 5, and if
+ * that's the case, it will change the event handler data of the first event
+ * handler to another string. Then it checks if the event data is higher than
+ * 10, and if so, it will request the main loop to quit.
+ *
+ * An interesting point of this example is that although the second event
+ * handler requests the main loop to finish after the 11th event being received,
+ * it will process all the events that were already fired, and call their
+ * respective event handlers, before the main loop stops. If we didn't want
+ * these event handlers to be called after the 11th event, we would need to
+ * unregister them with ecore_event_handler_del() at this point.
+ *
+ * Now some basic initialization of the context, and the Ecore library itself:
+ *
+ * @until type_new
+ *
+ * This last line is interesting. It creates a new type of event and returns a
+ * unique ID for this event inside Ecore. This ID can be used anywhere else in
+ * your program to reference this specific type of event, and to add callbacks
+ * to it.
+ *
+ * It's common if you are implementing a library that declares new types of
+ * events to export their respective types as extern in the header files. This
+ * way, when the library is initialized and the new type is created, it will be
+ * available through the header file to an application using it add some
+ * callbacks to it. Since our example is self-contained, we are just putting it
+ * as a global variable.
+ *
+ * Now we add some callbacks:
+ *
+ * @until ctxt);
+ *
+ * This is very simple. Just need to call ecore_event_handler_add() with the
+ * respective event type, the callback function to be called, and a data pointer
+ * that will be passed to the callback when it is called by the event.
+ *
+ * Then we start firing events:
+ *
+ * @until }
+ *
+ * This @c for will fire 16 events of this type. Notice that the events will be
+ * fired consecutively, but any callback will be called yet. They are just
+ * called by the main loop, and since it wasn't even started, nothing happens
+ * yet. For each event fired, we allocate an integer that will hold the number
+ * of the event (we are arbitrarily creating these numbers just for
+ * demonstration purposes). It's up to the event creator to decide which type of
+ * information it wants to give to the event handler, and the event handler must
+ * know what is the event info structure for that type of event.
+ *
+ * Since we are not allocating any complex structure, just a simple integer, we
+ * don't need to pass any special free function to ecore_event_add(), and it
+ * will use a simple @c free on our data. That's the default behavior.
+ *
+ * Now finishing our example:
+ *
+ * @until }
+ *
+ * We just start the main loop and watch things happen, waiting to shutdown
+ * Ecore when the main loop exits and return.
+ */
+
+/**
+ * @page ecore_fd_handler_example_c ecore fd handlers - Monitoring file descriptors
+ * @dontinclude ecore_fd_handler_example.c
+ *
+ * This is a very simple example where we will start monitoring the stdin of the
+ * program and, whenever there's something to be read, we call our callback that
+ * will read it.
+ *
+ * Check the full code for this example @ref ecore_fd_handler_example.c "here".
+ *
+ * This seems to be stupid, since a similar result could be achieved by the
+ * following code:
+ *
+ * @code
+ * while (nbytes = read(STDIN_FILENO, buf, sizeof(buf)))
+ *   {
+ *      buf[nbytes - 1] = '\0';
+ *      printf("Read %zd bytes from input: \"%s\"\n", nbytes - 1, buf);
+ *   }
+ * @endcode
+ *
+ * However, the above code is blocking, and won't allow you to do anything else
+ * other than reading the input. Of course there are other methods to do a
+ * non-blocking reading, like setting the file descriptor to non-blocking and
+ * keep looping always checking if there's something to be read, and do other
+ * things otherwise. Or use a @c select call to watch for more than one file
+ * descriptor at the same time.
+ *
+ * The advantage of using an @ref Ecore_Fd_Handler is that you can monitor a
+ * file descriptor, while still iterating on the Ecore main loop. It will allow
+ * you to have timers working and expiring, events still being processed when
+ * received, idlers doing its work when there's nothing happening, and whenever
+ * there's something to be read from the file descriptor, your callback will be
+ * called. And it's everything monitored in the same main loop, no threads are
+ * needed, thus reducing the complexity of the program and any overhead caused
+ * by the use of threads.
+ *
+ * Now let's start our program. First we just declare a context structure that
+ * will be passed to our callback, with pointers to our handler and to a timer
+ * that will be used later:
+ *
+ * @until };
+ *
+ * Then we will declare a prepare_callback that is called before any fd_handler
+ * set in the program, and before the main loop select function is called. Just
+ * use one if you really know that you need it. We are just putting it here to
+ * exemplify its usage:
+ *
+ * @until }
+ *
+ * Now, our fd handler. In its arguments, the @c data pointer will have any data
+ * passed to it when it was registered, and the @c handler pointer will contain
+ * the fd handler returned by the ecore_main_fd_handler_add() call. It can be
+ * used, for example, to retrieve which file descriptor triggered this callback,
+ * since it could be added to more than one file descriptor, or to check what
+ * tipe of activity there's in the file descriptor.
+ *
+ * The code is very simple: we first check if the type of activity was an error.
+ * It probably won't happen with the default input, but could be the case of a
+ * network socket detecting a disconnection. Next, we get the file descriptor
+ * from this handler (as said before, the callback could be added to more than
+ * one file descriptor), and read it since we know that it shouldn't block,
+ * because our fd handler told us that there's some activity on it. If the
+ * result of the read was 0 bytes, we know that it's an end of file (EOF), so we
+ * can finish reading the input. Otherwise we just print the content read from
+ * it:
+ *
+ * @until }
+ *
+ * Also notice that this callback returns @ref ECORE_CALLBACK_RENEW to keep
+ * being called, as almost all other Ecore callbacks, otherwise if it returns
+ * @ref ECORE_CALLBACK_CANCEL then the file handler would be deleted.
+ *
+ * Just to demonstrate that our program isn't blocking in the input read but
+ * still can process other Ecore events, we are going to setup an @ref
+ * Ecore_Timer. This is its callback:
+ *
+ * @until }
+ *
+ * Now in the main code we are going to initialize the library, and setup
+ * callbacks for the file descriptor, the prepare callback, and the timer:
+ *
+ * @until timer_add
+ *
+ * Notice that the use of ecore_main_fd_handler_add() specifies what kind of
+ * activity we are monitoring. In this case, we want to monitor for read (since
+ * it's the standard input) and for errors. This is done by the flags @ref
+ * ECORE_FD_READ and @ref ECORE_FD_ERROR. For the three callbacks we are also
+ * giving a pointer to our context structure, which has pointers to the handlers
+ * added.
+ *
+ * Then we can start the main loop and see everything happening:
+ *
+ * @until }
+ *
+ * In the end we are just deleting the fd handler and the timer to demonstrate
+ * the API usage, since Ecore would already do it for us on its shutdown.
+ */
+
+/**
+ * @page ecore_poller_example_c ecore poller - Repetitive polling tasks
+ * @dontinclude ecore_poller_example.c
+ *
+ * This example show how to setup, and explains how an @ref Ecore_Poller is
+ * called. You can @ref ecore_poller_example.c "see the full source code here".
+ *
+ * In this example we store the initial time of the program just to use as
+ * comparison to the time when the poller callbacks are called. It will be
+ * stored in @c _initial_time :
+ *
+ * @until initial_time
+ *
+ * Then next step is to define the poller callback. This callback assumes that a
+ * @c data pointer is passed to it on creation, and is a string just used to
+ * identify the poller. The callback prints this string and the time since the
+ * program started, and returns @ref ECORE_CALLBACK_RENEW to keep being called.
+ *
+ * @until }
+ *
+ * Now in the main function we initialize Ecore, and save the initial time of
+ * the program, so we can compare it later with the time that the pollers are
+ * being called:
+ *
+ * @until initial_time
+ *
+ * Then we change the poll interval to 0.3 seconds (the default is 0.125
+ * seconds) just to show the API usage.
+ *
+ * Finally, we create two pollers, one that will be called every 4 ticks, and
+ * another one that will be called every 8 ticks. This means the the first
+ * poller interval will be around 1.2 seconds, and the second one will be
+ * around 2.4 seconds. But the most important point is: since the second poller
+ * interval is a multiple of the first one, they will be always synchronized.
+ * Ecore calls pollers that are in the "same tick" together. It doesn't go back
+ * to the main loop and check if there's another poller to execute at this
+ * time, but instead it calls all the pollers registered to this "tick" at the
+ * same time.  See the description of ecore_poller_add() for more details. This
+ * is easy to see in the time printed by both of them.
+ *
+ * If instead of two synchronized pollers, we were using two different timers,
+ * one with interval of 1.2 seconds and another one with an interval of 2.4
+ * seconds, there would be no guarantee that they would be totally in sync. Some
+ * delay in the execution of another task, or even in the task called in the
+ * callback, could make them get out of sync, forcing Ecore's main loop to wake
+ * up more than necessary.
+ *
+ * Well, this is the code that create these two pollers and set the poll
+ * interval, then starts the main loop:
+ *
+ * @until ecore_main_loop_begin
+ *
+ * If you hit CTRL-C during the execution of the program, the main loop will
+ * quit, since there are some signal handlers already set by default to do this.
+ * So after the main loop begin call, we change the second poller's interval to
+ * 16 ticks, so it will happen each 4.8 seconds (or each 4 times that the first
+ * poller is called).
+ *
+ * This means: the program is started, the first poller is called each 4 ticks
+ * and the second is called each 8 ticks. After CTRL-C is used, the second
+ * poller will be called each 16 ticks.
+ *
+ * @until }
+ *
+ * The rest of the program is just deleting the pollers and shutting down the
+ * library.
+ */
+
+/**
+ * @page ecore_con_lookup_example_c Ecore_Con - DNS lookup
+ *
+ * This is a very simple example that shows how to make a simple DNS lookup
+ * using ecore_con_lookup().
+ *
+ * It's possible to see in the beginning of the main function that we are using
+ * the arguments passed via command line. This is the address that we are going
+ * to make the DNS lookup on.
+ *
+ * The next step is to initialize the libraries, and just call
+ * ecore_con_lookup(). This function will get the string that contains the
+ * address to be resolved as first parameter, then a callback that will be
+ * called when the resolve stage is done, and finally a data pointer that will
+ * be passed to the callback.
+ *
+ * This function is asynchronous, and the callback will be called only on
+ * success. If there was an error during the resolve stage, there's no way to
+ * know about that. It's only possible to know about errors when setting up the
+ * lookup, by looking at the return code of the ecore_con_lookup() function.
+ *
+ * The callback @c _lookup_done_cb passed as argument to ecore_con_lookup() just
+ * prints the resolved canonical name, ip, address of the sockaddr structure,
+ * and the length of the socket address (in bytes).
+ *
+ * Finally, we start the main loop, and after that we finalize the libraries and
+ * exit.
+ *
+ * This is the code for this simple example:
+ *
+ * @include ecore_con_lookup_example.c
+ */
+
+/**
+ * @example ecore_idler_example.c
+ * This example shows when @ref Ecore_Idler, @ref Ecore_Idle_Enterer and @ref
+ * Ecore_Idle_Exiter are called. See
+ * @ref ecore_idler_example_c "the explanation here".
+ */
+
+/**
+ * @example ecore_job_example.c
+ * This example shows how to use an @ref Ecore_Job. See
+ * @ref ecore_job_example_c "the explanation here".
+ */
+
+/**
+ * @example ecore_time_functions_example.c
+ * Shows the difference between the three time functions. See @ref
+ * ecore_time_functions_example_c "the example explained".
+ */
+
+/**
+ * @example ecore_timer_example.c
+ * This example show how to use timers to have timed events inside ecore.
+ * See @ref ecore_timer_example_c "the example explained".
+ */
+
+/**
+ * @example ecore_fd_handler_example.c
+ * This example shows how to setup and use an fd_handler. See
+ * @ref ecore_fd_handler_example_c "the explanation here".
+ */
+
+/**
+ * @example ecore_poller_example.c
+ * This example shows how to setup and use a poller. See
+ * @ref ecore_poller_example_c "the explanation here".
+ */
+
+/**
+ * @example ecore_event_example.c
+ * This example shows how to setup, change, and delete event handlers. See
+ * @ref ecore_event_example_c "the explanation here".
+ */
+
+/**
+ * @example ecore_fd_handler_gnutls_example.c
+ * Shows how to use fd handlers.
+ */
+
+/**
+ * @example ecore_con_lookup_example.c
+ * Shows how to make a simple DNS lookup. See the complete example description
+ * at @ref @ecore_con_lookup_example_c
+ */
+
+/**
+ * @page tutorial_ecore_pipe_gstreamer_example
+ *
+ * Here is an example that uses the pipe wrapper with a Gstreamer
+ * pipeline. For each decoded frame in the Gstreamer thread, a handle
+ * is called in the ecore thread.
+ *
+ * @include ecore_pipe_gstreamer_example.c
+ * @example ecore_pipe_gstreamer_example.c
+ */
+
+/**
+ * @page tutorial_ecore_pipe_simple_example
+ * @dontinclude ecore_pipe_simple_example.c
+ *
+ * This example shows some simple usage of ecore_pipe. We are going to create a
+ * pipe, fork our process, and then the child is going to comunicate to the
+ * parent the result of its processing through the pipe.
+ *
+ * As always we start with our includes, nothing especial:
+ * @skip #include
+ * @until Ecore.h
+ *
+ * The first thing we are going to define in our example is the function we are
+ * going to run on the child process, which, as mentioned, will do some
+ * processing and then will write the result to the pipe:
+ * @until }
+ * @until }
+ * @note The sleep was added so the parent process would think the child process
+ * was doing something interesting...
+ *
+ * Next up is our function for handling data arriving in the pipe. It copies the
+ * data to another buffer, adds a terminating NULL and prints it. Also if it
+ * receives a certain string it stops the main loop(efectvely ending the
+ * program):
+ * @until }
+ * @until }
+ *
+ * And now on to our main function, we start by declaring some variables and
+ * initializing ecore:
+ * @until ecore_init
+ *
+ * And since we are talking about pipes let's create one:
+ * @until pipe_add
+ *
+ * Now we are going to fork:
+ * @until fork
+ * @note duh...
+ *
+ * The child process is going to do the our fancy processing:
+ * @until }
+ * @note It's very important to call ecore_pipe_read_close() here so that the
+ * child process won't read what it is writing to the pipe itself.
+ *
+ * And the parent is going to run ecore's main loop waiting for some data:
+ * @until }
+ * @note Calling ecore_pipe_write_close() here isn't important but since we
+ * aren't going to write in the pipe it is good practice.
+ *
+ * And finally when done processing(the child) or done receiving(the parent) we
+ * delete the pipe and shutdown ecore:
+ * @until }
+ *
+ * @example ecore_pipe_simple_example.c
+ */

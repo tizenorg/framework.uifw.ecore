@@ -62,6 +62,10 @@ static double       precision = 10.0 / 1000000.0;
  *
  * The timer allows callbacks to be called at specific intervals.
  *
+ * Examples with functions that deal with time:
+ * @li @ref ecore_time_functions_example_c
+ * @li @ref ecore_timer_example_c
+ *
  * @{
  */
 
@@ -103,6 +107,8 @@ ecore_timer_precision_get(void)
 EAPI void
 ecore_timer_precision_set(double value)
 {
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (value < 0.0)
      {
         ERR("Precision %f less than zero, ignored", value);
@@ -134,6 +140,8 @@ ecore_timer_add(double in, Ecore_Task_Cb func, const void *data)
 {
    double now;
    Ecore_Timer *timer;
+
+   ECORE_MAIN_LOOP_ASSERT();
 
    if (!func) return NULL;
    if (in < 0.0) in = 0.0;
@@ -169,6 +177,8 @@ ecore_timer_loop_add(double in, Ecore_Task_Cb func, const void *data)
    double now;
    Ecore_Timer *timer;
 
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!func) return NULL;
    if (in < 0.0) in = 0.0;
    timer = calloc(1, sizeof(Ecore_Timer));
@@ -197,6 +207,8 @@ ecore_timer_loop_add(double in, Ecore_Task_Cb func, const void *data)
 EAPI void *
 ecore_timer_del(Ecore_Timer *timer)
 {
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
      {
         ECORE_MAGIC_FAIL(timer, ECORE_MAGIC_TIMER,
@@ -233,6 +245,8 @@ ecore_timer_del(Ecore_Timer *timer)
 EAPI void
 ecore_timer_interval_set(Ecore_Timer *timer, double in)
 {
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
      {
         ECORE_MAGIC_FAIL(timer, ECORE_MAGIC_TIMER,
@@ -251,6 +265,8 @@ ecore_timer_interval_set(Ecore_Timer *timer, double in)
 EAPI double
 ecore_timer_interval_get(Ecore_Timer *timer)
 {
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
      {
         ECORE_MAGIC_FAIL(timer, ECORE_MAGIC_TIMER,
@@ -271,6 +287,8 @@ ecore_timer_interval_get(Ecore_Timer *timer)
 EAPI void
 ecore_timer_delay(Ecore_Timer *timer, double add)
 {
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
      {
         ECORE_MAGIC_FAIL(timer, ECORE_MAGIC_TIMER,
@@ -300,6 +318,8 @@ ecore_timer_pending_get(Ecore_Timer *timer)
 {
    double        now;
 
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
      {
         ECORE_MAGIC_FAIL(timer, ECORE_MAGIC_TIMER,
@@ -315,13 +335,25 @@ ecore_timer_pending_get(Ecore_Timer *timer)
 }
 
 /**
+ * Pauses a running timer.
  *
+ * @param timer The timer to be paused.
  *
+ * The timer callback won't be called while the timer is paused. The remaining
+ * time until the timer expires will be saved, so the timer can be resumed with
+ * that same remaining time to expire, instead of expiring instantly.  Use
+ * ecore_timer_thaw() to resume it.
+ *
+ * @note Nothing happens if the timer was already paused.
+ *
+ * @see ecore_timer_thaw()
  */
 EAPI void
 ecore_timer_freeze(Ecore_Timer *timer)
 {
    double now;
+
+   ECORE_MAIN_LOOP_ASSERT();
 
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
      {
@@ -344,10 +376,25 @@ ecore_timer_freeze(Ecore_Timer *timer)
    timer->frozen = 1;
 }
 
+/**
+ * Resumes a frozen (paused) timer.
+ *
+ * @param timer The timer to be resumed.
+ *
+ * The timer will be resumed from its previous relative position in time. That
+ * means, if it had X seconds remaining until expire when it was paused, it will
+ * be started now with those same X seconds remaining to expire again. But
+ * notice that the interval time won't be touched by this call or by
+ * ecore_timer_freeze().
+ *
+ * @see ecore_timer_freeze()
+ */
 EAPI void
 ecore_timer_thaw(Ecore_Timer *timer)
 {
    double now;
+
+   ECORE_MAIN_LOOP_ASSERT();
 
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
      {

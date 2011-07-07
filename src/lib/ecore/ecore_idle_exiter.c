@@ -40,11 +40,16 @@ static int                idle_exiters_delete_me = 0;
  * @param func The function to call when exiting an idle state.
  * @param data The data to be passed to the @p func call
  * @return A handle to the idle exiter callback on success.  NULL otherwise.
+ * @note The function func will be called every time the main loop is exiting
+ * idle state, as long as it returns 1 (or ECORE_CALLBACK_RENEW). A return of 0
+ * (or ECORE_CALLBACK_CANCEL) deletes the idle exiter.
  */
 EAPI Ecore_Idle_Exiter *
 ecore_idle_exiter_add(Ecore_Task_Cb func, const void *data)
 {
    Ecore_Idle_Exiter *ie;
+
+   ECORE_MAIN_LOOP_ASSERT();
 
    if (!func) return NULL;
    ie = calloc(1, sizeof(Ecore_Idle_Exiter));
@@ -65,6 +70,8 @@ ecore_idle_exiter_add(Ecore_Task_Cb func, const void *data)
 EAPI void *
 ecore_idle_exiter_del(Ecore_Idle_Exiter *idle_exiter)
 {
+   ECORE_MAIN_LOOP_ASSERT();
+
    if (!ECORE_MAGIC_CHECK(idle_exiter, ECORE_MAGIC_IDLE_EXITER))
      {
         ECORE_MAGIC_FAIL(idle_exiter, ECORE_MAGIC_IDLE_EXITER,

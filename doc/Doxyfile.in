@@ -74,7 +74,8 @@ WARN_NO_PARAMDOC       = YES
 WARN_FORMAT            = "$file:$line: $text"
 WARN_LOGFILE           =
 INPUT                  = @srcdir@/ecore.dox \
-                         @top_srcdir@/src/lib
+                         @top_srcdir@/src/lib \
+                         @srcdir@/examples.dox
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          =
 RECURSIVE              = YES
@@ -82,7 +83,7 @@ EXCLUDE                = @top_srcdir@/src/lib/ecore_config/* @top_srcdir@/src/li
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = ecore_config* Ecore_Config*
 EXCLUDE_SYMBOLS        = Ecore_Config*
-EXAMPLE_PATH           = @top_srcdir@/examples/
+EXAMPLE_PATH           = @top_srcdir@/src/examples/
 EXAMPLE_PATTERNS       =
 EXAMPLE_RECURSIVE      = YES
 IMAGE_PATH             = img

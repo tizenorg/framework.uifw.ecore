@@ -493,7 +493,7 @@ ecore_x_window_shape_rectangles_add(Ecore_X_Window     win,
              rect[i].height = rects[i].height;
           }
      }
-   
+
    XShapeCombineRectangles(_ecore_x_disp,
                            win,
                            ShapeBounding,
