@@ -412,8 +412,6 @@ struct _Ecore_IMF_Context_Class
    void (*use_preedit_set)     (Ecore_IMF_Context *ctx, Eina_Bool use_preedit);
    void (*input_mode_set)      (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Mode input_mode);
    Eina_Bool (*filter_event)   (Ecore_IMF_Context *ctx, Ecore_IMF_Event_Type type, Ecore_IMF_Event *event);
-
-   /* Input Panel Control APIs */
    void (*control_panel_show)   (Ecore_IMF_Context *ctx);
    void (*control_panel_hide)   (Ecore_IMF_Context *ctx);
 
@@ -453,6 +451,7 @@ struct _Ecore_IMF_Context_Class
    void (*preedit_string_with_attributes_get) (Ecore_IMF_Context *ctx, char **str, Eina_List **attrs, int *cursor_pos);
    void (*prediction_allow_set)(Ecore_IMF_Context *ctx, Eina_Bool prediction);
    void (*autocapital_type_set)(Ecore_IMF_Context *ctx, Ecore_IMF_Autocapital_Type autocapital_type);
+   void (*cursor_location_set) (Ecore_IMF_Context *ctx, int x, int y, int w, int h);
 };
 
 struct _Ecore_IMF_Context_Info
@@ -490,6 +489,7 @@ EAPI void                          ecore_imf_context_focus_in(Ecore_IMF_Context 
 EAPI void                          ecore_imf_context_focus_out(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_reset(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_cursor_position_set(Ecore_IMF_Context *ctx, int cursor_pos);
+EAPI void                          ecore_imf_context_cursor_location_set(Ecore_IMF_Context *ctx, int x, int y, int w, int h);
 EAPI void                          ecore_imf_context_use_preedit_set(Ecore_IMF_Context *ctx, Eina_Bool use_preedit);
 EAPI void                          ecore_imf_context_retrieve_surrounding_callback_set(Ecore_IMF_Context *ctx, Eina_Bool (*func)(void *data, Ecore_IMF_Context *ctx, char **text, int *cursor_pos), const void *data);
 EAPI void                          ecore_imf_context_input_mode_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Mode input_mode);
