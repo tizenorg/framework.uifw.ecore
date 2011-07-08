@@ -493,19 +493,18 @@ _ecore_main_gsource_prepare(GSource *source __UNUSED__, gint *next_time)
          _ecore_timer_cleanup();
 
          /* when idling, busy loop checking the fds only */
-         if (!ecore_idling)
-           {
-              _ecore_idle_enterer_call();
-              _ecore_throttle();
-           }
+         _ecore_idle_enterer_call();
+         _ecore_throttle();
      }
+
+   while (_ecore_signal_count_get()) _ecore_signal_call();
 
    /* don't check fds if somebody quit */
    running = g_main_loop_is_running(ecore_main_loop);
    if (running)
      {
         /* only set idling state in dispatch */
-        if (ecore_idling && !_ecore_idler_exist())
+        if (ecore_idling && !_ecore_idler_exist() && !_ecore_event_exist())
           {
              if (_ecore_timers_exists())
                {
@@ -564,7 +563,7 @@ _ecore_main_gsource_check(GSource *source __UNUSED__)
    in_main_loop++;
 
    /* check if old timers expired */
-   if (ecore_idling && !_ecore_idler_exist())
+   if (ecore_idling && !_ecore_idler_exist() && !_ecore_event_exist())
      {
         if (timer_fd >= 0)
           {
@@ -593,16 +592,12 @@ _ecore_main_gsource_check(GSource *source __UNUSED__)
      ecore_fds_ready = (_ecore_main_fdh_glib_mark_active() > 0);
    _ecore_main_fd_handlers_cleanup();
 
-   /* ^C perhaps? */
-   if (!ret && _ecore_signal_count_get() > 0)
-     ret = TRUE;
-
    /* check timers after updating loop time */
    _ecore_time_loop_time = ecore_time_get();
    if (!ret && _ecore_timers_exists())
      {
         double next_time = _ecore_timer_next_get();
-        ret = _ecore_timers_exists() && (0.0 >= next_time);
+        ret = _ecore_timers_exists() && (0.0 == next_time);
      }
 
    _ecore_timer_enable_new();
@@ -620,7 +615,7 @@ _ecore_main_gsource_dispatch(GSource *source __UNUSED__, GSourceFunc callback __
    double next_time = _ecore_timer_next_get();
 
    events_ready = _ecore_event_exist();
-   timers_ready = _ecore_timers_exists() && (0.0 >= next_time);
+   timers_ready = _ecore_timers_exists() && (0.0 == next_time);
    idlers_ready = _ecore_idler_exist();
    signals_ready = (_ecore_signal_count_get() > 0);
 
@@ -644,7 +639,6 @@ _ecore_main_gsource_dispatch(GSource *source __UNUSED__, GSourceFunc callback __
         _ecore_idler_call();
 
         events_ready = _ecore_event_exist();
-        timers_ready = _ecore_timers_exists() && (0.0 >= next_time);
         idlers_ready = _ecore_idler_exist();
 
         if ((ecore_fds_ready || events_ready || timers_ready || idlers_ready || signals_ready))
