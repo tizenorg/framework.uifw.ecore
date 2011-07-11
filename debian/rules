@@ -20,7 +20,7 @@ DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb \
 	--disable-ecore-evas-xrender-x11 \
 	--enable-curl \
 	--disable-openssl \
-	--enable-g-main-loop \
+	--enable-glib-integration-always \
 	--disable-xim
 DEB_MAKE_EXTRA_ARGS := V=0
 
