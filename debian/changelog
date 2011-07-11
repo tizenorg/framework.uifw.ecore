@@ -1,6 +1,6 @@
-ecore (1.0.0.001+svn.61099slp2+build01) unstable; urgency=low
+ecore (1.0.0.001+svn.61150slp2+build01) unstable; urgency=low
 
-  * Merge with SVN revision 61099
+  * Merge with SVN revision 61150
 
  -- Mike McCormack <mj.mccormack@samsung.com>  Thu, 07 Jul 2011 15:10:51 +0900
 
