@@ -867,7 +867,9 @@ _ecore_thread_assert_main_loop_thread(const char *function)
    if (!good)
      {
         EINA_LOG_CRIT("Call to %s from wrong thread!", function);
+#if 0
         abort();
+#endif
      }
 }
 
