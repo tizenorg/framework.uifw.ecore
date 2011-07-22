@@ -178,11 +178,11 @@ ecore_imf_context_add(const char *id)
 
    /* default prediction is EINA_TRUE, so let's make sure it's
     * set on the immodule */
-//   ecore_imf_context_prediction_allow_set(ctx, EINA_TRUE);
+   ecore_imf_context_prediction_allow_set(ctx, EINA_TRUE);
 
    /* default autocapital type is SENTENCE type, so let's make sure it's
     * set on the immodule */
-//   ecore_imf_context_autocapital_type_set(ctx, ECORE_IMF_AUTOCAPITAL_TYPE_SENTENCE);
+   ecore_imf_context_autocapital_type_set(ctx, ECORE_IMF_AUTOCAPITAL_TYPE_SENTENCE);
 
    /* default input panel enabled status is EINA_TRUE, so let's make sure it's
     * set on the immodule */
