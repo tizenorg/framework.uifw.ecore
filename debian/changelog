@@ -1,3 +1,9 @@
+ecore (1.0.0.001+svn.61784slp2+build01) unstable; urgency=low
+
+  * Merge with upstream ecore svn @61784
+
+ -- Mike McCormack <mj.mccormack@samsung.com>  Wed, 27 Jul 2011 14:43:58 +0900
+
 ecore (1.0.0.001+svn.61150slp2+build03) unstable; urgency=low
 
   * [ecore_imf] set autocapital type
