@@ -59,8 +59,6 @@ Window _ecore_x_event_last_win = 0;
 int _ecore_x_event_last_root_x = 0;
 int _ecore_x_event_last_root_y = 0;
 Eina_Bool _ecore_x_xcursor = EINA_FALSE;
-XIC _ecore_x_ic = NULL; /* Input context for composed characters */
-XIM _ecore_x_im = NULL;
 
 Ecore_X_Window _ecore_x_private_win = 0;
 
@@ -124,6 +122,7 @@ int ECORE_X_MODIFIER_WIN = 0;
 EAPI int ECORE_X_LOCK_SCROLL = 0;
 EAPI int ECORE_X_LOCK_NUM = 0;
 EAPI int ECORE_X_LOCK_CAPS = 0;
+EAPI int ECORE_X_LOCK_SHIFT = 0;
 
 #ifdef LOGRT
 static double t0 = 0.0;
@@ -516,6 +515,7 @@ ecore_x_init(const char *name)
    ECORE_X_LOCK_SCROLL = _ecore_x_key_mask_get(XK_Scroll_Lock);
    ECORE_X_LOCK_NUM = _ecore_x_key_mask_get(XK_Num_Lock);
    ECORE_X_LOCK_CAPS = _ecore_x_key_mask_get(XK_Caps_Lock);
+   ECORE_X_LOCK_SHIFT = _ecore_x_key_mask_get(XK_Shift_Lock);
 
    _ecore_x_fd_handler_handle =
       ecore_main_fd_handler_add(ConnectionNumber(_ecore_x_disp),
@@ -558,56 +558,6 @@ ecore_x_init(const char *name)
 
    _ecore_x_private_win = ecore_x_window_override_new(0, -77, -777, 123, 456);
 
-#ifdef ENABLE_XIM
-   /* Setup XIM */
-   if (!_ecore_x_ic && XSupportsLocale())
-     {
-        XIM im;
-        XIC ic;
-        XIMStyles *supported_styles;
-        XIMStyle chosen_style = 0;
-        Ecore_X_Window client_window = ecore_x_window_root_get(
-              _ecore_x_private_win);
-        char *ret;
-        int i;
-
-        XSetLocaleModifiers("@im=none");
-        if (!(im = XOpenIM(_ecore_x_disp, NULL, NULL, NULL)))
-           goto _im_create_end;
-
-        ret = XGetIMValues(im, XNQueryInputStyle, &supported_styles, NULL);
-        if (ret || !supported_styles)
-           goto _im_create_error;
-
-        for (i = 0; i < supported_styles->count_styles; i++)
-          {
-             if (supported_styles->supported_styles[i] ==
-                 (XIMPreeditNothing | XIMStatusNothing))
-                chosen_style = supported_styles->supported_styles[i];
-          }
-        XFree(supported_styles);
-        if (!chosen_style)
-           goto _im_create_error;
-
-        ic = XCreateIC(im,
-                       XNInputStyle,
-                       chosen_style,
-                       XNClientWindow,
-                       client_window,
-                       NULL);
-        if (ic)
-          {
-             _ecore_x_ic = ic;
-             _ecore_x_im = im;
-             goto _im_create_end;
-          }
-
-_im_create_error:
-        XCloseIM(im);
-     }
-
-_im_create_end:
-#endif /* ifdef ENABLE_XIM */
    return _ecore_x_init_count;
 
 free_event_handlers:
@@ -640,20 +590,6 @@ _ecore_x_shutdown(int close_display)
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
-#ifdef ENABLE_XIM
-   if (_ecore_x_ic)
-     {
-        XDestroyIC(_ecore_x_ic);
-        _ecore_x_ic = NULL;
-     }
-
-   if (_ecore_x_im)
-     {
-        XCloseIM(_ecore_x_im);
-        _ecore_x_im = NULL;
-     }
-
-#endif /* ifdef ENABLE_XIM */
    ecore_main_fd_handler_del(_ecore_x_fd_handler_handle);
    if (close_display)
       XCloseDisplay(_ecore_x_disp);
@@ -773,6 +709,50 @@ ecore_x_screen_size_get(const Ecore_X_Screen *screen, int *w, int *h)
    if (!s) return;
    if (w) *w = s->width;
    if (h) *h = s->height;
+}
+
+/**
+ * Retrieves the number of screens.
+ * 
+ * @return  The count of the number of screens.
+ * @ingroup Ecore_X_Display_Attr_Group
+ *
+ * @since 1.1
+ */
+EAPI int 
+ecore_x_screen_count_get(void) 
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   return ScreenCount(_ecore_x_disp);
+}
+
+/**
+ * Retrieves the index number of the given screen.
+ * 
+ * @return  The index number of the screen.
+ * @ingroup Ecore_X_Display_Attr_Group
+ *
+ * @since 1.1
+ */
+EAPI int 
+ecore_x_screen_index_get(const Ecore_X_Screen *screen) 
+{
+   return XScreenNumberOfScreen((Screen *)screen);
+}
+
+/**
+ * Retrieves the screen based on index number.
+ * 
+ * @return  The Ecore_X_Screen at this index.
+ * @ingroup Ecore_X_Display_Attr_Group
+ *
+ * @since 1.1
+ */
+EAPI Ecore_X_Screen *
+ecore_x_screen_get(int index) 
+{
+   return XScreenOfDisplay(_ecore_x_disp, index);
 }
 
 /**
@@ -1887,10 +1867,10 @@ EAPI void
 ecore_x_pointer_last_xy_get(int *x, int *y)
 {
    if (x)
-      *x = _ecore_x_event_last_root_x;
+     *x = _ecore_x_event_last_root_x;
 
    if (y)
-      *y = _ecore_x_event_last_root_y;
+     *y = _ecore_x_event_last_root_y;
 } /* ecore_x_pointer_last_xy_get */
 
 EAPI void
@@ -1901,24 +1881,73 @@ ecore_x_pointer_xy_get(Ecore_X_Window win, int *x, int *y)
    unsigned int mask;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
-   ret = XQueryPointer(_ecore_x_disp,
-                       win,
-                       &rwin,
-                       &cwin,
-                       &rx,
-                       &ry,
-                       &wx,
-                       &wy,
-                       &mask);
+   ret = XQueryPointer(_ecore_x_disp, win, &rwin, &cwin, 
+                       &rx, &ry, &wx, &wy, &mask);
    if (!ret)
-      wx = wy = -1;
+     wx = wy = -1;
 
-   if (x)
-      *x = wx;
-
-   if (y)
-      *y = wy;
+   if (x) *x = wx;
+   if (y) *y = wy;
 } /* ecore_x_pointer_xy_get */
+
+/**
+ * Retrieve the Visual ID from a given Visual.
+ *
+ * @param visual  The Visual to get the ID for.
+ *
+ * @return The visual id.
+ * @since 1.1.0
+ */
+EAPI unsigned int 
+ecore_x_visual_id_get(Ecore_X_Visual visual) 
+{
+   return XVisualIDFromVisual(visual);
+}
+
+/**
+ * Retrieve the default Visual.
+ *
+ * @param disp  The Display to get the Default Visual from
+ * @param screen The Screen.
+ *
+ * @return The default visual.
+ * @since 1.1.0
+ */
+EAPI Ecore_X_Visual 
+ecore_x_default_visual_get(Ecore_X_Display *disp, Ecore_X_Screen *screen) 
+{
+   return DefaultVisual(disp, ecore_x_screen_index_get(screen));
+}
+
+/**
+ * Retrieve the default Colormap.
+ *
+ * @param disp  The Display to get the Default Colormap from
+ * @param screen The Screen.
+ *
+ * @return The default colormap.
+ * @since 1.1.0
+ */
+EAPI Ecore_X_Colormap 
+ecore_x_default_colormap_get(Ecore_X_Display *disp, Ecore_X_Screen *screen) 
+{
+   return DefaultColormap(disp, ecore_x_screen_index_get(screen));
+}
+
+/**
+ * Retrieve the default depth.
+ *
+ * @param disp  The Display to get the Default Depth from
+ * @param screen The Screen.
+ *
+ * @return The default depth.
+ * @since 1.1.0
+ */
+EAPI int 
+ecore_x_default_depth_get(Ecore_X_Display *disp, Ecore_X_Screen *screen) 
+{
+   return DefaultDepth(disp, ecore_x_screen_index_get(screen));
+}
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -1949,6 +1978,9 @@ _ecore_x_event_modifier(unsigned int state)
 
    if (state & ECORE_EVENT_LOCK_CAPS)
       xmodifiers |= ECORE_X_LOCK_CAPS;
+
+   if (state & ECORE_EVENT_LOCK_SHIFT)
+      xmodifiers |= ECORE_X_LOCK_SHIFT;
 
    return xmodifiers;
 } /* _ecore_x_event_modifier */

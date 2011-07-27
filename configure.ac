@@ -141,6 +141,7 @@ want_ecore_x_xprint="yes"
 want_ecore_x_xtest="yes"
 want_ecore_x_cursor="yes"
 want_ecore_x_input="yes"
+want_ecore_x_dri="yes"
 
 # ecore_evas modules
 want_ecore_evas="yes"
@@ -160,6 +161,9 @@ want_ecore_evas_gl_sdl="no"
 want_ecore_evas_directfb="no"
 want_ecore_evas_fb="no"
 want_ecore_evas_software_16_wince="no"
+
+# ecore_imf modules
+want_ecore_imf_xim="no"
 
 case "$host_os" in
    mingw32ce* | cegcc*)
@@ -209,11 +213,12 @@ case "$host_os" in
       want_ecore_evas_opengl_x11="yes"
       want_ecore_evas_software_16_x11="yes"
       want_ecore_evas_software_8_x11="yes"
-      want_ecore_evas_software_xcb="yes"
+      want_ecore_evas_software_xcb="no"
       want_ecore_evas_software_sdl="yes"
       want_ecore_evas_gl_sdl="yes"
       want_ecore_evas_directfb="yes"
       want_ecore_evas_fb="yes"
+      want_ecore_imf_xim="yes"
       ;;
 esac
 
@@ -234,6 +239,31 @@ requirements_ecore_sdl=""
 requirements_ecore_x=""
 requirements_ecore_win32=""
 requirements_ecore_wince=""
+requirements_ecore_imf_xim=""
+
+AC_CHECK_DECL([MAXHOSTNAMELEN],[FOUND_MAXHOSTNAMELEN=yes])
+
+if test x$FOUND_MAXHOSTNAMELEN != xyes ; then
+  AC_MSG_CHECKING([for header that defines MAXHOSTNAMELEN])
+
+  FOUND_MAXHOSTNAMELEN='not found'
+
+  AC_COMPILE_IFELSE(
+	AC_LANG_PROGRAM([#include <sys/param.h>],
+		[int h = MAXHOSTNAMELEN;]),
+	[FOUND_MAXHOSTNAMELEN='sys/param.h'
+	   AC_DEFINE(NEED_SYS_PARAM_H,1,
+	     [Define to 1 if you need <sys/param.h> to define MAXHOSTNAMELEN])])
+
+	AC_COMPILE_IFELSE(
+	    AC_LANG_PROGRAM([#include <netdb.h>],
+			    [int h = MAXHOSTNAMELEN;]),
+	    [FOUND_MAXHOSTNAMELEN='netdb.h'
+	     AC_DEFINE(NEED_NETDB_H,1,
+	       [Define to 1 if you need <netdb.h> to define MAXHOSTNAMELEN])])
+
+  AC_MSG_RESULT([$FOUND_MAXHOSTNAMELEN])
+fi
 
 ### Additional options to configure
 
@@ -633,20 +663,130 @@ AC_ARG_ENABLE(ecore-x-input,
         @<:@default=detect@:>@])],
    [want_ecore_x_input=$enableval])
 
+AC_ARG_ENABLE(ecore-x-dri,
+   [AC_HELP_STRING([--disable-ecore-x-dri],
+       [disable the ecore_x support for DRI extension.
+        @<:@default=detect@:>@])],
+   [want_ecore_x_dri=$enableval])
 
 AC_ARG_ENABLE(ecore-x-xcb,
    [AC_HELP_STRING([--enable-ecore-x-xcb],
        [enable the ecore_x module with XCB backend. @<:@default=disabled@:>@])],
-   [want_ecore_x_xcb=$enableval],
-   [want_ecore_x_xcb="no"])
+   [want_ecore_x_xcb=$enableval])
 
 AC_MSG_CHECKING(whether ecore_x with XCB backend is to be built)
 AC_MSG_RESULT($want_ecore_x_xcb)
 
 if test "x$want_ecore_x_xcb" = "xyes" ; then
-  PKG_CHECK_MODULES(XCB, xcb xcb-icccm xcb-image xcb-keysyms pixman-1,
+
+  AC_MSG_CHECKING([keysym definitions])
+  KEYSYMDEFDIR=`$PKG_CONFIG --variable=includedir xproto`/X11
+  FILES="keysymdef.h XF86keysym.h Sunkeysym.h DECkeysym.h HPkeysym.h"
+  for i in $FILES; do
+      if test -f "$KEYSYMDEFDIR/$i"; then
+        KEYSYMDEFS="$KEYSYMDEFS $KEYSYMDEFDIR/$i"
+      elif test "x$i" = "xkeysymdef.h"; then
+        AC_MSG_ERROR([Cannot find keysymdef.h])
+      fi
+  done
+  AC_MSG_RESULT([$KEYSYMDEFS])
+  AC_SUBST(KEYSYMDEFS)
+
+  have_iconv="no"
+  AC_ARG_WITH([iconv-link],
+    AC_HELP_STRING([--with-iconv-link=ICONV_LINK], [explicitly specify an iconv link option]),
+      [
+        LIBS="$withval $LIBS"
+        have_iconv="yes"
+      ])
+
+  AC_MSG_CHECKING(for explicit iconv link options)
+  if test "x${iconv_libs}" = "x" ; then
+    AC_MSG_RESULT([no explicit iconv link option])
+  else
+    AC_MSG_RESULT([$iconv_libs])
+  fi
+
+  if test "x${have_iconv}" = "xno" ; then
+    AC_CHECK_HEADERS([iconv.h], [have_iconv="yes"])
+
+    if test "x${have_iconv}" = "xyes" ; then
+      AC_MSG_CHECKING([whether iconv() is in libc])
+
+      AC_LINK_IFELSE(
+        [AC_LANG_PROGRAM(
+        [[
+          #include <stdlib.h>
+          #include <iconv.h>
+        ]],
+        [[
+          iconv_t ic;
+          size_t count = iconv(ic, NULL, NULL, NULL, NULL);
+        ]])],
+        [have_iconv="yes"],
+        [have_iconv="no"])
+
+      AC_MSG_RESULT([${have_iconv}])
+    fi
+
+    if test "x${have_iconv}" = "xno" ; then
+      AC_MSG_CHECKING([whether iconv() is in libiconv.a])
+
+      LIBS_save="${LIBS}"
+      LIBS="-liconv $LIBS"
+      AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM(
+        [[
+          #include <stdlib.h>
+          #include <iconv.h>
+        ]],
+        [[
+          iconv_t ic;
+          size_t count;
+          count = iconv(ic, NULL, NULL, NULL, NULL);
+        ]])],
+        [have_iconv="yes"],
+        [
+          have_iconv="no"
+          LIBS=${LIBS_save}
+        ])
+
+      AC_MSG_RESULT([${have_iconv}])
+    fi
+
+    if test "x${have_iconv}" = "xno" ; then
+      AC_MSG_CHECKING([whether iconv() is in libiconv_plug.a])
+
+      LIBS_save="${LIBS}"
+      LIBS="-liconv_plug $LIBS"
+      AC_LINK_IFELSE(
+      [AC_LANG_PROGRAM(
+      [[
+        #include <stdlib.h>
+        #include <iconv.h>
+      ]],
+      [[
+        iconv_t ic;
+        size_t count = iconv(ic, NULL, NULL, NULL, NULL);
+      ]])],
+      [have_iconv="yes"],
+      [
+        have_iconv="no"
+        LIBS=${LIBS_save}
+      ])
+
+      AC_MSG_RESULT([${have_iconv}])
+    fi
+
+    if test "x${have_iconv}" = "xyes" ; then
+      AC_DEFINE([HAVE_ICONV], [1], [Set to 1 if iconv library is installed])
+    fi
+  fi
+
+## x11-xcb
+  PKG_CHECK_MODULES(XCB, xcb xcb-shm xcb-icccm xcb-image xcb-keysyms pixman-1,
     [ have_ecore_x_xcb="yes"
-      requirements_ecore_x="xcb xcb-icccm xcb-image xcb-keysyms pixman-1 ${requirements_ecore_x}" ],
+      requirements_ecore_x="xcb xcb-shm xcb-icccm xcb-image xcb-keysyms pixman-1 ${requirements_ecore_x}" ],
     [ have_ecore_x_xcb="no" ])
 
   if test "x$have_ecore_x_xcb" = "xyes" ; then
@@ -695,9 +835,9 @@ if test "x$want_ecore_x_xcb" = "xyes" ; then
     fi
 
     if test "x$want_ecore_x_render" != "xno"; then
-      PKG_CHECK_MODULES(XCB_RENDER, xcb-render,
+      PKG_CHECK_MODULES(XCB_RENDER, xcb-render xcb-renderutil,
         [ have_ecore_x_xcb_render="yes"
-          requirements_ecore_x="xcb-render ${requirements_ecore_x}"
+          requirements_ecore_x="xcb-render xcb-renderutil ${requirements_ecore_x}"
           AC_DEFINE(ECORE_XCB_RENDER, 1, [Build support for XCB render]) ],
         [ have_ecore_x_xcb_render="no" ])
     else
@@ -742,7 +882,7 @@ if test "x$want_ecore_x_xcb" = "xyes" ; then
       PKG_CHECK_MODULES(XCB_XFIXES, xcb-xfixes,
         [ have_ecore_x_xcb_xfixes="yes"
           requirements_ecore_x="xcb-xfixes ${requirements_ecore_x}"
-          AC_DEFINE(ECORE_XCB_FIXES, 1, [Build support for XCB xfixes]) ],
+          AC_DEFINE(ECORE_XCB_XFIXES, 1, [Build support for XCB xfixes]) ],
         [ have_ecore_x_xcb_xfixes="no" ])
     else
       have_ecore_x_xcb_xfixes="no"
@@ -780,6 +920,41 @@ if test "x$want_ecore_x_xcb" = "xyes" ; then
     else
       have_ecore_x_xcb_xtest="no"
       AC_MSG_NOTICE("xtest extension explicitly disabled")
+    fi
+
+# input extension disabled currently in xcb as xcb-input has some issues
+    want_ecore_x_input="no"
+    if test "x$want_ecore_x_input" != "xno"; then
+      PKG_CHECK_MODULES(XCB_XINPUT, xcb-xinput,
+        [ have_ecore_x_xcb_xinput="yes"
+          requirements_ecore_x="xcb-xinput ${requirements_ecore_x}"
+          AC_DEFINE(ECORE_XCB_XINPUT, 1, [Build support for XCB xinput]) ],
+        [ have_ecore_x_xcb_xinput="no" ])
+    else
+      have_ecore_x_xcb_xinput="no"
+      AC_MSG_NOTICE("xinput extension explicitly disabled")
+    fi
+
+    if test "x$want_ecore_x_cursor" != "xno"; then
+      PKG_CHECK_MODULES(XCB_CURSOR, xcb-render xcb-renderutil,
+        [ have_ecore_x_xcb_cursor="yes"
+          requirements_ecore_x="xcb-render xcb-renderutil ${requirements_ecore_x}"
+          AC_DEFINE(ECORE_XCB_CURSOR, 1, [Build support for XCB cursor]) ],
+        [ have_ecore_x_xcb_cursor="no" ])
+    else
+      have_ecore_x_xcb_cursor="no"
+      AC_MSG_NOTICE("cursor extension explicitly disabled")
+    fi
+
+    if test "x$want_ecore_x_dri" != "xno"; then
+      PKG_CHECK_MODULES(XCB_DRI, xcb-dri2,
+        [ have_ecore_x_xcb_dri="yes"
+          requirements_ecore_x="xcb-dri2 ${requirements_ecore_x}"
+          AC_DEFINE(ECORE_XCB_DRI, 1, [Build support for XCB dri/dri2]) ],
+        [ have_ecore_x_xcb_dri="no" ])
+    else
+      have_ecore_x_xcb_dri="no"
+      AC_MSG_NOTICE("dri extension explicitly disabled")
     fi
 
     AC_DEFINE(HAVE_ECORE_X_XCB, 1, [Defined to 1 if XCB is enabled.])
@@ -1174,6 +1349,20 @@ ECORE_CHECK_MODULE([input], [${want_ecore_input}], [Input])
 ECORE_CHECK_MODULE([input-evas], [${want_ecore_input}], [Input_Evas], [${have_evas}],
    [requirements_ecore_input_evas="ecore-input >= 1.0.0 evas >= 1.0.0 ${requirements_ecore_input}"])
 
+# ecore_imf_xim
+AM_CONDITIONAL(BUILD_ECORE_IMF_XIM, false)
+ecore_imf_xim_deps="no"
+echo "have_ecore_x_xlib: ${have_ecore_x_xlib}"
+if test    "x${have_ecore_imf}" = "xyes" \
+        -a "x${have_ecore_x_xlib}" = "xyes" \
+        -a "x${have_ecore_input}" = "xyes" ; then
+   ecore_imf_xim_deps="yes"
+   AC_DEFINE(BUILD_ECORE_IMF_XIM, 1, [Ecore Imf XIM Support])
+fi
+
+ECORE_CHECK_MODULE([imf-xim], [${want_ecore_imf}], [Imf_XIM], [${ecore_imf_xim_deps}],
+   [requirements_ecore_imf_xim="ecore-imf >= 1.0.0 ecore-x >= 1.0.0 ecore-input >= 1.0.0 ${requirements_ecore_imf_xim}"])
+
 ## Graphic systems
 
 # ecore_x{cb}
@@ -1269,8 +1458,8 @@ ECORE_EVAS_CHECK_MODULE([software-x11],
    [Software X11],
    [${have_ecore_x}])
 
-have_ecore_evas_software_xlib=no"
-have_ecore_evas_software_xcb=no"
+have_ecore_evas_software_xlib="no"
+have_ecore_evas_software_xcb="no"
 if test "x$have_ecore_evas_software_x11" = "xyes" ; then
    have_ecore_evas_software_xlib=`${PKG_CONFIG} --variable=Xlib evas-software-x11`
    if test "x${have_ecore_evas_software_xlib}" = "xyes" -a "x${have_ecore_x_xlib}" = "xyes" ; then
@@ -1287,7 +1476,31 @@ fi
 ECORE_EVAS_CHECK_MODULE([opengl-x11],
    [${want_ecore_evas_opengl_x11}],
    [OpenGL Xlib],
-   [${have_ecore_x_xlib}])
+   [${have_ecore_x}])
+
+have_ecore_evas_opengl_xlib="no"
+have_ecore_evas_opengl_xcb="no"
+if test "x${have_ecore_evas_opengl_x11}" = "xyes" -o "x${have_ecore_evas_opengl_x11}" = "xstatic" ; then
+   have_ecore_evas_opengl_xlib=`${PKG_CONFIG} --variable=Xlib evas-opengl-x11`
+   if test "x${have_ecore_evas_opengl_xlib}" = "xyes" ; then
+      AC_DEFINE(BUILD_ECORE_EVAS_OPENGL_XLIB, 1, [OpenGL Xlib rendering backend])
+   fi
+
+# opengl does not work with xcb (yet)
+   have_ecore_evas_opengl_xcb=`${PKG_CONFIG} --variable=XCB evas-opengl-x11`
+   if test "x${have_ecore_evas_opengl_xcb}" = "xyes" -a "x${have_ecore_x_xcb}" = "xyes" ; then
+      PKG_CHECK_MODULES(XCB_X11, x11-xcb,
+        [ have_ecore_x_opengl_xcb="yes"
+          requirements_ecore_x="x11-xcb ${requirements_ecore_x}"
+          AC_DEFINE(BUILD_ECORE_X_OPENGL_XCB, 1, [Build support for XCB-based OpenGL])
+          AC_DEFINE(BUILD_ECORE_EVAS_OPENGL_XCB, 1, [OpenGL XCB rendering backend])
+        ],
+        [ have_ecore_x_opengl_xcb="no" ])
+    else
+      have_ecore_x_opengl_xcb="no"
+      AC_MSG_NOTICE("XCB-based OpenGL explicitly disabled")
+    fi
+fi
 
 # ecore_evas_software_x11 16 bits
 
@@ -1411,6 +1624,7 @@ AC_SUBST(requirements_ecore_sdl)
 AC_SUBST(requirements_ecore_x)
 AC_SUBST(requirements_ecore_win32)
 AC_SUBST(requirements_ecore_wince)
+AC_SUBST(requirements_ecore_imf_xim)
 
 AC_CONFIG_FILES([
 Makefile
@@ -1435,6 +1649,7 @@ doc/ecore.dox
 doc/Makefile
 doc/Doxyfile
 src/Makefile
+src/util/Makefile
 src/bin/Makefile
 src/lib/Makefile
 src/lib/ecore/Makefile
@@ -1458,6 +1673,9 @@ src/lib/ecore_x/xlib/Makefile
 src/lib/ecore_x/xcb/Makefile
 src/examples/Makefile
 src/tests/Makefile
+src/modules/Makefile
+src/modules/immodules/Makefile
+src/modules/immodules/xim/Makefile
 README
 ecore.spec
 $po_makefile_in
@@ -1511,6 +1729,7 @@ if test "x$have_ecore_file" = "xyes" ; then
 fi
 #echo "  Ecore_Config.................: $have_ecore_config (deprecated)"
 echo "  Ecore_IMF....................: $have_ecore_imf"
+echo "    XIM........................: $have_ecore_imf_xim"
 echo "  Ecore_IMF_Evas...............: $have_ecore_imf_evas"
 echo "  Ecore_Input..................: $have_ecore_input"
 echo "  Ecore_Input_Evas.............: $have_ecore_input_evas"
@@ -1576,7 +1795,11 @@ if test "x${have_ecore_evas}" = "xyes" ; then
   else
     echo "    Software X11...............: $have_ecore_evas_software_x11"
   fi
-  echo "    OpenGL X11.................: $have_ecore_evas_opengl_x11"
+  if test "x${have_ecore_evas_opengl_x11}" = "xyes" ; then
+    echo "    OpenGL X11.................: $have_ecore_evas_opengl_x11 (Xlib=${have_ecore_evas_opengl_xlib}) (XCB=${have_ecore_evas_opengl_xcb})"
+  else
+    echo "    OpenGL X11.................: $have_ecore_evas_opengl_x11"
+  fi
   echo "    Software GDI...............: $have_ecore_evas_software_gdi"
   echo "    Software DirectDraw........: $have_ecore_evas_software_ddraw"
   echo "    Direct3D...................: $have_ecore_evas_direct3d"

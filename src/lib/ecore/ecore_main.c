@@ -85,19 +85,21 @@ struct epoll_event {
 };
 
 static inline int
-epoll_create(int size)
+epoll_create(int size __UNUSED__)
 {
   return -1;
 }
 
 static inline int
-epoll_wait(int epfd, struct epoll_event *events, int maxevents, int timeout)
+epoll_wait(int epfd __UNUSED__, struct epoll_event *events __UNUSED__,
+           int maxevents __UNUSED__, int timeout __UNUSED__)
 {
   return -1;
 }
 
 static inline int
-epoll_ctl(int epfd, int op, int fd, struct epoll_event *event)
+epoll_ctl(int epfd __UNUSED__, int op __UNUSED__, int fd __UNUSED__,
+          struct epoll_event *event __UNUSED__)
 {
   return -1;
 }
@@ -235,6 +237,7 @@ static GSource *ecore_glib_source;
 static guint ecore_glib_source_id;
 static GMainLoop* ecore_main_loop;
 static gboolean ecore_idling;
+static gboolean _ecore_glib_idle_enterer_called;
 static gboolean ecore_fds_ready;
 #endif
 
@@ -483,25 +486,28 @@ static inline int _ecore_main_fdh_glib_mark_active(void)
 static gboolean
 _ecore_main_gsource_prepare(GSource *source __UNUSED__, gint *next_time)
 {
-   gboolean running;
+   gboolean ready = FALSE;
 
    in_main_loop++;
 
-   if (!ecore_idling)
+   if (!ecore_idling && !_ecore_glib_idle_enterer_called)
      {
-         while (_ecore_timer_call(_ecore_time_loop_time));
-         _ecore_timer_cleanup();
+        _ecore_time_loop_time = ecore_time_get();
+        while (_ecore_timer_call(_ecore_time_loop_time));
+        _ecore_timer_cleanup();
 
-         /* when idling, busy loop checking the fds only */
-         _ecore_idle_enterer_call();
-         _ecore_throttle();
+        _ecore_idle_enterer_call();
+        _ecore_throttle();
+        _ecore_glib_idle_enterer_called = FALSE;
+
+        if (fd_handlers_with_buffer)
+          _ecore_main_fd_handlers_buf_call();
      }
 
    while (_ecore_signal_count_get()) _ecore_signal_call();
 
    /* don't check fds if somebody quit */
-   running = g_main_loop_is_running(ecore_main_loop);
-   if (running)
+   if (g_main_loop_is_running(ecore_main_loop))
      {
         /* only set idling state in dispatch */
         if (ecore_idling && !_ecore_idler_exist() && !_ecore_event_exist())
@@ -510,7 +516,7 @@ _ecore_main_gsource_prepare(GSource *source __UNUSED__, gint *next_time)
                {
                   int r = -1;
                   double t = _ecore_timer_next_get();
-                  if (timer_fd >= 0)
+                  if (timer_fd >= 0 && t > 0.0)
                     {
                        struct itimerspec ts;
 
@@ -520,7 +526,7 @@ _ecore_main_gsource_prepare(GSource *source __UNUSED__, gint *next_time)
                        ts.it_value.tv_nsec = fmod(t*NS_PER_SEC, NS_PER_SEC);
 
                        /* timerfd cannot sleep for 0 time */
-                       if (ts.it_value.tv_sec && ts.it_value.tv_nsec)
+                       if (ts.it_value.tv_sec || ts.it_value.tv_nsec)
                          {
                             r = timerfd_settime(timer_fd, 0, &ts, NULL);
                             if (r < 0)
@@ -536,23 +542,33 @@ _ecore_main_gsource_prepare(GSource *source __UNUSED__, gint *next_time)
                          }
                     }
                   if (r == -1)
-                    *next_time = ceil(t * 1000.0);
+                    {
+                       *next_time = ceil(t * 1000.0);
+                       if (t == 0.0)
+                         ready = TRUE;
+                    }
                }
              else
                *next_time = -1;
           }
         else
-          *next_time = 0;
+          {
+            *next_time = 0;
+            if (_ecore_event_exist())
+              ready = TRUE;
+          }
 
         if (fd_handlers_with_prep)
           _ecore_main_prepare_handlers();
      }
+   else
+     ready = TRUE;
 
    in_main_loop--;
    INF("leave, timeout = %d", *next_time);
 
    /* ready if we're not running (about to quit) */
-   return !running;
+   return ready;
 }
 
 static gboolean
@@ -591,37 +607,36 @@ _ecore_main_gsource_check(GSource *source __UNUSED__)
    else
      ecore_fds_ready = (_ecore_main_fdh_glib_mark_active() > 0);
    _ecore_main_fd_handlers_cleanup();
+   if (ecore_fds_ready)
+     ret = TRUE;
 
    /* check timers after updating loop time */
-   _ecore_time_loop_time = ecore_time_get();
    if (!ret && _ecore_timers_exists())
-     {
-        double next_time = _ecore_timer_next_get();
-        ret = _ecore_timers_exists() && (0.0 == next_time);
-     }
-
-   _ecore_timer_enable_new();
+     ret = (0.0 == _ecore_timer_next_get());
 
    in_main_loop--;
 
-   return ret || ecore_fds_ready;
+   return ret;
 }
 
 /* like we just came out of main_loop_select in  _ecore_main_select */
 static gboolean
 _ecore_main_gsource_dispatch(GSource *source __UNUSED__, GSourceFunc callback __UNUSED__, gpointer user_data __UNUSED__)
 {
-   gboolean events_ready, timers_ready, idlers_ready, signals_ready;
-   double next_time = _ecore_timer_next_get();
+   gboolean events_ready, timers_ready, idlers_ready;
+   double next_time;
+
+   _ecore_time_loop_time = ecore_time_get();
+   _ecore_timer_enable_new();
+   next_time = _ecore_timer_next_get();
 
    events_ready = _ecore_event_exist();
    timers_ready = _ecore_timers_exists() && (0.0 == next_time);
    idlers_ready = _ecore_idler_exist();
-   signals_ready = (_ecore_signal_count_get() > 0);
 
    in_main_loop++;
-   INF("enter idling=%d fds=%d events=%d signals=%d timers=%d (next=%.2f) idlers=%d",
-       ecore_idling, ecore_fds_ready, events_ready, signals_ready,
+   INF("enter idling=%d fds=%d events=%d timers=%d (next=%.2f) idlers=%d",
+       ecore_idling, ecore_fds_ready, events_ready,
        timers_ready, next_time, idlers_ready);
 
    if (ecore_idling && events_ready)
@@ -639,9 +654,8 @@ _ecore_main_gsource_dispatch(GSource *source __UNUSED__, GSourceFunc callback __
         _ecore_idler_call();
 
         events_ready = _ecore_event_exist();
-        idlers_ready = _ecore_idler_exist();
 
-        if ((ecore_fds_ready || events_ready || timers_ready || idlers_ready || signals_ready))
+        if (ecore_fds_ready || events_ready || timers_ready)
           {
              _ecore_idle_exiter_call();
              ecore_idling = 0;
@@ -657,6 +671,16 @@ _ecore_main_gsource_dispatch(GSource *source __UNUSED__, GSourceFunc callback __
         while (_ecore_signal_count_get()) _ecore_signal_call();
         _ecore_event_call();
         _ecore_main_fd_handlers_cleanup();
+
+        while (_ecore_timer_call(_ecore_time_loop_time));
+        _ecore_timer_cleanup();
+
+        _ecore_idle_enterer_call();
+        _ecore_throttle();
+        _ecore_glib_idle_enterer_called = TRUE;
+
+        if (fd_handlers_with_buffer)
+          _ecore_main_fd_handlers_buf_call();
      }
 
    in_main_loop--;
@@ -705,6 +729,7 @@ _ecore_main_loop_init(void)
       CRIT("Failed to create glib source for epoll!");
    else
      {
+        g_source_set_priority(ecore_glib_source, G_PRIORITY_HIGH_IDLE + 20);
         if (HAVE_EPOLL && epoll_fd >= 0)
           {
              /* epoll multiplexes fds into the g_main_loop */

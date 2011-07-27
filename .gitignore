@@ -1,4 +1,3 @@
-=======
 *.o
 *.lo
 *.a
@@ -80,6 +79,7 @@ po/remove-potcdate.sin
 po/stamp-po
 /stamp-h1
 /doc/Doxyfile
+/src/bin/ecore_test
 debian/*.debhelper.log
 debian/*.substvars
 debian/*.debhelper

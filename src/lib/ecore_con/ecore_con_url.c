@@ -4,40 +4,7 @@
  */
 
 /*
- * Brief usage:
- * 1. Create an Ecore_Con_Url object
- * 2. Register to receive the ECORE_CON_EVENT_URL_COMPLETE event
- *    (and optionally the ECORE_CON_EVENT_URL_DATA event to receive
- *    the response, e.g. for HTTP/FTP downloads)
- * 3. Set the URL with ecore_con_url_url_set(...);
- * 4. Perform the operation with ecore_con_url_get(...);
- *
- * Note that it is good to reuse Ecore_Con_Url objects wherever possible, but
- * bear in mind that each one can only perform one operation at a time.
- * You need to wait for the ECORE_CON_EVENT_URL_COMPLETE event before re-using
- * or destroying the object.
- *
- * Example Usage 1 (HTTP GET):
- *   ecore_con_url_url_set(url_con, "http://www.google.com");
- *   ecore_con_url_get(url_con);
- *
- * Example usage 2 (HTTP POST):
- *   ecore_con_url_url_set(url_con, "http://www.example.com/post_handler.cgi");
- *   ecore_con_url_post(url_con, data, data_length, "multipart/form-data");
- *
- * Example Usage 3 (FTP download):
- *   ecore_con_url_url_set(url_con, "ftp://ftp.example.com/pub/myfile");
- *   ecore_con_url_get(url_con);
- *
- * Example Usage 4 (FTP upload as ftp://ftp.example.com/file):
- *   ecore_con_url_url_set(url_con, "ftp://ftp.example.com");
- *   ecore_con_url_ftp_upload(url_con, "/tmp/file", "user", "pass", NULL);
- *
- * Example Usage 5 (FTP upload as ftp://ftp.example.com/dir/file):
- *   ecore_con_url_url_set(url_con, "ftp://ftp.example.com");
- *   ecore_con_url_ftp_upload(url_con, "/tmp/file", "user", "pass","dir");
- *
- * FIXME: Support more CURL features: Progress callbacks and more...
+ * FIXME: Support more CURL features...
  */
 
 #ifdef HAVE_CONFIG_H
@@ -135,19 +102,9 @@ _url_complete_push_event(int   type,
 /**
  * @addtogroup Ecore_Con_Url_Group Ecore URL Connection Functions
  *
- * Utility functions that set up, use and shut down the Ecore URL
- * Connection library.
- *
- * @todo write detailed description of Ecore_Con_Url
- *
  * @{
  */
 
-/**
- * Initialises the Ecore_Con_Url library.
- * @return Number of times the library has been initialised without being
- *          shut down.
- */
 EAPI int
 ecore_con_url_init(void)
 {
@@ -202,10 +159,6 @@ ecore_con_url_init(void)
 #endif
 }
 
-/**
- * Shuts down the Ecore_Con_Url library.
- * @return  Number of calls that still uses Ecore_Con_Url
- */
 EAPI int
 ecore_con_url_shutdown(void)
 {
@@ -242,10 +195,6 @@ ecore_con_url_shutdown(void)
    return 1;
 }
 
-/**
- * Enable or disable HTTP 1.1 pipelining.
- * @param enable EINA_TRUE will turn it on, EINA_FALSE will disable it.
- */
 EAPI void
 ecore_con_url_pipeline_set(Eina_Bool enable)
 {
@@ -258,10 +207,6 @@ ecore_con_url_pipeline_set(Eina_Bool enable)
 #endif
 }
 
-/**
- * Is HTTP 1.1 pipelining enable ?
- * @return EINA_TRUE if it is enable.
- */
 EAPI Eina_Bool
 ecore_con_url_pipeline_get(void)
 {
@@ -271,21 +216,6 @@ ecore_con_url_pipeline_get(void)
   return EINA_FALSE;
 }
 
-/**
- * Creates and initializes a new Ecore_Con_Url connection object.
- *
- * Creates and initializes a new Ecore_Con_Url connection object that can be
- * uesd for sending requests.
- *
- * @param url URL that will receive requests. Can be changed using
- *            ecore_con_url_url_set.
- *
- * @return NULL on error, a new Ecore_Con_Url on success.
- *
- *
- * @see ecore_con_url_custom_new()
- * @see ecore_con_url_url_set()
- */
 EAPI Ecore_Con_Url *
 ecore_con_url_new(const char *url)
 {
@@ -354,22 +284,6 @@ ecore_con_url_new(const char *url)
 #endif
 }
 
-/**
- * Creates a custom connection object.
- *
- * Creates and initializes a new Ecore_Con_Url for a custom request (e.g. HEAD,
- * SUBSCRIBE and other obscure HTTP requests). This object should be used like
- * one created with ecore_con_url_new().
- *
- * @param url URL that will receive requests
- * @param custom_request Custom request (e.g. GET, POST, HEAD, PUT, etc)
- *
- * @return NULL on error, a new Ecore_Con_Url on success.
- *
- *
- * @see ecore_con_url_new()
- * @see ecore_con_url_url_set()
- */
 EAPI Ecore_Con_Url *
 ecore_con_url_custom_new(const char *url,
                          const char *custom_request)
@@ -406,13 +320,6 @@ ecore_con_url_custom_new(const char *url,
 #endif
 }
 
-/**
- * Destroys a Ecore_Con_Url connection object.
- *
- * @param url_con Connection object to free.
- *
- * @see ecore_con_url_new()
- */
 EAPI void
 ecore_con_url_free(Ecore_Con_Url *url_con)
 {
@@ -465,7 +372,7 @@ ecore_con_url_free(Ecore_Con_Url *url_con)
      free(s);
    EINA_LIST_FREE(url_con->response_headers, s)
      free(s);
-   free(url_con->url);
+   eina_stringshare_del(url_con->url);
    free(url_con);
 #else
    return;
@@ -473,15 +380,22 @@ ecore_con_url_free(Ecore_Con_Url *url_con)
 #endif
 }
 
-/**
- * Sets the URL to send the request to.
- *
- * @param url_con Connection object through which the request will be sent.
- * @param url URL that will receive the request
- *
- * @return EINA_TRUE on success, EINA_FALSE on error.
- *
- */
+EAPI const char *
+ecore_con_url_url_get(Ecore_Con_Url *url_con)
+{
+#ifdef HAVE_CURL
+   if (!ECORE_MAGIC_CHECK(url_con, ECORE_MAGIC_CON_URL))
+     {
+        ECORE_MAGIC_FAIL(url_con, ECORE_MAGIC_CON_URL, __func__);
+        return NULL;
+     }
+   return url_con->url;
+#else
+   (void)url_con;
+   return NULL;
+#endif
+}
+
 EAPI Eina_Bool
 ecore_con_url_url_set(Ecore_Con_Url *url_con,
                       const char    *url)
@@ -496,12 +410,7 @@ ecore_con_url_url_set(Ecore_Con_Url *url_con,
    if (url_con->active)
      return EINA_FALSE;
 
-   if (url_con->url)
-     free(url_con->url);
-
-   url_con->url = NULL;
-   if (url)
-     url_con->url = strdup(url);
+   eina_stringshare_replace(&url_con->url, url);
 
    if (url_con->url)
      curl_easy_setopt(url_con->curl_easy, CURLOPT_URL,
@@ -517,18 +426,6 @@ ecore_con_url_url_set(Ecore_Con_Url *url_con,
 #endif
 }
 
-/**
- * Associates data with a connection object.
- *
- * Associates data with a connection object, which can be retrieved later with
- * ecore_con_url_data_get()).
- *
- * @param url_con Connection object to associate data.
- * @param data Data to be set.
- *
- *
- * @see ecore_con_url_data_get()
- */
 EAPI void
 ecore_con_url_data_set(Ecore_Con_Url *url_con,
                        void          *data)
@@ -548,21 +445,6 @@ ecore_con_url_data_set(Ecore_Con_Url *url_con,
 #endif
 }
 
-/**
- * Adds an additional header to the request connection object.
- *
- * Adds an additional header to the request connection object. This addition
- * will be valid for only one ecore_con_url_get() or ecore_con_url_post() call.
- *
- * @param url_con Connection object
- * @param key Header key
- * @param value Header value
- *
- *
- * @see ecore_con_url_get()
- * @see ecore_con_url_post()
- * @see ecore_con_url_additional_headers_clear()
- */
 EAPI void
 ecore_con_url_additional_header_add(Ecore_Con_Url *url_con,
                                     const char    *key,
@@ -593,19 +475,6 @@ ecore_con_url_additional_header_add(Ecore_Con_Url *url_con,
 #endif
 }
 
-/**
- * Cleans additional headers.
- *
- * Cleans additional headers associated with a connection object (previously
- * added with ecore_con_url_additional_header_add()).
- *
- * @param url_con Connection object to clean additional headers.
- *
- *
- * @see ecore_con_url_additional_header_add()
- * @see ecore_con_url_get()
- * @see ecore_con_url_post()
- */
 EAPI void
 ecore_con_url_additional_headers_clear(Ecore_Con_Url *url_con)
 {
@@ -627,19 +496,6 @@ ecore_con_url_additional_headers_clear(Ecore_Con_Url *url_con)
 #endif
 }
 
-/**
- * Retrieves data associated with a Ecore_Con_Url connection object.
- *
- * Retrieves data associated with a Ecore_Con_Url connection object (previously
- * set with ecore_con_url_data_set()).
- *
- * @param url_con Connection object to retrieve data from.
- *
- * @return Data associated with the given object.
- *
- *
- * @see ecore_con_url_data_set()
- */
 EAPI void *
 ecore_con_url_data_get(Ecore_Con_Url *url_con)
 {
@@ -657,17 +513,6 @@ ecore_con_url_data_get(Ecore_Con_Url *url_con)
 #endif
 }
 
-/**
- * Sets whether HTTP requests should be conditional, dependent on
- * modification time.
- *
- * @param url_con   Ecore_Con_Url to act upon.
- * @param condition Condition to use for HTTP requests.
- * @param timestamp Time since 1 Jan 1970 to use in the condition.
- *
- * @sa ecore_con_url_get()
- * @sa ecore_con_url_post()
- */
 EAPI void
 ecore_con_url_time(Ecore_Con_Url     *url_con,
                    Ecore_Con_Url_Time condition,
@@ -690,17 +535,6 @@ ecore_con_url_time(Ecore_Con_Url     *url_con,
 #endif
 }
 
-/**
- * Setup a file for receiving response data.
- *
- * Sets up a file to have response data written into. Note that
- * ECORE_CON_EVENT_URL_DATA events will not be emitted if a file has been set to
- * receive the response data.
- *
- * @param url_con Connection object to set file
- * @param fd File descriptor associated with the file
- *
- */
 EAPI void
 ecore_con_url_fd_set(Ecore_Con_Url *url_con,
                      int            fd)
@@ -716,20 +550,6 @@ ecore_con_url_fd_set(Ecore_Con_Url *url_con,
 #endif
 }
 
-/**
- * Retrieves the number of bytes received.
- *
- * Retrieves the number of bytes received on the last request of the given
- * connection object.
- *
- * @param url_con Connection object which the request was sent on.
- *
- * @return Number of bytes received on request.
- *
- *
- * @see ecore_con_url_get()
- * @see ecore_con_url_post()
- */
 EAPI int
 ecore_con_url_received_bytes_get(Ecore_Con_Url *url_con)
 {
@@ -747,18 +567,6 @@ ecore_con_url_received_bytes_get(Ecore_Con_Url *url_con)
 #endif
 }
 
-/**
- * Retrieves headers from last request sent.
- *
- * Retrieves a list containing the response headers. This function should be
- * used after an ECORE_CON_EVENT_URL_COMPLETE event (headers should normally be
- * ready at that time).
- *
- * @param url_con Connection object to retrieve response headers from.
- *
- * @return List of response headers. This list must not be modified by the user.
- *
- */
 EAPI const Eina_List *
 ecore_con_url_response_headers_get(Ecore_Con_Url *url_con)
 {
@@ -769,19 +577,6 @@ ecore_con_url_response_headers_get(Ecore_Con_Url *url_con)
 #endif
 }
 
-/**
- * Sets url_con to use http auth, with given username and password, "safely" or not.
- * ATTENTION: requires libcurl >= 7.19.1 to work, otherwise will always return 0.
- *
- * @param url_con Connection object to perform a request on, previously created
- *    with ecore_con_url_new() or ecore_con_url_custom_new().
- * @param username Username to use in authentication
- * @param password Password to use in authentication
- * @param safe Whether to use "safer" methods (eg, NOT http basic auth)
- *
- * @return #EINA_TRUE on success, #EINA_FALSE on error.
- *
- */
 EAPI Eina_Bool
 ecore_con_url_httpauth_set(Ecore_Con_Url *url_con,
                            const char    *username,
@@ -922,28 +717,6 @@ _ecore_con_url_send(Ecore_Con_Url *url_con,
 #endif
 }
 
-/**
- * Sends a request.
- *
- * @param url_con Connection object to perform a request on, previously created
- *                with ecore_con_url_new() or ecore_con_url_custom_new().
- * @param data    Payload (data sent on the request)
- * @param length  Payload length. If @c -1, rely on automatic length
- *                calculation via @c strlen() on @p data.
- * @param content_type Content type of the payload (e.g. text/xml)
- *
- * @return #EINA_TRUE on success, #EINA_FALSE on error.
- *
- * @see ecore_con_url_custom_new()
- * @see ecore_con_url_additional_headers_clear()
- * @see ecore_con_url_additional_header_add()
- * @see ecore_con_url_data_set()
- * @see ecore_con_url_data_get()
- * @see ecore_con_url_response_headers_get()
- * @see ecore_con_url_time()
- * @see ecore_con_url_get()
- * @see ecore_con_url_post()
- */
 EINA_DEPRECATED EAPI Eina_Bool
 ecore_con_url_send(Ecore_Con_Url *url_con,
                    const void    *data,
@@ -953,49 +726,12 @@ ecore_con_url_send(Ecore_Con_Url *url_con,
    return _ecore_con_url_send(url_con, MODE_AUTO, data, length, content_type);
 }
 
-/**
- * Sends a get request.
- *
- * @param url_con Connection object to perform a request on, previously created
- *
- * @return #EINA_TRUE on success, #EINA_FALSE on error.
- *
- * @see ecore_con_url_custom_new()
- * @see ecore_con_url_additional_headers_clear()
- * @see ecore_con_url_additional_header_add()
- * @see ecore_con_url_data_set()
- * @see ecore_con_url_data_get()
- * @see ecore_con_url_response_headers_get()
- * @see ecore_con_url_time()
- * @see ecore_con_url_post()
- */
 EAPI Eina_Bool
 ecore_con_url_get(Ecore_Con_Url *url_con)
 {
    return _ecore_con_url_send(url_con, MODE_GET, NULL, 0, NULL);
 }
 
-/**
- * Sends a post request.
- *
- * @param url_con Connection object to perform a request on, previously created
- *                with ecore_con_url_new() or ecore_con_url_custom_new().
- * @param data    Payload (data sent on the request)
- * @param length  Payload length. If @c -1, rely on automatic length
- *                calculation via @c strlen() on @p data.
- * @param content_type Content type of the payload (e.g. text/xml)
- *
- * @return #EINA_TRUE on success, #EINA_FALSE on error.
- *
- * @see ecore_con_url_custom_new()
- * @see ecore_con_url_additional_headers_clear()
- * @see ecore_con_url_additional_header_add()
- * @see ecore_con_url_data_set()
- * @see ecore_con_url_data_get()
- * @see ecore_con_url_response_headers_get()
- * @see ecore_con_url_time()
- * @see ecore_con_url_get()
- */
 EAPI Eina_Bool
 ecore_con_url_post(Ecore_Con_Url *url_con,
                    const void    *data,
@@ -1005,17 +741,6 @@ ecore_con_url_post(Ecore_Con_Url *url_con,
    return _ecore_con_url_send(url_con, MODE_POST, data, length, content_type);
 }
 
-/**
- * @brief Uploads a file to an ftp site.
- * @param url_con The Ecore_Con_Url object to send with
- * @param filename The path to the file to send
- * @param user The username to log in with
- * @param pass The password to log in with
- * @param upload_dir The directory to which the file should be uploaded
- * @return #EINA_TRUE on success, else #EINA_FALSE.
- * Upload @p filename to an ftp server set in @p url_con using @p user
- * and @p pass to directory @p upload_dir
- */
 EAPI Eina_Bool
 ecore_con_url_ftp_upload(Ecore_Con_Url *url_con,
                          const char    *filename,
@@ -1099,18 +824,6 @@ ecore_con_url_ftp_upload(Ecore_Con_Url *url_con,
 #endif
 }
 
-/**
- * Enables the cookie engine for subsequent HTTP requests.
- *
- * After this function is called, cookies set by the server in HTTP responses
- * will be parsed and stored, as well as sent back to the server in new HTTP
- * requests.
- *
- * @note Even though this function is called @c ecore_con_url_cookies_init(),
- * there is no symmetrical shutdown operation.
- *
- * @param url_con Ecore_Con_Url instance which will be acted upon.
- */
 EAPI void
 ecore_con_url_cookies_init(Ecore_Con_Url *url_con)
 {
@@ -1131,26 +844,6 @@ ecore_con_url_cookies_init(Ecore_Con_Url *url_con)
 #endif
 }
 
-/**
- * Controls whether session cookies from previous sessions shall be loaded.
- *
- * Session cookies are cookies with no expire date set, which usually means
- * they are removed after the current session is closed.
- *
- * By default, when Ecore_Con_Url loads cookies from a file, all cookies are
- * loaded, including session cookies, which, most of the time, were supposed
- * to be loaded and valid only for that session.
- *
- * If @p ignore is set to @c EINA_TRUE, when Ecore_Con_Url loads cookies from
- * the files passed to @c ecore_con_url_cookies_file_add(), session cookies
- * will not be loaded.
- *
- * @param url_con Ecore_Con_Url instance which will be acted upon.
- * @param ignore  If @c EINA_TRUE, ignore session cookies when loading cookies
- *                from files. If @c EINA_FALSE, all cookies will be loaded.
- *
- * @see ecore_con_url_cookies_file_add()
- */
 EAPI void
 ecore_con_url_cookies_ignore_old_session_set(Ecore_Con_Url *url_con, Eina_Bool ignore)
 {
@@ -1172,21 +865,6 @@ ecore_con_url_cookies_ignore_old_session_set(Ecore_Con_Url *url_con, Eina_Bool i
 #endif
 }
 
-/**
- * Clears currently loaded cookies.
- *
- * The cleared cookies are removed and will not be sent in subsequent HTTP
- * requests, nor will they be written to the cookiejar file set via
- * @c ecore_con_url_cookies_jar_file_set().
- *
- * @note This function will initialize the cookie engine if it has not been
- *       initialized yet.
- *
- * @param url_con      Ecore_Con_Url instance which will be acted upon.
- *
- * @see ecore_con_url_cookies_session_clear()
- * @see ecore_con_url_cookies_ignore_old_session_set()
- */
 EAPI void
 ecore_con_url_cookies_clear(Ecore_Con_Url *url_con)
 {
@@ -1207,24 +885,6 @@ ecore_con_url_cookies_clear(Ecore_Con_Url *url_con)
 #endif
 }
 
-/**
- * Clears currently loaded session cookies.
- *
- * Session cookies are cookies with no expire date set, which usually means
- * they are removed after the current session is closed.
- *
- * The cleared cookies are removed and will not be sent in subsequent HTTP
- * requests, nor will they be written to the cookiejar file set via
- * @c ecore_con_url_cookies_jar_file_set().
- *
- * @note This function will initialize the cookie engine if it has not been
- *       initialized yet.
- *
- * @param url_con      Ecore_Con_Url instance which will be acted upon.
- *
- * @see ecore_con_url_cookies_clear()
- * @see ecore_con_url_cookies_ignore_old_session_set()
- */
 EAPI void
 ecore_con_url_cookies_session_clear(Ecore_Con_Url *url_con)
 {
@@ -1245,25 +905,6 @@ ecore_con_url_cookies_session_clear(Ecore_Con_Url *url_con)
 #endif
 }
 
-/**
- * Adds a file to the list of files from which to load cookies.
- *
- * Files must contain cookies defined according to two possible formats:
- *
- * @li HTTP-style header ("Set-Cookie: ...").
- * @li Netscape/Mozilla cookie data format.
- *
- * Please notice that the file will not be read immediately, but rather added
- * to a list of files that will be loaded and parsed at a later time.
- *
- * @note This function will initialize the cookie engine if it has not been
- *       initialized yet.
- *
- * @param url_con   Ecore_Con_Url instance which will be acted upon.
- * @param file_name Name of the file that will be added to the list.
- *
- * @see ecore_con_url_cookies_ignore_old_session_set()
- */
 EAPI void
 ecore_con_url_cookies_file_add(Ecore_Con_Url *url_con, const char * const file_name)
 {
@@ -1285,24 +926,6 @@ ecore_con_url_cookies_file_add(Ecore_Con_Url *url_con, const char * const file_n
 #endif
 }
 
-/**
- * Sets the name of the file to which all current cookies will be written when
- * either cookies are flushed or Ecore_Con is shut down.
- *
- * Cookies are written following Netscape/Mozilla's data format, also known as
- * cookie-jar.
- *
- * @note This function will initialize the cookie engine if it has not been
- *       initialized yet.
- *
- * @param url_con        Ecore_Con_Url instance which will be acted upon.
- * @param cookiejar_file File to which the cookies will be written.
- *
- * @return @c EINA_TRUE is the file name has been set successfully,
- *         @c EINA_FALSE otherwise.
- *
- * @see ecore_con_url_cookies_jar_write()
- */
 EAPI Eina_Bool
 ecore_con_url_cookies_jar_file_set(Ecore_Con_Url *url_con, const char * const cookiejar_file)
 {
@@ -1336,19 +959,6 @@ ecore_con_url_cookies_jar_file_set(Ecore_Con_Url *url_con, const char * const co
 #endif
 }
 
-/**
- * Writes all current cookies to the cookie jar immediately.
- *
- * A cookie-jar file must have been previously set by
- * @c ecore_con_url_jar_file_set, otherwise nothing will be done.
- *
- * @note This function will initialize the cookie engine if it has not been
- *       initialized yet.
- *
- * @param url_con Ecore_Con_Url instance which will be acted upon.
- *
- * @see ecore_con_url_cookies_jar_file_set()
- */
 EAPI void
 ecore_con_url_cookies_jar_write(Ecore_Con_Url *url_con)
 {
@@ -1369,16 +979,6 @@ ecore_con_url_cookies_jar_write(Ecore_Con_Url *url_con)
 #endif
 }
 
-/**
- * Toggle libcurl's verbose output.
- *
- * If @p verbose is @c EINA_TRUE, libcurl will output a lot of verbose
- * information about its operations, which is useful for
- * debugging. The verbose information will be sent to stderr.
- *
- * @param url_con Ecore_Con_Url instance which will be acted upon.
- * @param verbose Whether or not to enable libcurl's verbose output.
- */
 EAPI void
 ecore_con_url_verbose_set(Ecore_Con_Url *url_con,
                           Eina_Bool      verbose)
@@ -1404,10 +1004,6 @@ ecore_con_url_verbose_set(Ecore_Con_Url *url_con,
 #endif
 }
 
-/**
- * Enable or disable EPSV extension
- * @return  FIXME: To be more documented.
- */
 EAPI void
 ecore_con_url_ftp_use_epsv_set(Ecore_Con_Url *url_con,
                                Eina_Bool      use_epsv)

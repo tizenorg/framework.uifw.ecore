@@ -821,10 +821,28 @@ extern "C" {
    * a thread as soon as one becomes available and notify the calling user of
    * its completion once the task is done.
    *
+   * The following image shows the flow of a program running four tasks on
+   * a pool of two threads.
+   *
+   * @image html ecore_thread.png
+   * @image rtf ecore_thread.png
+   * @image latex ecore_thread.eps width=\textwidth
+   *
    * For larger tasks that may require continuous communication with the main
    * program, the feedback workers provide the same functionality plus a way
    * for the function running in the thread to send messages to the main
    * thread.
+   *
+   * The next diagram omits some details shown in the previous one regarding
+   * how threads are spawned and tasks are queued, but illustrates how feedback
+   * jobs communicate with the main loop and the special case of threads
+   * running out of pool.
+   *
+   * @image html ecore_thread_feedback.png
+   * @image rtf ecore_thread_feedback.png
+   * @image latex ecore_thread_feedback.eps width=\textwidth
+   *
+   * See an overview example in @ref ecore_thread_example_c.
    *
    * @ingroup Ecore_Group
    *
@@ -1162,7 +1180,7 @@ extern "C" {
    * For example, if you have a program doing requisitions to a database,
    * these requisitions can be done in threads so that waiting for the
    * database to respond doesn't block the UI. Each of these threads will
-   * run a function, and each function will be dependant on a connection to
+   * run a function, and each function will be dependent on a connection to
    * the database, which may not be able to handle more than one request at
    * a time so for each running function you will need one connection handle.
    * The options then are:
