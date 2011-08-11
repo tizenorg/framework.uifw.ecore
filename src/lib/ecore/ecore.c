@@ -53,6 +53,18 @@ static int _ecore_init_count = 0;
 int _ecore_log_dom = -1;
 int _ecore_fps_debug = 0;
 
+typedef struct _Ecore_Safe_Call Ecore_Safe_Call;
+struct _Ecore_Safe_Call
+{
+   Ecore_Cb cb;
+   void *data;
+};
+
+static void _thread_callback(void *data, void *buffer, unsigned int nbyte);
+static Eina_List *_thread_cb = NULL;
+static Ecore_Pipe *_thread_call = NULL;
+static Eina_Lock _thread_safety;
+
 /** OpenBSD does not define CODESET
  * FIXME ??
  */
@@ -62,7 +74,7 @@ int _ecore_fps_debug = 0;
 #endif
 
 /**
- * @addtogroup Ecore_Init_Group Ecore initialisation and shutdown functions.
+ * @addtogroup Ecore_Init_Group
  *
  * @{
  */
@@ -126,6 +138,9 @@ ecore_init(void)
    _ecore_job_init();
    _ecore_time_init();
 
+   eina_lock_new(&_thread_safety);
+   _thread_call = ecore_pipe_add(_thread_callback, NULL);
+
 #if HAVE_MALLINFO
    if (getenv("ECORE_MEM_STAT"))
      {
@@ -164,6 +179,9 @@ ecore_shutdown(void)
 {
    if (--_ecore_init_count != 0)
      return _ecore_init_count;
+
+   ecore_pipe_del(_thread_call);
+   eina_lock_free(&_thread_safety);
 
    if (_ecore_fps_debug) _ecore_fps_debug_shutdown();
    _ecore_poller_shutdown();
@@ -206,6 +224,34 @@ ecore_shutdown(void)
 /**
  * @}
  */
+
+EAPI void
+ecore_main_loop_thread_safe_call(Ecore_Cb callback, void *data)
+{
+   Ecore_Safe_Call *order;
+   int wakeup = 42;
+   Eina_Bool count;
+
+   if (eina_main_loop_is())
+     {
+        callback(data);
+        return ;
+     }
+
+   order = malloc(sizeof (Ecore_Safe_Call));
+   if (!order) return ;
+
+   order->cb = callback;
+   order->data = data;
+
+   eina_lock_take(&_thread_safety);
+
+   count = _thread_cb ? 0 : 1;
+   _thread_cb = eina_list_append(_thread_cb, order);
+   if (count) ecore_pipe_write(_thread_call, &wakeup, sizeof (int));
+
+   eina_lock_release(&_thread_safety);
+}
 
 EAPI void
 ecore_print_warning(const char *function, const char *sparam)
@@ -428,3 +474,23 @@ _ecore_memory_statistic(__UNUSED__ void *data)
 }
 
 #endif
+
+static void
+_thread_callback(void *data __UNUSED__,
+                 void *buffer __UNUSED__,
+                 unsigned int nbyte __UNUSED__)
+{
+   Ecore_Safe_Call *call;
+   Eina_List *callback;
+
+   eina_lock_take(&_thread_safety);
+   callback = _thread_cb;
+   _thread_cb = NULL;
+   eina_lock_release(&_thread_safety);
+
+   EINA_LIST_FREE(callback, call)
+     {
+        call->cb(call->data);
+        free(call);
+     }
+}

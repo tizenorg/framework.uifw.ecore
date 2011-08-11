@@ -119,6 +119,9 @@ EAPI void          _ecore_magic_fail(const void *d, Ecore_Magic m, Ecore_Magic r
 
 void          _ecore_time_init(void);
 
+Ecore_Timer  *_ecore_timer_loop_add(double in, Ecore_Task_Cb func, const void *data);
+void         *_ecore_timer_del(Ecore_Timer *timer);
+void          _ecore_timer_delay(Ecore_Timer *timer, double add);
 void          _ecore_timer_shutdown(void);
 void          _ecore_timer_cleanup(void);
 void          _ecore_timer_enable_new(void);
@@ -184,9 +187,6 @@ void          _ecore_fps_debug_runtime_add(double t);
 
 void _ecore_thread_init(void);
 void _ecore_thread_shutdown(void);
-void _ecore_thread_assert_main_loop_thread(const char *function);
-
-#define ECORE_MAIN_LOOP_ASSERT() _ecore_thread_assert_main_loop_thread(__FUNCTION__)
 
 void _ecore_glib_init(void);
 void _ecore_glib_shutdown(void);
@@ -198,6 +198,21 @@ void _ecore_main_loop_init(void);
 void _ecore_main_loop_shutdown(void);
 
 void _ecore_throttle(void);
+
+#ifdef HAVE_THREAD_SAFETY
+void _ecore_lock(void);
+void _ecore_unlock(void);
+#else
+static inline void _ecore_lock(void)
+  {
+     /* at least check we're not being called from a thread */
+     EINA_MAIN_LOOP_CHECK_RETURN;
+  }
+
+static inline void _ecore_unlock(void)
+  {
+  }
+#endif
 
 extern int    _ecore_fps_debug;
 extern double _ecore_time_loop_time;

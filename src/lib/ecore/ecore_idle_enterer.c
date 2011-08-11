@@ -23,14 +23,11 @@ static Ecore_Idle_Enterer *idle_enterers = NULL;
 static Ecore_Idle_Enterer *idle_enterer_current = NULL;
 static int                 idle_enterers_delete_me = 0;
 
-/**
- * @addtogroup Ecore_Group Ecore - Main Loop and Job Functions.
- *
- * @{
- */
+static void *
+_ecore_idle_enterer_del(Ecore_Idle_Enterer *idle_enterer);
 
 /**
- * @addtogroup Ecore_Idle_Group Ecore Idle functions
+ * @addtogroup Ecore_Idle_Group
  *
  * @{
  */
@@ -48,17 +45,19 @@ static int                 idle_enterers_delete_me = 0;
 EAPI Ecore_Idle_Enterer *
 ecore_idle_enterer_add(Ecore_Task_Cb func, const void *data)
 {
-   Ecore_Idle_Enterer *ie;
+   Ecore_Idle_Enterer *ie = NULL;
 
-   ECORE_MAIN_LOOP_ASSERT();
+   _ecore_lock();
 
-   if (!func) return NULL;
+   if (!func) goto unlock;
    ie = calloc(1, sizeof(Ecore_Idle_Enterer));
-   if (!ie) return NULL;
+   if (!ie) goto unlock;
    ECORE_MAGIC_SET(ie, ECORE_MAGIC_IDLE_ENTERER);
    ie->func = func;
    ie->data = (void *)data;
    idle_enterers = (Ecore_Idle_Enterer *) eina_inlist_append(EINA_INLIST_GET(idle_enterers), EINA_INLIST_GET(ie));
+unlock:
+   _ecore_unlock();
    return ie;
 }
 
@@ -75,17 +74,19 @@ ecore_idle_enterer_add(Ecore_Task_Cb func, const void *data)
 EAPI Ecore_Idle_Enterer *
 ecore_idle_enterer_before_add(Ecore_Task_Cb func, const void *data)
 {
-   Ecore_Idle_Enterer *ie;
+   Ecore_Idle_Enterer *ie = NULL;
 
-   ECORE_MAIN_LOOP_ASSERT();
+   _ecore_lock();
 
-   if (!func) return NULL;
+   if (!func) goto unlock;
    ie = calloc(1, sizeof(Ecore_Idle_Enterer));
-   if (!ie) return NULL;
+   if (!ie) goto unlock;
    ECORE_MAGIC_SET(ie, ECORE_MAGIC_IDLE_ENTERER);
    ie->func = func;
    ie->data = (void *)data;
    idle_enterers = (Ecore_Idle_Enterer *) eina_inlist_prepend(EINA_INLIST_GET(idle_enterers), EINA_INLIST_GET(ie));
+unlock:
+   _ecore_unlock();
    return ie;
 }
 
@@ -98,7 +99,7 @@ ecore_idle_enterer_before_add(Ecore_Task_Cb func, const void *data)
 EAPI void *
 ecore_idle_enterer_del(Ecore_Idle_Enterer *idle_enterer)
 {
-   ECORE_MAIN_LOOP_ASSERT();
+   void *data;
 
    if (!ECORE_MAGIC_CHECK(idle_enterer, ECORE_MAGIC_IDLE_ENTERER))
      {
@@ -106,19 +107,25 @@ ecore_idle_enterer_del(Ecore_Idle_Enterer *idle_enterer)
                          "ecore_idle_enterer_del");
         return NULL;
      }
-   EINA_SAFETY_ON_TRUE_RETURN_VAL(idle_enterer->delete_me, NULL);
-   idle_enterer->delete_me = 1;
-   idle_enterers_delete_me = 1;
-   return idle_enterer->data;
+   _ecore_lock();
+   data = _ecore_idle_enterer_del(idle_enterer);
+   _ecore_unlock();
+   return data;
 }
 
 /**
  * @}
  */
 
-/**
- * @}
- */
+static void *
+_ecore_idle_enterer_del(Ecore_Idle_Enterer *idle_enterer)
+{
+   EINA_SAFETY_ON_TRUE_RETURN_VAL(idle_enterer->delete_me, NULL);
+   idle_enterer->delete_me = 1;
+   idle_enterers_delete_me = 1;
+   return idle_enterer->data;
+}
+
 
 void
 _ecore_idle_enterer_shutdown(void)
@@ -154,10 +161,19 @@ _ecore_idle_enterer_call(void)
         Ecore_Idle_Enterer *ie = (Ecore_Idle_Enterer *)idle_enterer_current;
         if (!ie->delete_me)
           {
+             Ecore_Task_Cb func;
+             void *data;
+             Eina_Bool ret;
+
+             func = ie->func;
+             data = ie->data;
              ie->references++;
-             if (!ie->func(ie->data))
+             _ecore_unlock();
+             ret = func(data);
+             _ecore_lock();
+             if (!ret)
                {
-                  if (!ie->delete_me) ecore_idle_enterer_del(ie);
+                  if (!ie->delete_me) _ecore_idle_enterer_del(ie);
                }
              ie->references--;
           }
