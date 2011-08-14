@@ -1,6 +1,8 @@
 #ifndef _ECORE_PRIVATE_H
 #define _ECORE_PRIVATE_H
 
+#include <assert.h>
+
 extern int _ecore_log_dom ;
 #ifdef  _ECORE_DEFAULT_LOG_DOM
 # undef _ECORE_DEFAULT_LOG_DOM
@@ -145,6 +147,7 @@ void          _ecore_event_shutdown(void);
 int           _ecore_event_exist(void);
 Ecore_Event  *_ecore_event_add(int type, void *ev, Ecore_End_Cb func_free, void *data);
 void          _ecore_event_call(void);
+void         *_ecore_event_handler_del(Ecore_Event_Handler *event_handler);
 
 Ecore_Timer  *_ecore_exe_doomsday_clock_get(Ecore_Exe *exe);
 void          _ecore_exe_doomsday_clock_set(Ecore_Exe *exe, Ecore_Timer *dc);
@@ -154,6 +157,8 @@ void         *_ecore_event_signal_hup_new(void);
 void         *_ecore_event_signal_exit_new(void);
 void         *_ecore_event_signal_power_new(void);
 void         *_ecore_event_signal_realtime_new(void);
+
+void         *_ecore_main_fd_handler_del(Ecore_Fd_Handler *fd_handler);
 
 void          _ecore_main_shutdown(void);
 
@@ -199,20 +204,111 @@ void _ecore_main_loop_shutdown(void);
 
 void _ecore_throttle(void);
 
-#ifdef HAVE_THREAD_SAFETY
-void _ecore_lock(void);
-void _ecore_unlock(void);
-#else
-static inline void _ecore_lock(void)
-  {
-     /* at least check we're not being called from a thread */
-     EINA_MAIN_LOOP_CHECK_RETURN;
-  }
+extern int _ecore_main_lock_count;
+extern Eina_Lock _ecore_main_loop_lock;
 
-static inline void _ecore_unlock(void)
-  {
-  }
+static inline void
+_ecore_lock(void)
+{
+#ifdef HAVE_THREAD_SAFETY
+   eina_lock_take(&_ecore_main_loop_lock);
+#else
+   /* at least check we're not being called from a thread */
+   EINA_MAIN_LOOP_CHECK_RETURN;
 #endif
+   _ecore_main_lock_count++;
+   assert(_ecore_main_lock_count == 1);
+}
+
+static inline void
+_ecore_unlock(void)
+{
+   _ecore_main_lock_count--;
+   assert(_ecore_main_lock_count == 0);
+#ifdef HAVE_THREAD_SAFETY
+   eina_lock_release(&_ecore_main_loop_lock);
+#endif
+}
+
+/*
+ * Callback wrappers all assume that ecore _ecore_lock has been called
+ */
+static inline Eina_Bool
+_ecore_call_task_cb(Ecore_Task_Cb func, void *data)
+{
+   Eina_Bool r;
+
+   _ecore_unlock();
+   r = func(data);
+   _ecore_lock();
+
+   return r;
+}
+
+static inline void *
+_ecore_call_data_cb(Ecore_Data_Cb func, void *data)
+{
+   void *r;
+
+   _ecore_unlock();
+   r = func(data);
+   _ecore_lock();
+
+   return r;
+}
+
+static inline void
+_ecore_call_end_cb(Ecore_End_Cb func, void *user_data, void *func_data)
+{
+   _ecore_unlock();
+   func(user_data, func_data);
+   _ecore_lock();
+}
+
+static inline Eina_Bool
+_ecore_call_filter_cb(Ecore_Filter_Cb func, void *data,
+                        void *loop_data, int type, void *event)
+{
+   Eina_Bool r;
+
+   _ecore_unlock();
+   r = func(data, loop_data, type, event);
+   _ecore_lock();
+
+   return r;
+}
+
+static inline Eina_Bool
+_ecore_call_handler_cb(Ecore_Event_Handler_Cb func, void *data, int type, void *event)
+{
+   Eina_Bool r;
+
+   _ecore_unlock();
+   r = func(data, type, event);
+   _ecore_lock();
+
+   return r;
+}
+
+static inline void
+_ecore_call_prep_cb(Ecore_Fd_Prep_Cb func, void *data, Ecore_Fd_Handler *fd_handler)
+{
+   _ecore_unlock();
+   func(data, fd_handler);
+   _ecore_lock();
+}
+
+static inline Eina_Bool
+_ecore_call_fd_cb(Ecore_Fd_Cb func, void *data, Ecore_Fd_Handler *fd_handler)
+{
+   Eina_Bool r;
+
+   _ecore_unlock();
+   r = func(data, fd_handler);
+   _ecore_lock();
+
+   return r;
+}
 
 extern int    _ecore_fps_debug;
 extern double _ecore_time_loop_time;
