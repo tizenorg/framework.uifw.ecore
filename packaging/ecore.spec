@@ -10,29 +10,24 @@ Release:    1
 Group:      TO_BE/FILLED_IN
 License:    TO BE FILLED IN
 URL:        http://www.enlightenment.org
-Source0:    http://download.enlightenment.org/releases/ecore-%{version}.tar.bz2
+Source0:    ecore-%{version}.tar.bz2
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
-BuildRequires:  pkgconfig(eet)
 BuildRequires:  pkgconfig(eina)
+BuildRequires:  pkgconfig(eet)
 BuildRequires:  pkgconfig(evas)
 BuildRequires:  pkgconfig(glib-2.0)
-BuildRequires:  pkgconfig(pixman-1)
-BuildRequires:  pkgconfig(x11)
+BuildRequires:  pkgconfig(xcursor)
+BuildRequires:  pkgconfig(xrender)
+BuildRequires:  pkgconfig(xinerama)
+BuildRequires:  pkgconfig(xrandr)
 BuildRequires:  pkgconfig(xext)
-BuildRequires:  pkgconfig(xcb)
-BuildRequires:  pkgconfig(xcb-composite)
-BuildRequires:  pkgconfig(xcb-damage)
-BuildRequires:  pkgconfig(xcb-dpms)
-BuildRequires:  pkgconfig(xcb-randr)
-BuildRequires:  pkgconfig(xcb-render)
-BuildRequires:  pkgconfig(xcb-screensaver)
-BuildRequires:  pkgconfig(xcb-shape)
-BuildRequires:  pkgconfig(xcb-sync)
-BuildRequires:  pkgconfig(xcb-xfixes)
-BuildRequires:  pkgconfig(xcb-xinerama)
-BuildRequires:  pkgconfig(xcb-xprint)
-BuildRequires:  pkgconfig(xcb-xtest)
+BuildRequires:  pkgconfig(xcomposite)
+BuildRequires:  pkgconfig(xdamage)
+BuildRequires:  pkgconfig(xextproto)
+BuildRequires:  pkgconfig(xtst)
+BuildRequires:  pkgconfig(libcurl)
+BuildRequires:  libjpeg-devel
 
 
 %description
@@ -179,8 +174,6 @@ rm -rf %{buildroot}
 %make_install
 
 
-#%find_lang ecore
-
 %post -p /sbin/ldconfig
 
 %postun -p /sbin/ldconfig
@@ -239,7 +232,6 @@ rm -rf %{buildroot}
 
 %files devel
 %defattr(-,root,root,-)
-/usr/bin/ecore_test
 %{_includedir}/ecore-1/*.h
 %{_libdir}/pkgconfig/ecore*.pc
 %{_libdir}/libecore.so
@@ -256,6 +248,7 @@ rm -rf %{buildroot}
 
 %files bin
 %defattr(-,root,root,-)
+/usr/bin/ecore_test
 
 %files con
 %defattr(-,root,root,-)
