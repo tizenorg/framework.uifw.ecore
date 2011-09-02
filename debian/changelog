@@ -1,3 +1,13 @@
+ecore (1.0.0.001+svn.62653slp2+build01) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r62653
+  * Important Changes
+       [Migration upstream r62653] Merge branch 'svn_merge'
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.62653slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Fri, 02 Sep 2011 18:43:09 +0900
+
 ecore (1.0.0.001+svn.61784slp2+build02) unstable; urgency=low
 
   * [ecore_x] fixed multi-touch double clicked
