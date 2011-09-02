@@ -48,6 +48,7 @@ ecore_x_window_prop_card32_set(Ecore_X_Window win, Ecore_X_Atom atom, unsigned i
 #if SIZEOF_INT == SIZEOF_LONG
    xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, atom, 
                        ECORE_X_ATOM_CARDINAL, 32, num, (unsigned char *)val);
+   ecore_x_flush();
 #else
    long *v2;
    unsigned int i;
@@ -60,6 +61,7 @@ ecore_x_window_prop_card32_set(Ecore_X_Window win, Ecore_X_Atom atom, unsigned i
    xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, atom, 
                        ECORE_X_ATOM_CARDINAL, 32, num, (unsigned char *)v2);
    free(v2);
+   ecore_x_flush();
 #endif
 }
 
@@ -146,6 +148,7 @@ ecore_x_window_prop_xid_set(Ecore_X_Window win, Ecore_X_Atom atom, Ecore_X_Atom 
    xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, atom, 
                        type, 32, num, (unsigned char *)v2);
    free(v2);
+   ecore_x_flush();
 #endif
 }
 
@@ -194,6 +197,7 @@ ecore_x_window_prop_string_set(Ecore_X_Window win, Ecore_X_Atom type, const char
 
    xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, type, 
                        ECORE_X_ATOM_UTF8_STRING, 8, strlen(str), str);
+   ecore_x_flush();
 }
 
 EAPI char *
@@ -297,9 +301,12 @@ ecore_x_window_prop_property_set(Ecore_X_Window win, Ecore_X_Atom property, Ecor
    if (win == 0)
      win = ((xcb_screen_t *)_ecore_xcb_screen)->root;
 
-   if (size != 32)
-     xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, 
-                         property, type, size, num, (unsigned char *)data);
+   if (size != 32) 
+     {
+        xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, 
+                            property, type, size, num, (unsigned char *)data);
+        ecore_x_flush();
+     }
    else 
      {
         unsigned long *dat;
@@ -314,6 +321,7 @@ ecore_x_window_prop_property_set(Ecore_X_Window win, Ecore_X_Atom property, Ecor
                                  property, type, size, num, 
                                  (unsigned char *)dat);
              free(dat);
+             ecore_x_flush();
           }
      }
 }
@@ -507,7 +515,11 @@ ecore_x_window_prop_protocol_isset(Ecore_X_Window win, Ecore_X_WM_Protocol proto
 {
    Eina_Bool ret = EINA_FALSE;
    Ecore_X_Atom proto;
+#ifdef OLD_XCB_VERSION
    xcb_get_wm_protocols_reply_t protos;
+#else
+   xcb_icccm_get_wm_protocols_reply_t protos;
+#endif
    xcb_get_property_cookie_t cookie;
    uint8_t reply;
    uint32_t count = 0, i = 0;
@@ -517,9 +529,16 @@ ecore_x_window_prop_protocol_isset(Ecore_X_Window win, Ecore_X_WM_Protocol proto
    if (protocol >= ECORE_X_WM_PROTOCOL_NUM) return EINA_FALSE;
 
    proto = _ecore_xcb_atoms_wm_protocol[protocol];
+#ifdef OLD_XCB_VERSION
    cookie = xcb_get_wm_protocols_unchecked(_ecore_xcb_conn, win, 
                                            ECORE_X_ATOM_WM_PROTOCOLS);
    reply = xcb_get_wm_protocols_reply(_ecore_xcb_conn, cookie, &protos, NULL);
+#else
+   cookie = xcb_icccm_get_wm_protocols_unchecked(_ecore_xcb_conn, win, 
+                                                 ECORE_X_ATOM_WM_PROTOCOLS);
+   reply = xcb_icccm_get_wm_protocols_reply(_ecore_xcb_conn, cookie, 
+                                            &protos, NULL);
+#endif
    if (!reply) return EINA_FALSE;
 
    count = protos.atoms_len;
@@ -532,14 +551,22 @@ ecore_x_window_prop_protocol_isset(Ecore_X_Window win, Ecore_X_WM_Protocol proto
           }
      }
 
+#ifdef OLD_XCB_VERSION
    xcb_get_wm_protocols_reply_wipe(&protos);
+#else
+   xcb_icccm_get_wm_protocols_reply_wipe(&protos);
+#endif
    return ret;
 }
 
 EAPI Ecore_X_WM_Protocol *
 ecore_x_window_prop_protocol_list_get(Ecore_X_Window win, int *num_ret) 
 {
+#ifdef OLD_XCB_VERSION
    xcb_get_wm_protocols_reply_t protos;
+#else
+   xcb_icccm_get_wm_protocols_reply_t protos;
+#endif
    xcb_get_property_cookie_t cookie;
    uint8_t reply;
    uint32_t count = 0, i = 0;
@@ -551,22 +578,37 @@ ecore_x_window_prop_protocol_list_get(Ecore_X_Window win, int *num_ret)
 
    *num_ret = 0;
 
+#ifdef OLD_XCB_VERSION
    cookie = xcb_get_wm_protocols_unchecked(_ecore_xcb_conn, win, 
                                            ECORE_X_ATOM_WM_PROTOCOLS);
    reply = xcb_get_wm_protocols_reply(_ecore_xcb_conn, cookie, &protos, NULL);
+#else
+   cookie = xcb_icccm_get_wm_protocols_unchecked(_ecore_xcb_conn, win, 
+                                                 ECORE_X_ATOM_WM_PROTOCOLS);
+   reply = xcb_icccm_get_wm_protocols_reply(_ecore_xcb_conn, cookie, 
+                                            &protos, NULL);
+#endif
    if (!reply) return NULL;
 
    count = protos.atoms_len;
    if (count <= 0) 
      {
+#ifdef OLD_XCB_VERSION
         xcb_get_wm_protocols_reply_wipe(&protos);
+#else
+        xcb_icccm_get_wm_protocols_reply_wipe(&protos);
+#endif
         return NULL;
      }
 
    prot_ret = calloc(1, count * sizeof(Ecore_X_WM_Protocol));
    if (!prot_ret) 
      {
+#ifdef OLD_XCB_VERSION
         xcb_get_wm_protocols_reply_wipe(&protos);
+#else
+        xcb_icccm_get_wm_protocols_reply_wipe(&protos);
+#endif
         return NULL;
      }
 
@@ -584,7 +626,11 @@ ecore_x_window_prop_protocol_list_get(Ecore_X_Window win, int *num_ret)
 
    if (num_ret) *num_ret = count;
 
+#ifdef OLD_XCB_VERSION
    xcb_get_wm_protocols_reply_wipe(&protos);
+#else
+   xcb_icccm_get_wm_protocols_reply_wipe(&protos);
+#endif
    return prot_ret;
 }
 

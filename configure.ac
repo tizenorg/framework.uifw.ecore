@@ -783,13 +783,34 @@ if test "x$want_ecore_x_xcb" = "xyes" ; then
     fi
   fi
 
-## x11-xcb
-  PKG_CHECK_MODULES(XCB, xcb xcb-shm xcb-icccm xcb-image xcb-keysyms pixman-1,
+  PKG_CHECK_MODULES(XCB, x11-xcb xcb xcb-shm xcb-event xcb-icccm >= 0.3.8 xcb-util >= 0.3.8 xcb-image xcb-keysyms,
     [ have_ecore_x_xcb="yes"
-      requirements_ecore_x="xcb xcb-shm xcb-icccm xcb-image xcb-keysyms pixman-1 ${requirements_ecore_x}" ],
-    [ have_ecore_x_xcb="no" ])
+      requirements_ecore_x="x11-xcb xcb xcb-shm xcb-event xcb-icccm xcb-util xcb-image xcb-keysyms ${requirements_ecore_x}"
+    ],
+    [ 
+	PKG_CHECK_MODULES(XCB, x11-xcb xcb xcb-event xcb-shm xcb-icccm xcb-image xcb-keysyms, 
+	  [ have_ecore_x_xcb="yes"
+	    AC_DEFINE(OLD_XCB_VERSION, 1, [xcb version])
+	    requirements_ecore_x="x11-xcb xcb xcb-event xcb-shm xcb-icccm xcb-image xcb-keysyms ${requirements_ecore_x}" ],
+	  [ have_ecore_x_xcb="no" ])
+    ], 
+    [have_ecore_x_xcb="no" ])
 
   if test "x$have_ecore_x_xcb" = "xyes" ; then
+
+   PKG_CHECK_MODULES([PIXMAN],
+      [pixman-1],
+      [
+       have_pixman="yes"
+       AC_DEFINE(HAVE_PIXMAN, 1, [have pixman for rendering])
+       requirements_ecore_x="pixman-1 ${requirements_ecore_x}"
+      ],
+      [
+       if test "x${want_pixman}" = "xyes" -a "x${use_strict}" = "xyes" ; then
+          AC_MSG_ERROR([Pixman not found (strict dependencies checking)])
+       fi
+      ])
+
     if test "x$want_ecore_x_composite" != "xno"; then
       PKG_CHECK_MODULES(XCB_COMPOSITE, xcb-composite,
         [ have_ecore_x_xcb_composite="yes"
@@ -1147,6 +1168,22 @@ EFL_CHECK_THREADS(
    ],
    [have_threads="no"])
 
+### enable thread safety if we have threads, unless specifically asked not to
+if test "x${have_threads}" = "xno"
+then
+  want_thread_safety="no"
+else
+  want_thread_safety="no"  # to be changed to yes when ready
+  AC_ARG_ENABLE(thread-safety,
+    AC_HELP_STRING([--enable-thread-safety], [enable or disable thread safety]),
+    [want_thread_safety=$enableval])
+fi
+
+if test "x${want_thread_safety}" = "xyes"
+then
+   AC_DEFINE([HAVE_THREAD_SAFETY], [1], [Define to enable thread safety])
+fi
+
 ### Checks for types
 AC_CHECK_SIZEOF(int, 4)
 AC_CHECK_SIZEOF(long, 4)
@@ -1466,6 +1503,9 @@ if test "x$have_ecore_evas_software_x11" = "xyes" ; then
       AC_DEFINE(BUILD_ECORE_EVAS_SOFTWARE_XLIB, 1, [Evas Software Xlib Engine Support])
    fi
    have_ecore_evas_software_xcb=`${PKG_CONFIG} --variable=XCB evas-software-x11`
+   if test "x$have_ecore_evas_software_xcb" = "xstatic"; then
+      have_ecore_evas_software_xcb="yes"
+   fi
    if test "x$have_ecore_evas_software_xcb" = "xyes" -a "x${have_ecore_x_xcb}" = "xyes" ; then
       AC_DEFINE(BUILD_ECORE_EVAS_SOFTWARE_XCB, 1, [Evas Software XCB Engine Support])
    fi
@@ -1488,6 +1528,9 @@ if test "x${have_ecore_evas_opengl_x11}" = "xyes" -o "x${have_ecore_evas_opengl_
 
 # opengl does not work with xcb (yet)
    have_ecore_evas_opengl_xcb=`${PKG_CONFIG} --variable=XCB evas-opengl-x11`
+   if test "x${have_ecore_evas_opengl_xcb}" = "xstatic"; then
+      have_ecore_evas_opengl_xcb="yes"
+   fi
    if test "x${have_ecore_evas_opengl_xcb}" = "xyes" -a "x${have_ecore_x_xcb}" = "xyes" ; then
       PKG_CHECK_MODULES(XCB_X11, x11-xcb,
         [ have_ecore_x_opengl_xcb="yes"
@@ -1692,6 +1735,7 @@ echo " Core:"
 echo
 echo "  Ecore........................: always"
 echo "    Thread support.............: $have_threads"
+echo "    Thread safety..............: $want_thread_safety"
 echo "    GLib support...............: $have_glib"
 echo "    Always integrate GLib......: $want_glib_integration_always"
 echo "    Use g_main_loop............: $want_g_main_loop"

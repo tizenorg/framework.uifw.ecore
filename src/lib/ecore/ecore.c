@@ -53,6 +53,36 @@ static int _ecore_init_count = 0;
 int _ecore_log_dom = -1;
 int _ecore_fps_debug = 0;
 
+typedef struct _Ecore_Safe_Call Ecore_Safe_Call;
+struct _Ecore_Safe_Call
+{
+   union {
+      Ecore_Cb async;
+      Ecore_Data_Cb sync;
+   } cb;
+   void *data;
+
+   Eina_Lock m;
+   Eina_Condition c;
+
+   Eina_Bool sync : 1;
+   Eina_Bool suspend : 1;
+};
+
+static void _ecore_main_loop_thread_safe_call(Ecore_Safe_Call *order);
+static void _thread_safe_cleanup(void *data);
+static void _thread_callback(void *data, void *buffer, unsigned int nbyte);
+static Eina_List *_thread_cb = NULL;
+static Ecore_Pipe *_thread_call = NULL;
+static Eina_Lock _thread_safety;
+
+static Eina_Bool _thread_loop = EINA_FALSE;
+static Eina_Lock _thread_mutex;
+static Eina_Condition _thread_cond;
+
+Eina_Lock _ecore_main_loop_lock;
+int _ecore_main_lock_count;
+
 /** OpenBSD does not define CODESET
  * FIXME ??
  */
@@ -62,7 +92,7 @@ int _ecore_fps_debug = 0;
 #endif
 
 /**
- * @addtogroup Ecore_Init_Group Ecore initialisation and shutdown functions.
+ * @addtogroup Ecore_Init_Group
  *
  * @{
  */
@@ -126,6 +156,13 @@ ecore_init(void)
    _ecore_job_init();
    _ecore_time_init();
 
+   eina_lock_new(&_thread_safety);
+   eina_lock_new(&_thread_mutex);
+   eina_condition_new(&_thread_cond, &_thread_mutex);
+   _thread_call = ecore_pipe_add(_thread_callback, NULL);
+
+   eina_lock_new(&_ecore_main_loop_lock);
+
 #if HAVE_MALLINFO
    if (getenv("ECORE_MEM_STAT"))
      {
@@ -162,8 +199,15 @@ ecore_init(void)
 EAPI int
 ecore_shutdown(void)
 {
+   /*
+    * take a lock here because _ecore_event_shutdown() does callbacks
+    */
+   _ecore_lock();
    if (--_ecore_init_count != 0)
-     return _ecore_init_count;
+     goto unlock;
+
+   ecore_pipe_del(_thread_call);
+   eina_lock_free(&_thread_safety);
 
    if (_ecore_fps_debug) _ecore_fps_debug_shutdown();
    _ecore_poller_shutdown();
@@ -199,6 +243,8 @@ ecore_shutdown(void)
 #ifdef HAVE_EVIL
    evil_shutdown();
 #endif
+unlock:
+   _ecore_unlock();
 
    return _ecore_init_count;
 }
@@ -206,6 +252,110 @@ ecore_shutdown(void)
 /**
  * @}
  */
+
+static int wakeup = 42;
+
+EAPI void
+ecore_main_loop_thread_safe_call_async(Ecore_Cb callback, void *data)
+{
+   Ecore_Safe_Call *order;
+
+   if (!callback) return ;
+
+   if (eina_main_loop_is())
+     {
+        callback(data);
+        return ;
+     }
+
+   order = malloc(sizeof (Ecore_Safe_Call));
+   if (!order) return ;
+
+   order->cb.async = callback;
+   order->data = data;
+   order->sync = EINA_FALSE;
+   order->suspend = EINA_FALSE;
+
+   _ecore_main_loop_thread_safe_call(order);
+}
+
+EAPI void *
+ecore_main_loop_thread_safe_call_sync(Ecore_Data_Cb callback, void *data)
+{
+   Ecore_Safe_Call *order;
+   void *ret;
+
+   if (!callback) return NULL;
+
+   if (eina_main_loop_is())
+     {
+        return callback(data);
+     }
+
+   order = malloc(sizeof (Ecore_Safe_Call));
+   if (!order) return NULL;
+
+   order->cb.sync = callback;
+   order->data = data;
+   eina_lock_new(&order->m);
+   eina_condition_new(&order->c, &order->m);
+   order->sync = EINA_TRUE;
+   order->suspend = EINA_FALSE;
+
+   _ecore_main_loop_thread_safe_call(order);
+
+   eina_lock_take(&order->m);
+   eina_condition_wait(&order->c);
+   eina_lock_release(&order->m);
+
+   ret = order->data;
+
+   order->sync = EINA_FALSE;
+   order->cb.async = _thread_safe_cleanup;
+   order->data = order;
+
+   _ecore_main_loop_thread_safe_call(order);
+
+   return ret;
+}
+
+EAPI Eina_Bool
+ecore_thread_main_loop_begin(void)
+{
+   Ecore_Safe_Call *order;
+
+   if (eina_main_loop_is())
+     return EINA_FALSE;
+
+   order = malloc(sizeof (Ecore_Safe_Call));
+   if (!order) return EINA_FALSE;
+
+   eina_lock_new(&order->m);
+   eina_condition_new(&order->c, &order->m);
+   order->suspend = EINA_TRUE;
+
+   _ecore_main_loop_thread_safe_call(order);
+
+   eina_lock_take(&order->m);
+   eina_condition_wait(&order->c);
+   eina_lock_release(&order->m);
+
+   eina_main_loop_define();
+
+   _thread_loop = EINA_TRUE;
+
+   return EINA_TRUE;
+}
+
+EAPI void
+ecore_thread_main_loop_end(void)
+{
+   if (!_thread_loop) return ;
+   /* until we unlock the main loop, this thread has the main loop id */
+   if (!eina_main_loop_is()) return ;
+
+   eina_condition_broadcast(&_thread_cond);
+}
 
 EAPI void
 ecore_print_warning(const char *function, const char *sparam)
@@ -292,7 +442,7 @@ unsigned int *_ecore_fps_runtime_mmap = NULL;
 void
 _ecore_fps_debug_init(void)
 {
-   char  buf[4096];
+   char  buf[PATH_MAX];
    const char *tmp;
    int   pid;
 
@@ -315,16 +465,16 @@ _ecore_fps_debug_init(void)
    if (_ecore_fps_debug_fd >= 0)
      {
         unsigned int zero = 0;
-        char *buf = (char *)&zero;
+        char *buf2 = (char *)&zero;
         ssize_t todo = sizeof(unsigned int);
 
         while (todo > 0)
           {
-             ssize_t r = write(_ecore_fps_debug_fd, buf, todo);
+             ssize_t r = write(_ecore_fps_debug_fd, buf2, todo);
              if (r > 0)
                {
                   todo -= r;
-                  buf += r;
+                  buf2 += r;
                }
              else if ((r < 0) && (errno == EINTR))
                continue;
@@ -428,3 +578,67 @@ _ecore_memory_statistic(__UNUSED__ void *data)
 }
 
 #endif
+
+static void
+_ecore_main_loop_thread_safe_call(Ecore_Safe_Call *order)
+{
+   Eina_Bool count;
+
+   eina_lock_take(&_thread_safety);
+
+   count = _thread_cb ? 0 : 1;
+   _thread_cb = eina_list_append(_thread_cb, order);
+   if (count) ecore_pipe_write(_thread_call, &wakeup, sizeof (int));
+
+   eina_lock_release(&_thread_safety);
+}
+
+static void
+_thread_safe_cleanup(void *data)
+{
+   Ecore_Safe_Call *call = data;
+
+   eina_condition_free(&call->c);
+   eina_lock_free(&call->m);
+}
+
+static void
+_thread_callback(void *data __UNUSED__,
+                 void *buffer __UNUSED__,
+                 unsigned int nbyte __UNUSED__)
+{
+   Ecore_Safe_Call *call;
+   Eina_List *callback;
+
+   eina_lock_take(&_thread_safety);
+   callback = _thread_cb;
+   _thread_cb = NULL;
+   eina_lock_release(&_thread_safety);
+
+   EINA_LIST_FREE(callback, call)
+     {
+        if (call->suspend)
+          {
+             eina_condition_broadcast(&call->c);
+
+             eina_lock_take(&_thread_mutex);
+             eina_condition_wait(&_thread_cond);
+             eina_lock_release(&_thread_mutex);
+
+             eina_main_loop_define();
+
+             _thread_safe_cleanup(call);
+             free(call);
+          }
+        else if (call->sync)
+          {
+             call->data = call->cb.sync(call->data);
+             eina_condition_broadcast(&call->c);
+          }
+        else
+          {
+             call->cb.async(call->data);
+             free(call);
+          }
+     }
+}

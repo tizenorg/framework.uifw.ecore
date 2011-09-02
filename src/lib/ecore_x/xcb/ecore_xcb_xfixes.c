@@ -46,8 +46,13 @@ _ecore_xcb_xfixes_finalize(void)
         reply = xcb_xfixes_query_version_reply(_ecore_xcb_conn, cookie, NULL);
         if (reply) 
           {
-             if (reply->major_version >= 3) 
-               _xfixes_avail = EINA_TRUE;
+             /* NB: XFixes Extension >= 3 needed for shape stuff.
+              * for now, I am removing this check so that it matches the 
+              * xlib code closer. If the extension version ends up being 
+              * that important, then re-enable this */
+
+             /* if (reply->major_version >= 3) */
+             _xfixes_avail = EINA_TRUE;
              free(reply);
           }
 
@@ -55,6 +60,39 @@ _ecore_xcb_xfixes_finalize(void)
           _ecore_xcb_event_xfixes = ext_reply->first_event;
      }
 #endif
+}
+
+EAPI Eina_Bool
+ecore_x_fixes_selection_notification_request(Ecore_X_Atom selection)
+{
+#ifdef ECORE_XCB_XFIXES
+   Ecore_X_Window root = 0;
+   xcb_void_cookie_t cookie;
+   xcb_generic_error_t *err;
+   int mask = 0;
+#endif
+
+   if (!_xfixes_avail) return EINA_FALSE;
+#ifdef ECORE_XCB_XFIXES
+   root = ((xcb_screen_t *)_ecore_xcb_screen)->root;
+
+   mask = (XCB_XFIXES_SELECTION_EVENT_MASK_SET_SELECTION_OWNER |
+           XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_WINDOW_DESTROY |
+           XCB_XFIXES_SELECTION_EVENT_MASK_SELECTION_CLIENT_CLOSE);
+
+   cookie = 
+     xcb_xfixes_select_selection_input_checked(_ecore_xcb_conn, root, 
+                                               selection, mask);
+   err = xcb_request_check(_ecore_xcb_conn, cookie);
+   if (err) 
+     {
+        free(err);
+        return EINA_FALSE;
+     }
+
+   return EINA_TRUE;
+#endif
+   return EINA_FALSE;
 }
 
 Eina_Bool 
@@ -95,6 +133,7 @@ ecore_x_region_new(Ecore_X_Rectangle *rects, int num)
    region = xcb_generate_id(_ecore_xcb_conn);
    xcb_xfixes_create_region(_ecore_xcb_conn, region, num, xrects);
    free(xrects);
+   ecore_x_flush();
 #endif
 
    return region;
@@ -119,6 +158,7 @@ ecore_x_region_new_from_bitmap(Ecore_X_Pixmap bitmap)
 #ifdef ECORE_XCB_XFIXES
    region = xcb_generate_id(_ecore_xcb_conn);
    xcb_xfixes_create_region_from_bitmap(_ecore_xcb_conn, region, bitmap);
+   ecore_x_flush();
 #endif
 
    return region;
@@ -145,6 +185,7 @@ ecore_x_region_new_from_window(Ecore_X_Window win, Ecore_X_Region_Type type)
 #ifdef ECORE_XCB_XFIXES
    region = xcb_generate_id(_ecore_xcb_conn);
    xcb_xfixes_create_region_from_window(_ecore_xcb_conn, region, win, type);
+   ecore_x_flush();
 #endif
 
    return region;
@@ -168,6 +209,7 @@ ecore_x_region_new_from_gc(Ecore_X_GC gc)
 #ifdef ECORE_XCB_XFIXES
    region = xcb_generate_id(_ecore_xcb_conn);
    xcb_xfixes_create_region_from_gc(_ecore_xcb_conn, region, gc);
+   ecore_x_flush();
 #endif
 
    return region;
@@ -191,6 +233,7 @@ ecore_x_region_new_from_picture(Ecore_X_Picture picture)
 #ifdef ECORE_XCB_XFIXES
    region = xcb_generate_id(_ecore_xcb_conn);
    xcb_xfixes_create_region_from_picture(_ecore_xcb_conn, region, picture);
+   ecore_x_flush();
 #endif
 
    return region;
@@ -210,6 +253,7 @@ ecore_x_region_free(Ecore_X_Region region)
 
 #ifdef ECORE_XCB_XFIXES
    xcb_xfixes_destroy_region(_ecore_xcb_conn, region);
+   ecore_x_flush();
 #endif
 }
 
@@ -236,6 +280,7 @@ ecore_x_region_set(Ecore_X_Region region, Ecore_X_Rectangle *rects, int num)
    xrects = _ecore_xcb_rect_to_xcb(rects, num);
    xcb_xfixes_set_region(_ecore_xcb_conn, region, num, xrects);
    free(xrects);
+   ecore_x_flush();
 #endif
 }
 
@@ -255,6 +300,7 @@ ecore_x_region_copy(Ecore_X_Region dest, Ecore_X_Region source)
    // NB: Hmmmm...this may need converting to/fro xcb_rectangle_t
 #ifdef ECORE_XCB_XFIXES
    xcb_xfixes_copy_region(_ecore_xcb_conn, source, dest);
+   ecore_x_flush();
 #endif
 }
 
@@ -275,6 +321,7 @@ ecore_x_region_combine(Ecore_X_Region dest, Ecore_X_Region source1, Ecore_X_Regi
 
 #ifdef ECORE_XCB_XFIXES
    xcb_xfixes_union_region(_ecore_xcb_conn, source1, source2, dest);
+   ecore_x_flush();
 #endif
 }
 
@@ -295,6 +342,7 @@ ecore_x_region_intersect(Ecore_X_Region dest, Ecore_X_Region source1, Ecore_X_Re
 
 #ifdef ECORE_XCB_XFIXES
    xcb_xfixes_intersect_region(_ecore_xcb_conn, source1, source2, dest);
+   ecore_x_flush();
 #endif
 }
 
@@ -315,6 +363,7 @@ ecore_x_region_subtract(Ecore_X_Region dest, Ecore_X_Region source1, Ecore_X_Reg
 
 #ifdef ECORE_XCB_XFIXES
    xcb_xfixes_subtract_region(_ecore_xcb_conn, source1, source2, dest);
+   ecore_x_flush();
 #endif
 }
 
@@ -334,23 +383,18 @@ ecore_x_region_invert(Ecore_X_Region dest, Ecore_X_Rectangle *bounds, Ecore_X_Re
 {
 #ifdef ECORE_XCB_XFIXES
    xcb_rectangle_t xrects;
-   int num = 0;
 #endif
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
 #ifdef ECORE_XCB_XFIXES
-   while (bounds + num)
-     num++;
-
    xrects.x = bounds->x;
    xrects.y = bounds->y;
    xrects.width = bounds->width;
    xrects.height = bounds->height;
 
-//   xrects = _ecore_xcb_rect_to_xcb(bounds, num);
    xcb_xfixes_invert_region(_ecore_xcb_conn, source, xrects, dest);
-//   free(xrects);
+   ecore_x_flush();
 #endif
 }
 
@@ -370,6 +414,7 @@ ecore_x_region_translate(Ecore_X_Region region, int dx, int dy)
 
 #ifdef ECORE_XCB_XFIXES
    xcb_xfixes_translate_region(_ecore_xcb_conn, region, dx, dy);
+   ecore_x_flush();
 #endif
 }
 
@@ -388,6 +433,7 @@ ecore_x_region_extents(Ecore_X_Region dest, Ecore_X_Region source)
 
 #ifdef ECORE_XCB_XFIXES
    xcb_xfixes_region_extents(_ecore_xcb_conn, source, dest);
+   ecore_x_flush();
 #endif
 }
 
@@ -480,6 +526,7 @@ ecore_x_region_expand(Ecore_X_Region dest, Ecore_X_Region source, unsigned int l
 
 #ifdef ECORE_XCB_XFIXES
    xcb_xfixes_expand_region(_ecore_xcb_conn, source, dest, left, right, top, bottom);
+   ecore_x_flush();
 #endif
 }
 
@@ -506,6 +553,7 @@ ecore_x_region_gc_clip_set(Ecore_X_Region region, Ecore_X_GC gc, int x, int y)
 
 #ifdef ECORE_XCB_XFIXES
    xcb_xfixes_set_gc_clip_region(_ecore_xcb_conn, gc, region, x, y);
+   ecore_x_flush();
 #endif
 }
 
@@ -529,6 +577,7 @@ ecore_x_region_window_shape_set(Ecore_X_Region region, Ecore_X_Window dest, Ecor
 
 #ifdef ECORE_XCB_XFIXES
    xcb_xfixes_set_window_shape_region(_ecore_xcb_conn, dest, type, x, y, region);
+   ecore_x_flush();
 #endif
 }
 
@@ -554,6 +603,7 @@ ecore_x_region_picture_clip_set(Ecore_X_Region region, Ecore_X_Picture picture, 
 
 #ifdef ECORE_XCB_XFIXES
    xcb_xfixes_set_picture_clip_region(_ecore_xcb_conn, picture, region, x, y);
+   ecore_x_flush();
 #endif
 }
 

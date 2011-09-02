@@ -42,8 +42,7 @@ _ecore_xcb_damage_finalize(void)
         reply = xcb_damage_query_version_reply(_ecore_xcb_conn, cookie, NULL);
         if (reply)
           {
-             if (reply->major_version >= XCB_DAMAGE_MAJOR_VERSION) 
-               _damage_avail = EINA_TRUE;
+             _damage_avail = EINA_TRUE;
              free(reply);
           }
 
@@ -87,6 +86,7 @@ ecore_x_damage_new(Ecore_X_Drawable drawable, Ecore_X_Damage_Report_Level level)
 #ifdef ECORE_XCB_DAMAGE
    damage = xcb_generate_id(_ecore_xcb_conn);
    xcb_damage_create(_ecore_xcb_conn, damage, drawable, level);
+   ecore_x_flush();
 #endif
 
    return damage;
@@ -108,6 +108,7 @@ ecore_x_damage_free(Ecore_X_Damage damage)
 
 #ifdef ECORE_XCB_DAMAGE
    xcb_damage_destroy(_ecore_xcb_conn, damage);
+   ecore_x_flush();
 #endif
 }
 
@@ -136,5 +137,6 @@ ecore_x_damage_subtract(Ecore_X_Damage damage, Ecore_X_Region repair, Ecore_X_Re
 
 #ifdef ECORE_XCB_DAMAGE
    xcb_damage_subtract(_ecore_xcb_conn, damage, repair, parts);
+   ecore_x_flush();
 #endif
 }

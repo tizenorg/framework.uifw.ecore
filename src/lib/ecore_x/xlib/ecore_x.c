@@ -91,6 +91,7 @@ EAPI int ECORE_X_EVENT_MAPPING_CHANGE = 0;
 EAPI int ECORE_X_EVENT_SELECTION_CLEAR = 0;
 EAPI int ECORE_X_EVENT_SELECTION_REQUEST = 0;
 EAPI int ECORE_X_EVENT_SELECTION_NOTIFY = 0;
+EAPI int ECORE_X_EVENT_FIXES_SELECTION_NOTIFY = 0;
 EAPI int ECORE_X_EVENT_CLIENT_MESSAGE = 0;
 EAPI int ECORE_X_EVENT_WINDOW_SHAPE = 0;
 EAPI int ECORE_X_EVENT_SCREENSAVER_NOTIFY = 0;
@@ -752,9 +753,9 @@ ecore_x_screen_index_get(const Ecore_X_Screen *screen)
  * @since 1.1
  */
 EAPI Ecore_X_Screen *
-ecore_x_screen_get(int index) 
+ecore_x_screen_get(int idx) 
 {
-   return XScreenOfDisplay(_ecore_x_disp, index);
+   return XScreenOfDisplay(_ecore_x_disp, idx);
 }
 
 /**

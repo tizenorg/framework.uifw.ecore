@@ -263,9 +263,27 @@
 2011-07-22  Mike Blumenkrantz
 
         * Added ecore_con_url_url_get
-        
+
 2011-07-26  Carsten Haitzler (The Rasterman)
 
         * Fix timer precision handling for grouping timer ticks so
         they actually do tick off together
+
+2011-07-28  Cedric Bail
+
+	* Add ecore_main_loop_thread_safe_call_async.
+
+2011-07-26  Carsten Haitzler (The Rasterman)
+
+        * Make ecore-evas give more errors on stderr when engines are
+        not found.
+
+2011-08-16  Cedric Bail
+
+	* Add ecore_main_loop_thread_safe_call_sync.
+
+2011-08-17  Cedric Bail
+
+	* Add ecore_thread_main_loop_begin and ecore_thread_main_loop_end.
+	Usefull to protect EFL call from another thread.
 

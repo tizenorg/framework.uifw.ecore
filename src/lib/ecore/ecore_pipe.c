@@ -89,29 +89,12 @@ struct _Ecore_Pipe
 
 static Eina_Bool _ecore_pipe_read(void *data, Ecore_Fd_Handler *fd_handler);
 
+
 /**
- * @addtogroup Ecore_Group Ecore - Main Loop and Job Functions.
+ * @addtogroup Ecore_Pipe_Group
  *
  * @{
  */
-
-/**
- * @addtogroup Ecore_Pipe_Group Pipe wrapper
- *
- * These functions wrap the pipe / write / read functions to easily integrate
- * its use into ecore's main loop.
- *
- * The ecore_pipe_add() function creates file descriptors (sockets on
- * Windows) and attach an handle to the ecore main loop. That handle is
- * called when data is read in the pipe. To write data in the pipe,
- * just call ecore_pipe_write(). When you are done, just call
- * ecore_pipe_del().
- *
- * For examples see here:
- * @li @ref tutorial_ecore_pipe_gstreamer_example
- * @li @ref tutorial_ecore_pipe_simple_example
- */
-
 
 /**
  * Create two file descriptors (sockets on Windows). Add
@@ -174,7 +157,7 @@ ecore_pipe_del(Ecore_Pipe *p)
      }
    p->delete_me = EINA_TRUE;
    if (p->handling > 0) return (void *)p->data;
-   if (p->fd_handler) ecore_main_fd_handler_del(p->fd_handler);
+   if (p->fd_handler) _ecore_main_fd_handler_del(p->fd_handler);
    if (p->fd_read != PIPE_FD_INVALID) pipe_close(p->fd_read);
    if (p->fd_write != PIPE_FD_INVALID) pipe_close(p->fd_write);
    data = (void *)p->data;
@@ -197,7 +180,7 @@ ecore_pipe_read_close(Ecore_Pipe *p)
      }
    if (p->fd_handler)
      {
-        ecore_main_fd_handler_del(p->fd_handler);
+        _ecore_main_fd_handler_del(p->fd_handler);
         p->fd_handler = NULL;
      }
    if (p->fd_read != PIPE_FD_INVALID)
@@ -224,7 +207,7 @@ ecore_pipe_freeze(Ecore_Pipe *p)
      }
    if (p->fd_handler)
      {
-        ecore_main_fd_handler_del(p->fd_handler);
+        _ecore_main_fd_handler_del(p->fd_handler);
         p->fd_handler = NULL;
      }
 }
@@ -459,10 +442,6 @@ ecore_pipe_write(Ecore_Pipe *p, const void *buffer, unsigned int nbytes)
 
    return EINA_FALSE;
 }
-
-/**
- * @}
- */
 
 /**
  * @}
