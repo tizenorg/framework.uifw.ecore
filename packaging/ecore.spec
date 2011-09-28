@@ -44,13 +44,15 @@ Requires:   %{name} = %{version}-%{release}
 %description devel
 Core abstraction layer for enlightenment (devel)
 
-%package bin
+%package tools
 Summary:    Enlightened Core X interface library (bin)
 Group:      Development/Libraries
 Requires:   %{name} = %{version}-%{release}
+Provides:   %{name}-bin
+Obsoletes:  %{name}-bin
 
-%description bin
-Core abstraction layer for enlightenment (bin)
+%description tools
+Core abstraction layer for enlightenment (tools)
 
 %package con
 Summary:    Enlightened Core X interface library (con)
@@ -243,7 +245,7 @@ rm -rf %{buildroot}
 %{_libdir}/libecore_x.so
 %{_libdir}/libecore_fb.so
 
-%files bin
+%files tools
 %defattr(-,root,root,-)
 /usr/bin/ecore_test
 
