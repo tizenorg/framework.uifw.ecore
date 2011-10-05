@@ -9,6 +9,7 @@ ecore_x_window_prop_card32_get(Ecore_X_Window win, Ecore_X_Atom atom, unsigned i
    int num = 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    cookie = xcb_get_property_unchecked(_ecore_xcb_conn, 0, win, atom, 
                                        ECORE_X_ATOM_CARDINAL, 0, 0x7fffffff);
@@ -44,11 +45,12 @@ EAPI void
 ecore_x_window_prop_card32_set(Ecore_X_Window win, Ecore_X_Atom atom, unsigned int *val, unsigned int num) 
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
 #if SIZEOF_INT == SIZEOF_LONG
    xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, atom, 
                        ECORE_X_ATOM_CARDINAL, 32, num, (unsigned char *)val);
-   ecore_x_flush();
+//   ecore_x_flush();
 #else
    long *v2;
    unsigned int i;
@@ -61,7 +63,7 @@ ecore_x_window_prop_card32_set(Ecore_X_Window win, Ecore_X_Atom atom, unsigned i
    xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, atom, 
                        ECORE_X_ATOM_CARDINAL, 32, num, (unsigned char *)v2);
    free(v2);
-   ecore_x_flush();
+//   ecore_x_flush();
 #endif
 }
 
@@ -73,6 +75,7 @@ ecore_x_window_prop_card32_list_get(Ecore_X_Window win, Ecore_X_Atom atom, unsig
    int num = -1;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (list) *list = NULL;
 
@@ -133,9 +136,12 @@ EAPI void
 ecore_x_window_prop_xid_set(Ecore_X_Window win, Ecore_X_Atom atom, Ecore_X_Atom type, Ecore_X_ID *xids, unsigned int num) 
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
 #if SIZEOF_INT == SIZEOF_LONG
    xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, atom, 
                        type, 32, num, (unsigned char *)xids);
+//   ecore_x_flush();
 #else
    long *v2;
    unsigned int i;
@@ -148,7 +154,7 @@ ecore_x_window_prop_xid_set(Ecore_X_Window win, Ecore_X_Atom atom, Ecore_X_Atom 
    xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, atom, 
                        type, 32, num, (unsigned char *)v2);
    free(v2);
-   ecore_x_flush();
+//   ecore_x_flush();
 #endif
 }
 
@@ -160,6 +166,7 @@ ecore_x_window_prop_xid_get(Ecore_X_Window win, Ecore_X_Atom atom, Ecore_X_Atom 
    int num = 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    num = len;
    cookie = xcb_get_property_unchecked(_ecore_xcb_conn, 0, win, atom, type, 
@@ -194,10 +201,11 @@ EAPI void
 ecore_x_window_prop_string_set(Ecore_X_Window win, Ecore_X_Atom type, const char *str) 
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, type, 
                        ECORE_X_ATOM_UTF8_STRING, 8, strlen(str), str);
-   ecore_x_flush();
+//   ecore_x_flush();
 }
 
 EAPI char *
@@ -209,6 +217,7 @@ ecore_x_window_prop_string_get(Ecore_X_Window win, Ecore_X_Atom type)
    int len = 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    cookie = 
      xcb_get_property_unchecked(_ecore_xcb_conn, 0, 
@@ -289,6 +298,7 @@ EAPI void
 ecore_x_window_prop_property_del(Ecore_X_Window win, Ecore_X_Atom property) 
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    xcb_delete_property(_ecore_xcb_conn, win, property);
 }
@@ -297,6 +307,7 @@ EAPI void
 ecore_x_window_prop_property_set(Ecore_X_Window win, Ecore_X_Atom property, Ecore_X_Atom type, int size, void *data, int num) 
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (win == 0)
      win = ((xcb_screen_t *)_ecore_xcb_screen)->root;
@@ -305,7 +316,7 @@ ecore_x_window_prop_property_set(Ecore_X_Window win, Ecore_X_Atom property, Ecor
      {
         xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, 
                             property, type, size, num, (unsigned char *)data);
-        ecore_x_flush();
+//        ecore_x_flush();
      }
    else 
      {
@@ -321,7 +332,7 @@ ecore_x_window_prop_property_set(Ecore_X_Window win, Ecore_X_Atom property, Ecor
                                  property, type, size, num, 
                                  (unsigned char *)dat);
              free(dat);
-             ecore_x_flush();
+//             ecore_x_flush();
           }
      }
 }
@@ -336,6 +347,7 @@ ecore_x_window_prop_property_get(Ecore_X_Window win, Ecore_X_Atom property, Ecor
    void *value;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (num) *num = 0;
 
@@ -410,6 +422,7 @@ ecore_x_window_prop_xid_list_get(Ecore_X_Window win, Ecore_X_Atom atom, Ecore_X_
    int num = -1;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (xids) *xids = NULL;
 
@@ -442,34 +455,6 @@ ecore_x_window_prop_xid_list_get(Ecore_X_Window win, Ecore_X_Atom atom, Ecore_X_
 
    free(reply);
    return num;
-
-   /* if ((reply->type == XCB_NONE) || (reply->value_len == 0))  */
-   /*   num = 0; */
-   /* else if ((reply->type == ECORE_X_ATOM_CARDINAL) && (reply->format == 32))  */
-   /*   { */
-   /*      num = xcb_get_property_value_length(reply); */
-   /*      if (xids)  */
-   /*        { */
-   /*           uint32_t *val; */
-   /*           int i = 0; */
-   /*           void *value; */
-
-   /*           val = (uint32_t *)malloc(num * sizeof(Ecore_X_ID)); */
-   /*           if (!val)  */
-   /*             { */
-   /*                free(reply); */
-   /*                return -1; */
-   /*             } */
-
-   /*           for (i = 0; i < num; i++) */
-   /*             val[i] = ((unsigned long *)value)[i]; */
-
-   /*           *xids = val; */
-   /*        } */
-   /*   } */
-
-   /* free(reply); */
-   /* return num; */
 }
 
 EAPI void 
@@ -479,6 +464,7 @@ ecore_x_window_prop_xid_list_change(Ecore_X_Window win, Ecore_X_Atom atom, Ecore
    int i = 0, num = 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    num = ecore_x_window_prop_xid_list_get(win, atom, type, &lst);
    if (num < 0) return;
@@ -525,6 +511,7 @@ ecore_x_window_prop_protocol_isset(Ecore_X_Window win, Ecore_X_WM_Protocol proto
    uint32_t count = 0, i = 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (protocol >= ECORE_X_WM_PROTOCOL_NUM) return EINA_FALSE;
 
@@ -573,6 +560,7 @@ ecore_x_window_prop_protocol_list_get(Ecore_X_Window win, int *num_ret)
    Ecore_X_WM_Protocol *prot_ret = NULL;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (!num_ret) return NULL;
 
@@ -644,6 +632,7 @@ ecore_x_window_prop_list(Ecore_X_Window win, int *num)
    int i = 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (num) *num = 0;
 

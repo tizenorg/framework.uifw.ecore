@@ -59,7 +59,7 @@ VMAJ=v_maj
 AC_SUBST(VMAJ)
 
 m4_ifdef([AM_GNU_GETTEXT_VERSION], [
-AM_GNU_GETTEXT_VERSION([0.14])
+AM_GNU_GETTEXT_VERSION([0.17])
 ])
 
 m4_ifdef([AM_GNU_GETTEXT], [
@@ -95,6 +95,7 @@ AC_CANONICAL_HOST
 
 # dependencies and options
 want_curl="no"
+want_local_sockets="yes"
 want_abstract_sockets="no"
 want_gnutls="no"
 want_openssl="no"
@@ -176,6 +177,8 @@ case "$host_os" in
       want_notify_win32="yes"
       want_curl="yes"
       want_glib="auto"
+      want_gnutls="auto"
+      want_openssl="auto"
       want_ecore_imf="yes"
       want_ecore_win32="yes"
       want_ecore_evas_software_gdi="yes"
@@ -222,6 +225,11 @@ case "$host_os" in
       ;;
 esac
 
+case "$host_vendor" in
+  ps3*)
+      want_local_sockets="no"
+      ;;
+esac
 requirements_ecore=""
 requirements_ecore_con=""
 #requirements_ecore_config=""
@@ -289,6 +297,22 @@ fi
 
 if test "x${want_glib_integration_always}" = "xyes" -a "x${want_g_main_loop}" = "xyes"; then
   AC_MSG_ERROR([--enable-glib-integration-always and --enable-glib-main-loop are mutually exclusive])
+fi
+
+# local sockets (ecore_con.c)
+AC_ARG_ENABLE([local-sockets],
+   [AC_HELP_STRING([--disable-local-sockets], [disable local sockets.])],
+   [
+    if test "x${enableval}" = "xyes" ; then
+       want_ecore_con_local_sockets="yes"
+    else
+       want_ecore_con_local_sockets="no"
+    fi
+   ],
+   [want_ecore_con_local_sockets=${want_local_sockets}])
+
+if test "x${want_ecore_con_local_sockets}" = "xyes" ; then
+   AC_DEFINE([HAVE_LOCAL_SOCKETS], [1], [Have local sockets support])
 fi
 
 # abstract sockets (ecore_con.c)
@@ -523,24 +547,25 @@ fi
 # SDL library (ecore_sdl)
 
 have_sdl="no"
-SDL_CONFIG="sdl-config"
-AC_ARG_WITH([sdl-config],
-   [AC_HELP_STRING([--with-sdl-config=PATH], [use sdl-config specified])],
-   [
-    SDL_CONFIG=$withval
-    AC_MSG_NOTICE([using ${SDL_CONFIG} for sdl-config])
-   ])
+PKG_CHECK_MODULES([SDL], [sdl >= 1.2.0], [have_sdl="yes"], [have_sdl="no"])
+if test "x${have_sdl}" != "xyes" ; then
+   SDL_CONFIG="sdl-config"
+   AC_ARG_WITH([sdl-config],
+      [AC_HELP_STRING([--with-sdl-config=PATH], [use sdl-config specified])],
+      [
+       SDL_CONFIG=$withval
+       AC_MSG_NOTICE([using ${SDL_CONFIG} for sdl-config])
+      ])
 
-AC_PATH_PROG([SDL_CONFIG], ["sdl-config"], [""], [$PATH])
+   AC_PATH_PROG([SDL_CONFIG], ["sdl-config"], [""], [$PATH])
 
-if test -n "$SDL_CONFIG" ; then
-   SDL_CFLAGS=`$SDL_CONFIG --cflags`
-   SDL_LIBS=`$SDL_CONFIG --libs`
-   AC_SUBST(SDL_CFLAGS)
-   AC_SUBST(SDL_LIBS)
-   have_sdl="yes"
-else
-   PKG_CHECK_MODULES([SDL], [sdl >= 1.2.0], [have_sdl="yes"], [have_sdl="no"])
+   if test -n "$SDL_CONFIG" ; then
+      SDL_CFLAGS=`$SDL_CONFIG --cflags`
+      SDL_LIBS=`$SDL_CONFIG --libs`
+      AC_SUBST(SDL_CFLAGS)
+      AC_SUBST(SDL_LIBS)
+      have_sdl="yes"
+   fi
 fi
 
 if test "x${have_sdl}" = "xyes" ; then
@@ -783,12 +808,12 @@ if test "x$want_ecore_x_xcb" = "xyes" ; then
     fi
   fi
 
-  PKG_CHECK_MODULES(XCB, x11-xcb xcb xcb-shm xcb-event xcb-icccm >= 0.3.8 xcb-util >= 0.3.8 xcb-image xcb-keysyms,
+  PKG_CHECK_MODULES(ECORE_XCB, x11-xcb xcb xcb-shm xcb-event xcb-icccm >= 0.3.8 xcb-util >= 0.3.8 xcb-image xcb-keysyms >= 0.3.8,
     [ have_ecore_x_xcb="yes"
       requirements_ecore_x="x11-xcb xcb xcb-shm xcb-event xcb-icccm xcb-util xcb-image xcb-keysyms ${requirements_ecore_x}"
     ],
     [ 
-	PKG_CHECK_MODULES(XCB, x11-xcb xcb xcb-event xcb-shm xcb-icccm xcb-image xcb-keysyms, 
+	PKG_CHECK_MODULES(ECORE_XCB, x11-xcb xcb xcb-event xcb-shm xcb-icccm xcb-image xcb-keysyms, 
 	  [ have_ecore_x_xcb="yes"
 	    AC_DEFINE(OLD_XCB_VERSION, 1, [xcb version])
 	    requirements_ecore_x="x11-xcb xcb xcb-event xcb-shm xcb-icccm xcb-image xcb-keysyms ${requirements_ecore_x}" ],
@@ -967,21 +992,21 @@ if test "x$want_ecore_x_xcb" = "xyes" ; then
       AC_MSG_NOTICE("cursor extension explicitly disabled")
     fi
 
-    if test "x$want_ecore_x_dri" != "xno"; then
-      PKG_CHECK_MODULES(XCB_DRI, xcb-dri2,
-        [ have_ecore_x_xcb_dri="yes"
-          requirements_ecore_x="xcb-dri2 ${requirements_ecore_x}"
-          AC_DEFINE(ECORE_XCB_DRI, 1, [Build support for XCB dri/dri2]) ],
-        [ have_ecore_x_xcb_dri="no" ])
-    else
-      have_ecore_x_xcb_dri="no"
-      AC_MSG_NOTICE("dri extension explicitly disabled")
-    fi
+#    if test "x$want_ecore_x_dri" != "xno"; then
+#      PKG_CHECK_MODULES(XCB_DRI, xcb-dri2,
+#        [ have_ecore_x_xcb_dri="yes"
+#          requirements_ecore_x="xcb-dri2 ${requirements_ecore_x}"
+#          AC_DEFINE(ECORE_XCB_DRI, 1, [Build support for XCB dri/dri2]) ],
+#        [ have_ecore_x_xcb_dri="no" ])
+#    else
+#      have_ecore_x_xcb_dri="no"
+#      AC_MSG_NOTICE("dri extension explicitly disabled")
+#    fi
 
     AC_DEFINE(HAVE_ECORE_X_XCB, 1, [Defined to 1 if XCB is enabled.])
 
-    x_cflags=$XCB_CFLAGS
-    x_libs=$XCB_LIBS
+    x_cflags=$ECORE_XCB_CFLAGS
+    x_libs=$ECORE_XCB_LIBS
     have_x="yes"
 
     have_ecore_x_xcb_define="-DHAVE_ECORE_X_XCB"
@@ -1089,6 +1114,8 @@ PKG_CHECK_MODULES([EVAS], [evas >= 1.0.0],
 
 
 ### Checks for header files
+
+AC_CHECK_HEADERS([sys/select.h])
 
 EFL_CHECK_PATH_MAX
 
@@ -1232,7 +1259,7 @@ AC_SUBST(lt_enable_auto_import)
 ### Checks for library functions
 AC_ISC_POSIX
 AC_FUNC_ALLOCA
-AC_CHECK_FUNCS(gettimeofday strlcpy)
+AC_CHECK_FUNCS([gettimeofday strlcpy execvp])
 
 AC_COMPILE_IFELSE(
    [AC_LANG_PROGRAM(
@@ -1298,6 +1325,22 @@ have_openssl="no"
 have_cares="no"
 if test "x${have_ecore_con}" = "xyes" ; then
 
+   # Verify IPV6 availability in headers
+   have_ipv6="no"
+   AC_CHECK_TYPES([struct ipv6_mreq], [have_ipv6="yes"], [have_ipv6="no"],
+               [[
+#ifdef HAVE_NETINET_IN_H
+# include <netinet/in.h>
+#endif
+#ifdef HAVE_WS2TCPIP_H
+# include <ws2tcpip.h>
+#endif
+        ]])
+
+   if test "x${have_ipv6}" = "xyes" ; then
+      AC_DEFINE(HAVE_IPV6, 1, [Define if IPV6 is supported])
+   fi
+
    ECORE_CHECK_CURL([${want_curl}],
       [
        have_curl="yes"
@@ -1353,7 +1396,15 @@ if test "x${have_ecore_file}" = "xyes" ; then
 
    if test "x${have_ecore_con}" = "xyes" ; then
       requirements_ecore_file="ecore-con >= 1.0.0 ${requirements_ecore_file}"
+   else
+      ECORE_CHECK_CURL([${want_curl}],
+         [
+          have_curl="yes"
+          requirements_ecore_file="libcurl ${requirements_ecore_file}"
+         ],
+         [have_curl="no"])
    fi
+
 fi
 
 # ecore_config
@@ -1499,6 +1550,9 @@ have_ecore_evas_software_xlib="no"
 have_ecore_evas_software_xcb="no"
 if test "x$have_ecore_evas_software_x11" = "xyes" ; then
    have_ecore_evas_software_xlib=`${PKG_CONFIG} --variable=Xlib evas-software-x11`
+   if test "x${have_ecore_evas_software_xlib}" = "xstatic"; then
+      have_ecore_evas_software_xlib="yes"
+   fi
    if test "x${have_ecore_evas_software_xlib}" = "xyes" -a "x${have_ecore_x_xlib}" = "xyes" ; then
       AC_DEFINE(BUILD_ECORE_EVAS_SOFTWARE_XLIB, 1, [Evas Software Xlib Engine Support])
    fi
@@ -1751,7 +1805,10 @@ else
 fi
   echo "    GnuTLS.....................: $have_gnutls"
   echo "    CURL.......................: $have_curl"
-  echo "    Abstract Sockets...........: $want_abstract_sockets"
+  echo "    Local Sockets..............: $want_ecore_con_local_sockets"
+if test "x$want_ecore_con_local_sockets" = "xyes" ; then
+  echo "      Abstract Sockets.........: $want_ecore_con_abstract_sockets"
+fi
   echo "    c-ares.....................: $have_cares"
 fi
 echo "  Ecore_Ipc....................: $have_ecore_ipc"

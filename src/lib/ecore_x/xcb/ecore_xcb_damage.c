@@ -82,11 +82,14 @@ ecore_x_damage_new(Ecore_X_Drawable drawable, Ecore_X_Damage_Report_Level level)
    Ecore_X_Damage damage = 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   if (!_damage_avail) return 0;
 
 #ifdef ECORE_XCB_DAMAGE
    damage = xcb_generate_id(_ecore_xcb_conn);
    xcb_damage_create(_ecore_xcb_conn, damage, drawable, level);
-   ecore_x_flush();
+//   ecore_x_flush();
 #endif
 
    return damage;
@@ -105,10 +108,13 @@ EAPI void
 ecore_x_damage_free(Ecore_X_Damage damage) 
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   if (!_damage_avail) return;
 
 #ifdef ECORE_XCB_DAMAGE
    xcb_damage_destroy(_ecore_xcb_conn, damage);
-   ecore_x_flush();
+//   ecore_x_flush();
 #endif
 }
 
@@ -134,9 +140,12 @@ EAPI void
 ecore_x_damage_subtract(Ecore_X_Damage damage, Ecore_X_Region repair, Ecore_X_Region parts) 
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   if (!_damage_avail) return;
 
 #ifdef ECORE_XCB_DAMAGE
    xcb_damage_subtract(_ecore_xcb_conn, damage, repair, parts);
-   ecore_x_flush();
+//   ecore_x_flush();
 #endif
 }

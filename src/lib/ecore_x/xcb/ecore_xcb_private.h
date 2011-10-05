@@ -13,6 +13,7 @@
 # include <xcb/xcb.h>
 # include <xcb/bigreq.h>
 # include <xcb/shm.h>
+# include <xcb/xcb_image.h>
 
 /* EFL includes */
 # include "Ecore.h"
@@ -70,6 +71,15 @@ extern int _ecore_xcb_log_dom;
 # ifndef MAX
 #  define MAX(a, b) ((a < b) ? b : a)
 # endif
+
+#define CHECK_XCB_CONN \
+   { \
+      if (xcb_connection_has_error(_ecore_xcb_conn)) \
+        { \
+           DBG("XCB Connection Has Error !!"); \
+           _ecore_xcb_io_error_handle(NULL); \
+        } \
+   }
 
 /* enums */
 typedef enum _Ecore_Xcb_Encoding_Style Ecore_Xcb_Encoding_Style;
@@ -333,5 +343,14 @@ Ecore_X_Window_State _ecore_xcb_netwm_window_state_get(Ecore_X_Atom atom);
 
 int _ecore_xcb_error_handle(xcb_generic_error_t *err);
 int _ecore_xcb_io_error_handle(xcb_generic_error_t *err);
+
+xcb_image_t *_ecore_xcb_image_create_native(int w, int h, xcb_image_format_t format, uint8_t depth, void *base, uint32_t bytes, uint8_t *data);
+
+void _ecore_xcb_xdefaults_init(void);
+void _ecore_xcb_xdefaults_shutdown(void);
+char *_ecore_xcb_xdefaults_string_get(const char *prog, const char *param);
+int _ecore_xcb_xdefaults_int_get(const char *prog, const char *param);
+
+void _ecore_xcb_modifiers_get(void);
 
 #endif

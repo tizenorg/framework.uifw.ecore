@@ -52,12 +52,13 @@ _ecore_xcb_render_finalize(void)
                   char *v = NULL;
 
                   _render_avail = EINA_TRUE;
+                  _ecore_xcb_xdefaults_init();
                   if ((reply->major_version > 0) || (reply->minor_version >= 5)) 
                     {
                        _render_argb = EINA_TRUE;
                        v = getenv("XCURSOR_CORE");
-                       /* if (!v)  */
-                       /*   v = _ecore_xcb_resource_get_string("Xcursor", "core"); */
+                       if (!v) 
+                         v = _ecore_xcb_xdefaults_string_get("Xcursor", "core");
                        if ((v) && (_ecore_xcb_render_parse_boolean(v)))
                          _render_argb = EINA_FALSE;
                     }
@@ -66,11 +67,12 @@ _ecore_xcb_render_finalize(void)
                     {
                        _render_anim = EINA_TRUE;
                        v = getenv("XCURSOR_ANIM");
-                       /* if (!v)  */
-                       /*   v = _ecore_xcb_resource_get_string("Xcursor", "anim"); */
+                       if (!v) 
+                         v = _ecore_xcb_xdefaults_string_get("Xcursor", "anim");
                        if ((v) && (_ecore_xcb_render_parse_boolean(v)))
                          _render_anim = EINA_FALSE;
                     }
+                  _ecore_xcb_xdefaults_shutdown();
                }
           }
         free(reply);
@@ -106,8 +108,10 @@ _ecore_xcb_render_visual_supports_alpha(Ecore_X_Visual visual)
 #endif
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (!visual) return EINA_FALSE;
+   if (!_render_avail) return EINA_FALSE;
 
 #ifdef ECORE_XCB_RENDER
    reply = xcb_render_util_query_formats(_ecore_xcb_conn);
@@ -147,6 +151,9 @@ _ecore_xcb_render_find_visual_id(int type, Eina_Bool check_alpha)
 #endif
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   if (!_render_avail) return 0;
 
 #ifdef ECORE_XCB_RENDER
    reply = xcb_render_util_query_formats(_ecore_xcb_conn);

@@ -18,7 +18,7 @@ _ecore_evas_x_group_leader_set(Ecore_Evas *ee)
      {
         char *id = NULL;
 
-        leader_win = 
+        leader_win =
           ecore_x_window_override_new(ee->engine.x.win_root, 1234, 5678, 1, 2);
         ecore_x_window_defaults_set(leader_win);
         if ((id = getenv("DESKTOP_STARTUP_ID")))
@@ -32,7 +32,7 @@ _ecore_evas_x_group_leader_set(Ecore_Evas *ee)
 static void
 _ecore_evas_x_group_leader_unset(Ecore_Evas *ee)
 {
-   ecore_x_window_prop_property_del(ee->prop.window, 
+   ecore_x_window_prop_property_del(ee->prop.window,
                                     ECORE_X_ATOM_WM_CLIENT_LEADER);
    if (ee->engine.x.leader == leader_win)
      {
@@ -146,9 +146,9 @@ _ecore_evas_x_gl_window_new(Ecore_Evas *ee, Ecore_X_Window parent, int x, int y,
                   Ecore_X_Window root;
 
                   root = ecore_x_window_root_get(parent);
-                  for (i = 0; i < num; i++) 
+                  for (i = 0; i < num; i++)
                     {
-                       if (root == roots[i]) 
+                       if (root == roots[i])
                          {
                             screen = i;
                             break;
@@ -167,7 +167,7 @@ _ecore_evas_x_gl_window_new(Ecore_Evas *ee, Ecore_X_Window parent, int x, int y,
         einfo->info.colormap = einfo->func.best_colormap_get(einfo);
         einfo->info.depth = einfo->func.best_depth_get(einfo);
 
-        if ((!einfo->info.visual) || 
+        if ((!einfo->info.visual) ||
             (!einfo->info.colormap) || (!einfo->info.depth))
           {
              WRN("OpenGL X11 init engine '%s' failed - no visual, colormap or depth.", ee->driver);
@@ -178,14 +178,14 @@ _ecore_evas_x_gl_window_new(Ecore_Evas *ee, Ecore_X_Window parent, int x, int y,
                }
           }
 
-        if (argb) 
+        if (argb)
           {
              if (override)
                win = ecore_x_window_override_argb_new(parent, x, y, w, h);
              else
                win = ecore_x_window_argb_new(parent, x, y, w, h);
           }
-        else 
+        else
           {
              if (override)
                win = ecore_x_window_override_new(parent, x, y, w, h);
@@ -234,9 +234,9 @@ _ecore_evas_x_gl_window_new(Ecore_Evas *ee, Ecore_X_Window parent, int x, int y,
 static int
 _ecore_evas_x_render(Ecore_Evas *ee)
 {
-   Eina_Rectangle *r;
-   Eina_List *updates, *l;
    int rend = 0;
+   Eina_List *updates = NULL;
+
 #ifdef BUILD_ECORE_EVAS_SOFTWARE_BUFFER
    Eina_List *ll;
    Ecore_Evas *ee2;
@@ -253,25 +253,30 @@ _ecore_evas_x_render(Ecore_Evas *ee)
         if (ee2->func.fn_post_render) ee2->func.fn_post_render(ee2);
      }
 #endif
+
    if (ee->func.fn_pre_render) ee->func.fn_pre_render(ee);
+   updates = evas_render_updates(ee->evas);
    if (ee->prop.avoid_damage)
      {
-        updates = evas_render_updates(ee->evas);
         if (ee->engine.x.using_bg_pixmap)
           {
              if (updates)
                {
+                  Eina_List *l = NULL;
+                  Eina_Rectangle *r;
+
                   EINA_LIST_FOREACH(updates, l, r)
-                    ecore_x_window_area_clear(ee->prop.window, r->x, r->y, r->w, r->h);
-                  if ((ee->shaped) && (updates))
+                    ecore_x_window_area_clear(ee->prop.window,
+                                              r->x, r->y, r->w, r->h);
+                  if (ee->shaped)
                     {
 #ifdef EVAS_FRAME_QUEUING
-                       /* wait until ee->engine.x.mask being updated */
                        evas_sync(ee->evas);
 #endif
-                       ecore_x_window_shape_mask_set(ee->prop.window, ee->engine.x.mask);
+                       ecore_x_window_shape_mask_set(ee->prop.window,
+                                                     ee->engine.x.mask);
                     }
-                  if ((ee->alpha) && (updates))
+                  if (ee->alpha)
                     {
 #ifdef EVAS_FRAME_QUEUING
                        /* wait until ee->engine.x.mask being updated */
@@ -286,104 +291,97 @@ _ecore_evas_x_render(Ecore_Evas *ee)
           }
         else
           {
-             EINA_LIST_FOREACH(updates, l, r)
-               {
-                  Ecore_X_Rectangle rect;
-                  Ecore_X_XRegion  *tmpr;
-
-                  if (!ee->engine.x.damages)
-                    ee->engine.x.damages = ecore_x_xregion_new();
-                  tmpr = ecore_x_xregion_new();
-                  if (ee->rotation == 0)
-                    {
-                       rect.x = r->x;
-                       rect.y = r->y;
-                       rect.width = r->w;
-                       rect.height = r->h;
-                    }
-                  else if (ee->rotation == 90)
-                    {
-                       rect.x = r->y;
-                       rect.y = ee->h - r->x - r->w;
-                       rect.width = r->h;
-                       rect.height = r->w;
-                    }
-                  else if (ee->rotation == 180)
-                    {
-                       rect.x = ee->w - r->x - r->w;
-                       rect.y = ee->h - r->y - r->h;
-                       rect.width = r->w;
-                       rect.height = r->h;
-                    }
-                  else if (ee->rotation == 270)
-                    {
-                       rect.x = ee->w - r->y - r->h;
-                       rect.y = r->x;
-                       rect.width = r->h;
-                       rect.height = r->w;
-                    }
-                  ecore_x_xregion_union_rect(tmpr, ee->engine.x.damages, &rect);
-                  ecore_x_xregion_free(ee->engine.x.damages);
-                  ee->engine.x.damages = tmpr;
-               }
-             if (ee->engine.x.damages)
-               {
-                  /* if we have a damage pixmap - we can avoid exposures by
-                   * disabling them just for setting the mask */
-                  ecore_x_event_mask_set(ee->prop.window,
-                                         ECORE_X_EVENT_MASK_KEY_DOWN |
-                                         ECORE_X_EVENT_MASK_KEY_UP |
-                                         ECORE_X_EVENT_MASK_MOUSE_DOWN |
-                                         ECORE_X_EVENT_MASK_MOUSE_UP |
-                                         ECORE_X_EVENT_MASK_MOUSE_IN |
-                                         ECORE_X_EVENT_MASK_MOUSE_OUT |
-                                         ECORE_X_EVENT_MASK_MOUSE_MOVE |
-//                                         ECORE_X_EVENT_MASK_WINDOW_DAMAGE |
-                                         ECORE_X_EVENT_MASK_WINDOW_VISIBILITY |
-                                         ECORE_X_EVENT_MASK_WINDOW_CONFIGURE |
-                                         ECORE_X_EVENT_MASK_WINDOW_FOCUS_CHANGE |
-                                         ECORE_X_EVENT_MASK_WINDOW_PROPERTY |
-                                         ECORE_X_EVENT_MASK_WINDOW_COLORMAP
-                                         );
-                  if ((ee->shaped) && (updates))
-                    ecore_x_window_shape_mask_set(ee->prop.window, 
-                                                  ee->engine.x.mask);
-                  /* and re-enable them again */
-                  ecore_x_event_mask_set(ee->prop.window,
-                                         ECORE_X_EVENT_MASK_KEY_DOWN |
-                                         ECORE_X_EVENT_MASK_KEY_UP |
-                                         ECORE_X_EVENT_MASK_MOUSE_DOWN |
-                                         ECORE_X_EVENT_MASK_MOUSE_UP |
-                                         ECORE_X_EVENT_MASK_MOUSE_IN |
-                                         ECORE_X_EVENT_MASK_MOUSE_OUT |
-                                         ECORE_X_EVENT_MASK_MOUSE_MOVE |
-                                         ECORE_X_EVENT_MASK_WINDOW_DAMAGE |
-                                         ECORE_X_EVENT_MASK_WINDOW_VISIBILITY |
-                                         ECORE_X_EVENT_MASK_WINDOW_CONFIGURE |
-                                         ECORE_X_EVENT_MASK_WINDOW_FOCUS_CHANGE |
-                                         ECORE_X_EVENT_MASK_WINDOW_PROPERTY |
-                                         ECORE_X_EVENT_MASK_WINDOW_COLORMAP
-                                         );
-                  ecore_x_xregion_set(ee->engine.x.damages, ee->engine.x.gc);
-
-                  /* debug rendering */
-                  /*
-                   XSetForeground(ecore_x_display_get(), ee->engine.x.gc, rand());
-                   XFillRectangle(ecore_x_display_get(), ee->prop.window, ee->engine.x.gc,
-                   0, 0, ee->w, ee->h);
-                   XSync(ecore_x_display_get(), False);
-                   usleep(20000);
-                   XSync(ecore_x_display_get(), False);
-                   */
-
-                  ecore_x_pixmap_paste(ee->engine.x.pmap, ee->prop.window, 
-                                       ee->engine.x.gc, 0, 0, ee->w, ee->h, 
-                                       0, 0);
-                  ecore_x_xregion_free(ee->engine.x.damages);
-                  ee->engine.x.damages = NULL;
-               }
              if (updates)
                {
+                  Eina_List *l = NULL;
+                  Eina_Rectangle *r;
+
+                  EINA_LIST_FOREACH(updates, l, r)
+                    {
+                       Ecore_X_Rectangle rect;
+                       Ecore_X_XRegion *tmpr;
+
+                       if (!ee->engine.x.damages)
+                         ee->engine.x.damages = ecore_x_xregion_new();
+                       tmpr = ecore_x_xregion_new();
+                       if (ee->rotation == 0)
+                         {
+                            rect.x = r->x;
+                            rect.y = r->y;
+                            rect.width = r->w;
+                            rect.height = r->h;
+                         }
+                       else if (ee->rotation == 90)
+                         {
+                            rect.x = r->y;
+                            rect.y = ee->h - r->x - r->w;
+                            rect.width = r->h;
+                            rect.height = r->w;
+                         }
+                       else if (ee->rotation == 180)
+                         {
+                            rect.x = ee->w - r->x - r->w;
+                            rect.y = ee->h - r->y - r->h;
+                            rect.width = r->w;
+                            rect.height = r->h;
+                         }
+                       else if (ee->rotation == 270)
+                         {
+                            rect.x = ee->w - r->y - r->h;
+                            rect.y = r->x;
+                            rect.width = r->h;
+                            rect.height = r->w;
+                         }
+                       ecore_x_xregion_union_rect(tmpr, ee->engine.x.damages,
+                                                  &rect);
+                       ecore_x_xregion_free(ee->engine.x.damages);
+                       ee->engine.x.damages = tmpr;
+                    }
+                  if (ee->engine.x.damages)
+                    {
+                       /* if we have a damage pixmap - we can avoid exposures by
+                        * disabling them just for setting the mask */
+                       ecore_x_event_mask_set(ee->prop.window,
+                                              ECORE_X_EVENT_MASK_KEY_DOWN |
+                                              ECORE_X_EVENT_MASK_KEY_UP |
+                                              ECORE_X_EVENT_MASK_MOUSE_DOWN |
+                                              ECORE_X_EVENT_MASK_MOUSE_UP |
+                                              ECORE_X_EVENT_MASK_MOUSE_IN |
+                                              ECORE_X_EVENT_MASK_MOUSE_OUT |
+                                              ECORE_X_EVENT_MASK_MOUSE_MOVE |
+                                              //                                         ECORE_X_EVENT_MASK_WINDOW_DAMAGE |
+                                              ECORE_X_EVENT_MASK_WINDOW_VISIBILITY |
+                                              ECORE_X_EVENT_MASK_WINDOW_CONFIGURE |
+                                              ECORE_X_EVENT_MASK_WINDOW_FOCUS_CHANGE |
+                                              ECORE_X_EVENT_MASK_WINDOW_PROPERTY |
+                                              ECORE_X_EVENT_MASK_WINDOW_COLORMAP
+                                             );
+                       if (ee->shaped)
+                         ecore_x_window_shape_mask_set(ee->prop.window,
+                                                       ee->engine.x.mask);
+                       /* and re-enable them again */
+                       ecore_x_event_mask_set(ee->prop.window,
+                                              ECORE_X_EVENT_MASK_KEY_DOWN |
+                                              ECORE_X_EVENT_MASK_KEY_UP |
+                                              ECORE_X_EVENT_MASK_MOUSE_DOWN |
+                                              ECORE_X_EVENT_MASK_MOUSE_UP |
+                                              ECORE_X_EVENT_MASK_MOUSE_IN |
+                                              ECORE_X_EVENT_MASK_MOUSE_OUT |
+                                              ECORE_X_EVENT_MASK_MOUSE_MOVE |
+                                              ECORE_X_EVENT_MASK_WINDOW_DAMAGE |
+                                              ECORE_X_EVENT_MASK_WINDOW_VISIBILITY |
+                                              ECORE_X_EVENT_MASK_WINDOW_CONFIGURE |
+                                              ECORE_X_EVENT_MASK_WINDOW_FOCUS_CHANGE |
+                                              ECORE_X_EVENT_MASK_WINDOW_PROPERTY |
+                                              ECORE_X_EVENT_MASK_WINDOW_COLORMAP
+                                             );
+                       ecore_x_xregion_set(ee->engine.x.damages, ee->engine.x.gc);
+                       ecore_x_pixmap_paste(ee->engine.x.pmap, ee->prop.window,
+                                            ee->engine.x.gc, 0, 0, ee->w, ee->h,
+                                            0, 0);
+                       ecore_x_xregion_free(ee->engine.x.damages);
+                       ee->engine.x.damages = NULL;
+                    }
                   evas_render_updates_free(updates);
                   _ecore_evas_idle_timeout_update(ee);
                   rend = 1;
@@ -394,16 +392,15 @@ _ecore_evas_x_render(Ecore_Evas *ee)
             ((ee->should_be_visible) && (ee->prop.fullscreen)) ||
             ((ee->should_be_visible) && (ee->prop.override)))
      {
-        updates = evas_render_updates(ee->evas);
         if (updates)
           {
              if (ee->shaped)
                {
 #ifdef EVAS_FRAME_QUEUING
-                  /* wait until ee->engine.x.mask being updated */
                   evas_sync(ee->evas);
 #endif
-                  ecore_x_window_shape_mask_set(ee->prop.window, ee->engine.x.mask);
+                  ecore_x_window_shape_mask_set(ee->prop.window,
+                                                ee->engine.x.mask);
                }
              if (ee->alpha)
                {
@@ -439,6 +436,7 @@ _ecore_evas_x_render(Ecore_Evas *ee)
           }
      }
  */
+
    return rend;
 }
 
@@ -634,7 +632,7 @@ _ecore_evas_x_event_visibility_change(void *data __UNUSED__, int type __UNUSED__
         if (!ecore_x_screen_is_composited(ee->engine.x.screen_num))
           ee->draw_ok = 0;
      }
-   else 
+   else
      ee->draw_ok = 1;
    return ECORE_CALLBACK_PASS_ON;
 }
@@ -651,7 +649,7 @@ _ecore_evas_x_event_client_message(void *data __UNUSED__, int type __UNUSED__, v
      {
         ee = ecore_event_window_match(e->data.l[0]);
         if (!ee) return ECORE_CALLBACK_PASS_ON; /* pass on event */
-        if (e->data.l[0] != (long)ee->prop.window) 
+        if (e->data.l[0] != (long)ee->prop.window)
           return ECORE_CALLBACK_PASS_ON;
         if (!ee->engine.x.sync_began)
           {
@@ -665,7 +663,7 @@ _ecore_evas_x_event_client_message(void *data __UNUSED__, int type __UNUSED__, v
      {
         ee = ecore_event_window_match(e->data.l[0]);
         if (!ee) return ECORE_CALLBACK_PASS_ON; /* pass on event */
-        if (e->data.l[0] != (long)ee->prop.window) 
+        if (e->data.l[0] != (long)ee->prop.window)
           return ECORE_CALLBACK_PASS_ON;
         ee->engine.x.sync_began = 0;
         ee->engine.x.sync_cancel = 0;
@@ -674,7 +672,7 @@ _ecore_evas_x_event_client_message(void *data __UNUSED__, int type __UNUSED__, v
      {
         ee = ecore_event_window_match(e->data.l[0]);
         if (!ee) return ECORE_CALLBACK_PASS_ON; /* pass on event */
-        if (e->data.l[0] != (long)ee->prop.window) 
+        if (e->data.l[0] != (long)ee->prop.window)
           return ECORE_CALLBACK_PASS_ON;
         ee->engine.x.sync_began = 0;
         ee->engine.x.sync_cancel = 1;
@@ -850,7 +848,7 @@ _ecore_evas_x_event_window_damage(void *data __UNUSED__, int type __UNUSED__, vo
         Ecore_X_Rectangle rect;
         Ecore_X_XRegion *tmpr;
 
-        if (!ee->engine.x.damages) 
+        if (!ee->engine.x.damages)
           ee->engine.x.damages = ecore_x_xregion_new();
         tmpr = ecore_x_xregion_new();
         rect.x = e->x;
@@ -1198,44 +1196,44 @@ _ecore_evas_x_init(void)
 {
    _ecore_evas_init_count++;
    if (_ecore_evas_init_count > 1) return _ecore_evas_init_count;
-   ecore_evas_event_handlers[0] = 
-     ecore_event_handler_add(ECORE_X_EVENT_MOUSE_IN, 
+   ecore_evas_event_handlers[0] =
+     ecore_event_handler_add(ECORE_X_EVENT_MOUSE_IN,
                              _ecore_evas_x_event_mouse_in, NULL);
-   ecore_evas_event_handlers[1] = 
-     ecore_event_handler_add(ECORE_X_EVENT_MOUSE_OUT, 
+   ecore_evas_event_handlers[1] =
+     ecore_event_handler_add(ECORE_X_EVENT_MOUSE_OUT,
                              _ecore_evas_x_event_mouse_out, NULL);
-   ecore_evas_event_handlers[2] = 
-     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_FOCUS_IN, 
+   ecore_evas_event_handlers[2] =
+     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_FOCUS_IN,
                              _ecore_evas_x_event_window_focus_in, NULL);
-   ecore_evas_event_handlers[3] = 
-     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_FOCUS_OUT, 
+   ecore_evas_event_handlers[3] =
+     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_FOCUS_OUT,
                              _ecore_evas_x_event_window_focus_out, NULL);
-   ecore_evas_event_handlers[4] = 
-     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_DAMAGE, 
+   ecore_evas_event_handlers[4] =
+     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_DAMAGE,
                              _ecore_evas_x_event_window_damage, NULL);
-   ecore_evas_event_handlers[5] = 
-     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_DESTROY, 
+   ecore_evas_event_handlers[5] =
+     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_DESTROY,
                              _ecore_evas_x_event_window_destroy, NULL);
-   ecore_evas_event_handlers[6] = 
-     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_CONFIGURE, 
+   ecore_evas_event_handlers[6] =
+     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_CONFIGURE,
                              _ecore_evas_x_event_window_configure, NULL);
-   ecore_evas_event_handlers[7] = 
-     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_DELETE_REQUEST, 
+   ecore_evas_event_handlers[7] =
+     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_DELETE_REQUEST,
                              _ecore_evas_x_event_window_delete_request, NULL);
-   ecore_evas_event_handlers[8] = 
-     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_SHOW, 
+   ecore_evas_event_handlers[8] =
+     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_SHOW,
                              _ecore_evas_x_event_window_show, NULL);
-   ecore_evas_event_handlers[9] = 
-     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_HIDE, 
+   ecore_evas_event_handlers[9] =
+     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_HIDE,
                              _ecore_evas_x_event_window_hide, NULL);
-   ecore_evas_event_handlers[10] = 
-     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_PROPERTY, 
+   ecore_evas_event_handlers[10] =
+     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_PROPERTY,
                              _ecore_evas_x_event_property_change, NULL);
-   ecore_evas_event_handlers[11] = 
-     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_VISIBILITY_CHANGE, 
+   ecore_evas_event_handlers[11] =
+     ecore_event_handler_add(ECORE_X_EVENT_WINDOW_VISIBILITY_CHANGE,
                              _ecore_evas_x_event_visibility_change, NULL);
-   ecore_evas_event_handlers[12] = 
-     ecore_event_handler_add(ECORE_X_EVENT_CLIENT_MESSAGE, 
+   ecore_evas_event_handlers[12] =
+     ecore_event_handler_add(ECORE_X_EVENT_CLIENT_MESSAGE,
                              _ecore_evas_x_event_client_message, NULL);
    ecore_event_evas_init();
    return _ecore_evas_init_count;
@@ -1246,7 +1244,7 @@ _ecore_evas_x_free(Ecore_Evas *ee)
 {
    _ecore_evas_x_group_leader_unset(ee);
    _ecore_evas_x_sync_set(ee);
-   if (ee->engine.x.win_shaped_input) 
+   if (ee->engine.x.win_shaped_input)
      ecore_x_window_free(ee->engine.x.win_shaped_input);
    ecore_x_window_free(ee->prop.window);
    if (ee->engine.x.pmap) ecore_x_pixmap_free(ee->engine.x.pmap);
@@ -1263,7 +1261,7 @@ _ecore_evas_x_free(Ecore_Evas *ee)
         Ecore_X_Window *winp;
 
         winp = ee->engine.x.win_extra->data;
-        ee->engine.x.win_extra = 
+        ee->engine.x.win_extra =
           eina_list_remove_list(ee->engine.x.win_extra, ee->engine.x.win_extra);
         ecore_event_window_unregister(*winp);
         free(winp);
@@ -1306,17 +1304,20 @@ _ecore_evas_x_move(Ecore_Evas *ee, int x, int y)
      }
    else
      {
-        ecore_x_window_move(ee->prop.window, x, y);
+        if ((ee->x != x) || (ee->y != y))
+          {
+             if (!ee->engine.x.managed)
+               {
+                  ee->x = x;
+                  ee->y = y;
+               }
+             ecore_x_window_move(ee->prop.window, x, y);
+          }
         if (!ee->should_be_visible)
           {
              /* We need to request pos */
              ee->prop.request_pos = 1;
              _ecore_evas_x_size_pos_hints_update(ee);
-          }
-        if (!ee->engine.x.managed)
-          {
-             ee->x = x;
-             ee->y = y;
           }
      }
 }
@@ -1347,9 +1348,9 @@ _ecore_evas_x_resize(Ecore_Evas *ee, int w, int h)
      {
         if ((ee->w != w) || (ee->h != h))
           {
-             ecore_x_window_resize(ee->prop.window, w, h);
              ee->w = w;
              ee->h = h;
+             ecore_x_window_resize(ee->prop.window, w, h);
              if ((ee->rotation == 90) || (ee->rotation == 270))
                {
                   evas_output_size_set(ee->evas, ee->h, ee->w);
@@ -1373,7 +1374,7 @@ _ecore_evas_x_resize(Ecore_Evas *ee, int w, int h)
              if (ee->func.fn_resize) ee->func.fn_resize(ee);
           }
      }
-   else
+   else if ((ee->w != w) || (ee->h != h))
      ecore_x_window_resize(ee->prop.window, w, h);
 }
 
@@ -1495,9 +1496,9 @@ _ecore_evas_x_rotation_set_internal(Ecore_Evas *ee, int rotation, int resize,
           }
         else
           {
-             int w, h;
+             /* int w, h; */
 
-             ecore_x_window_size_get(ee->prop.window, &w, &h);
+             /* ecore_x_window_size_get(ee->prop.window, &w, &h); */
              if ((rotation == 0) || (rotation == 180))
                {
                   evas_output_size_set(ee->evas, ee->w, ee->h);
@@ -1587,7 +1588,7 @@ _ecore_evas_x_rotation_set(Ecore_Evas *ee, int rotation, int resize)
         einfo = (Evas_Engine_Info_GL_X11 *)evas_engine_info_get(ee->evas);
         if (!einfo) return;
         einfo->info.rotation = rotation;
-        _ecore_evas_x_rotation_set_internal(ee, rotation, resize, 
+        _ecore_evas_x_rotation_set_internal(ee, rotation, resize,
                                             (Evas_Engine_Info *)einfo);
 # if _USE_WIN_ROT_EFFECT
         ecore_x_window_prop_property_set(ee->prop.window,
@@ -1608,7 +1609,7 @@ _ecore_evas_x_rotation_set(Ecore_Evas *ee, int rotation, int resize)
         einfo = (Evas_Engine_Info_Software_X11 *)evas_engine_info_get(ee->evas);
         if (!einfo) return;
         einfo->info.rotation = rotation;
-        _ecore_evas_x_rotation_set_internal(ee, rotation, resize, 
+        _ecore_evas_x_rotation_set_internal(ee, rotation, resize,
                                             (Evas_Engine_Info *)einfo);
 # if _USE_WIN_ROT_EFFECT
         ecore_x_window_prop_property_set(ee->prop.window,
@@ -1629,7 +1630,7 @@ _ecore_evas_x_rotation_set(Ecore_Evas *ee, int rotation, int resize)
         einfo = (Evas_Engine_Info_Software_16_X11 *)evas_engine_info_get(ee->evas);
         if (!einfo) return;
         einfo->info.rotation = rotation;
-        _ecore_evas_x_rotation_set_internal(ee, rotation, resize, 
+        _ecore_evas_x_rotation_set_internal(ee, rotation, resize,
                                             (Evas_Engine_Info *)einfo);
 # if _USE_WIN_ROT_EFFECT
         ecore_x_window_prop_property_set(ee->prop.window,
@@ -1650,7 +1651,7 @@ _ecore_evas_x_rotation_set(Ecore_Evas *ee, int rotation, int resize)
         einfo = (Evas_Engine_Info_Software_8_X11 *)evas_engine_info_get(ee->evas);
         if (!einfo) return;
         einfo->info.rotation = rotation;
-        _ecore_evas_x_rotation_set_internal(ee, rotation, resize, 
+        _ecore_evas_x_rotation_set_internal(ee, rotation, resize,
                                             (Evas_Engine_Info *)einfo);
 # if _USE_WIN_ROT_EFFECT
         ecore_x_window_prop_property_set(ee->prop.window,
@@ -1733,7 +1734,7 @@ _ecore_evas_x_shaped_set(Ecore_Evas *ee, int shaped)
           {
              if (ee->shaped)
                {
-                  ee->engine.x.mask = 
+                  ee->engine.x.mask =
                     ecore_x_pixmap_new(ee->prop.window, ee->w, ee->h, 1);
                   einfo->info.mask = ee->engine.x.mask;
                   if (!evas_engine_info_set(ee->evas, (Evas_Engine_Info *)einfo))
@@ -1925,27 +1926,27 @@ _ecore_evas_x_alpha_set(Ecore_Evas *ee, int alpha)
              /* FIXME: round trip in ecore_x_window_argb_get */
              if (ecore_x_window_argb_get(ee->engine.x.win_root))
                {
-                  ee->prop.window = 
+                  ee->prop.window =
                     _ecore_evas_x_gl_window_new(ee, ee->engine.x.win_root,
-                                                ee->req.x, ee->req.y, 
+                                                ee->req.x, ee->req.y,
                                                 ee->req.w, ee->req.h,
                                                 ee->prop.override, 1, NULL);
                }
-             else 
+             else
                {
-                  ee->prop.window = 
+                  ee->prop.window =
                     _ecore_evas_x_gl_window_new(ee, ee->engine.x.win_root,
-                                                ee->req.x, ee->req.y, 
+                                                ee->req.x, ee->req.y,
                                                 ee->req.w, ee->req.h,
-                                                ee->prop.override, ee->alpha, 
+                                                ee->prop.override, ee->alpha,
                                                 NULL);
                }
           }
-        else 
+        else
           {
-             ee->prop.window = 
+             ee->prop.window =
                _ecore_evas_x_gl_window_new(ee, ee->engine.x.win_root,
-                                           ee->req.x, ee->req.y, 
+                                           ee->req.x, ee->req.y,
                                            ee->req.w, ee->req.h,
                                            ee->prop.override, ee->alpha, NULL);
           }
@@ -2918,9 +2919,9 @@ ecore_evas_software_x11_new(const char *disp_name, Ecore_X_Window parent,
 
    /* init evas here */
    ee->evas = evas_new();
-   evas_event_callback_add(ee->evas, EVAS_CALLBACK_RENDER_FLUSH_PRE, 
+   evas_event_callback_add(ee->evas, EVAS_CALLBACK_RENDER_FLUSH_PRE,
                            _ecore_evas_x_flush_pre, ee);
-   evas_event_callback_add(ee->evas, EVAS_CALLBACK_RENDER_FLUSH_POST, 
+   evas_event_callback_add(ee->evas, EVAS_CALLBACK_RENDER_FLUSH_POST,
                            _ecore_evas_x_flush_post, ee);
    evas_data_attach_set(ee->evas, ee);
    evas_output_method_set(ee->evas, rmethod);
@@ -2956,7 +2957,6 @@ ecore_evas_software_x11_new(const char *disp_name, Ecore_X_Window parent,
    if (einfo)
      {
         Ecore_X_Screen *screen;
-        Ecore_X_Window_Attributes at;
 
         /* FIXME: this is inefficient as its 1 or more round trips */
         screen = ecore_x_default_screen_get();
@@ -2972,9 +2972,9 @@ ecore_evas_software_x11_new(const char *disp_name, Ecore_X_Window parent,
                   Ecore_X_Window root;
 
                   root = ecore_x_window_root_get(parent);
-                  for (i = 0; i < num; i++) 
+                  for (i = 0; i < num; i++)
                     {
-                       if (root == roots[i]) 
+                       if (root == roots[i])
                          {
                             screen = ecore_x_screen_get(i);
                             break;
@@ -3015,8 +3015,10 @@ ecore_evas_software_x11_new(const char *disp_name, Ecore_X_Window parent,
           }
 # endif
 
-        if (argb) 
+        if (argb)
           {
+             Ecore_X_Window_Attributes at;
+
              ecore_x_window_attributes_get(ee->prop.window, &at);
              einfo->info.visual = at.visual;
              einfo->info.colormap = at.colormap;
@@ -3025,11 +3027,11 @@ ecore_evas_software_x11_new(const char *disp_name, Ecore_X_Window parent,
           }
         else
           {
-             einfo->info.visual = 
+             einfo->info.visual =
                ecore_x_default_visual_get(einfo->info.connection, screen);
-             einfo->info.colormap = 
+             einfo->info.colormap =
                ecore_x_default_colormap_get(einfo->info.connection, screen);
-             einfo->info.depth = 
+             einfo->info.depth =
                ecore_x_default_depth_get(einfo->info.connection, screen);
              einfo->info.destination_alpha = 0;
           }
@@ -3412,7 +3414,7 @@ ecore_evas_gl_x11_pre_post_swap_callback_set(const Ecore_Evas *ee, void *data, v
    if (einfo)
      {
         einfo->callback.pre_swap = pre_cb;
-        einfo->callback.pre_swap = post_cb;
+        einfo->callback.post_swap = post_cb;
         einfo->callback.data = data;
         if (!evas_engine_info_set(ee->evas, (Evas_Engine_Info *)einfo))
           {
@@ -3962,12 +3964,12 @@ ecore_evas_software_x11_8_new(const char *disp_name, Ecore_X_Window parent,
    return ee;
 #else
    return NULL;
-   disp_name = NULL;
-   parent = 0;
-   x = 0;
-   y = 0;
-   w = 0;
-   h = 0;
+   (void)(disp_name);
+   (void)(parent);
+   (void)(x);
+   (void)(y);
+   (void)(w);
+   (void)(h);
 #endif /* ! BUILD_ECORE_EVAS_SOFTWARE_8_X11 */
 }
 
@@ -3983,7 +3985,7 @@ ecore_evas_software_x11_8_window_get(const Ecore_Evas *ee)
    return (Ecore_X_Window) ecore_evas_window_get(ee);
 #else
    return 0;
-   ee = NULL;
+   (void)(ee);
 #endif
 }
 
@@ -3999,7 +4001,7 @@ ecore_evas_software_x11_8_subwindow_get(const Ecore_Evas *ee)
    return (Ecore_X_Window) ecore_evas_window_get(ee);
 #else
    return 0;
-   ee = NULL;
+   (void)(ee);
 #endif
 }
 
@@ -4033,8 +4035,8 @@ ecore_evas_software_x11_8_direct_resize_set(Ecore_Evas *ee, Eina_Bool on)
      }
 #else
    return;
-   ee = NULL;
-   on = 0;
+   (void)(ee);
+   (void)(on);
 #endif
 }
 
@@ -4050,7 +4052,7 @@ ecore_evas_software_x11_8_direct_resize_get(const Ecore_Evas *ee)
    return ee->engine.x.direct_resize;
 #else
    return 0;
-   ee = NULL;
+   (void)(ee);
 #endif
 }
 
@@ -4079,8 +4081,8 @@ ecore_evas_software_x11_8_extra_event_window_add(Ecore_Evas *ee, Ecore_X_Window 
      }
 #else
    return;
-   ee = NULL;
-   win = 0;
+   (void)(ee);
+   (void)(win);
 #endif
 }
 
@@ -4192,12 +4194,12 @@ ecore_evas_x11_shape_input_rectangle_set(Ecore_Evas *ee, int x, int y, int w, in
    ret = _ecore_evas_x11_convert_rectangle_with_angle(ee, &dst_rect, &src_rect);
 
    if (!ee->engine.x.win_shaped_input)
-      ee->engine.x.win_shaped_input = ecore_x_window_override_new(ee->engine.x.win_root, 
+      ee->engine.x.win_shaped_input = ecore_x_window_override_new(ee->engine.x.win_root,
                                                                   0, 0, 1, 1);
 
    if (ret)
-      ecore_x_window_shape_input_rectangle_set(ee->engine.x.win_shaped_input, 
-                                               dst_rect.x, dst_rect.y, 
+      ecore_x_window_shape_input_rectangle_set(ee->engine.x.win_shaped_input,
+                                               dst_rect.x, dst_rect.y,
                                                dst_rect.width, dst_rect.height);
 #else
    return;
@@ -4237,12 +4239,12 @@ ecore_evas_x11_shape_input_rectangle_add(Ecore_Evas *ee, int x, int y, int w, in
    ret = _ecore_evas_x11_convert_rectangle_with_angle(ee, &dst_rect, &src_rect);
 
    if (!ee->engine.x.win_shaped_input)
-      ee->engine.x.win_shaped_input = ecore_x_window_override_new(ee->engine.x.win_root, 
+      ee->engine.x.win_shaped_input = ecore_x_window_override_new(ee->engine.x.win_root,
                                                                   0, 0, 1, 1);
 
    if (ret)
-      ecore_x_window_shape_input_rectangle_add(ee->engine.x.win_shaped_input, 
-                                               dst_rect.x, dst_rect.y, 
+      ecore_x_window_shape_input_rectangle_add(ee->engine.x.win_shaped_input,
+                                               dst_rect.x, dst_rect.y,
                                                dst_rect.width, dst_rect.height);
 #else
    return;
@@ -4282,12 +4284,12 @@ ecore_evas_x11_shape_input_rectangle_subtract(Ecore_Evas *ee, int x, int y, int 
    ret = _ecore_evas_x11_convert_rectangle_with_angle(ee, &dst_rect, &src_rect);
 
    if (!ee->engine.x.win_shaped_input)
-      ee->engine.x.win_shaped_input = ecore_x_window_override_new(ee->engine.x.win_root, 
+      ee->engine.x.win_shaped_input = ecore_x_window_override_new(ee->engine.x.win_root,
                                                                   0, 0, 1, 1);
 
    if (ret)
-      ecore_x_window_shape_input_rectangle_subtract(ee->engine.x.win_shaped_input, 
-                                                    dst_rect.x, dst_rect.y, 
+      ecore_x_window_shape_input_rectangle_subtract(ee->engine.x.win_shaped_input,
+                                                    dst_rect.x, dst_rect.y,
                                                     dst_rect.width, dst_rect.height);
 #else
    return;

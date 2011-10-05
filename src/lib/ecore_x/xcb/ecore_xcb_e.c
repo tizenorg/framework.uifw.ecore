@@ -20,6 +20,7 @@ ecore_x_e_comp_sync_draw_done_send(Ecore_X_Window root, Ecore_X_Window win)
    xcb_client_message_event_t ev;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (!root) root = ((xcb_screen_t *)_ecore_xcb_screen)->root;
 
@@ -38,6 +39,7 @@ ecore_x_e_comp_sync_draw_done_send(Ecore_X_Window root, Ecore_X_Window win)
    xcb_send_event(_ecore_xcb_conn, 0, root, 
                   (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | 
                       XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY), (const char *)&ev);
+//   ecore_x_flush();
 }
 
 EAPI void 
@@ -46,6 +48,7 @@ ecore_x_e_comp_sync_draw_size_done_send(Ecore_X_Window root, Ecore_X_Window win,
    xcb_client_message_event_t ev;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (!root) root = ((xcb_screen_t *)_ecore_xcb_screen)->root;
 
@@ -64,6 +67,7 @@ ecore_x_e_comp_sync_draw_size_done_send(Ecore_X_Window root, Ecore_X_Window win,
    xcb_send_event(_ecore_xcb_conn, 0, root, 
                   (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | 
                       XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY), (const char *)&ev);
+//   ecore_x_flush();
 }
 
 EAPI void 
@@ -153,9 +157,7 @@ ecore_x_e_comp_sync_begin_send(Ecore_X_Window win)
    xcb_client_message_event_t ev;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
-
-   /* ecore_x_client_message32_send(win, ECORE_X_ATOM_E_COMP_SYNC_BEGIN,  */
-   /*                               XCB_EVENT_MASK_NO_EVENT, win, 0, 0, 0, 0); */
+   CHECK_XCB_CONN;
 
    memset(&ev, 0, sizeof(xcb_client_message_event_t));
 
@@ -171,6 +173,7 @@ ecore_x_e_comp_sync_begin_send(Ecore_X_Window win)
 
    xcb_send_event(_ecore_xcb_conn, 0, win, 
                   XCB_EVENT_MASK_NO_EVENT, (const char *)&ev);
+//   ecore_x_flush();
 }
 
 EAPI void 
@@ -179,9 +182,7 @@ ecore_x_e_comp_sync_end_send(Ecore_X_Window win)
    xcb_client_message_event_t ev;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
-
-   /* ecore_x_client_message32_send(win, ECORE_X_ATOM_E_COMP_SYNC_END,  */
-   /*                               XCB_EVENT_MASK_NO_EVENT, win, 0, 0, 0, 0); */
+   CHECK_XCB_CONN;
 
    memset(&ev, 0, sizeof(xcb_client_message_event_t));
 
@@ -197,6 +198,7 @@ ecore_x_e_comp_sync_end_send(Ecore_X_Window win)
 
    xcb_send_event(_ecore_xcb_conn, 0, win, 
                   XCB_EVENT_MASK_NO_EVENT, (const char *)&ev);
+//   ecore_x_flush();
 }
 
 EAPI void 
@@ -205,9 +207,7 @@ ecore_x_e_comp_sync_cancel_send(Ecore_X_Window win)
    xcb_client_message_event_t ev;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
-
-   /* ecore_x_client_message32_send(win, ECORE_X_ATOM_E_COMP_SYNC_CANCEL,  */
-   /*                               XCB_EVENT_MASK_NO_EVENT, win, 0, 0, 0, 0); */
+   CHECK_XCB_CONN;
 
    memset(&ev, 0, sizeof(xcb_client_message_event_t));
 
@@ -223,6 +223,7 @@ ecore_x_e_comp_sync_cancel_send(Ecore_X_Window win)
 
    xcb_send_event(_ecore_xcb_conn, 0, win, 
                   XCB_EVENT_MASK_NO_EVENT, (const char *)&ev);
+//   ecore_x_flush();
 }
 
 EAPI void 
@@ -231,9 +232,7 @@ ecore_x_e_comp_flush_send(Ecore_X_Window win)
    xcb_client_message_event_t ev;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
-
-   /* ecore_x_client_message32_send(win, ECORE_X_ATOM_E_COMP_FLUSH,  */
-   /*                               XCB_EVENT_MASK_NO_EVENT, win, 0, 0, 0, 0); */
+   CHECK_XCB_CONN;
 
    memset(&ev, 0, sizeof(xcb_client_message_event_t));
 
@@ -249,6 +248,7 @@ ecore_x_e_comp_flush_send(Ecore_X_Window win)
 
    xcb_send_event(_ecore_xcb_conn, 0, win, 
                   XCB_EVENT_MASK_NO_EVENT, (const char *)&ev);
+//   ecore_x_flush();
 }
 
 EAPI void 
@@ -257,9 +257,7 @@ ecore_x_e_comp_dump_send(Ecore_X_Window win)
    xcb_client_message_event_t ev;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
-
-   /* ecore_x_client_message32_send(win, ECORE_X_ATOM_E_COMP_DUMP,  */
-   /*                               XCB_EVENT_MASK_NO_EVENT, win, 0, 0, 0, 0); */
+   CHECK_XCB_CONN;
 
    memset(&ev, 0, sizeof(xcb_client_message_event_t));
 
@@ -275,6 +273,7 @@ ecore_x_e_comp_dump_send(Ecore_X_Window win)
 
    xcb_send_event(_ecore_xcb_conn, 0, win, 
                   XCB_EVENT_MASK_NO_EVENT, (const char *)&ev);
+//   ecore_x_flush();
 }
 
 EAPI void 

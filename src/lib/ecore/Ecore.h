@@ -19,6 +19,7 @@ Ecore is a library of convenience functions. A brief explanation of how to use
 it can be found in @ref Ecore_Main_Loop_Page.
 
 The Ecore library provides the following modules:
+@li @ref Ecore_Main_Loop_Group
 @li @ref Ecore_File_Group
 @li @ref Ecore_Con_Group
 @li @link Ecore_Evas.h   Ecore_Evas - Evas convenience functions. @endlink
@@ -417,12 +418,12 @@ extern "C" {
    * @param callback The callback to call in the main loop
    * @param data The data to give to that call back
    *
-   * For all call that need to happen in the main loop (most EFL functions do),
-   * this helper function provide the infrastructure needed to do it safely
-   * by avoind dead lock, race condition and properly wake up the main loop.
+   * For all calls that need to happen in the main loop (most EFL functions do),
+   * this helper function provides the infrastructure needed to do it safely
+   * by avoiding dead lock, race condition and properly wake up the main loop.
    *
    * Remember after that function call, you should never touch again the @p data
-   * in the thread, it is owned by the main loop and you callback should take
+   * in the thread, it is owned by the main loop and your callback should take
    * care of freeing it if necessary.
    */
    EAPI void                 ecore_main_loop_thread_safe_call_async(Ecore_Cb callback, void *data);
@@ -435,9 +436,9 @@ extern "C" {
    * @param data The data to give to that call back
    * @return the value returned by the callback in the main loop
    *
-   * For all call that need to happen in the main loop (most EFL functions do),
-   * this helper function provide the infrastructure needed to do it safely
-   * by avoind dead lock, race condition and properly wake up the main loop.
+   * For all calls that need to happen in the main loop (most EFL functions do),
+   * this helper function provides the infrastructure needed to do it safely
+   * by avoiding dead lock, race condition and properly wake up the main loop.
    *
    * Remember this function will block until the callback is executed in the
    * main loop. It can take time and you have no guaranty about the timeline.
@@ -448,7 +449,8 @@ extern "C" {
    * @brief This function suspend the main loop in a know state
    * @since 1.1.0
    *
-   * @result EINA_TRUE if the main loop was suspended correctly.
+   * @result the number of time ecore_thread_main_loop_begin() has been called
+   * in this thread, if the main loop was suspended correctly. If not, it return @c -1.
    *
    * This function suspend the main loop in a know state, this let you
    * use any EFL call you want after it return. Be carefull, the main loop
@@ -461,16 +463,20 @@ extern "C" {
    * We still advise you, when possible, to use ecore_main_loop_thread_safe_call_async()
    * as it will not block the thread nor the main loop.
    */
-  EAPI Eina_Bool ecore_thread_main_loop_begin(void);
+  EAPI int ecore_thread_main_loop_begin(void);
 
   /**
    * @brief Unlock the main loop.
    * @since 1.1.0
    *
+   * @result the number of time ecore_thread_main_loop_end() need to be called before
+   * the main loop is unlocked again. @c -1 will be returned if you are trying to unlock
+   * when there wasn't enough call to ecore_thread_main_loop_begin().
+   *
    * After a call to ecore_thread_main_loop_begin(), you need to absolutly
    * call ecore_thread_main_loop_end(), or you application will stay frozen.
    */
-  EAPI void ecore_thread_main_loop_end(void);
+  EAPI int ecore_thread_main_loop_end(void);
 
    /**
     * @}
@@ -560,7 +566,7 @@ extern "C" {
         int   number; /**< The signal number. Either 1 or 2 */
         void *ext_data; /**< Extension data - not used */
 
-#ifndef _WIN32
+#if !defined (_WIN32) && !defined (__lv2ppu__)
         siginfo_t data; /**< Signal info */
 #endif
      };
@@ -569,7 +575,7 @@ extern "C" {
      {
         void *ext_data; /**< Extension data - not used */
 
-#ifndef _WIN32
+#if !defined (_WIN32) && !defined (__lv2ppu__)
         siginfo_t data; /**< Signal info */
 #endif
      };
@@ -581,7 +587,7 @@ extern "C" {
         Eina_Bool   terminate : 1; /**< Set if the exit request was a terminate singal */
         void          *ext_data; /**< Extension data - not used */
 
-#ifndef _WIN32
+#if !defined (_WIN32) && !defined (__lv2ppu__)
         siginfo_t data; /**< Signal info */
 #endif
      };
@@ -590,7 +596,7 @@ extern "C" {
      {
         void *ext_data; /**< Extension data - not used */
 
-#ifndef _WIN32
+#if !defined (_WIN32) && !defined (__lv2ppu__)
         siginfo_t data; /**< Signal info */
 #endif
      };
@@ -599,7 +605,7 @@ extern "C" {
      {
         int num; /**< The realtime signal's number */
 
-#ifndef _WIN32
+#if !defined (_WIN32) && !defined (__lv2ppu__)
         siginfo_t data; /**< Signal info */
 #endif
      };
@@ -643,8 +649,8 @@ extern "C" {
         ECORE_EXE_PIPE_READ = 1, /**< Exe Pipe Read mask */
         ECORE_EXE_PIPE_WRITE = 2, /**< Exe Pipe Write mask */
         ECORE_EXE_PIPE_ERROR = 4, /**< Exe Pipe error mask */
-        ECORE_EXE_PIPE_READ_LINE_BUFFERED = 8, /**< Reads are buffered until a newline and delivered 1 event per line */
-        ECORE_EXE_PIPE_ERROR_LINE_BUFFERED = 16, /**< Errors are buffered until a newline and delivered 1 event per line */
+        ECORE_EXE_PIPE_READ_LINE_BUFFERED = 8, /**< Reads are buffered until a newline and split 1 line per Ecore_Exe_Event_Data_Line */
+        ECORE_EXE_PIPE_ERROR_LINE_BUFFERED = 16, /**< Errors are buffered until a newline and split 1 line per Ecore_Exe_Event_Data_Line */
         ECORE_EXE_PIPE_AUTO = 32, /**< stdout and stderr are buffered automatically */
         ECORE_EXE_RESPAWN = 64, /**< FIXME: Exe is restarted if it dies */
         ECORE_EXE_USE_SH = 128, /**< Use /bin/sh to run the command. */
@@ -692,7 +698,7 @@ extern "C" {
         Eina_Bool  exited    : 1; /** < set to 1 if the process exited of its own accord */
         Eina_Bool  signalled : 1; /** < set to 1 id the process exited due to uncaught signal */
         void         *ext_data; /**< Extension data - not used */
-#ifndef _WIN32
+#if !defined (_WIN32) && !defined (__lv2ppu__)
         siginfo_t     data; /**< Signal info */
 #endif
      };

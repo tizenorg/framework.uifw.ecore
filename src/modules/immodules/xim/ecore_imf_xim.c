@@ -362,7 +362,7 @@ _ecore_imf_context_xim_cursor_location_set (Ecore_IMF_Context   *ctx,
 
    XFree(preedit_attr);
 #endif
-   w = 0; // yes w is unused, but only a bi-product of the algorithm
+   (void)(w); // yes w is unused, but only a bi-product of the algorithm
 }
 
 #ifdef ENABLE_XIM
@@ -925,6 +925,12 @@ get_ic(Ecore_IMF_Context *ctx)
         XIMStyle im_style = 0;
         XPoint spot = { 0, 0 };
         char *name = NULL;
+
+        if (!im_info)
+          {
+             EINA_LOG_WARN("Doesn't open XIM.");
+             return NULL;
+          }
         
         // supported styles
 #if 0

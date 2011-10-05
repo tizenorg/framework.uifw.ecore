@@ -39,7 +39,7 @@ ecore_x_mwm_borderless_set(Ecore_X_Window win, Eina_Bool borderless)
    data[0] = 2;
    data[2] = !borderless;
 
-   ecore_x_window_prop_property_set(win ? win : ((xcb_screen_t *)_ecore_xcb_screen)->root, 
+   ecore_x_window_prop_property_set(win, 
                                     ECORE_X_ATOM_MOTIF_WM_HINTS, 
                                     ECORE_X_ATOM_MOTIF_WM_HINTS, 32, 
                                     (void *)data, 5);
@@ -54,6 +54,7 @@ ecore_x_mwm_hints_get(Ecore_X_Window win, Ecore_X_MWM_Hint_Func *fhint, Ecore_X_
    int ret = EINA_FALSE;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    cookie = 
      xcb_get_property_unchecked(_ecore_xcb_conn, 0, win, 

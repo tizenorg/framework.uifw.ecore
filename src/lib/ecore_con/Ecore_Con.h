@@ -268,6 +268,7 @@ typedef struct _Ecore_Con_Event_Client_Del Ecore_Con_Event_Client_Del;
 /**
  * @typedef Ecore_Con_Event_Client_Error
  * Used as the @p data param for the corresponding event
+ * @since 1.1
  */
 typedef struct _Ecore_Con_Event_Client_Error Ecore_Con_Event_Client_Error;
 
@@ -293,6 +294,7 @@ typedef struct _Ecore_Con_Event_Server_Del Ecore_Con_Event_Server_Del;
 /**
  * @typedef Ecore_Con_Event_Server_Error
  * Used as the @p data param for the corresponding event
+ * @since 1.1
  */
 typedef struct _Ecore_Con_Event_Server_Error Ecore_Con_Event_Server_Error;
 
@@ -307,6 +309,20 @@ typedef struct _Ecore_Con_Event_Client_Data Ecore_Con_Event_Client_Data;
  * Used as the @p data param for the corresponding event
  */
 typedef struct _Ecore_Con_Event_Server_Data Ecore_Con_Event_Server_Data;
+
+/**
+ * @typedef Ecore_Con_Event_Client_Write
+ * Used as the @p data param for the corresponding event
+ * @since 1.1
+ */
+typedef struct _Ecore_Con_Event_Client_Write Ecore_Con_Event_Client_Write;
+
+/**
+ * @typedef Ecore_Con_Event_Server_Write
+ * Used as the @p data param for the corresponding event
+ * @since 1.1
+ */
+typedef struct _Ecore_Con_Event_Server_Write Ecore_Con_Event_Server_Write;
 
 /**
  * @typedef Ecore_Con_Event_Url_Data
@@ -428,6 +444,26 @@ struct _Ecore_Con_Event_Server_Data
 };
 
 /**
+ * @struct _Ecore_Con_Event_Client_Write
+ * Used as the @p data param for the @ref ECORE_CON_EVENT_CLIENT_WRITE event
+ */
+struct _Ecore_Con_Event_Client_Write
+{
+   Ecore_Con_Client *client; /**< the client that connected */
+   int size;                 /**< the length of the data sent */
+};
+
+/**
+ * @struct _Ecore_Con_Event_Server_Write
+ * Used as the @p data param for the @ref ECORE_CON_EVENT_SERVER_WRITE event
+ */
+struct _Ecore_Con_Event_Server_Write
+{
+   Ecore_Con_Server *server; /**< the server that was connected to */
+   int size;                 /**< the length of the data sent */
+};
+
+/**
  * @struct _Ecore_Con_Event_Url_Data
  * Used as the @p data param for the @ref ECORE_CON_EVENT_URL_DATA event
  * @ingroup Ecore_Con_Url_Group
@@ -474,7 +510,9 @@ struct _Ecore_Con_Event_Url_Progress
 EAPI extern int ECORE_CON_EVENT_CLIENT_ADD;
 /** A client has disconnected from the server */
 EAPI extern int ECORE_CON_EVENT_CLIENT_DEL;
-/** A client experienced an error */
+/** A client experienced an error
+ * @since 1.1
+ */
 EAPI extern int ECORE_CON_EVENT_CLIENT_ERROR;
 /** A client connection has been upgraded to SSL
  * @since 1.1
@@ -484,12 +522,22 @@ EAPI extern int ECORE_CON_EVENT_CLIENT_UPGRADE;
 EAPI extern int ECORE_CON_EVENT_SERVER_ADD;
 /** A server connection was lost */
 EAPI extern int ECORE_CON_EVENT_SERVER_DEL;
-/** A server experienced an error */
+/** A server experienced an error
+ * @since 1.1
+ */
 EAPI extern int ECORE_CON_EVENT_SERVER_ERROR;
 /** A server connection has been upgraded to SSL
  * @since 1.1
  */
 EAPI extern int ECORE_CON_EVENT_SERVER_UPGRADE;
+/** A server connection has sent data to its client
+ * @since 1.1
+ */
+EAPI extern int ECORE_CON_EVENT_CLIENT_WRITE;
+/** A server connection object has sent data
+ * @since 1.1
+ */
+EAPI extern int ECORE_CON_EVENT_SERVER_WRITE;
 /** A client connected to the server has sent data */
 EAPI extern int ECORE_CON_EVENT_CLIENT_DATA;
 /** A server connection object has data */
@@ -957,6 +1005,30 @@ EAPI void              ecore_con_server_timeout_set(Ecore_Con_Server *svr, doubl
  */
 EAPI double            ecore_con_server_timeout_get(Ecore_Con_Server *svr);
 
+/**
+ * Get the fd that the server is connected to
+ *
+ * @param svr The server object
+ * @return The fd, or -1 on failure
+ *
+ * This function returns the fd which is used by the underlying server connection.
+ * It should not be tampered with unless you REALLY know what you are doing.
+ * @note This function is only valid for servers created with ecore_con_server_connect()
+ * @since 1.1
+ */
+EAPI int               ecore_con_server_fd_get(Ecore_Con_Server *svr);
+
+/**
+ * Get the fd that the client is connected to
+ *
+ * @param cl The client object
+ * @return The fd, or -1 on failure
+ *
+ * This function returns the fd which is used by the underlying client connection.
+ * It should not be tampered with unless you REALLY know what you are doing.
+ * @since 1.1
+ */
+EAPI int               ecore_con_client_fd_get(Ecore_Con_Client *cl);
 /**
  * @}
  */

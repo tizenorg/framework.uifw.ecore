@@ -18,8 +18,7 @@ AM_CPPFLAGS = \
   @XCB_XTEST_CFLAGS@ \
   @XCB_XINPUT_CFLAGS@ \
   @XCB_CURSOR_CFLAGS@ \
-  @XCB_DRI_CFLAGS@ \
-  @XCB_CFLAGS@ \
+  @ECORE_XCB_CFLAGS@ \
   @PIXMAN_CFLAGS@ \
   -I$(top_srcdir)/src/lib/ecore \
   -I$(top_srcdir)/src/lib/ecore_x \
@@ -67,7 +66,8 @@ libecore_x_xcb_la_SOURCES = \
   ecore_xcb_xinerama.c \
   ecore_xcb_error.c \
   ecore_xcb_xtest.c \
-  ecore_xcb_vsync.c
+  ecore_xcb_vsync.c \
+  ecore_xcb_xdefaults.c
 
 libecore_x_xcb_la_LIBADD = \
   @XCB_DAMAGE_LIBS@ \
@@ -84,8 +84,7 @@ libecore_x_xcb_la_LIBADD = \
   @XCB_XTEST_LIBS@ \
   @XCB_XINPUT_LIBS@ \
   @XCB_CURSOR_LIBS@ \
-  @XCB_DRI_LIBS@ \
-  @XCB_LIBS@ \
+  @ECORE_XCB_LIBS@ \
   @PIXMAN_LIBS@ \
   $(top_builddir)/src/lib/ecore/libecore.la \
   $(top_builddir)/src/lib/ecore_input/libecore_input.la \

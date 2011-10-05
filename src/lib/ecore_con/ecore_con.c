@@ -94,13 +94,15 @@ static void _ecore_con_event_server_error_free(void *data,
                                                Ecore_Con_Event_Server_Error *e);
 static void _ecore_con_event_client_error_free(Ecore_Con_Server *svr,
                                                Ecore_Con_Event_Client_Error *e);
+static void _ecore_con_event_server_write_free(void *data,
+                                               Ecore_Con_Event_Server_Write *e);
+static void _ecore_con_event_client_write_free(Ecore_Con_Server *svr,
+                                               Ecore_Con_Event_Client_Write *e);
 
 static void _ecore_con_lookup_done(void           *data,
                                    Ecore_Con_Info *infos);
 
-static const char *
-_ecore_con_pretty_ip(struct sockaddr *client_addr,
-                     socklen_t        size);
+static const char * _ecore_con_pretty_ip(struct sockaddr *client_addr);
 
 EAPI int ECORE_CON_EVENT_CLIENT_ADD = 0;
 EAPI int ECORE_CON_EVENT_CLIENT_DEL = 0;
@@ -108,6 +110,8 @@ EAPI int ECORE_CON_EVENT_SERVER_ADD = 0;
 EAPI int ECORE_CON_EVENT_SERVER_DEL = 0;
 EAPI int ECORE_CON_EVENT_CLIENT_DATA = 0;
 EAPI int ECORE_CON_EVENT_SERVER_DATA = 0;
+EAPI int ECORE_CON_EVENT_CLIENT_WRITE = 0;
+EAPI int ECORE_CON_EVENT_SERVER_WRITE = 0;
 EAPI int ECORE_CON_EVENT_CLIENT_ERROR = 0;
 EAPI int ECORE_CON_EVENT_SERVER_ERROR = 0;
 
@@ -145,6 +149,8 @@ ecore_con_init(void)
    ECORE_CON_EVENT_SERVER_DEL = ecore_event_type_new();
    ECORE_CON_EVENT_CLIENT_DATA = ecore_event_type_new();
    ECORE_CON_EVENT_SERVER_DATA = ecore_event_type_new();
+   ECORE_CON_EVENT_CLIENT_WRITE = ecore_event_type_new();
+   ECORE_CON_EVENT_SERVER_WRITE = ecore_event_type_new();
    ECORE_CON_EVENT_CLIENT_ERROR = ecore_event_type_new();
    ECORE_CON_EVENT_SERVER_ERROR = ecore_event_type_new();
 
@@ -846,7 +852,7 @@ ecore_con_client_ip_get(Ecore_Con_Client *cl)
         return NULL;
      }
    if (!cl->ip)
-     cl->ip = _ecore_con_pretty_ip(cl->client_addr, cl->client_addr_len);
+     cl->ip = _ecore_con_pretty_ip(cl->client_addr);
 
    return cl->ip;
 }
@@ -861,7 +867,11 @@ ecore_con_client_port_get(Ecore_Con_Client *cl)
      }
    if (cl->client_addr->sa_family == AF_INET)
      return ((struct sockaddr_in*)cl->client_addr)->sin_port;
+#ifdef HAVE_IPV6
    return ((struct sockaddr_in6*)cl->client_addr)->sin6_port;
+#else
+   return -1;
+#endif
 }
 
 EAPI double
@@ -886,6 +896,29 @@ ecore_con_client_flush(Ecore_Con_Client *cl)
      }
 
    _ecore_con_client_flush(cl);
+}
+
+EAPI int
+ecore_con_server_fd_get(Ecore_Con_Server *svr)
+{
+   if (!ECORE_MAGIC_CHECK(svr, ECORE_MAGIC_CON_SERVER))
+     {
+        ECORE_MAGIC_FAIL(svr, ECORE_MAGIC_CON_SERVER, __func__);
+        return -1;
+     }
+   if (svr->created) return -1;
+   return ecore_main_fd_handler_fd_get(svr->fd_handler);
+}
+
+EAPI int
+ecore_con_client_fd_get(Ecore_Con_Client *cl)
+{
+   if (!ECORE_MAGIC_CHECK(cl, ECORE_MAGIC_CON_CLIENT))
+     {
+        ECORE_MAGIC_FAIL(cl, ECORE_MAGIC_CON_CLIENT, __func__);
+        return -1;
+     }
+   return ecore_main_fd_handler_fd_get(cl->fd_handler);
 }
 
 /**
@@ -923,6 +956,22 @@ ecore_con_event_server_del(Ecore_Con_Server *svr)
     e->server = svr;
     ecore_event_add(ECORE_CON_EVENT_SERVER_DEL, e,
                     _ecore_con_event_server_del_free, NULL);
+}
+
+void
+ecore_con_event_server_write(Ecore_Con_Server *svr, int num)
+{
+   Ecore_Con_Event_Server_Write *e;
+
+   e = malloc(sizeof(Ecore_Con_Event_Server_Write));
+   EINA_SAFETY_ON_NULL_RETURN(e);
+
+   svr->event_count++;
+   e->server = svr;
+   e->size = num;
+   ecore_event_add(ECORE_CON_EVENT_SERVER_WRITE, e,
+                   (Ecore_End_Cb)_ecore_con_event_server_write_free, NULL);
+
 }
 
 void
@@ -990,6 +1039,21 @@ ecore_con_event_client_del(Ecore_Con_Client *cl)
     e->client = cl;
     ecore_event_add(ECORE_CON_EVENT_CLIENT_DEL, e,
                     (Ecore_End_Cb)_ecore_con_event_client_del_free, cl->host_server);
+}
+
+void
+ecore_con_event_client_write(Ecore_Con_Client *cl, int num)
+{
+   Ecore_Con_Event_Client_Write *e;
+   e = malloc(sizeof(Ecore_Con_Event_Client_Write));
+   EINA_SAFETY_ON_NULL_RETURN(e);
+
+   cl->host_server->event_count++;
+   cl->event_count++;
+   e->client = cl;
+   e->size = num;
+   ecore_event_add(ECORE_CON_EVENT_CLIENT_WRITE, e,
+                   (Ecore_End_Cb)_ecore_con_event_client_write_free, cl->host_server);
 }
 
 void
@@ -1332,10 +1396,12 @@ _ecore_con_cb_tcp_listen(void           *data,
 
    if ((svr->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_NODELAY)
      {
+#ifdef HAVE_NETINET_TCP_H
         int flag = 1;
 
         if (setsockopt(svr->fd, IPPROTO_TCP, TCP_NODELAY, (char *)&flag,
                        sizeof(int)) < 0)
+#endif
           {
              ecore_con_event_server_error(svr, strerror(errno));
              goto error;
@@ -1376,7 +1442,9 @@ _ecore_con_cb_udp_listen(void           *data,
    Ecore_Con_Server *svr;
    Ecore_Con_Type type;
    struct ip_mreq mreq;
+#ifdef HAVE_IPV6
    struct ipv6_mreq mreq6;
+#endif
    const int on = 1;
 
    svr = data;
@@ -1413,6 +1481,7 @@ _ecore_con_cb_udp_listen(void           *data,
                   goto error;
                }
           }
+#ifdef HAVE_IPV6
         else if (net_info->info.ai_family == AF_INET6)
           {
              if (!inet_pton(net_info->info.ai_family, net_info->ip,
@@ -1429,6 +1498,7 @@ _ecore_con_cb_udp_listen(void           *data,
                   goto error;
                }
           }
+#endif
      }
 
    if (setsockopt(svr->fd, SOL_SOCKET, SO_REUSEADDR, (const void *)&on, sizeof(on)) != 0)
@@ -1514,9 +1584,11 @@ _ecore_con_cb_tcp_connect(void           *data,
 
    if ((svr->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_NODELAY)
      {
+#ifdef HAVE_NETINET_TCP_H
         int flag = 1;
 
         if (setsockopt(svr->fd, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(int)) < 0)
+#endif
           {
              ecore_con_event_server_error(svr, strerror(errno));
              goto error;
@@ -1696,29 +1768,37 @@ svr_try_connect_plain(Ecore_Con_Server *svr)
 }
 
 static const char *
-_ecore_con_pretty_ip(struct sockaddr *client_addr,
-                     socklen_t        size)
+_ecore_con_pretty_ip(struct sockaddr *client_addr)
 {
+#ifndef HAVE_IPV6
+   char ipbuf[INET_ADDRSTRLEN + 1];
+#else
    char ipbuf[INET6_ADDRSTRLEN + 1];
+#endif
+   int family = client_addr->sa_family;
+   void *src;
 
-   /* show v4mapped address in pretty form */
-   if (client_addr->sa_family == AF_INET6)
+   switch(family)
      {
-        struct sockaddr_in6 *sa6;
+       case AF_INET:
+          src = &(((struct sockaddr_in *)client_addr)->sin_addr);
+          break;
+#ifdef HAVE_IPV6
+       case AF_INET6:
+          src = &(((struct sockaddr_in6 *)client_addr)->sin6_addr);
 
-        sa6 = (struct sockaddr_in6 *)client_addr;
-        if (IN6_IS_ADDR_V4MAPPED(&sa6->sin6_addr))
-          {
-             snprintf(ipbuf, sizeof (ipbuf), "%u.%u.%u.%u",
-                      sa6->sin6_addr.s6_addr[12],
-                      sa6->sin6_addr.s6_addr[13],
-                      sa6->sin6_addr.s6_addr[14],
-                      sa6->sin6_addr.s6_addr[15]);
-             return eina_stringshare_add(ipbuf);
-          }
-     }
+          if (IN6_IS_ADDR_V4MAPPED(src))
+            {
+               family = AF_INET;
+               src = (char*)src + 12;
+            }
+          break;
+#endif
+       default:
+          return eina_stringshare_add("0.0.0.0");
+    }
 
-   if (getnameinfo(client_addr, size, ipbuf, sizeof (ipbuf), NULL, 0, NI_NUMERICHOST))
+   if (!inet_ntop(family, src, ipbuf, sizeof(ipbuf)))
      return eina_stringshare_add("0.0.0.0");
 
    ipbuf[sizeof(ipbuf) - 1] = 0;
@@ -2175,6 +2255,7 @@ _ecore_con_server_flush(Ecore_Con_Server *svr)
          return;
      }
 
+   if (count) ecore_con_event_server_write(svr, count);
    svr->write_buf_offset += count;
    if (svr->write_buf_offset >= eina_binbuf_length_get(svr->buf))
      {
@@ -2239,6 +2320,7 @@ _ecore_con_client_flush(Ecore_Con_Client *cl)
         return;
      }
 
+   if (count) ecore_con_event_client_write(cl, count);
    cl->buf_offset += count;
    if (cl->buf_offset >= eina_binbuf_length_get(cl->buf))
      {
@@ -2281,6 +2363,24 @@ _ecore_con_event_client_del_free(Ecore_Con_Server *svr,
    e->client->event_count--;
    e->client->host_server->event_count--;
    if ((e->client->event_count <= 0) && (e->client->delete_me))
+     ecore_con_client_del(e->client);
+   if ((svr->event_count <= 0) && (svr->delete_me))
+     _ecore_con_server_free(svr);
+
+   free(e);
+}
+
+static void
+_ecore_con_event_client_write_free(Ecore_Con_Server *svr,
+                                   Ecore_Con_Event_Client_Write *e)
+{
+   e->client->event_count--;
+   e->client->host_server->event_count--;
+
+   if (((e->client->event_count <= 0) && (e->client->delete_me)) ||
+       ((e->client->host_server &&
+         ((e->client->host_server->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_UDP ||
+          (e->client->host_server->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_MCAST))))
      ecore_con_client_del(e->client);
    if ((svr->event_count <= 0) && (svr->delete_me))
      _ecore_con_server_free(svr);
@@ -2333,6 +2433,18 @@ _ecore_con_event_server_del_free(void *data __UNUSED__,
 
    e = ev;
    e->server->event_count--;
+   if ((e->server->event_count <= 0) && (e->server->delete_me))
+     _ecore_con_server_free(e->server);
+
+   free(e);
+}
+
+static void
+_ecore_con_event_server_write_free(void *data __UNUSED__,
+                                   Ecore_Con_Event_Server_Write *e)
+{
+   e->server->event_count--;
+
    if ((e->server->event_count <= 0) && (e->server->delete_me))
      _ecore_con_server_free(e->server);
 

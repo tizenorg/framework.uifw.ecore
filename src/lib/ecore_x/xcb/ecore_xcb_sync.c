@@ -55,10 +55,22 @@ _ecore_xcb_sync_finalize(void)
 void 
 _ecore_xcb_sync_magic_send(int val, Ecore_X_Window win) 
 {
+   xcb_client_message_event_t ev;
+
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
-   ecore_x_client_message32_send(win, 27777, XCB_EVENT_MASK_NO_EVENT, 
-                                 0x7162534, (0x10000000 + val), win, 0, 0);
-   ecore_x_flush();
+
+   memset(&ev, 0, sizeof(xcb_client_message_event_t));
+   ev.response_type = XCB_CLIENT_MESSAGE;
+   ev.format = 32;
+   ev.window = win;
+   ev.type = 27777;
+   ev.data.data32[0] = 0x7162534;
+   ev.data.data32[1] = (0x10000000 + val);
+   ev.data.data32[2] = win;
+
+   xcb_send_event(_ecore_xcb_conn, 0, win, XCB_EVENT_MASK_NO_EVENT, 
+                  (const char *)&ev);
+//   ecore_x_flush();
 }
 
 /* public functions */
@@ -72,6 +84,7 @@ ecore_x_sync_alarm_new(Ecore_X_Sync_Counter counter)
 #endif
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if ((!_sync_avail) || (!counter)) return 0;
 
@@ -103,12 +116,13 @@ EAPI Eina_Bool
 ecore_x_sync_alarm_free(Ecore_X_Sync_Alarm alarm) 
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if ((!_sync_avail) || (!alarm)) return EINA_FALSE;
 
 #ifdef ECORE_XCB_SYNC
    xcb_sync_destroy_alarm(_ecore_xcb_conn, alarm);
-   ecore_x_flush();
+//   ecore_x_flush();
    return EINA_TRUE;
 #endif
 
@@ -124,6 +138,7 @@ ecore_x_sync_counter_query(Ecore_X_Sync_Counter counter, unsigned int *val)
 #endif
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if ((!_sync_avail) || (!counter)) return EINA_FALSE;
 
@@ -148,6 +163,7 @@ ecore_x_sync_counter_inc(Ecore_X_Sync_Counter counter, int by)
 #endif
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if ((!_sync_avail) || (!counter)) return;
 
@@ -156,7 +172,7 @@ ecore_x_sync_counter_inc(Ecore_X_Sync_Counter counter, int by)
    v.lo = by;
 
    xcb_sync_change_counter(_ecore_xcb_conn, counter, v);
-   ecore_x_flush();
+//   ecore_x_flush();
 #endif
 }
 
@@ -171,6 +187,7 @@ ecore_x_sync_counter_val_wait(Ecore_X_Sync_Counter counter, int val)
 #endif
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if ((!_sync_avail) || (!counter)) return;
 
@@ -193,7 +210,7 @@ ecore_x_sync_counter_val_wait(Ecore_X_Sync_Counter counter, int val)
    cond.event_threshold = v2;
 
    xcb_sync_await(_ecore_xcb_conn, 1, &cond);
-   ecore_x_flush();
+//   ecore_x_flush();
 #endif
 }
 
@@ -206,6 +223,7 @@ ecore_x_sync_counter_new(int val)
 #endif
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (!_sync_avail) return 0;
 
@@ -215,7 +233,7 @@ ecore_x_sync_counter_new(int val)
 
    counter = xcb_generate_id(_ecore_xcb_conn);
    xcb_sync_create_counter(_ecore_xcb_conn, counter, v);
-   ecore_x_flush();
+//   ecore_x_flush();
 
    return counter;
 #endif
@@ -227,12 +245,13 @@ EAPI void
 ecore_x_sync_counter_free(Ecore_X_Sync_Counter counter) 
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if ((!_sync_avail) || (!counter)) return;
 
 #ifdef ECORE_XCB_SYNC
    xcb_sync_destroy_counter(_ecore_xcb_conn, counter);
-   ecore_x_flush();
+//   ecore_x_flush();
 #endif
 }
 
@@ -244,6 +263,7 @@ ecore_x_sync_counter_set(Ecore_X_Sync_Counter counter, int val)
 #endif
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if ((!_sync_avail) || (!counter)) return;
 
@@ -252,7 +272,7 @@ ecore_x_sync_counter_set(Ecore_X_Sync_Counter counter, int val)
    v.lo = val;
 
    xcb_sync_set_counter(_ecore_xcb_conn, counter, v);
-   ecore_x_flush();
+//   ecore_x_flush();
 #endif
 }
 
@@ -264,6 +284,7 @@ ecore_x_sync_counter_2_set(Ecore_X_Sync_Counter counter, int val_hi, unsigned in
 #endif
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if ((!_sync_avail) || (!counter)) return;
 
@@ -272,7 +293,7 @@ ecore_x_sync_counter_2_set(Ecore_X_Sync_Counter counter, int val_hi, unsigned in
    v.lo = val_lo;
 
    xcb_sync_set_counter(_ecore_xcb_conn, counter, v);
-   ecore_x_flush();
+//   ecore_x_flush();
 #endif
 }
 
@@ -286,6 +307,7 @@ ecore_x_sync_counter_2_query(Ecore_X_Sync_Counter counter, int *val_hi, unsigned
 #endif
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if ((!_sync_avail) || (!counter)) return EINA_FALSE;
 

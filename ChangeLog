@@ -109,7 +109,7 @@
         now uses the netwm sync protocol to get wm's to only configure
         as fast as it can keep drawing.
 
-2011-04-05  Leif Middelschulte
+2011-04-01  Leif Middelschulte
 
        * Add ecore_x_randr_edid_* data extraction and validation functions
        for EDID structures.
@@ -287,3 +287,17 @@
 	* Add ecore_thread_main_loop_begin and ecore_thread_main_loop_end.
 	Usefull to protect EFL call from another thread.
 
+2011-09-12  Mike Blumenkrantz
+
+        * Add ecore_con_server_fd_get, ecore_con_client_fd_get for manipulating
+          server file descriptors.
+
+2011-09-13  Mike Blumenkrantz
+
+        * Add ECORE_CON_EVENT_CLIENT_WRITE, ECORE_CON_EVENT_SERVER_WRITE for
+          obtaining progress of socket writes
+
+2011-09-18  Carsten Haitzler (The Rasterman)
+
+        * Fix bug in Ecore_X generic event handling for extended event
+          sizes when freeing (and allocating) the data.

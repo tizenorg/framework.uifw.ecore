@@ -15,7 +15,7 @@ typedef struct _Version_Cache_Item
 static Eina_Bool _ecore_xcb_dnd_converter_copy(char *target __UNUSED__, void *data, int size, void **data_ret, int *size_ret, Ecore_X_Atom *tprop __UNUSED__, int *count __UNUSED__);
 
 /* local variables */
-static int _ecore_xcb_dnd_init_count;
+static int _ecore_xcb_dnd_init_count = 0;
 static Ecore_X_DND_Source *_source = NULL;
 static Ecore_X_DND_Target *_target = NULL;
 static Version_Cache_Item *_version_cache = NULL;
@@ -87,6 +87,7 @@ ecore_x_dnd_send_status(Eina_Bool will_accept, Eina_Bool suppress, Ecore_X_Recta
    xcb_client_message_event_t ev;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (_target->state == ECORE_X_DND_TARGET_IDLE) return;
 
@@ -118,6 +119,7 @@ ecore_x_dnd_send_status(Eina_Bool will_accept, Eina_Bool suppress, Ecore_X_Recta
 
    xcb_send_event(_ecore_xcb_conn, 0, _target->source, 
                   XCB_EVENT_MASK_NO_EVENT, (const char *)&ev);
+//   ecore_x_flush();
 }
 
 EAPI Eina_Bool 
@@ -127,6 +129,7 @@ ecore_x_dnd_drop(void)
    Eina_Bool status = EINA_FALSE;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    memset(&ev, 0, sizeof(xcb_client_message_event_t));
 
@@ -135,24 +138,29 @@ ecore_x_dnd_drop(void)
         ev.response_type = XCB_CLIENT_MESSAGE;
         ev.format = 32;
         ev.window = _source->dest;
-        ev.data.data32[0] = _source->win;
-        ev.data.data32[1] = 0;
 
         if (_source->will_accept) 
           {
              ev.type = ECORE_X_ATOM_XDND_DROP;
+             ev.data.data32[0] = _source->win;
+             ev.data.data32[1] = 0;
              ev.data.data32[2] = _source->time;
 
              xcb_send_event(_ecore_xcb_conn, 0, _source->dest, 
                             XCB_EVENT_MASK_NO_EVENT, (const char *)&ev);
+//             ecore_x_flush();
              _source->state = ECORE_X_DND_SOURCE_DROPPED;
              status = EINA_TRUE;
           }
         else 
           {
              ev.type = ECORE_X_ATOM_XDND_LEAVE;
+             ev.data.data32[0] = _source->win;
+             ev.data.data32[1] = 0;
+
              xcb_send_event(_ecore_xcb_conn, 0, _source->dest, 
                             XCB_EVENT_MASK_NO_EVENT, (const char *)&ev);
+//             ecore_x_flush();
              _source->state = ECORE_X_DND_SOURCE_IDLE;
           }
      }
@@ -252,6 +260,7 @@ ecore_x_dnd_type_isset(Ecore_X_Window win, const char *type)
    Ecore_X_Atom *atoms, atom;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (!ecore_x_window_prop_property_get(win, ECORE_X_ATOM_XDND_TYPE_LIST, 
                                          ECORE_X_ATOM_ATOM, 32, &data, &num))
@@ -280,6 +289,7 @@ ecore_x_dnd_type_set(Ecore_X_Window win, const char *type, Eina_Bool on)
    unsigned char *data = NULL, *old_data = NULL;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    atom = ecore_x_atom_get(type);
    ecore_x_window_prop_property_get(win, ECORE_X_ATOM_XDND_TYPE_LIST, 
@@ -333,6 +343,7 @@ ecore_x_dnd_types_set(Ecore_X_Window win, const char **types, unsigned int num_t
    unsigned char *data = NULL;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (!num_types)
       ecore_x_window_prop_property_del(win, ECORE_X_ATOM_XDND_TYPE_LIST);
@@ -362,6 +373,7 @@ ecore_x_dnd_actions_set(Ecore_X_Window win, Ecore_X_Atom *actions, unsigned int 
    unsigned char *data = NULL;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (!num_actions)
       ecore_x_window_prop_property_del(win, ECORE_X_ATOM_XDND_ACTION_LIST);
@@ -438,6 +450,7 @@ ecore_x_dnd_send_finished(void)
    xcb_client_message_event_t ev;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    if (_target->state == ECORE_X_DND_TARGET_IDLE) return;
 
@@ -458,6 +471,7 @@ ecore_x_dnd_send_finished(void)
 
    xcb_send_event(_ecore_xcb_conn, 0, _target->source, 
                   XCB_EVENT_MASK_NO_EVENT, (const char *)&ev);
+//   ecore_x_flush();
    _target->state = ECORE_X_DND_TARGET_IDLE;
 }
 
@@ -495,6 +509,7 @@ _ecore_xcb_dnd_drag(Ecore_X_Window root, int x, int y)
    if (_source->state != ECORE_X_DND_SOURCE_DRAGGING) return;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    memset(&ev, 0, sizeof(xcb_client_message_event_t));
 
@@ -515,6 +530,7 @@ _ecore_xcb_dnd_drag(Ecore_X_Window root, int x, int y)
 
         xcb_send_event(_ecore_xcb_conn, 0, _source->dest, 
                        XCB_EVENT_MASK_NO_EVENT, (const char *)&ev);
+//        ecore_x_flush();
         _source->suppress = 0;
      }
 
@@ -553,6 +569,7 @@ _ecore_xcb_dnd_drag(Ecore_X_Window root, int x, int y)
 
              xcb_send_event(_ecore_xcb_conn, 0, win, 
                             XCB_EVENT_MASK_NO_EVENT, (const char *)&ev);
+//             ecore_x_flush();
              _source->await_status = 0;
              _source->will_accept = 0;
           }
@@ -575,6 +592,7 @@ _ecore_xcb_dnd_drag(Ecore_X_Window root, int x, int y)
 
              xcb_send_event(_ecore_xcb_conn, 0, win, 
                             XCB_EVENT_MASK_NO_EVENT, (const char *)&ev);
+//             ecore_x_flush();
              _source->await_status = 1;
           }
      }

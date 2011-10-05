@@ -57,8 +57,9 @@ _ecore_x_mouse_down_info_clear(void)
 void
 _ecore_x_events_init(void)
 {
-   //Actually, Nothing to do.
+   //Actually, Nothing to do. 
 }
+
 void
 _ecore_x_events_shutdown(void)
 {
@@ -75,7 +76,7 @@ _ecore_x_mouse_down_info_get(int dev)
    EINA_INLIST_FOREACH(l, info)
      if (info->dev == dev) return info;
 
-   //New Device. Add it.
+   //New Device. Add it. 
    info = calloc(1, sizeof(Ecore_X_Mouse_Down_Info));
    if (!info) return NULL;
 
@@ -1907,6 +1908,7 @@ _ecore_x_event_handle_mapping_notify(XEvent *xevent)
 
    _ecore_x_last_event_mouse_move = 0;
    XRefreshKeyboardMapping((XMappingEvent *)xevent);
+   _ecore_x_modifiers_get();
    e = calloc(1, sizeof(Ecore_X_Event_Mapping_Change));
    if (!e) return;
    switch (xevent->xmapping.request)
