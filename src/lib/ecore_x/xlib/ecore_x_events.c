@@ -449,6 +449,7 @@ _ecore_mouse_button(int          event,
        && !e->triple_click)
       _ecore_x_mouse_up_count = 0;
     */
+
    e->multi.device = dev;
    e->multi.radius = (radx + rady) / 2;
    e->multi.radius_x = radx;
@@ -603,6 +604,7 @@ _ecore_x_event_handle_button_press(XEvent *xevent)
               (xevent->xbutton.subwindow ? xevent->xbutton.subwindow : xevent->
                xbutton.window);
            event_window = xevent->xbutton.window;
+
            e = _ecore_mouse_button(ECORE_EVENT_MOUSE_BUTTON_DOWN,
                                    xevent->xbutton.time,
                                    xevent->xbutton.state,
