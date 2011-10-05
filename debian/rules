@@ -14,7 +14,7 @@ DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb \
 	--disable-openssl \
 	--disable-gnutls \
 	--disable-tslib \
-	--enable-doc \
+	--disable-doc \
 	--enable-simple-x11 \
 	--enable-ecore-evas-opengl-x11 \
 	--disable-ecore-evas-xrender-x11 \
@@ -28,12 +28,12 @@ DEB_MAKE_CLEAN_TARGET := distclean
 CFLAGS += -fvisibility=hidden -fPIC
 LDFLAGS += -fvisibility=hidden -Wl,--hash-style=both -Wl,--as-needed
 
-build/libecore-doc::
-	cd $(DEB_SRCDIR)/doc && make doc
+#build/libecore-doc::
+#	cd $(DEB_SRCDIR)/doc && make doc
 
-install/libecore-doc::
-	mkdir -p debian/libecore-doc/usr/share/doc/libecore-doc
-	cp -R $(DEB_SRCDIR)/doc/html debian/libecore-doc/usr/share/doc/libecore-doc/
+#install/libecore-doc::
+#	mkdir -p debian/libecore-doc/usr/share/doc/libecore-doc
+#	cp -R $(DEB_SRCDIR)/doc/html debian/libecore-doc/usr/share/doc/libecore-doc/
 
 clean::
 	[ ! -f Makefile ] || make distclean
