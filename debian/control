@@ -150,7 +150,7 @@ Description: Ecore inter-process communication functions
 
 Package: libecore-data
 Architecture: any
-Depends: ${misc:Depends}, ${shlibs:Depends}
+Depends: ${misc:Depends}
 Description: Ecore data functions
 
 Package: libecore-x
