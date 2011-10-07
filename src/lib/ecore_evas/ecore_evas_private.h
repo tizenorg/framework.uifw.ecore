@@ -58,7 +58,7 @@
 # include "Ecore_DirectFB.h"
 #endif
 
-#ifdef BUILD_ECORE_EVAS_SOFTWARE_BUFFER
+#if defined(BUILD_ECORE_EVAS_SOFTWARE_BUFFER) || defined(BUILD_ECORE_EVAS_EWS)
 # include <Evas_Engine_Buffer.h>
 #endif
 
@@ -184,6 +184,7 @@ struct _Ecore_Evas_Engine
 {
    Ecore_Evas_Engine_Func *func;
 
+/* TODO: UGLY! This should be an union or inheritance! */
 #ifdef BUILD_ECORE_EVAS_X11
    struct 
      {
@@ -258,6 +259,11 @@ struct _Ecore_Evas_Engine
          unsigned char fullscreen : 1;
       } state;
    } wince;
+#endif
+#ifdef BUILD_ECORE_EVAS_EWS
+   struct {
+      Evas_Object *image;
+   } ews;
 #endif
 
    Ecore_Timer *idle_flush_timer;
@@ -345,13 +351,19 @@ struct _Ecore_Evas
    Ecore_Evas_Engine engine;
    Eina_List *sub_ecore_evas;
 
+   int refcount;
+
    unsigned char ignore_events : 1;
    unsigned char manual_render : 1;
    unsigned char registered : 1;
    unsigned char no_comp_sync  : 1;
    unsigned char semi_sync  : 1;
+   unsigned char deleted : 1;
    int           gl_sync_draw_done; // added by gl77.lee
 };
+
+void _ecore_evas_ref(Ecore_Evas *ee);
+void _ecore_evas_unref(Ecore_Evas *ee);
 
 #ifdef BUILD_ECORE_EVAS_X11
 int _ecore_evas_x_shutdown(void);
@@ -371,6 +383,10 @@ int _ecore_evas_win32_shutdown(void);
 #endif
 #ifdef BUILD_ECORE_EVAS_SOFTWARE_16_WINCE
 int _ecore_evas_wince_shutdown(void);
+#endif
+#ifdef BUILD_ECORE_EVAS_EWS
+void _ecore_evas_ews_events_init(void);
+int _ecore_evas_ews_shutdown(void);
 #endif
 
 void _ecore_evas_fps_debug_init(void);

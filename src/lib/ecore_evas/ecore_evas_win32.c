@@ -48,17 +48,17 @@ _ecore_evas_win32_render(Ecore_Evas *ee)
 {
    int rend = 0;
    Eina_List *updates = NULL;
-#ifdef BUILD_ECORE_EVAS_SOFTWARE_BUFFER
    Eina_List *ll;
    Ecore_Evas *ee2;
 
    EINA_LIST_FOREACH(ee->sub_ecore_evas, ll, ee2)
      {
         if (ee2->func.fn_pre_render) ee2->func.fn_pre_render(ee2);
-        rend |= _ecore_evas_buffer_render(ee2);
+        if (ee2->engine.func->fn_render)
+          rend |= ee2->engine.func->fn_render(ee2);
         if (ee2->func.fn_post_render) ee2->func.fn_post_render(ee2);
      }
-#endif
+
    if (ee->func.fn_pre_render) ee->func.fn_pre_render(ee);
    if (ee->prop.avoid_damage)
      {
