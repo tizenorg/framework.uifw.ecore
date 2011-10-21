@@ -1310,7 +1310,7 @@ ecore_imf_context_input_panel_imdata_get (Ecore_IMF_Context *ctx, char *data, in
  * Get ISE Language of given ISE. -- Not supported for now --
  * @ingroup Ecore_IMF_Context_IMControl_Group
  */
-EAPI int
+EINA_DEPRECATED EAPI int
 ecore_imf_context_ise_get_ise_language (Ecore_IMF_Context *ctx, const char* ise_name, char ***langlist)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1337,7 +1337,7 @@ ecore_imf_context_ise_get_ise_language (Ecore_IMF_Context *ctx, const char* ise_
  * THIS API IS NOT SUPPORTED NOW
  * @since 1.1.0
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_keyboard_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Keyboard_Lang lang)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1358,7 +1358,7 @@ ecore_imf_context_keyboard_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Keybo
  * THIS API IS NOT SUPPORTED NOW
  * @since 1.1.0
  */
-EAPI Ecore_IMF_Keyboard_Lang
+EINA_DEPRECATED EAPI Ecore_IMF_Keyboard_Lang
 ecore_imf_context_keyboard_language_get (Ecore_IMF_Context *ctx)
 {
    Ecore_IMF_Keyboard_Lang lang = ECORE_IMF_KEYBOARD_LANG_NATIVE;
@@ -1380,7 +1380,7 @@ ecore_imf_context_keyboard_language_get (Ecore_IMF_Context *ctx)
  * Set ISF Language. -- Not supported for now --
  * @ingroup Ecore_IMF_Context_IMControl_Group
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_ise_set_isf_language (Ecore_IMF_Context *ctx, const char* lang)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1404,7 +1404,7 @@ ecore_imf_context_ise_set_isf_language (Ecore_IMF_Context *ctx, const char* lang
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_input_panel_use_effect_set (Ecore_IMF_Context *ctx, Eina_Bool use_effect)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1428,7 +1428,7 @@ ecore_imf_context_input_panel_use_effect_set (Ecore_IMF_Context *ctx, Eina_Bool 
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EAPI Eina_Bool
+EINA_DEPRECATED EAPI Eina_Bool
 ecore_imf_context_input_panel_use_effect_get (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1640,7 +1640,7 @@ ecore_imf_context_input_panel_key_disabled_list_get (Ecore_IMF_Context *ctx)
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_input_panel_reset (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1663,7 +1663,7 @@ ecore_imf_context_input_panel_reset (Ecore_IMF_Context *ctx)
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_input_panel_orient_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1687,7 +1687,7 @@ ecore_imf_context_input_panel_orient_set (Ecore_IMF_Context *ctx, Ecore_IMF_Inpu
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EAPI Ecore_IMF_Input_Panel_Orient
+EINA_DEPRECATED EAPI Ecore_IMF_Input_Panel_Orient
 ecore_imf_context_input_panel_orient_get (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1707,7 +1707,7 @@ ecore_imf_context_input_panel_orient_get (Ecore_IMF_Context *ctx)
  * @param name input panel name to be got
  * @ingroup Ecore_IMF_Context_IMControl_Group
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_ise_get_active_isename (Ecore_IMF_Context *ctx, char* name)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1730,7 +1730,7 @@ ecore_imf_context_ise_get_active_isename (Ecore_IMF_Context *ctx, char* name)
  * @param name input panel name to be set
  * @ingroup Ecore_IMF_Context_IMControl_Group
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_ise_set_active_ise_by_name (Ecore_IMF_Context *ctx, const char* name)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1753,7 +1753,7 @@ ecore_imf_context_ise_set_active_ise_by_name (Ecore_IMF_Context *ctx, const char
  * @param uuid input panel uuid to be set
  * @ingroup Ecore_IMF_Context_IMControl_Group
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_ise_set_active_ise_by_uuid (Ecore_IMF_Context *ctx, const char* uuid)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1777,7 +1777,7 @@ ecore_imf_context_ise_set_active_ise_by_uuid (Ecore_IMF_Context *ctx, const char
  * @return  int ise counter of iselist
  * @ingroup Ecore_IMF_Context_IMControl_Group
  */
-EAPI int
+EINA_DEPRECATED EAPI int
 ecore_imf_context_ise_get_iselist (Ecore_IMF_Context *ctx, char*** iselist)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1904,7 +1904,7 @@ ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx, int x, int y)
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_input_panel_caps_mode_set (Ecore_IMF_Context *ctx,
                                              Ecore_IMF_Input_Panel_Caps_Mode mode)
 {
