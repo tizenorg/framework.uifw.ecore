@@ -1404,7 +1404,7 @@ ecore_imf_context_ise_set_isf_language (Ecore_IMF_Context *ctx, const char* lang
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EINA_DEPRECATED EAPI void
+EAPI void
 ecore_imf_context_input_panel_use_effect_set (Ecore_IMF_Context *ctx, Eina_Bool use_effect)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1428,7 +1428,7 @@ ecore_imf_context_input_panel_use_effect_set (Ecore_IMF_Context *ctx, Eina_Bool 
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EINA_DEPRECATED EAPI Eina_Bool
+EAPI Eina_Bool
 ecore_imf_context_input_panel_use_effect_get (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1640,7 +1640,7 @@ ecore_imf_context_input_panel_key_disabled_list_get (Ecore_IMF_Context *ctx)
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EINA_DEPRECATED EAPI void
+EAPI void
 ecore_imf_context_input_panel_reset (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1663,7 +1663,7 @@ ecore_imf_context_input_panel_reset (Ecore_IMF_Context *ctx)
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EINA_DEPRECATED EAPI void
+EAPI void
 ecore_imf_context_input_panel_orient_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1687,7 +1687,7 @@ ecore_imf_context_input_panel_orient_set (Ecore_IMF_Context *ctx, Ecore_IMF_Inpu
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EINA_DEPRECATED EAPI Ecore_IMF_Input_Panel_Orient
+EAPI Ecore_IMF_Input_Panel_Orient
 ecore_imf_context_input_panel_orient_get (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
