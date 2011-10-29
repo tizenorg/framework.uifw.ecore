@@ -277,6 +277,7 @@ ecore_con_url_new(const char *url)
     * FIXME: Check that these timeouts are sensible defaults
     * FIXME: Provide a means to change these timeouts
     */
+   curl_easy_setopt(url_con->curl_easy, CURLOPT_MAXCONNECTS, 100);
    curl_easy_setopt(url_con->curl_easy, CURLOPT_CONNECTTIMEOUT, 30);
    curl_easy_setopt(url_con->curl_easy, CURLOPT_FOLLOWLOCATION, 1);
 
@@ -354,6 +355,7 @@ ecore_con_url_free(Ecore_Con_Url *url_con)
      {
         // FIXME: For an unknown reason, progress continue to arrive after destruction
         // this prevent any further call to the callback.
+        curl_easy_setopt(url_con->curl_easy, CURLOPT_NOPROGRESS, EINA_TRUE);
         curl_easy_setopt(url_con->curl_easy, CURLOPT_PROGRESSFUNCTION, NULL);
 
         if (url_con->active)
