@@ -17,6 +17,7 @@ Maintainer: Jaehwan Kim <jae.hwan.kim@samsung.com>,
  Myoungwoon Kim <myoungwoon.kim@samsung.com>,
  Seokjae Jeong <seok.j.jeong@samsung.com>,
  Mike McCormack <mj.mccormack@samsung.com>
+Uploaders: Tae-Hwan Kim <the81.kim@samsung.com>
 Build-Depends: dpkg-dev,
  debhelper (>= 6),
  cdbs,
