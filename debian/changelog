@@ -1,3 +1,13 @@
+ecore (1.0.0.001+svn.63888slp2+build05) unstable; urgency=low
+
+  * Upload package
+  * Important Changes
+        Add new api related with get last recently requested geometry value
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.63888slp2+build05
+
+ -- Jiyoun Park <jy0703.park@samsung.com>  Mon, 31 Oct 2011 15:23:33 +0900
+
 ecore (1.0.0.001+svn.63888slp2+build04) unstable; urgency=low
 
   * Package Upload
