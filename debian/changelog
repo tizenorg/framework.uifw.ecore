@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.63888slp2+build06) unstable; urgency=low
+
+  * Deprecated some Ecore_IMF APIs
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.63888slp2+build06
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Wed, 02 Nov 2011 12:41:49 +0900
+
 ecore (1.0.0.001+svn.63888slp2+build05) unstable; urgency=low
 
   * Upload package
