@@ -278,6 +278,7 @@ ecore_con_url_new(const char *url)
     * FIXME: Provide a means to change these timeouts
     */
    curl_easy_setopt(url_con->curl_easy, CURLOPT_MAXCONNECTS, 100);
+   curl_easy_setopt(url_con->curl_easy, CURLOPT_FORBID_REUSE, 1);
    curl_easy_setopt(url_con->curl_easy, CURLOPT_CONNECTTIMEOUT, 30);
    curl_easy_setopt(url_con->curl_easy, CURLOPT_FOLLOWLOCATION, 1);
 
