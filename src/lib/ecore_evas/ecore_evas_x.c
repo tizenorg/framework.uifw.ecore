@@ -1674,8 +1674,15 @@ _ecore_evas_x_rotation_set(Ecore_Evas *ee, int rotation, int resize)
      }
 
 #if _USE_WIN_ROT_EFFECT
-  _ecore_evas_x_rotation_effect_setup();
-  _ecore_evas_x_flush_pre(ee, NULL, NULL);
+   if ((ee->visible) &&
+       ((ecore_x_e_comp_sync_supported_get(ee->engine.x.win_root)) &&
+        (!ee->no_comp_sync) && (_ecore_evas_app_comp_sync)) &&
+        (ee->engine.x.sync_counter) &&
+        (ee->engine.x.sync_val > 0))
+     {
+        _ecore_evas_x_rotation_effect_setup();
+        _ecore_evas_x_flush_pre(ee, NULL, NULL);
+     }
 #endif /* end of _USE_WIN_ROT_EFFECT */
 }
 
