@@ -2561,21 +2561,21 @@ EAPI void
 
 typedef struct _Ecore_X_Window_Attributes
 {
-   Ecore_X_Window root;
-   int            x, y, w, h;
-   int            border;
-   int            depth;
-   Eina_Bool      visible : 1;
-   Eina_Bool      viewable : 1;
-   Eina_Bool      override : 1;
-   Eina_Bool      input_only : 1;
-   Eina_Bool      save_under : 1;
+   Ecore_X_Window   root;
+   int              x, y, w, h;
+   int              border;
+   int              depth;
+   Eina_Bool        visible : 1;
+   Eina_Bool        viewable : 1;
+   Eina_Bool        override : 1;
+   Eina_Bool        input_only : 1;
+   Eina_Bool        save_under : 1;
    struct
-     {
-        Ecore_X_Event_Mask mine;
-        Ecore_X_Event_Mask all;
-        Ecore_X_Event_Mask no_propagate;
-     } event_mask;
+   {
+      Ecore_X_Event_Mask mine;
+      Ecore_X_Event_Mask all;
+      Ecore_X_Event_Mask no_propagate;
+   } event_mask;
    Ecore_X_Gravity  window_gravity;
    Ecore_X_Gravity  pixel_gravity;
    Ecore_X_Colormap colormap;
