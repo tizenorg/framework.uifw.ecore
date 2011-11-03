@@ -286,7 +286,6 @@ _ecore_file_download_url_compare_job(const void *data1, const void *data2)
 static Eina_Bool
 _ecore_file_download_url_complete_cb(void *data __UNUSED__, int type __UNUSED__, void *event)
 {
-   DBG("_ecore_file_download_url_complete_cb");
    Ecore_Con_Event_Url_Complete *ev = event;
    Ecore_File_Download_Job      *job;
 
