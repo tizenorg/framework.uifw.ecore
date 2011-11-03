@@ -285,6 +285,10 @@ EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_AVAILABLE_ANGLE = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_OPERATOR = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_ROOT_ANGLE = 0;
 
+/* currently Emotion and E17 specific extension */
+EAPI Ecore_X_Atom ECORE_X_ATOM_E_VIDEO_PARENT = 0;
+EAPI Ecore_X_Atom ECORE_X_ATOM_E_VIDEO_POSITION = 0;
+
 /* added by doyoun.kang - for user created window */
 EAPI Ecore_X_Atom ECORE_X_ATOM_USER_CREATED_WINDOW = 0;
 

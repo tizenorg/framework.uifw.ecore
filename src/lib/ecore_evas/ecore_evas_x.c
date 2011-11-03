@@ -918,7 +918,6 @@ _ecore_evas_x_event_window_configure(void *data __UNUSED__, int type __UNUSED__,
    if (ee->engine.x.direct_resize) return ECORE_CALLBACK_PASS_ON;
 
    ee->engine.x.configure_coming = 0;
-
    if ((e->from_wm) || (ee->prop.override))
      {
         if ((ee->x != e->x) || (ee->y != e->y))
@@ -1376,7 +1375,7 @@ _ecore_evas_x_resize(Ecore_Evas *ee, int w, int h)
              if (ee->func.fn_resize) ee->func.fn_resize(ee);
           }
      }
-   else if (((ee->w != w) || (ee->h != h)) ||
+   else if (((ee->w != w) || (ee->h != h)) || 
             (ee->engine.x.configure_coming))
      {
         ee->engine.x.configure_coming = 1;
@@ -1440,7 +1439,7 @@ _ecore_evas_x_move_resize(Ecore_Evas *ee, int x, int y, int w, int h)
                }
           }
      }
-   else if (((ee->w != w) || (ee->h != h) || (ee->x != x) || (ee->y != y)) ||
+   else if (((ee->w != w) || (ee->h != h) || (ee->x != x) || (ee->y != y)) || 
             (ee->engine.x.configure_coming))
      {
         ee->engine.x.configure_coming = 1;
@@ -3228,8 +3227,13 @@ ecore_evas_gl_x11_options_new(const char *disp_name, Ecore_X_Window parent,
    ee->engine.func = (Ecore_Evas_Engine_Func *)&_ecore_x_engine_func;
 
    ee->driver = "opengl_x11";
+#if 1
    ee->semi_sync = 0; // gl engine doesn't need to sync - its whole swaps
+#else
+   if (!getenv("ECORE_EVAS_COMP_NOSEMISYNC"))
+      ee->semi_sync = 1; // gl engine doesn't need to sync - its whole swaps
 //   ee->no_comp_sync = 1; // gl engine doesn't need to sync - its whole swaps
+#endif
    if (disp_name) ee->name = strdup(disp_name);
 
    if (w < 1) w = 1;

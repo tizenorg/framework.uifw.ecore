@@ -16,7 +16,7 @@
 # ifdef  __cplusplus
 extern "C"
 # endif /* ifdef  __cplusplus */
-void *    alloca (size_t);
+void *alloca(size_t);
 #endif /* ifdef HAVE_ALLOCA_H */
 
 #include <string.h>
@@ -281,7 +281,10 @@ _ecore_x_atoms_init(void)
       { "_E_COMP_FLUSH", &ECORE_X_ATOM_E_COMP_FLUSH },
       { "_E_COMP_DUMP", &ECORE_X_ATOM_E_COMP_DUMP },
       { "_E_COMP_PIXMAP", &ECORE_X_ATOM_E_COMP_PIXMAP },
-     
+      { "_E_VIDEO_PARENT", &ECORE_X_ATOM_E_VIDEO_PARENT },
+      { "_E_VIDEO_POSITION", &ECORE_X_ATOM_E_VIDEO_POSITION }
+
+      /* SLP additions after the comma */ ,
       { "_E_USER_CREATED_WINDOW", &ECORE_X_ATOM_E_USER_CREATED_WINDOW },
       { "_E_PARENT_BORDER_WINDOW", &ECORE_X_ATOM_E_PARENT_BORDER_WINDOW },
       { "_E_COMP_DRI_BUFF_FLIP_SUPPORTED", &ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED },
@@ -292,7 +295,7 @@ _ecore_x_atoms_init(void)
       { "_E_ILLUME_ROTATE_OPERATOR", & ECORE_X_ATOM_E_ILLUME_ROTATE_OPERATOR },
       { "_E_ILLUME_ROTATE_ROOT_ANGLE", & ECORE_X_ATOM_E_ILLUME_ROTATE_ROOT_ANGLE },
 
-      /* added by doyoun.kang - for user created window */ 
+      /* added by doyoun.kang - for user created window */
       { "_ECORE_X_USER_CREATED_WINDOW", & ECORE_X_ATOM_USER_CREATED_WINDOW },
 
       /* added by gl77.lee - XID that points to the parent border window */
@@ -330,26 +333,28 @@ EAPI Ecore_X_Atom
 ecore_x_atom_get(const char *name)
 {
    if (!_ecore_x_disp)
-      return 0;
+     return 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    return XInternAtom(_ecore_x_disp, name, False);
 } /* ecore_x_atom_get */
 
 EAPI void
-ecore_x_atoms_get(const char **names, int num, Ecore_X_Atom *atoms)
+ecore_x_atoms_get(const char  **names,
+                  int           num,
+                  Ecore_X_Atom *atoms)
 {
    Atom *atoms_int;
    int i;
 
    if (!_ecore_x_disp)
-      return;
+     return;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    atoms_int = alloca(num * sizeof(Atom));
    XInternAtoms(_ecore_x_disp, (char **)names, num, False, atoms_int);
    for (i = 0; i < num; i++)
-      atoms[i] = atoms_int[i];
+     atoms[i] = atoms_int[i];
 } /* ecore_x_atoms_get */
 
 EAPI char *
@@ -359,13 +364,13 @@ ecore_x_atom_name_get(Ecore_X_Atom atom)
    char *xname;
 
    if (!_ecore_x_disp)
-      return NULL;
+     return NULL;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
    xname = XGetAtomName(_ecore_x_disp, atom);
    if (!xname)
-      return NULL;
+     return NULL;
 
    name = strdup(xname);
    XFree(xname);

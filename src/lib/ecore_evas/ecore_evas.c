@@ -21,6 +21,7 @@
 #include "ecore_evas_private.h"
 #include "Ecore_Evas.h"
 
+Eina_Bool _ecore_evas_app_comp_sync = 1;
 int _ecore_evas_log_dom = -1;
 static int _ecore_evas_init_count = 0;
 static Ecore_Fd_Handler *_ecore_evas_async_events_fd = NULL;
@@ -175,8 +176,8 @@ ecore_evas_engine_type_supported_get(Ecore_Evas_Engine_Type engine)
 #else
         return EINA_FALSE;
 #endif
-      case ECORE_EVAS_ENGINE_COCOA:
-#ifdef BUILD_ECORE_EVAS_COCOA
+      case ECORE_EVAS_ENGINE_OPENGL_COCOA:
+#ifdef BUILD_ECORE_EVAS_OPENGL_COCOA
         return EINA_TRUE;
 #else
         return EINA_FALSE;
@@ -232,6 +233,8 @@ ecore_evas_init(void)
    _ecore_evas_ews_events_init();
 #endif
 
+   if (getenv("ECORE_EVAS_COMP_NOSYNC"))
+      _ecore_evas_app_comp_sync = 0;
    return _ecore_evas_init_count;
 
  shutdown_ecore:
@@ -285,8 +288,6 @@ ecore_evas_shutdown(void)
 
    return _ecore_evas_init_count;
 }
-
-Eina_Bool _ecore_evas_app_comp_sync = 1;
 
 EAPI void
 ecore_evas_app_comp_sync_set(Eina_Bool do_sync)
@@ -397,7 +398,7 @@ _ecore_evas_constructor_software_x11(int x, int y, int w, int h, const char *ext
 }
 #endif
 
-#ifdef BUILD_ECORE_EVAS_COCOA
+#ifdef BUILD_ECORE_EVAS_OPENGL_COCOA
 static Ecore_Evas *
 _ecore_evas_constructor_cocoa(int x, int y, int w, int h, const char *extra_options)
 {
@@ -405,7 +406,7 @@ _ecore_evas_constructor_cocoa(int x, int y, int w, int h, const char *extra_opti
    Ecore_Evas *ee;
 
    _ecore_evas_parse_extra_options_str(extra_options, "name=", &name);
-   ee = ecore_evas_cocoa_new(name, w, h);
+   ee = ecore_evas_cocoa_new(NULL, x, y, w, h);
    free(name);
 
    if (ee) ecore_evas_move(ee, x, y);
@@ -683,8 +684,8 @@ static const struct ecore_evas_engine _engines[] = {
 #endif
 
   /* Apple */
-#ifdef BUILD_ECORE_EVAS_COCOA
-  {"cocoa", _ecore_evas_constructor_cocoa},
+#ifdef BUILD_ECORE_EVAS_OPENGL_COCOA
+  {"opengl_cocoa", _ecore_evas_constructor_cocoa},
 #endif
 
   /* Last chance to have a window */
@@ -2542,4 +2543,20 @@ ecore_evas_ecore_evas_list_get(void)
      }
 
    return l;
+}
+
+EAPI void
+ecore_evas_input_event_register(Ecore_Evas *ee)
+{
+   ecore_event_window_register((Ecore_Window)ee, ee, ee->evas,
+                               (Ecore_Event_Mouse_Move_Cb)_ecore_evas_mouse_move_process,
+                               (Ecore_Event_Multi_Move_Cb)_ecore_evas_mouse_multi_move_process,
+                               (Ecore_Event_Multi_Down_Cb)_ecore_evas_mouse_multi_down_process,
+                               (Ecore_Event_Multi_Up_Cb)_ecore_evas_mouse_multi_up_process);
+}
+
+EAPI void
+ecore_evas_input_event_unregister(Ecore_Evas *ee)
+{
+   ecore_event_window_unregister((Ecore_Window)ee);
 }

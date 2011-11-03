@@ -93,7 +93,7 @@ typedef enum _Ecore_Evas_Engine_Type
    ECORE_EVAS_ENGINE_SOFTWARE_DDRAW,
    ECORE_EVAS_ENGINE_DIRECT3D,
    ECORE_EVAS_ENGINE_OPENGL_GLEW,
-   ECORE_EVAS_ENGINE_COCOA,
+   ECORE_EVAS_ENGINE_OPENGL_COCOA,
    ECORE_EVAS_ENGINE_SOFTWARE_SDL,
    ECORE_EVAS_ENGINE_DIRECTFB,
    ECORE_EVAS_ENGINE_SOFTWARE_FB,
@@ -136,6 +136,10 @@ typedef struct _Ecore_Win32_Window Ecore_Win32_Window;
 
 #ifndef __ECORE_WINCE_H__
 typedef struct _Ecore_WinCE_Window Ecore_WinCE_Window;
+#endif
+
+#ifndef __ECORE_COCOA_H__
+typedef struct _Ecore_Cocoa_Window Ecore_Cocoa_Window;
 #endif
 
 #ifndef _ECORE_EVAS_PRIVATE_H
@@ -289,8 +293,8 @@ EAPI void        ecore_evas_geometry_get(const Ecore_Evas *ee, int *x, int *y, i
  *
  * This function takes four pointers to (already allocated) ints, and places
  * the geometry which @p ee was latest recently requested . If any of the parameters is not desired you
- * may pass NULL on them.
- * This function can represent recently requested geomety.
+ * may pass NULL on them. 
+ * This function can represent recently requested geomety. 
  * ecore_evas_geometry_get function returns the value is updated after engine finished request.
  * By comparison, ecore_evas_request_geometry_get returns recently requested value.
  *
@@ -943,7 +947,11 @@ EAPI Ecore_Evas     *ecore_evas_software_wince_gdi_new(Ecore_WinCE_Window *paren
 
 EAPI Ecore_WinCE_Window *ecore_evas_software_wince_window_get(const Ecore_Evas *ee);
 
-EAPI Ecore_Evas *ecore_evas_cocoa_new(const char* name, int w, int h);
+EAPI Ecore_Evas *ecore_evas_cocoa_new(Ecore_Cocoa_Window *parent,
+				      int x,
+				      int y,
+				      int w,
+				      int h);
 
 /* generic manipulation calls */
 /**
@@ -1390,6 +1398,28 @@ EAPI Eina_Bool   ecore_evas_sticky_get(const Ecore_Evas *ee);
 EAPI void        ecore_evas_manual_render_set(Ecore_Evas *ee, Eina_Bool manual_render);
 EAPI Eina_Bool   ecore_evas_manual_render_get(const Ecore_Evas *ee);
 
+/**
+ * @brief Registers an @c Ecore_Evas to receive events through ecore_input_evas.
+ *
+ * @param ee The @c Ecore_Evas handle.
+ *
+ * This function calls ecore_event_window_register() with the @p ee as its @c
+ * id argument, @c window argument, and uses its @c Evas too. It is useful when
+ * no @c window information is available on a given @c Ecore_Evas backend.
+ *
+ * @see ecore_evas_input_event_unregister()
+ * @since 1.1
+ */
+EAPI void        ecore_evas_input_event_register(Ecore_Evas *ee);
+/**
+ * @brief Unregisters an @c Ecore_Evas receiving events through ecore_input_evas.
+ *
+ * @param ee The @c Ecore_Evas handle.
+ *
+ * @see ecore_evas_input_event_register()
+ * @since 1.1
+ */
+EAPI void        ecore_evas_input_event_unregister(Ecore_Evas *ee);
 
 /**
  * @brief Force immediate rendering on a given @c Ecore_Evas window

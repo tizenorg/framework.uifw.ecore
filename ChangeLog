@@ -301,3 +301,24 @@
 
         * Fix bug in Ecore_X generic event handling for extended event
           sizes when freeing (and allocating) the data.
+
+2011-09-29  Youness Alaoui (KaKaRoTo)
+
+        * Port ecore-con to work on systems without IPv6 support
+        * Use inet_ntop instead of getnameinfo for ecore_con_client_get_ip
+        * Added ecore-con unit test
+
+2011-10-28  Jiyoun Park
+
+        * Fix bug in Ecore_X using geometry value instead of
+          recently requested geometry value
+
+2011-10-28 Rafael Antognolli
+
+        * Make the framebuffer engine input use ecore_input_evas instead
+        of feeding evas input events directly.
+
+2011-11-02 Nicolas Aguirre
+
+	* Add support ecore_cocoa_evas engine.
+	* Fix ecore_cocoa code to correctly handle cocoa window.

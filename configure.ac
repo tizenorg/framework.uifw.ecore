@@ -65,11 +65,17 @@ AM_GNU_GETTEXT_VERSION([0.17])
 m4_ifdef([AM_GNU_GETTEXT], [
 AM_GNU_GETTEXT([external])
 po_makefile_in=po/Makefile.in
-AM_CONDITIONAL([HAVE_PO], [true])
+have_po="yes"
 ],[
-AM_CONDITIONAL([HAVE_PO], [false])
+have_po="no"
 ])
 AC_SUBST(LTLIBINTL)
+
+if test "x${POSUB}" = "x" ; then
+   have_po="no"
+fi
+
+AM_CONDITIONAL([HAVE_PO], [test "x${have_po}" = "xyes"])
 
 with_max_log_level="<unset>"
 AC_ARG_WITH(internal-maximum-log-level,
@@ -159,6 +165,7 @@ want_ecore_evas_opengl_glew="no"
 want_ecore_evas_software_16_ddraw="no"
 want_ecore_evas_software_sdl="no"
 want_ecore_evas_gl_sdl="no"
+want_ecore_evas_gl_cocoa="no"
 want_ecore_evas_directfb="no"
 want_ecore_evas_fb="no"
 want_ecore_evas_software_16_wince="no"
@@ -199,6 +206,7 @@ case "$host_os" in
       want_ecore_cocoa="yes"
       want_ecore_evas_software_sdl="yes"
       want_ecore_evas_gl_sdl="yes"
+      want_ecore_evas_gl_cocoa="yes"
       ;;
    *)
       want_curl="yes"
@@ -220,6 +228,7 @@ case "$host_os" in
       want_ecore_evas_software_xcb="no"
       want_ecore_evas_software_sdl="yes"
       want_ecore_evas_gl_sdl="yes"
+      want_ecore_evas_gl_cocoa="no"
       want_ecore_evas_directfb="yes"
       want_ecore_evas_fb="yes"
       want_ecore_imf_xim="yes"
@@ -1116,7 +1125,7 @@ PKG_CHECK_MODULES([EVAS], [evas >= 1.0.0],
 
 ### Checks for header files
 
-AC_CHECK_HEADERS([sys/select.h])
+AC_CHECK_HEADERS([sys/select.h sys/prctl.h])
 
 EFL_CHECK_PATH_MAX
 
@@ -1151,16 +1160,36 @@ AC_CHECK_HEADER([linux/fb.h],
 
 # Cocoa header files (ecore_cocoa)
 
-cocoa_ldflags="";
+cocoa_ldflags=""
 have_cocoa="no"
 m4_ifdef([AC_PROG_OBJC], [
     if test "x${have_gnu_objc}" = "xyes" ; then
        AC_LANG_PUSH([Objective C])
-       AC_CHECK_HEADER([Cocoa/Cocoa.h],
+       LIBS_save="$LIBS"
+       LIBS="$LIBS -framework Cocoa"
+       AC_LINK_IFELSE(
+          [AC_LANG_PROGRAM(
+              [[
+#include <Cocoa/Cocoa.h>
+              ]],
+              [[
+NSWindow *window;
+window = [[NSWindow alloc]
+           initWithContentRect:NSMakeRect(0, 0, 1, 1)
+           styleMask:(NSTitledWindowMask)
+           backing:NSBackingStoreBuffered
+           defer:NO
+           screen:nil
+         ];
+              ]])],
           [
            have_cocoa="yes"
            cocoa_ldflags="-framework Cocoa"
-          ])
+          ],
+          [have_cocoa="no"])
+       LIBS="$LIBS_save"
+       AC_MSG_CHECKING([whether Cocoa framework is supported])
+       AC_MSG_RESULT([${have_cocoa}])
        AC_LANG_POP([Objective C])
     fi
 ])
@@ -1324,19 +1353,36 @@ have_curl="no"
 have_gnutls="no"
 have_openssl="no"
 have_cares="no"
+want_ipv6="yes"
+have_ipv6="no"
+
+AC_ARG_ENABLE([ipv6],
+   [AC_HELP_STRING([--disable-ipv6],
+       [disable ipv6 functionality @<:@default=detect@:>@])],
+   [
+    if test "x${enableval}" = "xyes" ; then
+       want_ipv6="yes"
+    else
+       want_ipv6="no"
+    fi],
+   [want_ipv6="auto"])
+
 if test "x${have_ecore_con}" = "xyes" ; then
 
    # Verify IPV6 availability in headers
-   have_ipv6="no"
-   AC_CHECK_TYPES([struct ipv6_mreq], [have_ipv6="yes"], [have_ipv6="no"],
-               [[
+   if test "x${want_ipv6}" != "xno" ; then
+      AC_CHECK_TYPES([struct ipv6_mreq],
+         [have_ipv6="yes"],
+         [have_ipv6="no"],
+         [[
 #ifdef HAVE_NETINET_IN_H
 # include <netinet/in.h>
 #endif
 #ifdef HAVE_WS2TCPIP_H
 # include <ws2tcpip.h>
 #endif
-        ]])
+         ]])
+   fi
 
    if test "x${have_ipv6}" = "xyes" ; then
       AC_DEFINE(HAVE_IPV6, 1, [Define if IPV6 is supported])
@@ -1674,6 +1720,14 @@ ECORE_EVAS_CHECK_MODULE([opengl-sdl],
    [${have_ecore_sdl}],
    [requirements_ecore_evas="ecore-sdl >= 1.0.0 ${requirements_ecore_evas}"])
 
+# ecore_evas_cocoa
+
+ECORE_EVAS_CHECK_MODULE([opengl-cocoa],
+   [${want_ecore_evas_gl_cocoa}],
+   [OpenGL Cocoa],
+   [${have_ecore_cocoa}],
+   [requirements_ecore_evas="ecore-cocoa >= 1.0.0 ${requirements_ecore_evas}"])
+
 # ecore_evas_directfb
 
 ECORE_EVAS_CHECK_MODULE([directfb],
@@ -1739,7 +1793,6 @@ ecore-directfb.pc
 ecore-evas.pc
 ecore-fb.pc
 ecore-file.pc
-ecore-cocoa.pc
 ecore-imf.pc
 ecore-imf-evas.pc
 ecore-ipc.pc
@@ -1748,6 +1801,7 @@ ecore-input.pc
 ecore-input-evas.pc
 ecore-win32.pc
 ecore-sdl.pc
+ecore-cocoa.pc
 ecore-wince.pc
 ecore.pc
 doc/ecore.dox
@@ -1811,6 +1865,7 @@ if test "x$have_gnutls" = "xyes" ; then
 else
   echo
 fi
+  echo "    IPv6.......................: $have_ipv6"
   echo "    GnuTLS.....................: $have_gnutls"
   echo "    CURL.......................: $have_curl"
   echo "    Local Sockets..............: $want_ecore_con_local_sockets"
@@ -1915,6 +1970,7 @@ if test "x${have_ecore_evas}" = "xyes" ; then
   echo "    OpenGL Glew................: $have_ecore_evas_opengl_glew"
   echo "    Software SDL...............: $have_ecore_evas_software_sdl"
   echo "    OpenGL SDL.................: $have_ecore_evas_opengl_sdl"
+  echo "    OpenGL Cocoa...............: $have_ecore_evas_opengl_cocoa"
   echo "    DirectFB...................: $have_ecore_evas_directfb"
   echo "    Software Framebuffer.......: $have_ecore_evas_fb"
   echo "    Software 8bit grayscale XCB: $have_ecore_evas_software_8_x11"
