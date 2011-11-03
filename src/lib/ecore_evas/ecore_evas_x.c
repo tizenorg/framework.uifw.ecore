@@ -77,6 +77,8 @@ _ecore_evas_x_protocols_set(Ecore_Evas *ee)
 static void
 _ecore_evas_x_sync_set(Ecore_Evas *ee)
 {
+   Ecore_X_Sync_Counter sync_counter = ee->engine.x.sync_counter;
+
    if (((ee->should_be_visible) || (ee->visible)) &&
        ((ecore_x_e_comp_sync_supported_get(ee->engine.x.win_root)) &&
            (!ee->no_comp_sync) && (_ecore_evas_app_comp_sync)))
@@ -87,10 +89,14 @@ _ecore_evas_x_sync_set(Ecore_Evas *ee)
    else
      {
         if (ee->engine.x.sync_counter)
-           ecore_x_sync_counter_free(ee->engine.x.sync_counter);
+          {
+             ecore_x_sync_counter_free(ee->engine.x.sync_counter);
+             ee->engine.x.sync_val = 0;
+          }
         ee->engine.x.sync_counter = 0;
      }
-   ecore_x_e_comp_sync_counter_set(ee->prop.window, ee->engine.x.sync_counter);
+   if (sync_counter != ee->engine.x.sync_counter)
+      ecore_x_e_comp_sync_counter_set(ee->prop.window, ee->engine.x.sync_counter);
 }
 
 static void
@@ -98,6 +104,7 @@ _ecore_evas_x_sync_clear(Ecore_Evas *ee)
 {
    if (!ee->engine.x.sync_counter) return;
    ecore_x_sync_counter_free(ee->engine.x.sync_counter);
+   ee->engine.x.sync_val = 0;
    ee->engine.x.sync_counter = 0;
 }
 
