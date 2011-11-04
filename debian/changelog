@@ -1,3 +1,14 @@
+ecore (1.0.0.001+svn.64661slp2+build02) unstable; urgency=low
+
+  * [ecore evas] fix rotation lockup problem
+                 when application's window is unmapped
+  * [ecore evas] fix sync counter lockup problem with application
+                 which rapidly maps and unmaps a window
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.64661slp2+build02
+
+ -- Gwanglim Lee <gl77.lee@samsung.com>  Fri, 04 Nov 2011 13:45:05 +0900
+
 ecore (1.0.0.001+svn.64661slp2+build01) unstable; urgency=low
 
   * Merge with upstream @64661
