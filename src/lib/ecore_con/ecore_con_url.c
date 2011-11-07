@@ -277,7 +277,6 @@ ecore_con_url_new(const char *url)
     * FIXME: Check that these timeouts are sensible defaults
     * FIXME: Provide a means to change these timeouts
     */
-   curl_easy_setopt(url_con->curl_easy, CURLOPT_MAXCONNECTS, 100);
    curl_easy_setopt(url_con->curl_easy, CURLOPT_FORBID_REUSE, 1);
    curl_easy_setopt(url_con->curl_easy, CURLOPT_CONNECTTIMEOUT, 30);
    curl_easy_setopt(url_con->curl_easy, CURLOPT_FOLLOWLOCATION, 1);
@@ -1371,7 +1370,7 @@ _ecore_con_url_perform(Ecore_Con_Url *url_con)
    url_con->active = EINA_TRUE;
    curl_multi_add_handle(_curlm, url_con->curl_easy);
    curl_multi_perform(_curlm, &still_running);
-   
+
    completed_immediately = _ecore_con_url_process_completed_jobs(url_con);
 
    if (!completed_immediately)
