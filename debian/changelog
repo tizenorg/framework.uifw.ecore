@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.64661slp2+build03) unstable; urgency=low
+
+  * Ecore, Ecore_con, Ecore_file: merge upstream r64851 
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.64661slp2+build03
+
+ -- Tae-Hwan Kim <the81.kim@samsung.com>  Tue, 08 Nov 2011 14:17:28 +0900
+
 ecore (1.0.0.001+svn.64661slp2+build02) unstable; urgency=low
 
   * [ecore evas] fix rotation lockup problem
