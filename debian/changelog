@@ -1,3 +1,9 @@
+ecore (1.0.0.001+svn.64964slp2+build01) unstable; urgency=low
+
+  * Merge with upstream @64964
+
+ -- Mike McCormack <mj.mccormack@samsung.com>  Thu, 10 Nov 2011 12:12:11 +0900
+
 ecore (1.0.0.001+svn.64661slp2+build04) unstable; urgency=low
 
   * [ecore_imf] remove depecated APIs
