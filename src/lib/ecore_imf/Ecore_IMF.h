@@ -30,19 +30,6 @@
 # endif
 #endif /* ! _WIN32 */
 
-/* Faked 'bool'.  */
-#ifndef __cplusplus
-# ifndef bool
-#  define bool int
-#  ifndef FALSE
-#   define FALSE 0
-#  endif
-#  ifndef TRUE 
-#   define TRUE 1
-#  endif
-# endif
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -502,32 +489,15 @@ EAPI void                          ecore_imf_context_input_panel_enabled_set(Eco
 EAPI Eina_Bool                     ecore_imf_context_input_panel_enabled_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_input_panel_imdata_set(Ecore_IMF_Context *ctx, const char *data, int len);
 EAPI void                          ecore_imf_context_input_panel_imdata_get(Ecore_IMF_Context *ctx, char *data, int *len);
-EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_use_effect_set(Ecore_IMF_Context *ctx, Eina_Bool use_effect);
-EINA_DEPRECATED EAPI Eina_Bool     ecore_imf_context_input_panel_use_effect_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_input_panel_geometry_get(Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
 EAPI void                          ecore_imf_context_input_panel_private_key_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, int key_value, const char* key_string);
 EAPI Eina_List                    *ecore_imf_context_input_panel_private_key_list_get(Ecore_IMF_Context *ctx);
-EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_reset(Ecore_IMF_Context *ctx);        /* Same as reset to default property*/
-EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_orient_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation);
-EINA_DEPRECATED EAPI Ecore_IMF_Input_Panel_Orient  ecore_imf_context_input_panel_orient_get(Ecore_IMF_Context *ctx);
 EAPI Ecore_IMF_Input_Panel_State   ecore_imf_context_input_panel_state_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_input_panel_event_callback_add(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), const void *data);
 EAPI void                          ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
 EAPI void                          ecore_imf_context_input_panel_key_disabled_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
 EAPI Eina_List                    *ecore_imf_context_input_panel_key_disabled_list_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_input_panel_move(Ecore_IMF_Context *ctx, int x, int y);
-EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_caps_mode_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Caps_Mode mode);
-
-EINA_DEPRECATED EAPI void          ecore_imf_context_keyboard_language_set(Ecore_IMF_Context *ctx, Ecore_IMF_Keyboard_Lang lang);
-EINA_DEPRECATED EAPI Ecore_IMF_Keyboard_Lang ecore_imf_context_keyboard_language_get(Ecore_IMF_Context *ctx);
-
-/* functions to control isf */
-EINA_DEPRECATED EAPI int           ecore_imf_context_ise_get_ise_language(Ecore_IMF_Context *ctx, const char* ise_name, char ***langlist);
-EINA_DEPRECATED EAPI void          ecore_imf_context_ise_set_isf_language(Ecore_IMF_Context *ctx, const char* lang);
-EINA_DEPRECATED EAPI void          ecore_imf_context_ise_get_active_isename(Ecore_IMF_Context *ctx, char* name);
-EINA_DEPRECATED EAPI void          ecore_imf_context_ise_set_active_ise_by_name(Ecore_IMF_Context *ctx, const char* name);
-EINA_DEPRECATED EAPI void          ecore_imf_context_ise_set_active_ise_by_uuid(Ecore_IMF_Context *ctx, const char* uuid);
-EINA_DEPRECATED EAPI int           ecore_imf_context_ise_get_iselist(Ecore_IMF_Context *ctx, char*** iselist);
 
 /* The following entry points must be exported by each input method module
  */

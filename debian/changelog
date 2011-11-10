@@ -1,3 +1,11 @@
+ecore (1.0.0.001+svn.64661slp2+build04) unstable; urgency=low
+
+  * [ecore_imf] remove depecated APIs
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.64661slp2+build04
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Thu, 10 Nov 2011 09:28:41 +0900
+
 ecore (1.0.0.001+svn.64661slp2+build03) unstable; urgency=low
 
   * Ecore, Ecore_con, Ecore_file: merge upstream r64851 
