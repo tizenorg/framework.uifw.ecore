@@ -129,6 +129,7 @@ want_ecore_x="no"
 want_ecore_win32="no"
 want_ecore_cocoa="no"
 want_ecore_sdl="no"
+want_ecore_psl1ght="no"
 want_ecore_fb="no"
 want_ecore_directfb="no"
 want_ecore_wince="no"
@@ -141,6 +142,7 @@ want_ecore_x_randr="yes"
 want_ecore_x_render="yes"
 want_ecore_x_screensaver="yes"
 want_ecore_x_shape="yes"
+want_ecore_x_gesture="no"
 want_ecore_x_sync="yes"
 want_ecore_x_xfixes="yes"
 want_ecore_x_xinerama="yes"
@@ -166,6 +168,7 @@ want_ecore_evas_software_16_ddraw="no"
 want_ecore_evas_software_sdl="no"
 want_ecore_evas_gl_sdl="no"
 want_ecore_evas_gl_cocoa="no"
+want_ecore_evas_psl1ght="no"
 want_ecore_evas_directfb="no"
 want_ecore_evas_fb="no"
 want_ecore_evas_software_16_wince="no"
@@ -254,6 +257,7 @@ requirements_ecore_input_evas=""
 requirements_ecore_ipc=""
 requirements_ecore_cocoa=""
 requirements_ecore_sdl=""
+requirements_ecore_psl1ght=""
 requirements_ecore_x=""
 requirements_ecore_win32=""
 requirements_ecore_wince=""
@@ -467,6 +471,25 @@ case "$host_os" in
       ;;
 esac
 
+have_ps3=""
+case "$host_vendor" in
+  ps3*)
+      have_ps3="yes"
+      PKG_CHECK_MODULES([ESCAPE], [escape])
+      CFLAGS="$CFLAGS $ESCAPE_CFLAGS"
+      AC_DEFINE(HAVE_ESCAPE, 1, [Set to 1 if Escape library is installed])
+      EFL_ECORE_PSL1GHT_BUILD="-DEFL_ECORE_PSL1GHT_BUILD"
+      requirements_ecore="escape ${requirements_ecore}"
+      requirements_ecore_evas="escape ${requirements_ecore_evas}"
+      requirements_ecore_file="escape ${requirements_ecore_file}"
+      requirements_ecore_imf="escape ${requirements_ecore_imf}"
+      requirements_ecore_imf_evas="escape ${requirements_ecore_imf_evas}"
+      requirements_ecore_sdl="escape ${requirements_ecore_sdl}"
+      want_ecore_psl1ght="yes"
+      want_ecore_evas_psl1ght="yes"
+      ;;
+esac
+
 AC_SUBST(EFL_ECORE_BUILD)
 AC_SUBST(EFL_ECORE_CON_BUILD)
 AC_SUBST(EFL_ECORE_EVAS_BUILD)
@@ -479,9 +502,11 @@ AC_SUBST(EFL_ECORE_IPC_BUILD)
 AC_SUBST(EFL_ECORE_WINCE_BUILD)
 AC_SUBST(EFL_ECORE_WIN32_BUILD)
 AC_SUBST(EFL_ECORE_SDL_BUILD)
+AC_SUBST(EFL_ECORE_PSL1GHT_BUILD)
 
 AM_CONDITIONAL(ECORE_HAVE_WINCE, test "x${have_wince}" = "xyes")
 AM_CONDITIONAL(ECORE_HAVE_WIN32, test "x${have_win32}" = "xyes")
+AM_CONDITIONAL(ECORE_HAVE_PS3, test "x${have_ps3}" = "xyes")
 
 WIN32_LIBS=""
 case "$host_os" in
@@ -531,6 +556,7 @@ requirements_ecore_input_evas="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore
 requirements_ecore_ipc="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_ipc}"
 requirements_ecore_cocoa="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_cocoa}"
 requirements_ecore_sdl="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_sdl}"
+requirements_ecore_psl1ght="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_sdl}"
 requirements_ecore_win32="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_win32}"
 requirements_ecore_wince="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_wince}"
 requirements_ecore_x="ecore >= 1.0.0 eina >= 1.0.0 ${requirements_ecore_x}"
@@ -655,6 +681,12 @@ AC_ARG_ENABLE(ecore-x-shape,
        [disable the ecore_x support for Xshape extension.
         @<:@default=detect@:>@])],
    [want_ecore_x_shape=$enableval])
+
+AC_ARG_ENABLE(ecore-x-gesture,
+   [AC_HELP_STRING([--enable-ecore-x-gesture],
+       [enable the ecore_x support for Xgesture extension.
+        @<:@default=detect@:>@])],
+   [want_ecore_x_gesture=$enableval])
 
 AC_ARG_ENABLE(ecore-x-sync,
    [AC_HELP_STRING([--disable-ecore-x-sync],
@@ -923,6 +955,17 @@ if test "x$want_ecore_x_xcb" = "xyes" ; then
       AC_MSG_NOTICE("shape extension explicitly disabled")
     fi
 
+    if test "x$want_ecore_x_gesture" != "xno"; then
+      PKG_CHECK_MODULES(XCB_XGESTURE, xcb-gesture,
+        [ have_ecore_x_xcb_gesture="yes"
+          requirements_ecore_x="xcb-gesture ${requirements_ecore_x}"
+          AC_DEFINE(ECORE_XCB_XGESTURE, 1, [Build support for XCB gesture]) ],
+        [ have_ecore_x_xcb_gesture="no" ])
+    else
+      have_ecore_x_xcb_gesture="no"
+      AC_MSG_NOTICE("gesture extension explicitly disabled")
+    fi
+
     if test "x$want_ecore_x_sync" != "xno"; then
       PKG_CHECK_MODULES(XCB_SYNC, xcb-sync,
         [ have_ecore_x_xcb_sync="yes"
@@ -1093,12 +1136,13 @@ if ! test "x$have_ecore_x_xcb" = "xyes" ; then
     ECORE_CHECK_X_EXTENSION([Xinerama], [Xinerama.h], [Xinerama], [XineramaQueryScreens], [$want_ecore_x_xinerama])
     ECORE_CHECK_X_EXTENSION([Xprint], [Print.h], [Xp], [XpQueryScreens], [$want_ecore_x_xprint])
     ECORE_CHECK_X_EXTENSION([Xrandr], [Xrandr.h], [Xrandr], [XRRGetScreenResourcesCurrent], [$want_ecore_x_randr])
+    ECORE_CHECK_X_EXTENSION([Xgesture], [gesture.h], [Xgesture], [XGestureQueryExtension], [$want_ecore_x_gesture])
     ECORE_CHECK_X_EXTENSION([Xrender], [Xrender.h], [Xrender], [XRenderFindVisualFormat], [$want_ecore_x_render])
     ECORE_CHECK_X_EXTENSION([Xtest], [XTest.h], [Xtst], [XTestFakeKeyEvent], [$want_ecore_x_xtest])
     ECORE_CHECK_X_EXTENSION([Xss], [scrnsaver.h], [Xss], [XScreenSaverSelectInput], [$want_ecore_x_screensaver])
     ECORE_CHECK_X_EXTENSION([Xi2], [XInput2.h], [Xi], [XIQueryDevice], [$want_ecore_x_input])
 
-    ecore_x_libs_private="${Xcursor_libs} ${XKB_LIBS} ${XCOMPOSITE_LIBS} ${XDAMAGE_LIBS} ${XDPMS_LIBS} ${XFIXES_LIBS} ${XINERAMA_LIBS} ${XPRINT_LIBS} ${XRANDR_LIBS} ${XRENDER_LIBS} ${XTEST_LIBS} ${XSS_LIBS} ${XI2_LIBS}"
+    ecore_x_libs_private="${Xcursor_libs} ${XKB_LIBS} ${XCOMPOSITE_LIBS} ${XGESTURE_LIBS} ${XDAMAGE_LIBS} ${XDPMS_LIBS} ${XFIXES_LIBS} ${XINERAMA_LIBS} ${XPRINT_LIBS} ${XRANDR_LIBS} ${XRENDER_LIBS} ${XTEST_LIBS} ${XSS_LIBS} ${XI2_LIBS}"
 
     AC_DEFINE(HAVE_ECORE_X_XLIB, 1, [Defined to 1 if Xlib is enabled.])
     have_x="yes"
@@ -1250,7 +1294,7 @@ AC_CHECK_SIZEOF(long, 4)
 
 
 ### Checks for compiler characteristics
-AM_PROG_CC_STDC
+AC_PROG_CC_STDC
 AC_C_CONST
 AC_C_BIGENDIAN
 AC_HEADER_STDC
@@ -1543,6 +1587,9 @@ fi
 ECORE_CHECK_MODULE([sdl], [${want_ecore_sdl}], [Sdl], [${ecore_sdl_deps}],
    [requirements_ecore_sdl="ecore-input >= 1.0.0 ${requirements_ecore_sdl}"])
 
+ECORE_CHECK_MODULE([psl1ght], [${want_ecore_psl1ght}], [psl1ght], [${ecore_psl1ght_deps}],
+   [requirements_ecore_psl1ght="ecore-input >= 1.0.0 ${requirements_ecore_psl1ght}"])
+
 # ecore_fb
 ECORE_CHECK_MODULE([fb], [${want_ecore_fb}], [FB], [$have_fb])
 
@@ -1759,6 +1806,14 @@ ECORE_EVAS_CHECK_MODULE_FULL([ews], [software-buffer],
    [Ecore Evas Single Process Windowing System],
    [yes], [])
 
+# ecore_evas_psl1ght
+
+ECORE_EVAS_CHECK_MODULE([psl1ght],
+   [${want_ecore_evas_psl1ght}],
+   [PSL1GHT],
+   [${have_ecore_psl1ght}],
+   [requirements_ecore_evas="ecore-psl1ght >= 1.0.0 ${requirements_ecore_evas}"])
+
 ### install and build examples
 
 EFL_CHECK_BUILD_EXAMPLES([enable_build_examples="yes"], [enable_build_examples="no"])
@@ -1780,6 +1835,7 @@ AC_SUBST(requirements_ecore_input_evas)
 AC_SUBST(requirements_ecore_ipc)
 AC_SUBST(requirements_ecore_cocoa)
 AC_SUBST(requirements_ecore_sdl)
+AC_SUBST(requirements_ecore_psl1ght)
 AC_SUBST(requirements_ecore_x)
 AC_SUBST(requirements_ecore_win32)
 AC_SUBST(requirements_ecore_wince)
@@ -1802,6 +1858,7 @@ ecore-input-evas.pc
 ecore-win32.pc
 ecore-sdl.pc
 ecore-cocoa.pc
+ecore-psl1ght.pc
 ecore-wince.pc
 ecore.pc
 doc/ecore.dox
@@ -1820,6 +1877,7 @@ src/lib/ecore_fb/Makefile
 src/lib/ecore_file/Makefile
 src/lib/ecore_cocoa/Makefile
 src/lib/ecore_sdl/Makefile
+src/lib/ecore_psl1ght/Makefile
 src/lib/ecore_imf/Makefile
 src/lib/ecore_imf_evas/Makefile
 src/lib/ecore_input/Makefile
@@ -1835,7 +1893,6 @@ src/tests/Makefile
 src/modules/Makefile
 src/modules/immodules/Makefile
 src/modules/immodules/xim/Makefile
-README
 ecore.spec
 $po_makefile_in
 ])
@@ -1910,6 +1967,7 @@ if test "x$have_ecore_x" = "xyes" ; then
     echo "    Xrandr.....................: $have_ecore_x_xcb_randr"
     echo "    Xscreensaver...............: $have_ecore_x_xcb_screensaver"
     echo "    Xshape.....................: $have_ecore_x_xcb_shape"
+    echo "    Xgesture...................: $have_ecore_x_xcb_gesture"
     echo "    Xsync......................: $have_ecore_x_xcb_sync"
     echo "    Xrender....................: $have_ecore_x_xcb_render"
     echo "    Xcomposite.................: $have_ecore_x_xcb_composite"
@@ -1924,6 +1982,7 @@ if test "x$have_ecore_x" = "xyes" ; then
     echo "    Xprint.....................: $use_xprint"
     echo "    Xinerama...................: $use_xinerama"
     echo "    Xrandr.....................: $use_xrandr"
+    echo "    Xgesture...................: $use_xgesture"
     echo "    Xscreensaver...............: $use_xss"
     echo "    Xrender....................: $use_xrender"
     echo "    Xcomposite.................: $use_xcomposite"
@@ -1946,6 +2005,7 @@ if test "x${have_ecore_fb}" = "xyes" ; then
 fi
 echo "  Ecore_DirectFB...............: $have_ecore_directfb"
 echo "  Ecore_WinCE..................: $have_ecore_wince"
+echo "  Ecore_PSL1GHT................: $have_ecore_psl1ght"
 
 echo
 echo " Ecore Evas:"
@@ -1972,6 +2032,7 @@ if test "x${have_ecore_evas}" = "xyes" ; then
   echo "    OpenGL SDL.................: $have_ecore_evas_opengl_sdl"
   echo "    OpenGL Cocoa...............: $have_ecore_evas_opengl_cocoa"
   echo "    DirectFB...................: $have_ecore_evas_directfb"
+  echo "    PSL1GHT....................: $have_ecore_evas_psl1ght"
   echo "    Software Framebuffer.......: $have_ecore_evas_fb"
   echo "    Software 8bit grayscale XCB: $have_ecore_evas_software_8_x11"
   echo "    Software 16bit X11.........: $have_ecore_evas_software_16_x11"

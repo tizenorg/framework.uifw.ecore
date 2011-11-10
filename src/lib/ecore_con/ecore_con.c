@@ -143,6 +143,8 @@ ecore_con_init(void)
         return --_ecore_con_init_count;
      }
 
+   ecore_con_mempool_init();
+
    ECORE_CON_EVENT_CLIENT_ADD = ecore_event_type_new();
    ECORE_CON_EVENT_CLIENT_DEL = ecore_event_type_new();
    ECORE_CON_EVENT_SERVER_ADD = ecore_event_type_new();
@@ -177,6 +179,8 @@ ecore_con_shutdown(void)
 
    EINA_LIST_FOREACH_SAFE(servers, l, l2, svr)
      _ecore_con_server_free(svr);
+
+   ecore_con_mempool_shutdown();
 
    ecore_con_info_shutdown();
    ecore_con_ssl_shutdown();
@@ -932,7 +936,7 @@ ecore_con_event_server_add(Ecore_Con_Server *svr)
     Ecore_Con_Event_Server_Add *e;
     int ev = ECORE_CON_EVENT_SERVER_ADD;
 
-    e = calloc(1, sizeof(Ecore_Con_Event_Server_Add));
+    e = ecore_con_event_server_add_alloc();
     EINA_SAFETY_ON_NULL_RETURN(e);
 
     svr->event_count++;
@@ -948,7 +952,7 @@ ecore_con_event_server_del(Ecore_Con_Server *svr)
 {
     Ecore_Con_Event_Server_Del *e;
 
-    e = calloc(1, sizeof(Ecore_Con_Event_Server_Del));
+    e = ecore_con_event_server_del_alloc();
     EINA_SAFETY_ON_NULL_RETURN(e);
 
     svr->event_count++;
@@ -963,7 +967,7 @@ ecore_con_event_server_write(Ecore_Con_Server *svr, int num)
 {
    Ecore_Con_Event_Server_Write *e;
 
-   e = malloc(sizeof(Ecore_Con_Event_Server_Write));
+   e = ecore_con_event_server_write_alloc();
    EINA_SAFETY_ON_NULL_RETURN(e);
 
    svr->event_count++;
@@ -979,7 +983,7 @@ ecore_con_event_server_data(Ecore_Con_Server *svr, unsigned char *buf, int num, 
 {
    Ecore_Con_Event_Server_Data *e;
 
-   e = malloc(sizeof(Ecore_Con_Event_Server_Data));
+   e = ecore_con_event_server_data_alloc();
    EINA_SAFETY_ON_NULL_RETURN(e);
 
    svr->event_count++;
@@ -990,8 +994,8 @@ ecore_con_event_server_data(Ecore_Con_Server *svr, unsigned char *buf, int num, 
         e->data = malloc(num);
         if (!e->data)
           {
-             ERR("alloc!");
-             free(e);
+             ERR("server data allocation failure !");
+             _ecore_con_event_server_data_free(NULL, e);
              return;
           }
         memcpy(e->data, buf, num);
@@ -1009,7 +1013,7 @@ ecore_con_event_client_add(Ecore_Con_Client *cl)
    Ecore_Con_Event_Client_Add *e;
    int ev = ECORE_CON_EVENT_CLIENT_ADD;
 
-   e = calloc(1, sizeof(Ecore_Con_Event_Client_Add));
+   e = ecore_con_event_client_add_alloc();
    EINA_SAFETY_ON_NULL_RETURN(e);
 
    cl->event_count++;
@@ -1027,15 +1031,13 @@ ecore_con_event_client_del(Ecore_Con_Client *cl)
 {
     Ecore_Con_Event_Client_Del *e;
 
-    e = calloc(1, sizeof(Ecore_Con_Event_Client_Del));
+    if (!cl) return;
+    e = ecore_con_event_client_del_alloc();
     EINA_SAFETY_ON_NULL_RETURN(e);
 
-    if (cl)
-      {
-         cl->event_count++;
-         cl->host_server->event_count++;
-         _ecore_con_cl_timer_update(cl);
-      }
+    cl->event_count++;
+    cl->host_server->event_count++;
+    _ecore_con_cl_timer_update(cl);
     e->client = cl;
     ecore_event_add(ECORE_CON_EVENT_CLIENT_DEL, e,
                     (Ecore_End_Cb)_ecore_con_event_client_del_free, cl->host_server);
@@ -1045,7 +1047,8 @@ void
 ecore_con_event_client_write(Ecore_Con_Client *cl, int num)
 {
    Ecore_Con_Event_Client_Write *e;
-   e = malloc(sizeof(Ecore_Con_Event_Client_Write));
+
+   e = ecore_con_event_client_write_alloc();
    EINA_SAFETY_ON_NULL_RETURN(e);
 
    cl->host_server->event_count++;
@@ -1060,7 +1063,8 @@ void
 ecore_con_event_client_data(Ecore_Con_Client *cl, unsigned char *buf, int num, Eina_Bool duplicate)
 {
    Ecore_Con_Event_Client_Data *e;
-   e = malloc(sizeof(Ecore_Con_Event_Client_Data));
+
+   e = ecore_con_event_client_data_alloc();
    EINA_SAFETY_ON_NULL_RETURN(e);
 
    cl->host_server->event_count++;
@@ -1072,8 +1076,8 @@ ecore_con_event_client_data(Ecore_Con_Client *cl, unsigned char *buf, int num, E
         e->data = malloc(num);
         if (!e->data)
           {
-             free(cl->client_addr);
-             free(cl);
+             ERR("client data allocation failure !");
+             _ecore_con_event_client_data_free(cl->host_server, e);
              return;
           }
         memcpy(e->data, buf, num);
@@ -1097,7 +1101,7 @@ ecore_con_event_server_error(Ecore_Con_Server *svr, const char *error)
 {
    Ecore_Con_Event_Server_Error *e;
 
-   e = calloc(1, sizeof(Ecore_Con_Event_Server_Error));
+   e = ecore_con_event_server_error_alloc();
    EINA_SAFETY_ON_NULL_RETURN(e);
 
    e->server = svr;
@@ -1112,7 +1116,7 @@ ecore_con_event_client_error(Ecore_Con_Client *cl, const char *error)
 {
    Ecore_Con_Event_Client_Error *e;
 
-   e = calloc(1, sizeof(Ecore_Con_Event_Client_Error));
+   e = ecore_con_event_client_error_alloc();
    EINA_SAFETY_ON_NULL_RETURN(e);
 
    e->client = cl;
@@ -2348,7 +2352,7 @@ _ecore_con_event_client_add_free(Ecore_Con_Server *svr,
    if ((svr->event_count <= 0) && (svr->delete_me))
      _ecore_con_server_free(svr);
 
-   free(e);
+   ecore_con_event_client_add_free(e);
 }
 
 static void
@@ -2367,7 +2371,7 @@ _ecore_con_event_client_del_free(Ecore_Con_Server *svr,
    if ((svr->event_count <= 0) && (svr->delete_me))
      _ecore_con_server_free(svr);
 
-   free(e);
+   ecore_con_event_client_del_free(e);
 }
 
 static void
@@ -2385,7 +2389,7 @@ _ecore_con_event_client_write_free(Ecore_Con_Server *svr,
    if ((svr->event_count <= 0) && (svr->delete_me))
      _ecore_con_server_free(svr);
 
-   free(e);
+   ecore_con_event_client_write_free(e);
 }
 
 static void
@@ -2408,7 +2412,7 @@ _ecore_con_event_client_data_free(Ecore_Con_Server *svr,
    if ((svr->event_count <= 0) && (svr->delete_me))
      _ecore_con_server_free(svr);
 
-   free(e);
+   ecore_con_event_client_data_free(e);
 }
 
 static void
@@ -2422,7 +2426,7 @@ _ecore_con_event_server_add_free(void *data __UNUSED__,
    if ((e->server->event_count <= 0) && (e->server->delete_me))
      _ecore_con_server_free(e->server);
 
-   free(e);
+   ecore_con_event_server_add_free(e);
 }
 
 static void
@@ -2436,7 +2440,7 @@ _ecore_con_event_server_del_free(void *data __UNUSED__,
    if ((e->server->event_count <= 0) && (e->server->delete_me))
      _ecore_con_server_free(e->server);
 
-   free(e);
+   ecore_con_event_server_del_free(e);
 }
 
 static void
@@ -2448,7 +2452,7 @@ _ecore_con_event_server_write_free(void *data __UNUSED__,
    if ((e->server->event_count <= 0) && (e->server->delete_me))
      _ecore_con_server_free(e->server);
 
-   free(e);
+   ecore_con_event_server_write_free(e);
 }
 
 static void
@@ -2465,7 +2469,7 @@ _ecore_con_event_server_data_free(void *data __UNUSED__,
    if ((e->server->event_count <= 0) && (e->server->delete_me))
      _ecore_con_server_free(e->server);
 
-   free(e);
+   ecore_con_event_server_data_free(e);
 }
 
 
@@ -2476,7 +2480,8 @@ _ecore_con_event_server_error_free(void *data __UNUSED__, Ecore_Con_Event_Server
    if ((e->server->event_count <= 0) && (e->server->delete_me))
      _ecore_con_server_free(e->server);
    if (e->error) free(e->error);
-   free(e);
+
+   ecore_con_event_server_error_free(e);
 }
 
 static void
@@ -2489,8 +2494,8 @@ _ecore_con_event_client_error_free(Ecore_Con_Server *svr, Ecore_Con_Event_Client
    if ((svr->event_count <= 0) && (svr->delete_me))
      _ecore_con_server_free(svr);
    if (e->error) free(e->error);
-   free(e);
 
+   ecore_con_event_client_error_free(e);
 }
 
 static void
