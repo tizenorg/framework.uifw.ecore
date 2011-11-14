@@ -408,15 +408,6 @@ struct _Ecore_IMF_Context_Class
    /* CallBack APIs  */
    void (*input_panel_event_callback_add) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
    void (*input_panel_event_callback_del) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallbackFunc) (void *data, Ecore_IMF_Context *ctx, int value));
-
-   /* ISF related APIs */
-   int (*ise_get_ise_language)       (Ecore_IMF_Context *ctx, const char* input_panel_name, char*** langlist);
-   int (*ise_set_isf_language)       (Ecore_IMF_Context *ctx, const char* lang);
-   int (*ise_get_active_isename)     (Ecore_IMF_Context *ctx, char* name);       /**< will be deprecated */
-   int (*ise_set_active_ise_by_name) (Ecore_IMF_Context *ctx, const char* name); /**< will be deprecated */
-   int (*ise_set_active_ise_by_uuid) (Ecore_IMF_Context *ctx, const char* uuid); /**< will be deprecated */
-   int (*ise_get_iselist)            (Ecore_IMF_Context *ctx, char*** iselist);  /**< will be deprecated */
-   void (*input_panel_caps_mode_set) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Caps_Mode mode);
 };
 
 struct _Ecore_IMF_Context_Info
