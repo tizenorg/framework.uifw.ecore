@@ -698,9 +698,7 @@ _ecore_con_url_send(Ecore_Con_Url *url_con,
           }
         else curl_easy_setopt(url_con->curl_easy, CURLOPT_POSTFIELDSIZE, 0);
         if (mode == MODE_POST)
-          {
-             curl_easy_setopt(url_con->curl_easy, CURLOPT_POST, 1);
-          }
+          curl_easy_setopt(url_con->curl_easy, CURLOPT_POST, 1);
      }
 
    switch (url_con->time_condition)
@@ -1375,7 +1373,7 @@ _ecore_con_url_perform(Ecore_Con_Url *url_con)
    url_con->active = EINA_TRUE;
    curl_multi_add_handle(_curlm, url_con->curl_easy);
    curl_multi_perform(_curlm, &still_running);
-   
+
    completed_immediately = _ecore_con_url_process_completed_jobs(url_con);
 
    if (!completed_immediately)
