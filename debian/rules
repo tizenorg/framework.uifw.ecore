@@ -21,6 +21,7 @@ DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb \
 	--enable-curl \
 	--disable-openssl \
 	--enable-glib-integration-always \
+	--enable-cares \
 	--disable-xim
 DEB_MAKE_EXTRA_ARGS := V=0
 

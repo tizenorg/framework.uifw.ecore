@@ -38,7 +38,8 @@ Build-Depends: dpkg-dev,
  doxygen,
  pkg-config,
  libtool,
- libcurl-dev
+ libcurl-dev,
+ libc-ares-dev
 Standards-Version: 3.8.1
 Homepage: http://enlightenment.org
 
