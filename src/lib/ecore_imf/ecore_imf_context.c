@@ -781,8 +781,6 @@ ecore_imf_context_new(const Ecore_IMF_Context_Class *ctxc)
    ctx->input_panel_x = 0;
    ctx->input_panel_y = 0;
    ctx->input_panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
-   ctx->input_panel_orient = ECORE_IMF_INPUT_PANEL_ORIENT_NONE;
-   ctx->use_effect = EINA_TRUE;
    ctx->callbacks = NULL;
 
    return ctx;

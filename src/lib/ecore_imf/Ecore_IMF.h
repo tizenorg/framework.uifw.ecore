@@ -62,13 +62,6 @@ typedef enum
 
 typedef enum
 {
-   ECORE_IMF_INPUT_PANEL_CAPS_MODE_OFF,     /**< Off */
-   ECORE_IMF_INPUT_PANEL_CAPS_MODE_ON,      /**< On */
-   ECORE_IMF_INPUT_PANEL_CAPS_MODE_LOCK,    /**< Lock */
-} Ecore_IMF_Input_Panel_Caps_Mode;
-
-typedef enum
-{
    ECORE_IMF_INPUT_PANEL_ORIENT_NONE,
    ECORE_IMF_INPUT_PANEL_ORIENT_90_CW, /* Clockwise */
    ECORE_IMF_INPUT_PANEL_ORIENT_180,
