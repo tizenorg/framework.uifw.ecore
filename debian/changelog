@@ -1,3 +1,13 @@
+ecore (1.1.0+svn.65303slp2+build03) unstable; urgency=low
+
+  * Package Upload : because of build error
+  * Important Changes
+        Rollback about dependency with cares - Caused some app's build error about no Elementary.h
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.65303slp2+build03
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Thu, 17 Nov 2011 19:10:33 +0900
+
 ecore (1.1.0+svn.65303slp2+build02) unstable; urgency=low
 
   * Enable c-ARES based aync DNS resolution
