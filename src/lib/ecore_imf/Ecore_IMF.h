@@ -56,12 +56,6 @@ typedef enum
 
 typedef enum
 {
-   ECORE_IMF_KEYBOARD_LANG_NATIVE,  /**< Native */
-   ECORE_IMF_KEYBOARD_LANG_ALPHABET /**< Alphabet */
-} Ecore_IMF_Keyboard_Lang;
-
-typedef enum
-{
    ECORE_IMF_INPUT_PANEL_ORIENT_NONE,
    ECORE_IMF_INPUT_PANEL_ORIENT_90_CW, /* Clockwise */
    ECORE_IMF_INPUT_PANEL_ORIENT_180,
