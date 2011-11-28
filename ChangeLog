@@ -47,7 +47,7 @@
 
 	* Ecore_Win32: improve resize of windows and fix key up event for
 	the 'space' key.
-	* Ecore_WinCE do not erase a window background
+	* Ecore_WinCE: do not erase a window background
 
 2011-02-21 Jihoon Kim
 
@@ -66,7 +66,7 @@
 
 2011-02-24 Vincent Torri
 
-	* Ecore_File fix compilation when ecore_con and curl are not
+	* Ecore_File: fix compilation when ecore_con and curl are not
 	available
 
 2011-02-27 Jihoon Kim
@@ -325,5 +325,28 @@
 
 2011-11-02 Bluezery
 
-	* Fix return error handling in ecore_file_download when 
+	* Fix return error handling in ecore_file_download when
         ecore_con_url_get() fails.
+
+2011-11-20 Vincent Torri
+
+	* Ecore_Win32, Ecore_WinCE: fix Shift, Control and Alt keys
+	detection
+	* Ecore_Win32: fix "mouse-down inside and mouse-up outside" issue
+
+2011-11-2  Carsten Haitzler (The Rasterman)
+
+        * Fix bug ecore-evas for fb, buffer, sdl back-ends to ensure
+        mouse is in on init (as events wont always give this) and focus
+        is set on show if appropriate if no focus in/out events come
+        from the back-end later
+        * Fix setting override state to only hide if it should be
+        visible at that point in x back end support
+
+2011-11-24 Rafael Antognolli
+
+        * Add ecore_fb_input_device_window_set().
+
+2011-11-27 Vincent Torri
+
+        * Fix and improve key management on Windows XP

@@ -88,13 +88,14 @@ _ecore_win32_window_procedure(HWND   window,
        _ecore_win32_event_handle_key_press(data, 1);
        return 0;
      case WM_CHAR:
+     case WM_SYSCHAR:
        INF("char message");
        _ecore_win32_event_handle_key_press(data, 0);
        return 0;
      case WM_KEYUP:
      case WM_SYSKEYUP:
        INF("keyup message");
-       _ecore_win32_event_handle_key_release(data, 1);
+       _ecore_win32_event_handle_key_release(data);
        return 0;
      case WM_SETFOCUS:
        INF("setfocus message");
@@ -107,6 +108,7 @@ _ecore_win32_window_procedure(HWND   window,
        /* Mouse input notifications */
      case WM_LBUTTONDOWN:
        INF("left button down message");
+       SetCapture(window);
        _ecore_win32_event_handle_button_press(data, 1);
        return 0;
      case WM_MBUTTONDOWN:
@@ -123,10 +125,10 @@ _ecore_win32_window_procedure(HWND   window,
 
           INF("left button up message");
 
+          ReleaseCapture();
           w = (Ecore_Win32_Window *)GetWindowLongPtr(window, GWLP_USERDATA);
           if (w->drag.dragging)
             {
-               ReleaseCapture();
                w->drag.dragging = 0;
                return 0;
             }

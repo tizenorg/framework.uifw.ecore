@@ -102,9 +102,9 @@ _ecore_evas_event_mouse_button_down(void *data __UNUSED__, int type __UNUSED__, 
 
    e = event;
    ee = _ecore_evas_fb_match();
-   if (!ee) return EINA_TRUE; /* pass on event */
+   if (!ee) return ECORE_CALLBACK_PASS_ON;
    _ecore_evas_mouse_move_process_fb(ee, e->x, e->y);
-   return EINA_TRUE; /* dont pass it on */
+   return ECORE_CALLBACK_PASS_ON;
 }
 
 static Eina_Bool
@@ -115,9 +115,9 @@ _ecore_evas_event_mouse_button_up(void *data __UNUSED__, int type __UNUSED__, vo
 
    e = event;
    ee = _ecore_evas_fb_match();
-   if (!ee) return EINA_TRUE; /* pass on event */
+   if (!ee) return ECORE_CALLBACK_PASS_ON;
    _ecore_evas_mouse_move_process_fb(ee, e->x, e->y);
-   return EINA_TRUE; /* dont pass it on */
+   return ECORE_CALLBACK_PASS_ON;
 }
 
 static Eina_Bool
@@ -128,9 +128,9 @@ _ecore_evas_event_mouse_move(void *data __UNUSED__, int type __UNUSED__, void *e
 
    e = event;
    ee = _ecore_evas_fb_match();
-   if (!ee) return EINA_TRUE; /* pass on event */
+   if (!ee) return ECORE_CALLBACK_PASS_ON;
    _ecore_evas_mouse_move_process_fb(ee, e->x, e->y);
-   return EINA_TRUE; /* dont pass it on */
+   return ECORE_CALLBACK_PASS_ON;
 }
 
 static Eina_Bool
@@ -141,9 +141,9 @@ _ecore_evas_event_mouse_wheel(void *data __UNUSED__, int type __UNUSED__, void *
 
    e = event;
    ee = _ecore_evas_fb_match();
-   if (!ee) return EINA_TRUE; /* pass on event */
+   if (!ee) return ECORE_CALLBACK_PASS_ON;
    _ecore_evas_mouse_move_process_fb(ee, e->x, e->y);
-   return EINA_TRUE; /* dont pass it on */
+   return ECORE_CALLBACK_PASS_ON;
 }
 
 static int
@@ -208,8 +208,9 @@ _ecore_evas_fb_init(Ecore_Evas *ee, int w, int h)
           continue;
 
         snprintf(device_path, 256, "/dev/input/%s", input_entry->d_name);
-        if (!(device = ecore_fb_input_device_open(ee, device_path)))
+        if (!(device = ecore_fb_input_device_open(device_path)))
           continue;
+        ecore_fb_input_device_window_set(device, ee);
 
         caps = ecore_fb_input_device_cap_get(device);
 
@@ -245,6 +246,7 @@ _ecore_evas_fb_init(Ecore_Evas *ee, int w, int h)
      {
         if (ecore_fb_ts_init())
           {
+             ecore_fb_ts_event_window_set(ee);
              ecore_evas_event_handlers[0]  = ecore_event_handler_add(ECORE_EVENT_MOUSE_BUTTON_DOWN, _ecore_evas_event_mouse_button_down, NULL);
              ecore_evas_event_handlers[1]  = ecore_event_handler_add(ECORE_EVENT_MOUSE_BUTTON_UP, _ecore_evas_event_mouse_button_up, NULL);
              ecore_evas_event_handlers[2]  = ecore_event_handler_add(ECORE_EVENT_MOUSE_MOVE, _ecore_evas_event_mouse_move, NULL);
@@ -368,6 +370,15 @@ _ecore_evas_rotation_set(Ecore_Evas *ee, int rotation, int resize __UNUSED__)
      evas_damage_rectangle_add(ee->evas, 0, 0, ee->w, ee->h);
    _ecore_evas_mouse_move_process_fb(ee, ee->mouse.x, ee->mouse.y);
    if (ee->func.fn_resize) ee->func.fn_resize(ee);
+}
+
+static void
+_ecore_evas_show(Ecore_Evas *ee)
+{
+   if (ee->prop.focused) return;
+   ee->prop.focused = 1;
+   evas_focus_in(ee->evas);
+   if (ee->func.fn_focus_in) ee->func.fn_focus_in(ee);
 }
 
 static void
@@ -508,7 +519,7 @@ static Ecore_Evas_Engine_Func _ecore_fb_engine_func =
      _ecore_evas_move_resize,
      _ecore_evas_rotation_set,
      NULL,
-     NULL,
+     _ecore_evas_show,
      NULL,
      NULL,
      NULL,
@@ -636,10 +647,7 @@ ecore_evas_fb_new(const char *disp_name, int rotation, int w, int h)
    ee->engine.func->fn_render = _ecore_evas_fb_render;
    _ecore_evas_register(ee);
    fb_ee = ee;
-
    evas_event_feed_mouse_in(ee->evas, (unsigned int)((unsigned long long)(ecore_time_get() * 1000.0) & 0xffffffff), NULL);
-   evas_focus_in(ee->evas);
-
    return ee;
 }
 #else

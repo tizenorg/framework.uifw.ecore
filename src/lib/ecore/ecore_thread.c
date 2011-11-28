@@ -789,9 +789,9 @@ restart:
 static Ecore_Pthread_Worker *
 _ecore_thread_worker_new(void)
 {
+#ifdef EFL_HAVE_THREADS
    Ecore_Pthread_Worker *result;
 
-#ifdef EFL_HAVE_THREADS
    result = eina_trash_pop(&_ecore_thread_worker_trash);
 
    if (!result) result = malloc(sizeof (Ecore_Pthread_Worker));
@@ -1073,6 +1073,7 @@ on_exit:
    ((Ecore_Pthread_Worker *)thread)->cancel = EINA_TRUE;
    return EINA_FALSE;
 #else
+   (void) thread;
    return EINA_TRUE;
 #endif
 }
@@ -1281,8 +1282,9 @@ ecore_thread_active_get(void)
 EAPI int
 ecore_thread_pending_get(void)
 {
-   int ret;
 #ifdef EFL_HAVE_THREADS
+   int ret;
+
    LKL(_ecore_pending_job_threads_mutex);
    ret = eina_list_count(_ecore_pending_job_threads);
    LKU(_ecore_pending_job_threads_mutex);
@@ -1295,8 +1297,9 @@ ecore_thread_pending_get(void)
 EAPI int
 ecore_thread_pending_feedback_get(void)
 {
-   int ret;
 #ifdef EFL_HAVE_THREADS
+   int ret;
+
    LKL(_ecore_pending_job_threads_mutex);
    ret = eina_list_count(_ecore_pending_job_threads_feedback);
    LKU(_ecore_pending_job_threads_mutex);
@@ -1309,8 +1312,9 @@ ecore_thread_pending_feedback_get(void)
 EAPI int
 ecore_thread_pending_total_get(void)
 {
-   int ret;
 #ifdef EFL_HAVE_THREADS
+   int ret;
+
    LKL(_ecore_pending_job_threads_mutex);
    ret = eina_list_count(_ecore_pending_job_threads) + eina_list_count(_ecore_pending_job_threads_feedback);
    LKU(_ecore_pending_job_threads_mutex);
@@ -1345,8 +1349,9 @@ ecore_thread_max_reset(void)
 EAPI int
 ecore_thread_available_get(void)
 {
-   int ret;
 #ifdef EFL_HAVE_THREADS
+   int ret;
+
    LKL(_ecore_pending_job_threads_mutex);
    ret = _ecore_thread_count_max - _ecore_thread_count;
    LKU(_ecore_pending_job_threads_mutex);
@@ -1363,9 +1368,11 @@ ecore_thread_local_data_add(Ecore_Thread *thread,
                             Eina_Free_Cb  cb,
                             Eina_Bool     direct)
 {
+#ifdef EFL_HAVE_THREADS
    Ecore_Pthread_Worker *worker = (Ecore_Pthread_Worker *)thread;
    Ecore_Thread_Data *d;
    Eina_Bool ret;
+#endif
 
    if ((!thread) || (!key) || (!value))
      return EINA_FALSE;
@@ -1391,7 +1398,9 @@ ecore_thread_local_data_add(Ecore_Thread *thread,
    CDB(worker->cond);
    return ret;
 #else
-   return EINA_TRUE;
+   (void) cb;
+   (void) direct;
+   return EINA_FALSE;
 #endif
 }
 
@@ -1401,9 +1410,12 @@ ecore_thread_local_data_set(Ecore_Thread *thread,
                             void         *value,
                             Eina_Free_Cb  cb)
 {
+#ifdef EFL_HAVE_THREADS
    Ecore_Pthread_Worker *worker = (Ecore_Pthread_Worker *)thread;
    Ecore_Thread_Data *d, *r;
    void *ret;
+#endif
+
    if ((!thread) || (!key) || (!value))
      return NULL;
 #ifdef EFL_HAVE_THREADS
@@ -1427,6 +1439,7 @@ ecore_thread_local_data_set(Ecore_Thread *thread,
    free(r);
    return ret;
 #else
+   (void) cb;
    return NULL;
 #endif
 }
@@ -1435,8 +1448,10 @@ EAPI void *
 ecore_thread_local_data_find(Ecore_Thread *thread,
                              const char   *key)
 {
+#ifdef EFL_HAVE_THREADS
    Ecore_Pthread_Worker *worker = (Ecore_Pthread_Worker *)thread;
    Ecore_Thread_Data *d;
+#endif
 
    if ((!thread) || (!key))
      return NULL;
@@ -1459,7 +1474,10 @@ EAPI Eina_Bool
 ecore_thread_local_data_del(Ecore_Thread *thread,
                             const char   *key)
 {
+#ifdef EFL_HAVE_THREADS
    Ecore_Pthread_Worker *worker = (Ecore_Pthread_Worker *)thread;
+#endif
+
    if ((!thread) || (!key))
      return EINA_FALSE;
 #ifdef EFL_HAVE_THREADS
@@ -1479,8 +1497,10 @@ ecore_thread_global_data_add(const char  *key,
                              Eina_Free_Cb cb,
                              Eina_Bool    direct)
 {
-   Eina_Bool ret;
+#ifdef EFL_HAVE_THREADS
    Ecore_Thread_Data *d;
+   Eina_Bool ret;
+#endif
 
    if ((!key) || (!value))
      return EINA_FALSE;
@@ -1507,6 +1527,8 @@ ecore_thread_global_data_add(const char  *key,
    CDB(_ecore_thread_global_hash_cond);
    return ret;
 #else
+   (void) cb;
+   (void) direct;
    return EINA_TRUE;
 #endif
 }
@@ -1516,8 +1538,10 @@ ecore_thread_global_data_set(const char  *key,
                              void        *value,
                              Eina_Free_Cb cb)
 {
+#ifdef EFL_HAVE_THREADS
    Ecore_Thread_Data *d, *r;
    void *ret;
+#endif
 
    if ((!key) || (!value))
      return NULL;
@@ -1545,6 +1569,7 @@ ecore_thread_global_data_set(const char  *key,
    free(r);
    return ret;
 #else
+   (void) cb;
    return NULL;
 #endif
 }
@@ -1552,7 +1577,10 @@ ecore_thread_global_data_set(const char  *key,
 EAPI void *
 ecore_thread_global_data_find(const char *key)
 {
+#ifdef EFL_HAVE_THREADS
    Ecore_Thread_Data *ret;
+#endif
+
    if (!key)
      return NULL;
 #ifdef EFL_HAVE_THREADS
@@ -1572,7 +1600,9 @@ ecore_thread_global_data_find(const char *key)
 EAPI Eina_Bool
 ecore_thread_global_data_del(const char *key)
 {
+#ifdef EFL_HAVE_THREADS
    Eina_Bool ret;
+#endif
 
    if (!key)
      return EINA_FALSE;
@@ -1593,8 +1623,10 @@ EAPI void *
 ecore_thread_global_data_wait(const char *key,
                               double      seconds)
 {
+#ifdef EFL_HAVE_THREADS
    double tm = 0;
    Ecore_Thread_Data *ret = NULL;
+#endif
 
    if (!key)
      return NULL;
@@ -1629,6 +1661,7 @@ ecore_thread_global_data_wait(const char *key,
    if (ret) return ret->data;
    return NULL;
 #else
+   (void) seconds;
    return NULL;
 #endif
 }
