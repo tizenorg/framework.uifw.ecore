@@ -1,3 +1,11 @@
+ecore (1.1.0+svn.65618slp2+build02) unstable; urgency=low
+
+  * [Bug Fix] CQ H0100136744 - curl fd handler refactoring
+  * Git: slp-scm.sec.samsung.net:slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.65618slp2+build02
+
+ -- Tae-Hwan Kim <the81.kim@samsung.com>  Tue, 29 Nov 2011 17:43:36 +0900
+
 ecore (1.1.0+svn.65618slp2+build01) unstable; urgency=low
 
   * Package Upload
