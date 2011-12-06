@@ -145,42 +145,6 @@ timerfd_settime(int                      fd __UNUSED__,
 
 #define NS_PER_SEC (1000.0 * 1000.0 * 1000.0)
 
-struct _Ecore_Fd_Handler
-{
-   EINA_INLIST;
-                          ECORE_MAGIC;
-   Ecore_Fd_Handler      *next_ready;
-   int                    fd;
-   Ecore_Fd_Handler_Flags flags;
-   Ecore_Fd_Cb            func;
-   void                  *data;
-   Ecore_Fd_Cb            buf_func;
-   void                  *buf_data;
-   Ecore_Fd_Prep_Cb       prep_func;
-   void                  *prep_data;
-   int                    references;
-   Eina_Bool              read_active : 1;
-   Eina_Bool              write_active : 1;
-   Eina_Bool              error_active : 1;
-   Eina_Bool              delete_me : 1;
-#if defined(USE_G_MAIN_LOOP)
-   GPollFD                gfd;
-#endif
-};
-
-#ifdef _WIN32
-struct _Ecore_Win32_Handler
-{
-   EINA_INLIST;
-                         ECORE_MAGIC;
-   HANDLE                h;
-   Ecore_Win32_Handle_Cb func;
-   void                 *data;
-   int                   references;
-   Eina_Bool             delete_me : 1;
-};
-#endif
-
 #ifndef USE_G_MAIN_LOOP
 static int  _ecore_main_select(double timeout);
 #endif
@@ -207,9 +171,7 @@ static void _ecore_main_win32_handlers_cleanup(void);
 #endif
 
 static int in_main_loop = 0;
-#ifndef USE_G_MAIN_LOOP
 static int do_quit = 0;
-#endif
 static Ecore_Fd_Handler *fd_handlers = NULL;
 static Ecore_Fd_Handler *fd_handler_current = NULL;
 static Eina_List *fd_handlers_with_prep = NULL;
@@ -889,8 +851,13 @@ ecore_main_loop_begin(void)
    in_main_loop--;
    _ecore_unlock();
 #else
-   ecore_main_loop = g_main_loop_new(NULL, FALSE);
-   g_main_loop_run(ecore_main_loop);
+   if (!do_quit)
+     {
+        if (!ecore_main_loop)
+          ecore_main_loop = g_main_loop_new(NULL, FALSE);
+        g_main_loop_run(ecore_main_loop);
+     }
+   do_quit = 0;
 #endif
 }
 
@@ -904,10 +871,10 @@ ecore_main_loop_begin(void)
 EAPI void
 ecore_main_loop_quit(void)
 {
-#ifndef USE_G_MAIN_LOOP
    do_quit = 1;
-#else
-   g_main_loop_quit(ecore_main_loop);
+#ifdef USE_G_MAIN_LOOP
+   if (ecore_main_loop)
+     g_main_loop_quit(ecore_main_loop);
 #endif
 }
 
@@ -987,7 +954,7 @@ ecore_main_fd_handler_add(int                    fd,
 
    if ((fd < 0) || (flags == 0) || (!func)) goto unlock;
 
-   fdh = calloc(1, sizeof(Ecore_Fd_Handler));
+   fdh = ecore_fd_handler_calloc(1);
    if (!fdh) goto unlock;
    ECORE_MAGIC_SET(fdh, ECORE_MAGIC_FD_HANDLER);
    fdh->next_ready = NULL;
@@ -997,7 +964,7 @@ ecore_main_fd_handler_add(int                    fd,
      {
         int err = errno;
         ERR("Failed to add poll on fd %d (errno = %d: %s)!", fd, err, strerror(err));
-        free(fdh);
+        ecore_fd_handler_mp_free(fdh);
         fdh = NULL;
         goto unlock;
      }
@@ -1030,7 +997,7 @@ ecore_main_win32_handler_add(void                 *h,
 
    if (!h || !func) return NULL;
 
-   wh = calloc(1, sizeof(Ecore_Win32_Handler));
+   wh = ecore_win32_handler_calloc(1);
    if (!wh) return NULL;
    ECORE_MAGIC_SET(wh, ECORE_MAGIC_WIN32_HANDLER);
    wh->h = (HANDLE)h;
@@ -1260,7 +1227,7 @@ _ecore_main_shutdown(void)
         fd_handlers = (Ecore_Fd_Handler *)eina_inlist_remove(EINA_INLIST_GET(fd_handlers),
                                                              EINA_INLIST_GET(fdh));
         ECORE_MAGIC_SET(fdh, ECORE_MAGIC_NONE);
-        free(fdh);
+        ecore_fd_handler_mp_free(fdh);
      }
    if (fd_handlers_with_buffer)
      fd_handlers_with_buffer = eina_list_free(fd_handlers_with_buffer);
@@ -1283,7 +1250,7 @@ _ecore_main_shutdown(void)
         win32_handlers = (Ecore_Win32_Handler *)eina_inlist_remove(EINA_INLIST_GET(win32_handlers),
                                                                    EINA_INLIST_GET(wh));
         ECORE_MAGIC_SET(wh, ECORE_MAGIC_NONE);
-        free(wh);
+        ecore_win32_handler_mp_free(wh);
      }
    win32_handlers_delete_me = EINA_FALSE;
    win32_handler_current = NULL;
@@ -1524,7 +1491,7 @@ _ecore_main_fd_handlers_cleanup(void)
         fd_handlers = (Ecore_Fd_Handler *)
           eina_inlist_remove(EINA_INLIST_GET(fd_handlers), EINA_INLIST_GET(fdh));
         ECORE_MAGIC_SET(fdh, ECORE_MAGIC_NONE);
-        free(fdh);
+        ecore_fd_handler_mp_free(fdh);
         fd_handlers_to_delete = eina_list_remove_list(fd_handlers_to_delete, l);
      }
 }
@@ -1555,7 +1522,7 @@ _ecore_main_win32_handlers_cleanup(void)
                eina_inlist_remove(EINA_INLIST_GET(win32_handlers),
                                   EINA_INLIST_GET(wh));
              ECORE_MAGIC_SET(wh, ECORE_MAGIC_NONE);
-             free(wh);
+             ecore_win32_handler_mp_free(wh);
           }
      }
    if (!deleted_in_use) win32_handlers_delete_me = EINA_FALSE;

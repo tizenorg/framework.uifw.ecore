@@ -350,3 +350,33 @@
 2011-11-27 Vincent Torri
 
         * Fix and improve key management on Windows XP
+
+2011-11-29 Vincent Torri
+
+        * Discard left Ctrl when AltGr is pressed (Windows XP)
+	* Fix the string value for the Delete key (Windows XP)
+	* Fix the key release values for non keystroke keys (Windows XP)
+
+2011-11-29 Mike McCormack
+
+	* Allow quitting before entering the glib version of the main loop
+
+2011-12-02 Carsten Haitzler (The Rasterman)
+
+        1.1.0 release
+        
+2011-12-02 Mike Blumenkrantz
+
+        * Use mempools for allocations
+
+2011-12-02 Term <term@twistedpath.org>
+
+        * added ecore_x_randr_output_backlight_available()
+
+2011-12-03 Vincent Torri
+
+	* Fix the modifiers value (Windows XP)
+
+2011-12-04 Mike Blumenkrantz
+
+        * added ecore_timer_reset()

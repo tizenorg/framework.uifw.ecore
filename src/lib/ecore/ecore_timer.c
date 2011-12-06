@@ -8,34 +8,6 @@
 #include "Ecore.h"
 #include "ecore_private.h"
 
-#ifdef WANT_ECORE_TIMER_DUMP
-# include <string.h>
-# include <execinfo.h>
-# define ECORE_TIMER_DEBUG_BT_NUM 64
-typedef void (*Ecore_Timer_Bt_Func)();
-#endif
-
-struct _Ecore_Timer
-{
-   EINA_INLIST;
-                       ECORE_MAGIC;
-   double              in;
-   double              at;
-   double              pending;
-   Ecore_Task_Cb       func;
-   void               *data;
-
-#ifdef WANT_ECORE_TIMER_DUMP
-   Ecore_Timer_Bt_Func timer_bt[ECORE_TIMER_DEBUG_BT_NUM];
-   int                 timer_bt_num;
-#endif
-
-   int                 references;
-   unsigned char       delete_me : 1;
-   unsigned char       just_added : 1;
-   unsigned char       frozen : 1;
-};
-
 static void _ecore_timer_set(Ecore_Timer  *timer,
                              double        at,
                              double        in,
@@ -140,7 +112,7 @@ ecore_timer_add(double        in,
    _ecore_lock();
    if (!func) goto unlock;
    if (in < 0.0) in = 0.0;
-   timer = calloc(1, sizeof(Ecore_Timer));
+   timer = ecore_timer_calloc(1);
    if (!timer) goto unlock;
    ECORE_MAGIC_SET(timer, ECORE_MAGIC_TIMER);
    now = ecore_time_get();
@@ -283,6 +255,37 @@ ecore_timer_delay(Ecore_Timer *timer,
 
    _ecore_lock();
    _ecore_timer_delay(timer, add);
+   _ecore_unlock();
+}
+
+/**
+ * Reset a timer to its full interval
+ * This doesn't affect the interval of a timer
+ * @param timer The timer
+ * @since 1.2
+ * @note This is equivalent to (but faster than)
+ * @code
+ * ecore_timer_delay(timer, ecore_timer_interval_get(timer) - ecore_timer_pending_get(timer));
+ * @endcode
+ */
+EAPI void
+ecore_timer_reset(Ecore_Timer *timer)
+{
+   double now, add;
+   if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
+     {
+        ECORE_MAGIC_FAIL(timer, ECORE_MAGIC_TIMER,
+                         __func__);
+        return;
+     }
+   _ecore_lock();
+   now = ecore_time_get();
+
+   if (timer->frozen)
+     add = timer->pending;
+   else
+     add = timer->at - now;
+   _ecore_timer_delay(timer, timer->in - add);
    _ecore_unlock();
 }
 
@@ -470,7 +473,7 @@ _ecore_timer_loop_add(double        in,
 
    if (!func) return timer;
    if (in < 0.0) in = 0.0;
-   timer = calloc(1, sizeof(Ecore_Timer));
+   timer = ecore_timer_calloc(1);
    if (!timer) return timer;
    ECORE_MAGIC_SET(timer, ECORE_MAGIC_TIMER);
    now = ecore_loop_time_get();
@@ -510,7 +513,7 @@ _ecore_timer_del(Ecore_Timer *timer)
         if (timer->delete_me)
           timers_delete_me--;
 
-        free(timer);
+        ecore_timer_mp_free(timer);
         return data;
      }
 
@@ -529,14 +532,14 @@ _ecore_timer_shutdown(void)
      {
         timers = (Ecore_Timer *)eina_inlist_remove(EINA_INLIST_GET(timers), EINA_INLIST_GET(timers));
         ECORE_MAGIC_SET(timer, ECORE_MAGIC_NONE);
-        free(timer);
+        ecore_timer_mp_free(timer);
      }
 
    while ((timer = suspended))
      {
         suspended = (Ecore_Timer *)eina_inlist_remove(EINA_INLIST_GET(suspended), EINA_INLIST_GET(suspended));
         ECORE_MAGIC_SET(timer, ECORE_MAGIC_NONE);
-        free(timer);
+        ecore_timer_mp_free(timer);
      }
 
    timer_current = NULL;
@@ -563,7 +566,7 @@ _ecore_timer_cleanup(void)
                }
              timers = (Ecore_Timer *)eina_inlist_remove(EINA_INLIST_GET(timers), EINA_INLIST_GET(timer));
              ECORE_MAGIC_SET(timer, ECORE_MAGIC_NONE);
-             free(timer);
+             ecore_timer_mp_free(timer);
              timers_delete_me--;
              done++;
              if (timers_delete_me == 0) return;
@@ -583,7 +586,7 @@ _ecore_timer_cleanup(void)
                }
              suspended = (Ecore_Timer *)eina_inlist_remove(EINA_INLIST_GET(suspended), EINA_INLIST_GET(timer));
              ECORE_MAGIC_SET(timer, ECORE_MAGIC_NONE);
-             free(timer);
+             ecore_timer_mp_free(timer);
              timers_delete_me--;
              done++;
              if (timers_delete_me == 0) return;
