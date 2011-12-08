@@ -1270,12 +1270,10 @@ _ecore_con_url_curl_clear(void)
           {
              int fd = ecore_main_fd_handler_fd_get(fd_handler);
              FD_CLR(fd, &_current_fd_set);
-             // FIXME: ecore_main_fd_handler_del() sometimes give warnnings
-             // because curl do not make fd itself controlled by users.
-             // But it can be ignored.
+             // FIXME: ecore_main_fd_handler_del() sometimes give errors
+             // because curl do not make fd itself controlled by users, but it can be ignored.
              ecore_main_fd_handler_del(fd_handler);
           }
-        _fd_hd_list = NULL;
      }
 
    EINA_LIST_FREE(_url_con_list, url_con)
@@ -1298,6 +1296,18 @@ _ecore_con_url_curl_clear(void)
 static Eina_Bool
 _ecore_con_url_fd_handler(void *data __UNUSED__, Ecore_Fd_Handler *fd_handler __UNUSED__)
 {
+   if (_fd_hd_list)
+     {
+        Ecore_Fd_Handler *fd_handler;
+        EINA_LIST_FREE(_fd_hd_list, fd_handler)
+          {
+             int fd = ecore_main_fd_handler_fd_get(fd_handler);
+             FD_CLR(fd, &_current_fd_set);
+             // FIXME: ecore_main_fd_handler_del() sometimes give errors
+             // because curl do not make fd itself controlled by users, but it can be ignored.
+             ecore_main_fd_handler_del(fd_handler);
+          }
+     }
    ecore_timer_thaw(_curl_timeout);
    return ECORE_CALLBACK_RENEW;
 }
