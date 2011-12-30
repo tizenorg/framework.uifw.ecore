@@ -1,3 +1,11 @@
+ecore (1.1.0+svn.65878slp2+build04) unstable; urgency=low
+
+  * Repackaging
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.65878slp2+build04
+
+ -- ChunEon Park <chuneon.park@samsung.com>  Fri, 30 Dec 2011 15:07:27 +0900
+
 ecore (1.1.0+svn.65878slp2+build03) unstable; urgency=low
 
   * Just Bumped up version
