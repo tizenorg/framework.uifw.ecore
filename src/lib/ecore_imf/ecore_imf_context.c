@@ -1151,7 +1151,7 @@ ecore_imf_context_input_panel_layout_get (Ecore_IMF_Context *ctx)
      {
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
                          "ecore_imf_context_input_panel_layout_get");
-        return ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID;
+        return ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
      }
 
    if (ctx->klass->input_panel_layout_get)
@@ -1159,7 +1159,7 @@ ecore_imf_context_input_panel_layout_get (Ecore_IMF_Context *ctx)
         return ctx->input_panel_layout;
      }
    else
-     return ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID;
+     return ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
 }
 
 /**

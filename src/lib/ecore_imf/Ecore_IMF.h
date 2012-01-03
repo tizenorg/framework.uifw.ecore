@@ -43,8 +43,7 @@ typedef enum
    ECORE_IMF_INPUT_PANEL_SHIFT_MODE_EVENT,         /**< Input Panel SHIFT MODE */
    ECORE_IMF_INPUT_PANEL_PREEDIT_MODE_EVENT,       /**< Input Panel PREEDIT MODE */
    ECORE_IMF_INPUT_PANEL_COMPLETION_MODE_EVENT,    /**< Input Panel COMPLETION MODE */
-   ECORE_IMF_INPUT_PANEL_CUSTOM_INPUT_MODE_EVENT,  /**< Input Panel CUSTOM INPUT MODE */
-   ECORE_IMF_INPUT_PANEL_EVENT_INVALID
+   ECORE_IMF_INPUT_PANEL_CUSTOM_INPUT_MODE_EVENT   /**< Input Panel CUSTOM INPUT MODE */
 } Ecore_IMF_Input_Panel_Event;
 
 typedef enum
@@ -183,8 +182,7 @@ typedef enum
    ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER,     /**< Phone Number layout */
    ECORE_IMF_INPUT_PANEL_LAYOUT_IP,              /**< IP layout */
    ECORE_IMF_INPUT_PANEL_LAYOUT_MONTH,           /**< Month layout */
-   ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY,      /**< Number Only layout */
-   ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID
+   ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY       /**< Number Only layout */
 } Ecore_IMF_Input_Panel_Layout;
 
 typedef enum
