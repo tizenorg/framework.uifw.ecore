@@ -53,14 +53,6 @@ typedef enum
    ECORE_IMF_INPUT_PANEL_STATE_INVALID
 } Ecore_IMF_Input_Panel_State;
 
-typedef enum
-{
-   ECORE_IMF_INPUT_PANEL_ORIENT_NONE,
-   ECORE_IMF_INPUT_PANEL_ORIENT_90_CW, /* Clockwise */
-   ECORE_IMF_INPUT_PANEL_ORIENT_180,
-   ECORE_IMF_INPUT_PANEL_ORIENT_90_CCW /* CounterClockwise */
-} Ecore_IMF_Input_Panel_Orient;
-
 typedef struct
 {
    int layout_idx;
@@ -380,7 +372,7 @@ struct _Ecore_IMF_Context_Class
    void (*input_panel_imdata_get)         (Ecore_IMF_Context *ctx, char* data, int *len);
 
    void (*input_panel_use_effect_set)     (Ecore_IMF_Context *ctx, Eina_Bool use_effect);
-   void (*input_panel_orient_set)         (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation);
+   void (*input_panel_orient_set)         (Ecore_IMF_Context *ctx, int orientation);
 
    void (*input_panel_move) (Ecore_IMF_Context *ctx, int x, int y);
    void (*input_panel_geometry_get)       (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
