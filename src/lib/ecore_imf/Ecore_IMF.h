@@ -174,7 +174,8 @@ typedef enum
    ECORE_IMF_INPUT_PANEL_LAYOUT_PHONENUMBER,     /**< Phone Number layout */
    ECORE_IMF_INPUT_PANEL_LAYOUT_IP,              /**< IP layout */
    ECORE_IMF_INPUT_PANEL_LAYOUT_MONTH,           /**< Month layout */
-   ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY       /**< Number Only layout */
+   ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY,      /**< Number Only layout */
+   ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID
 } Ecore_IMF_Input_Panel_Layout;
 
 typedef enum
