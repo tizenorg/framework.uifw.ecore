@@ -1,0 +1,1041 @@
+ecore (1.1.0+svn.65618slp2+build02) unstable; urgency=low
+
+  * [Bug Fix] CQ H0100136744 - curl fd handler refactoring
+  * Git: slp-scm.sec.samsung.net:slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.65618slp2+build02
+
+ -- Tae-Hwan Kim <the81.kim@samsung.com>  Tue, 29 Nov 2011 17:43:36 +0900
+
+ecore (1.1.0+svn.65618slp2+build01) unstable; urgency=low
+
+  * Package Upload
+  * Git: slp-scm.sec.samsung.net:slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.65618slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Tue, 29 Nov 2011 14:11:22 +0900
+
+ecore (1.1.0+svn.65303slp2+build04) unstable; urgency=low
+
+  * Add a configure option to enable ecore x gesture extension support 
+  * Add libxgesture-dev on Build-Depends section in debian/control 
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore 
+  * Tag: ecore_1.1.0+svn.65303slp2+build04
+
+ -- Sung-Jin Park <sj76.park@samsung.com>  Fri, 18 Nov 2011 11:11:27 +0900
+
+ecore (1.1.0+svn.65303slp2+build03) unstable; urgency=low
+
+  * Package Upload : because of build error
+  * Important Changes
+        Rollback about dependency with cares - Caused some app's build error about no Elementary.h
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.65303slp2+build03
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Thu, 17 Nov 2011 19:10:33 +0900
+
+ecore (1.1.0+svn.65303slp2+build02) unstable; urgency=low
+
+  * Enable c-ARES based aync DNS resolution
+
+ -- Mike McCormack <mj.mccormack@samsung.com>  Thu, 17 Nov 2011 17:46:57 +0900
+
+ecore (1.1.0+svn.65303slp2+build01) unstable; urgency=low
+
+  * Merge with upstream @65303
+
+ -- Mike McCormack <mj.mccormack@samsung.com>  Thu, 17 Nov 2011 09:05:24 +0900
+
+ecore (1.0.0.001+svn.64964slp2+build02) unstable; urgency=low
+
+  * [ecore_imf] remove unused interfaces
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.64964slp2+build02
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Mon, 14 Nov 2011 15:19:52 +0900
+
+ecore (1.0.0.001+svn.64964slp2+build01) unstable; urgency=low
+
+  * Merge with upstream @64964
+
+ -- Mike McCormack <mj.mccormack@samsung.com>  Thu, 10 Nov 2011 12:12:11 +0900
+
+ecore (1.0.0.001+svn.64661slp2+build04) unstable; urgency=low
+
+  * [ecore_imf] remove depecated APIs
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.64661slp2+build04
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Thu, 10 Nov 2011 09:28:41 +0900
+
+ecore (1.0.0.001+svn.64661slp2+build03) unstable; urgency=low
+
+  * Ecore, Ecore_con, Ecore_file: merge upstream r64851 
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.64661slp2+build03
+
+ -- Tae-Hwan Kim <the81.kim@samsung.com>  Tue, 08 Nov 2011 14:17:28 +0900
+
+ecore (1.0.0.001+svn.64661slp2+build02) unstable; urgency=low
+
+  * [ecore evas] fix rotation lockup problem
+                 when application's window is unmapped
+  * [ecore evas] fix sync counter lockup problem with application
+                 which rapidly maps and unmaps a window
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.64661slp2+build02
+
+ -- Gwanglim Lee <gl77.lee@samsung.com>  Fri, 04 Nov 2011 13:45:05 +0900
+
+ecore (1.0.0.001+svn.64661slp2+build01) unstable; urgency=low
+
+  * Merge with upstream @64661
+
+ -- Mike McCormack <mj.mccormack@samsung.com>  Thu, 03 Nov 2011 11:19:25 +0900
+
+ecore (1.0.0.001+svn.63888slp2+build07) unstable; urgency=low
+
+  * [ecore con url] Change HTTP persistent --> normal 
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.63888slp2+build07
+
+ -- Tae-Hwan Kim <the81.kim@samsung.com>  Wed, 02 Nov 2011 17:56:11 +0900
+
+ecore (1.0.0.001+svn.63888slp2+build06) unstable; urgency=low
+
+  * Deprecated some Ecore_IMF APIs
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.63888slp2+build06
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Wed, 02 Nov 2011 12:41:49 +0900
+
+ecore (1.0.0.001+svn.63888slp2+build05) unstable; urgency=low
+
+  * Upload package
+  * Important Changes
+        Add new api related with get last recently requested geometry value
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.63888slp2+build05
+
+ -- Jiyoun Park <jy0703.park@samsung.com>  Mon, 31 Oct 2011 15:23:33 +0900
+
+ecore (1.0.0.001+svn.63888slp2+build04) unstable; urgency=low
+
+  * Package Upload
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.63888slp2+build04
+
+ -- Tae-Hwan Kim <the81.kim@samsung.com>  Mon, 31 Oct 2011 10:25:07 +0900
+
+ecore (1.0.0.001+svn.63888slp2+build03) unstable; urgency=low
+
+  * Upload package
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.63888slp2+build03
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 25 Oct 2011 20:51:15 +0900
+
+ecore (1.0.0.001+svn.63888slp2+build02) unstable; urgency=low
+
+  * Upload Package
+  * Important Changes
+        ecore evas util can send resize request even though X relpy
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.63888slp2+build02
+
+ -- Jiyoun Park <jy0703.park@samsung.com>  Tue, 25 Oct 2011 18:08:02 +0900
+
+ecore (1.0.0.001+svn.63888slp2+build01) unstable; urgency=low
+
+  * Merge with upstream
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.63888slp2+build01
+
+ -- Mike McCormack <mj.mccormack@samsung.com>  Fri, 07 Oct 2011 11:41:21 +0900
+
+ecore (1.0.0.001+svn.63811slp2+build01) unstable; urgency=low
+
+  * merge with upstream
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.63811slp2+build01
+
+ -- Mike McCormack <mj.mccormack@samsung.com>  Wed, 05 Oct 2011 15:34:39 +0900
+
+ecore (1.0.0.001+svn.62653slp2+build02) unstable; urgency=low
+
+  * [SVN patch] ecore in SLP is merged with SVN r63475 patch only.
+    - fix bug in generic event handling on xlib side of ecore_x
+  * Ecore_IMF: remove unused enum ECORE_IMF_Autocorrection
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.62653slp2+build02
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Mon, 26 Sep 2011 20:01:42 +0900
+
+ecore (1.0.0.001+svn.62653slp2+build01) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r62653
+  * Important Changes
+       [Migration upstream r62653] Merge branch 'svn_merge'
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.62653slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Fri, 02 Sep 2011 18:43:09 +0900
+
+ecore (1.0.0.001+svn.61784slp2+build02) unstable; urgency=low
+
+  * [ecore_x] fixed multi-touch double clicked
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.61784slp2+build02
+
+ -- ChunEon Park <chuneon.park@samsung.com>  Wed, 31 Aug 2011 19:42:43 +0900
+
+ecore (1.0.0.001+svn.61784slp2+build01) unstable; urgency=low
+
+  * Merge with upstream ecore svn @61784
+
+ -- Mike McCormack <mj.mccormack@samsung.com>  Wed, 27 Jul 2011 14:43:58 +0900
+
+ecore (1.0.0.001+svn.61150slp2+build03) unstable; urgency=low
+
+  * [ecore_imf] set autocapital type
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.61150slp2+build03
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Mon, 25 Jul 2011 14:30:29 +0900
+
+ecore (1.0.0.001+svn.61150slp2+build02) unstable; urgency=low
+
+  * [ecore_imf] add ecore_imf_context_cursor_location_set API
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.61150slp2+build02
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Mon, 11 Jul 2011 16:13:56 +0900
+
+ecore (1.0.0.001+svn.61150slp2+build01) unstable; urgency=low
+
+  * Merge with SVN revision 61150
+
+ -- Mike McCormack <mj.mccormack@samsung.com>  Thu, 07 Jul 2011 15:10:51 +0900
+
+ecore (1.0.0.001+svn.60286slp2+build02) unstable; urgency=low
+
+  * [ecore_imf] add ecore_imf_context_input_panel_enalbed_set, get API
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.60286slp2+build02
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Sat, 25 Jun 2011 15:11:35 +0900
+
+ecore (1.0.0.001+svn.60286slp2+build01) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r60286
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.60286slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Fri, 24 Jun 2011 18:10:02 +0900
+
+ecore (1.0.0.001+svn.58224slp2+build04) unstable; urgency=low
+
+  * Fixed _ecore_main_loop_iterate_internal. Upstream merge.
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.58224slp2+build04
+
+ -- Daniel Juyung Seo <juyung.seo@samsung.com>  Mon, 23 May 2011 14:20:58 +0900
+
+ecore (1.0.0.001+svn.58224slp2+build03) unstable; urgency=low
+
+  * Package upload
+  * Git: slp-scm.sec.samsung.net:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.58224slp2+build03
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Tue, 03 May 2011 20:48:31 +0900
+
+ecore (1.0.0.001+svn.58224slp2+build02) unstable; urgency=low
+
+  * Add shape input mask feature (upstream svn rev.58621)
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.58224slp2+build02
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Mon, 11 Apr 2011 12:52:50 +0900
+
+ecore (1.0.0.001+svn.58224slp2+build01) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r58224
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.58224slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Tue, 05 Apr 2011 15:55:04 +0900
+
+ecore (1.0.0.001+svn.58047slp2+build02) unstable; urgency=low
+
+  * Rollback
+  * Git: slp-scm.sec.samsung.net:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.58047slp2+build02
+
+ -- Shinwoo Kim <cinoo.kim@samsung.com>  Tue, 29 Mar 2011 23:52:57 +0900
+
+ecore (1.0.0.001+svn.58047slp2+build01) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r58047
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.58047slp2+build01
+
+ -- Shinwoo Kim <cinoo.kim@samsung.com>  Tue, 29 Mar 2011 18:55:29 +0900
+
+ecore (1.0.0.001+svn.57453slp2+build05) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r57453
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.57453slp2+build05
+
+ -- Myungjae Lee <mjae.lee@samsung.com>  Wed, 09 Mar 2011 11:29:41 +0900
+
+ecore (1.0.0.001+svn.57453slp2+build04) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r57453
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.57453slp2+build04
+
+ -- Myungjae Lee <mjae.lee@samsung.com>  Wed, 09 Mar 2011 11:14:55 +0900
+
+ecore (1.0.0.001+svn.57453slp2+build03) unstable; urgency=low
+
+  * Package Uplaod : Rollback
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.57453slp2+build03
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Tue, 08 Mar 2011 12:38:42 +0900
+
+ecore (1.0.0.001+svn.57453slp2+build02) unstable; urgency=low
+
+  * Package Upload : rollback
+  * Git: 165.213.180.234:/slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.57453slp2+build02
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Tue, 08 Mar 2011 11:10:05 +0900
+
+ecore (1.0.0.001+svn.57453slp2+build01) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r57453
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.57453slp2+build01
+
+ -- Myungjae Lee <mjae.lee@samsung.com>  Mon, 07 Mar 2011 17:28:10 +0900
+
+ecore (1.0.0.001+svn.56239slp2+build06) unstable; urgency=low
+
+  * [SVN r56251] Bug fix - dont call pipe handler if its deleted.
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.56239slp2+build06  
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Fri, 11 Feb 2011 17:52:58 +0900
+
+ecore (1.0.0.001+svn.56239slp2+build05) unstable; urgency=low
+
+  * [SVN r56251] Bug fix - dont call pipe handler if its deleted.
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.56239slp2+build05 
+
+ -- Myoungwoon Kim <myoungwoon.kim@samsung.com>  Tue, 08 Feb 2011 15:21:18 +0900
+
+ecore (1.0.0.001+svn.56239slp2+build04) unstable; urgency=low
+
+  * [ecore_evas_x.c] apply ECORE_EVAS_GL_SYNC_DRAW_DONE env.
+     + check whether GL driver sends SYNC_DRAW_DONE msg after buffer copy.
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.56239slp2+build04
+
+ -- Gwanglim Lee <gl77.lee@samsung.com>  Sat, 05 Feb 2011 17:29:55 +0900
+
+ecore (1.0.0.001+svn.56239slp2+build03) unstable; urgency=low
+
+  * ee->no_comp_sync = 0 
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.56239slp2+build03  
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Mon, 31 Jan 2011 18:26:53 +0900
+
+ecore (1.0.0.001+svn.56239slp2+build02) unstable; urgency=low
+
+  * ee->no_comp_sync = 0 
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.56239slp2+build02 
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Mon, 31 Jan 2011 17:12:38 +0900
+
+ecore (1.0.0.001+svn.56239slp2+build01) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r56239
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.56239slp2+build01
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Thu, 27 Jan 2011 12:21:58 +0900
+
+ecore (1.0.0.001+svn.56091slp2+build01) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r56091
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.56091slp2+build01
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.56091slp2+build01
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Wed, 19 Jan 2011 16:16:45 +0900
+
+ecore (1.0.0.001+svn.55755slp2+build02) unstable; urgency=low
+
+  * [ecore_imf] bug fix : hide keyboard in ecore_imf_context_del
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.55755slp2+build02
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Wed, 05 Jan 2011 08:44:58 +0900
+
+ecore (1.0.0.001+svn.55755slp2+build01) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r55755
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.55755slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Mon, 03 Jan 2011 21:19:00 +0900
+
+ecore (1.0.0.001+svn.55594slp2+build02) unstable; urgency=low
+
+  * Bug patch - ecore_x_xregion_is_empty()
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.55594slp2+build02
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Mon, 03 Jan 2011 12:56:39 +0900
+
+ecore (1.0.0.001+svn.55594slp2+build01) unstable; urgency=low
+
+  * [SVN EFL Migration] ecore in SLP is merged with SVN r55594
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.55594slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Wed, 22 Dec 2010 20:01:47 +0900
+
+ecore (1.0.0.001+svn.55371slp2+build02) unstable; urgency=low
+
+  * epoll disabled.
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.55371slp2+build02
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Wed, 15 Dec 2010 16:37:29 +0900
+
+ecore (1.0.0.001+svn.55371slp2+build01) unstable; urgency=low
+
+  * [SVN's EFL Migration] ecore in SLP is merged with SVN r55371.
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.55371slp2+build01
+
+ -- Juyung Seo <juyung.seo@samsung.com>  Tue, 14 Dec 2010 17:50:20 +0900
+
+ecore (1.0.0.001+svn.55079slp2+build03) unstable; urgency=low
+
+  * [SVN's EFL Migration] ecore in SLP is merged with SVN r55371.
+  * Git: 165.213.180.234:slp/pkgs/e/ecore
+  * Tag: ecore_1.0.0.001+svn.55079slp2+build03
+
+ -- Juyung Seo <juyung.seo@samsung.com>  Tue, 14 Dec 2010 14:54:04 +0900
+
+ecore (1.0.0.001+svn.55079slp2+build02) unstable; urgency=low
+
+  * remove epoll
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.55079slp2+build02
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Thu, 02 Dec 2010 17:28:23 +0900
+
+ecore (1.0.0.001+svn.55079slp2+build01) unstable; urgency=low
+
+  * [SVN 55079 Merge]
+  * Update to SVN Revision 55079.
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.55079slp2+build01
+
+ -- Myoungwoon Kim <myoungwoon.kim@samsung.com>  Thu, 02 Dec 2010 09:18:09 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build28) unstable; urgency=low
+
+  * [ecore_evas] Patch code for rotation.
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build28
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Mon, 29 Nov 2010 10:14:56 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build27) unstable; urgency=low
+
+  * [ecore_evas.c] change FPS rate print it every 0.1 sec
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build27
+
+ -- Seokjae Jeong <seok.j.jeong@samsung.com>  Sat, 27 Nov 2010 15:06:21 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build26) unstable; urgency=low
+
+  * [ecore_imf] remove unused typedefs
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build26
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Fri, 26 Nov 2010 17:56:05 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build25) unstable; urgency=low
+
+  * [SVN 54830 Merge]
+  * Update to SVN Revision 54830.
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build25
+
+ -- Juyung Seo <juyung.seo@samsung.com>  Fri, 26 Nov 2010 15:31:53 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build19) unstable; urgency=low
+
+  * libcurl-dev -> libcurl4-openssl-dev
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build19
+
+ -- ChunEon Park <chuneon.park@samsung.com>  Thu, 18 Nov 2010 21:26:21 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build18) unstable; urgency=low
+
+  * [ecore_x] Add feature for sliding window
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build18
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Thu, 11 Nov 2010 10:53:35 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build17) unstable; urgency=low
+
+  * [ecore_imf] ecore_imf_context_input_panel_language_set
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build17
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 09 Nov 2010 15:08:12 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build16) unstable; urgency=low
+
+  * fix documentation of ecore_imf 
+  * [src/lib/ecore_evas/Ecore_Evas.h] svn merge v51740.
+  * [svn merge] r51678~r51707
+  * [svn merge] Changeset 51650 - Revert and reapply badnull patch
+  * [ecore_evas] svn 51618 : Add UNUSED where missing.
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build16
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Wed, 13 Oct 2010 16:54:37 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build15) unstable; urgency=low
+
+  * fixed epoll 
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build15
+
+ -- ChunEon Park <chuneon.park@samsung.com>  Tue, 05 Oct 2010 10:39:49 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build14) unstable; urgency=low
+
+  * [ecore_x_events.c] fixed double / triple click
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build14
+
+ -- ChunEon Park <chuneon.park@samsung.com>  Mon, 04 Oct 2010 21:38:13 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build13) unstable; urgency=low
+
+  * [ecore_evas] add EFL window rotation effect
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build13
+
+ -- Gwanglim Lee <gl77.lee@samsung.com>  Sat, 02 Oct 2010 03:37:56 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build12) unstable; urgency=low
+
+  * [ecore_imf] svn merge 52773
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build12 
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Wed, 30 Sep 2010 09:56:30 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build10) unstable; urgency=low
+
+  * update x_selection from upstream
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build10
+
+ -- Hyoyoung Chang <hyoyoung.chang@samsung.com>  Mon, 27 Sep 2010 17:27:38 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build09) unstable; urgency=low
+
+  * repackaging
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build09
+
+ -- ChunEon Park <chuneon.park@samsung.com>  Mon, 20 Sep 2010 21:42:20 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build08) unstable; urgency=low
+
+  * Add ecore_imf_context_input_panel_caps_mode_set
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build08
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Fri, 17 Sep 2010 15:48:17 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build07) unstable; urgency=low
+
+  * Repackage for epoll disable
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build07
+
+ -- Hyoyoung Chang <hyoyoung.chang@samsung.com>  Fri, 17 Sep 2010 12:03:07 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build06) unstable; urgency=low
+
+  * Repackage for epoll disable
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build06
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Wed, 15 Sep 2010 18:15:43 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build05) unstable; urgency=low
+
+  * Repackage for epoll disable
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build05
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Wed, 15 Sep 2010 11:39:28 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build04) unstable; urgency=low
+
+  * add as-needed
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build04
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Wed, 15 Sep 2010 10:00:16 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build03) unstable; urgency=low
+
+  * repackage for stopping EPOLL fucntionality
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build03
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Tue, 14 Sep 2010 16:05:25 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build02) unstable; urgency=low
+
+  * repackage
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build02
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Fri, 10 Sep 2010 22:38:46 +0900
+
+ecore (1.0.0.001+svn.51480slp2+build01) unstable; urgency=low
+
+  * [ecore] Merge slp with SVN
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_1.0.0.001+svn.51480slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Wed, 01 Sep 2010 10:31:12 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build15) unstable; urgency=low
+
+  * [rules] add disable-xim (from Wonkuk Jung)
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build15
+
+ -- Juyung Seo  <juyung.seo@samsung.com>  Wed, 01 Sep 2010 21:52:08 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build14) unstable; urgency=low
+
+  * [ecore_x] fix sync issue in 1 special event re-order case. ( Changeset r51609 ) 
+  * Reference : http://trac.enlightenment.org/e/changeset/51609
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build14
+
+ -- Gwan-gyeong Mun <kk.moon@samsung.com>  Mon, 30 Aug 2010 08:46:33 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build13) unstable; urgency=low
+
+  * [ecore_imf] add MONTH, NUMBERONLY Layout
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build13
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Fri, 20 Aug 2010 11:23:12 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build12) unstable; urgency=low
+
+  * [ecore_imf] change parameter type of event_callback_add
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build12
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Fri, 30 Jul 2010 14:57:28 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build11) unstable; urgency=low
+
+  * [ecore_imf] fix memory leak when private key or disable key func is used
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build11
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Fri, 30 Jul 2010 14:32:07 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build10) unstable; urgency=low
+
+  * Remove deprecated Ecore_IMF APIs.
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build10
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 20 Jul 2010 18:17:00 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build09) unstable; urgency=low
+
+  * Repackage for beat release.
+  * Git: 165.213.180.234:/git/slp/pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build09
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Mon, 19 Jul 2010 10:47:44 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build08) unstable; urgency=low
+
+  * add the ECORE_X_ATOM_PARENT_BORDER_WINDOW atom.
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL-pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build08
+
+ -- Gwanglim Lee <gl77.lee@samsung.com>  Wed, 14 Jul 2010 15:41:35 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build07) unstable; urgency=low
+
+  * Ecore_IMF API is revised.
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL-pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build07
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Thu, 08 Jul 2010 17:14:29 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build06) unstable; urgency=low
+
+  * add ecore_evas_gl_x11_no_swap_set for supporting lock/unlock feature.
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL-pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build06
+
+ -- ChunEon Park <chuneon.park@samsung.com>  Wed, 07 Jul 2010 20:03:15 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build05) unstable; urgency=low
+
+  * add ecore_evas_gl_x11_no_swap_set for supporting lock/unlock feature.
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL-pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build05
+
+ -- Gwanglim Lee <gl77.lee@samsung.com>  Tue, 29 Jun 2010 18:58:38 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build04) unstable; urgency=low
+
+  * Packaging.
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL-pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build04
+
+ -- Daniel Juyung Seo <juyung.seo@samsung.com>  Thu, 10 Jun 2010 21:09:25 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build03) unstable; urgency=low
+
+  * Packaging.
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL-pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build03
+
+ -- Daniel Juyung Seo <juyung.seo@samsung.com>  Thu, 10 Jun 2010 21:04:09 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3build02) unstable; urgency=low
+
+  * Packaging.
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL-pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3build02
+
+ -- Daniel Juyung Seo <juyung.seo@samsung.com>  목, 10  6월 2010 21:00:51 +0900
+
+ecore (0.9.9.060+svn.49540slp2+3) unstable; urgency=low
+
+  * Packaging.
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL-pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+3
+
+ -- Daniel Juyung Seo <juyung.seo@samsung.com>  Thu, 10 Jun 2010 20:46:54 +0900
+
+ecore (0.9.9.060+svn.49540slp2+2) unstable; urgency=low
+
+  * Packaging.
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL-pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+2
+
+ -- Daniel Juyung Seo <juyung.seo@samsung.net>  Thu, 10 Jun 2010 20:46:08 +0900
+
+ecore (0.9.9.060+svn.49540slp2+1) unstable; urgency=low
+
+  * Packaging.
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL-pkgs/ecore
+  * Tag: ecore_0.9.9.060+svn.49540slp2+1
+
+ -- Daniel Juyung Seo <juyung.seo@smasung.net>  Thu, 10 Jun 2010 20:45:22 +0900
+
+ecore (0.9.9.060+svn.49540slp2+0) unstable; urgency=low
+
+  * Update opensource EFL from SVN
+  * SVN revision: 49540 (Total EFL revision: 49550)
+  * Tag: 0.9.9.060+svn.49540slp2+0
+
+ -- Daniel Juyung Seo <juyung.seo@smasung.net>  Thu, 10 Jun 2010 15:50:38 +0900
+
+ecore (0.9.9.060+svn20100304slp2+4) unstable; urgency=low
+
+  * Enable curl
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL
+  * Tag: ecore_0.9.9.060+svn20100304slp2+4
+
+ -- Sangjin Lee <lsj119@samsung.com>  Wed, 14 Apr 2010 17:54:37 +0900
+
+ecore (0.9.9.060+svn20100304slp2+3) unstable; urgency=low
+
+  * change control - add libeina-svn-04 dependency to libecore-svn-01
+  * Git: 165.213.180.234:/git/slp2.0/slp2.0-pkgs/EFL
+  * Tag: 9.9.060+svn20100304slp2+3
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Thu, 01 Apr 2010 16:50:07 +0900
+
+ecore (0.9.9.060+svn20100304slp2+2) unstable; urgency=low
+
+  * add document in ecore_imf and cleanup
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 30 Mar 2010 16:55:51 +0900
+
+ecore (0.9.9.060+svn20100304slp2+1) unstable; urgency=low
+
+  * change package version
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Thu, 25 Mar 2010 15:05:10 +0900
+
+ecore (0.9.9.060+svn20100304-5) unstable; urgency=low
+
+  * Upgrade ecore to 47360 
+
+ -- Sangjin Lee <lsj119@samsung.com>  Mon, 22 Mar 2010 20:52:51 +0900
+
+ecore (0.9.9.060+svn20100304-4) unstable; urgency=low
+
+  * Modifed keydefs.h for resolving macro name conflicts
+
+ -- Ji-hoon Lee <dalton.lee@samsung.com>  Mon, 22 Mar 2010 16:03:48 +0900
+
+ecore (0.9.9.060+svn20100304-3) unstable; urgency=low
+
+    * Added keydefs.h for identifying key index
+
+ -- Ji-hoon Lee <dalton.lee@samsung.com>  Fri, 19 Mar 2010 20:20:43 +0900
+
+ecore (0.9.9.060+svn20100304-2) unstable; urgency=low
+
+  * Fix debian/libecore-dev.install not to omit symbolic links for shared objects
+
+ -- Sung-Jin Park <sj76.park@samsung.com>  Tue, 16 Mar 2010 21:26:16 +0900
+
+ecore (0.9.9.060+svn20100304-1) unstable; urgency=low
+
+  * EFL_update_revision_46864
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Thu, 11 Mar 2010 10:50:35 +0900
+
+ecore (0.9.9.060+svn20100203-16) unstable; urgency=low
+
+  * Modify shape input mask
+
+ -- Sangjin Lee <lsj119@samsung.com>  Thu, 11 Mar 2010 10:42:52 +0900
+
+ecore (0.9.9.060+svn20100203-15) unstable; urgency=low
+
+  * Modify ecore_x_window_hide().
+   + In order to avoid ISE lockup problem, we ensure that root window
+     receives UnmapNotify event.
+
+ -- Gwanglim Lee <gl77.lee@samsung.com>  Wed, 10 Mar 2010 17:07:18 +0900
+
+ecore (0.9.9.060+svn20100203-14) unstable; urgency=low
+
+  * Merge source (based on SVN rev.46421).
+  * Add ecore_data library.
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Thu, 04 Mar 2010 20:17:30 +0900
+
+ecore (0.9.9.060+svn20100203-13) unstable; urgency=low
+
+  * Rollback to source (0.9.9.060+svn20100203-10)
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Thu, 04 Mar 2010 14:26:58 +0900
+
+ecore (0.9.9.060+svn20100203-12) unstable; urgency=low
+
+  * Merge the latest ecore_imf
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Thu, 04 Mar 2010 13:21:57 +0900
+
+ecore (0.9.9.060+svn20100203-11) unstable; urgency=low
+
+  * Merge source (based on SVN rev.46421)
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Thu, 04 Mar 2010 12:17:19 +0900
+
+ecore (0.9.9.060+svn20100203-10) unstable; urgency=low
+
+  * Add ecore_imf_context_ise_event_callback_set API. ise_state_add_listener, remove_listener, change_listener will be deprecated.
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 02 Mar 2010 17:52:58 +0900
+
+ecore (0.9.9.060+svn20100203-9) unstable; urgency=low
+
+  * Patch for ecore_evas_x_alpha_set
+
+ -- Sangjin Lee <lsj119@samsung.com>  Sat, 27 Feb 2010 20:44:34 +0900
+
+ecore (0.9.9.060+svn20100203-8) unstable; urgency=low
+
+  * add more ISE_EVENT types
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Thu, 25 Feb 2010 17:09:28 +0900
+
+ecore (0.9.9.060+svn20100203-7) unstable; urgency=low
+
+  * add ecore_imf_context_ise_get_window_rect API
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 23 Feb 2010 20:42:39 +0900
+
+ecore (0.9.9.060+svn20100203-6) unstable; urgency=low
+
+  * revision update to 46263. (partial merge)
+  * add atoms for rotation.
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Thu, 18 Feb 2010 19:37:45 +0900
+
+ecore (0.9.9.060+svn20100203-5) unstable; urgency=low
+
+  * elm_win_transparent apply
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Thu, 11 Feb 2010 15:12:01 +0900
+
+ecore (0.9.9.060+svn20100203-4) unstable; urgency=low
+
+  * Add rotate with resize.
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Mon, 08 Feb 2010 14:14:00 +0900
+
+ecore (0.9.9.060+svn20100203-3) unstable; urgency=low
+
+  * repack
+
+ -- sangho park <sangho.g.park@samsung.com>  Thu, 04 Feb 2010 22:04:12 +0900
+
+ecore (0.9.9.060+svn20100203-2) unstable; urgency=low
+
+  * repack
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Thu, 04 Feb 2010 20:27:43 +0900
+
+ecore (0.9.9.060+svn20100203-1) unstable; urgency=low
+
+  * EFL_update_revision_45828
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Wed, 03 Feb 2010 16:39:21 +0900
+
+ecore (0.9.9.060+svn20100119-2) unstable; urgency=low
+
+  * updated ISF files
+
+ -- sehwan <sehwan@samsung.com>  Thu, 21 Jan 2010 23:23:29 +0900
+
+ecore (0.9.9.060+svn20100119-1) unstable; urgency=low
+
+  * EFL_update_revision_45322
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 19 Jan 2010 20:44:48 +0900
+
+ecore (0.9.9.060+svn20100111-4) unstable; urgency=low
+
+  * changed ecore-imf for isf
+
+ -- sehwan <sehwan@samsung.com>  Fri, 15 Jan 2010 15:06:31 +0900
+
+ecore (0.9.9.060+svn20100111-3) unstable; urgency=low
+
+  * reupload EFL i686
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Tue, 12 Jan 2010 17:35:33 +0900
+
+ecore (0.9.9.060+svn20100111-2) unstable; urgency=low
+
+  * reupload EFL
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Mon, 11 Jan 2010 22:16:49 +0900
+
+ecore (0.9.9.060+svn20100111-1) unstable; urgency=low
+
+  * update EFL revision 45026
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Mon, 11 Jan 2010 13:28:04 +0900
+
+ecore (0.9.9.060+svn20091229-3) unstable; urgency=low
+
+  * To solve version mismatch between i386 and armel.
+  * No source code changed.
+
+ -- Jongwoo Chae <jongwoo.chae@samsung.com>  Thu, 07 Jan 2010 21:47:34 +0900
+
+ecore (0.9.9.060+svn20091229-2) unstable; urgency=low
+
+  * Changed ecore_imf for isf package
+
+ -- Ji-hoon Lee <dalton.lee@samsung.com>  Wed, 06 Jan 2010 13:55:00 +0900
+
+ecore (0.9.9.060+svn20091229-1) unstable; urgency=low
+
+  * update EFL
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Tue, 29 Dec 2009 14:27:03 +0900
+
+ecore (0.9.9.060+svn20091112-6) unstable; urgency=low
+
+  * modified debian/control to link libcurl
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 29 Dec 2009 19:31:19 +0900
+
+
+ecore (0.9.9.060+svn20091112-5) unstable; urgency=low
+
+  * modified debian/control : changed Architecture all to any (by Juyung Seo)
+
+ -- Sangho Park <sangho.g.park@samsung.com>  Fri, 27 Nov 2009 15:59:07 +0900
+
+ecore (0.9.9.060+svn20091112-4) unstable; urgency=low
+
+  * svn stable version
+
+ -- Sangho Park <sangho.g.park@samsung.com>  Thu, 19 Nov 2009 18:50:08 +0900
+
+ecore (0.9.9.060+svn20091112-3) unstable; urgency=low
+
+  * add build dependency glib
+
+ -- Sangho Park <sangho.g.park@samsung.com>  Tue, 17 Nov 2009 21:37:23 +0900
+
+ecore (0.9.9.060+svn20091112-2) unstable; urgency=low
+
+  * add glib dependency
+
+ -- Sangho Park <sangho.g.park@samsung.com>  Tue, 17 Nov 2009 16:27:18 +0900
+
+ecore (0.9.9.060+svn20091112-1) unstable; urgency=low
+
+  * New version
+
+ -- Sangho Park <sangho.g.park@samsung.com>  Thu, 12 Nov 2009 23:44:06 +0900
+
+ecore (0.9.9.060+svnYYYYMMDD-1) unstable; urgency=low
+
+  * New version
+
+ -- quaker <quaker66@gmail.com>  Thu, 22 Apr 2009 18:12:06 +0100
+
+ecore (0.9.9.050+svnYYYYMMDD-1) unstable; urgency=low
+
+  * Clean up changelog
+
+ -- quaker <quaker66@gmail.com>  Tue, 21 Apr 2009 19:14:37 +0100
