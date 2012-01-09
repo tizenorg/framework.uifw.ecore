@@ -327,6 +327,7 @@ ecore_con_url_free(Ecore_Con_Url *url_con)
    EINA_LIST_FREE(url_con->response_headers, s)
      free(s);
    eina_stringshare_del(url_con->url);
+   if (url_con->post_data) free(url_con->post_data);
    free(url_con);
 #else
    return;
@@ -605,7 +606,7 @@ _ecore_con_url_send(Ecore_Con_Url *url_con,
 #ifdef HAVE_CURL
    Eina_List *l;
    const char *s;
-   char tmp[256];
+   char tmp[512];
 
    if (!ECORE_MAGIC_CHECK(url_con, ECORE_MAGIC_CON_URL))
      {
@@ -628,16 +629,24 @@ _ecore_con_url_send(Ecore_Con_Url *url_con,
 
    if ((mode == MODE_POST) || (mode == MODE_AUTO))
      {
-        if (data)
+        if (url_con->post_data) free(url_con->post_data);
+        url_con->post_data = NULL;
+        if ((data) && (length > 0))
           {
-             if ((content_type) && (strlen(content_type) < 200))
+             url_con->post_data = malloc(length);
+             if (url_con->post_data)
                {
-                  snprintf(tmp, sizeof(tmp), "Content-Type: %s", content_type);
-                  url_con->headers = curl_slist_append(url_con->headers, tmp);
+                  memcpy(url_con->post_data, data, length);
+                  if ((content_type) && (strlen(content_type) < 450))
+                    {
+                       snprintf(tmp, sizeof(tmp), "Content-Type: %s", content_type);
+                       url_con->headers = curl_slist_append(url_con->headers, tmp);
+                    }
+                  curl_easy_setopt(url_con->curl_easy, CURLOPT_POSTFIELDS, url_con->post_data);
+                  curl_easy_setopt(url_con->curl_easy, CURLOPT_POSTFIELDSIZE, length);
                }
-
-             curl_easy_setopt(url_con->curl_easy, CURLOPT_POSTFIELDS, data);
-             curl_easy_setopt(url_con->curl_easy, CURLOPT_POSTFIELDSIZE, length);
+             else
+               return EINA_FALSE;
           }
         else curl_easy_setopt(url_con->curl_easy, CURLOPT_POSTFIELDSIZE, 0);
         if (mode == MODE_POST)
@@ -1547,16 +1556,16 @@ _ecore_con_url_idler_handler(void *data __UNUSED__)
    CURLMcode ret;
 
    ret = curl_multi_perform(_curlm, &still_running);
-   if (ret != CURLM_OK)
+   if (ret == CURLM_CALL_MULTI_PERFORM)
+     {
+        DBG("Call multiperform again");
+        return ECORE_CALLBACK_RENEW;
+     }
+   else if (ret != CURLM_OK)
      {
         ERR("curl_multi_perform() failed: %s", curl_multi_strerror(ret));
         _ecore_con_url_curl_clear();
         ecore_timer_freeze(_curl_timeout);
-        return ECORE_CALLBACK_RENEW;
-     }
-   if (ret == CURLM_CALL_MULTI_PERFORM)
-     {
-        DBG("Call multiperform again");
         return ECORE_CALLBACK_RENEW;
      }
 

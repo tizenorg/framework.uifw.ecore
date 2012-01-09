@@ -88,6 +88,7 @@ Makefile.in
 /src/bin/ecore_test
 /src/lib/ecore_x/xcb/ecore_xcb_keysym_table.h
 /src/util/makekeys
+INSTALL
 debian/*.debhelper.log
 debian/*.substvars
 debian/*.debhelper
