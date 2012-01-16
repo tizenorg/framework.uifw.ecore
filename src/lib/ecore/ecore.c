@@ -2,6 +2,7 @@
 # include <config.h>
 #endif
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -222,8 +223,22 @@ ecore_shutdown(void)
      _ecore_lock();
      if (--_ecore_init_count != 0)
        goto unlock;
-
-     ecore_pipe_del(_thread_call);
+   
+   /* this looks horrible - a hack for now, but something to note. as
+    * we delete the _thread_call pipe a thread COULD be doing
+    * ecore_pipe_write() or what not to it at the same time - we
+    * must ensure all possible users of this _thread_call are finished
+    * and exited before we delete it here */
+   /*
+    * ok - this causes other valgrind complaints regarding glib aquiring
+    * locks internally. so fix bug a or bug b. let's leave the original
+    * bug in then and leave this as a note for now
+     Ecore_Pipe *p;
+     p = _thread_call;
+     _thread_call = NULL;
+     ecore_pipe_wait(p, 1, 0.1);
+     ecore_pipe_del(p);
+    */
      eina_lock_free(&_thread_safety);
      eina_condition_free(&_thread_cond);
      eina_lock_free(&_thread_mutex);

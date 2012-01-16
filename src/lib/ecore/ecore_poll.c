@@ -7,6 +7,17 @@
 #include "Ecore.h"
 #include "ecore_private.h"
 
+struct _Ecore_Poller
+{
+   EINA_INLIST;
+                 ECORE_MAGIC;
+   int           ibit;
+   unsigned char delete_me : 1;
+   Ecore_Task_Cb func;
+   void         *data;
+};
+GENERIC_ALLOC_SIZE_DECLARE(Ecore_Poller);
+
 static Ecore_Timer *timer = NULL;
 static int min_interval = -1;
 static int interval_incr = 0;
@@ -99,8 +110,8 @@ _ecore_poller_cb_timer(void *data __UNUSED__)
 
    at_tick++;
    last_tick = ecore_time_get();
-   /* we have 16 counters - each incriments every time the poller counter
-    * "ticks". it incriments by the minimum interval (which can be 1, 2, 4,
+   /* we have 16 counters - each increments every time the poller counter
+    * "ticks". it increments by the minimum interval (which can be 1, 2, 4,
     * 7, 16 etc. up to 32768) */
    for (i = 0; i < 15; i++)
      {
@@ -169,7 +180,7 @@ _ecore_poller_cb_timer(void *data __UNUSED__)
    at_tick--;
 
    /* if the timer was deleted then there is no point returning 1 - ambiguous
-    * if we do as it im plies "keep running me" but we have been deleted
+    * if we do as it implies keep running me" but we have been deleted
     * anyway */
    if (!timer) return ECORE_CALLBACK_CANCEL;
 
@@ -205,7 +216,7 @@ ecore_poller_poll_interval_set(Ecore_Poller_Type type __UNUSED__,
  * @param   type The ticker type to query
  * @return  The time in seconds between ticks of the ticker clock
  *
- * This will get the time between ticks of the specifider ticker clock.
+ * This will get the time between ticks of the specified ticker clock.
  */
 EAPI double
 ecore_poller_poll_interval_get(Ecore_Poller_Type type __UNUSED__)
