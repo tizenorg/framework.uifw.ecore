@@ -1,3 +1,11 @@
+ecore (1.1.0+svn.66972slp2+build01) unstable; urgency=low
+
+  * Package Upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.66972slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Mon, 16 Jan 2012 18:29:42 +0900
+
 ecore (1.1.0+svn.65878slp2+build05) unstable; urgency=low
 
   * jpeg7 -> jpeg8
