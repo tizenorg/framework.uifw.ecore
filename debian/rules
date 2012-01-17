@@ -22,7 +22,8 @@ DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb \
 	--disable-openssl \
 	--enable-glib-integration-always \
 	--enable-ecore-x-gesture \
-	--disable-xim
+	--disable-xim \
+	--disable-ecore-imf-scim
 DEB_MAKE_EXTRA_ARGS := V=0
 
 DEB_MAKE_CLEAN_TARGET := distclean
