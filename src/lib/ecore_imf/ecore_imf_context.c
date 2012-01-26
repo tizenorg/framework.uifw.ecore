@@ -778,8 +778,6 @@ ecore_imf_context_new(const Ecore_IMF_Context_Class *ctxc)
    ctx->data = NULL;
    ctx->retrieve_surrounding_func = NULL;
    ctx->retrieve_surrounding_data = NULL;
-   ctx->input_panel_x = 0;
-   ctx->input_panel_y = 0;
    ctx->input_panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
    ctx->callbacks = NULL;
 
@@ -1584,18 +1582,9 @@ ecore_imf_context_input_panel_event_callback_del (Ecore_IMF_Context *ctx,
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx, int x, int y)
 {
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
-                         "ecore_imf_context_input_panel_move");
-        return;
-     }
-
-   if (ctx->klass->input_panel_move) ctx->klass->input_panel_move(ctx, x, y);
-   ctx->input_panel_x = x;
-   ctx->input_panel_y = y;
+   // will be deprecated
 }
 

@@ -469,7 +469,7 @@ EAPI void                          ecore_imf_context_input_panel_event_callback_
 EAPI void                          ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
 EAPI void                          ecore_imf_context_input_panel_key_disabled_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
 EAPI Eina_List                    *ecore_imf_context_input_panel_key_disabled_list_get(Ecore_IMF_Context *ctx);
-EAPI void                          ecore_imf_context_input_panel_move(Ecore_IMF_Context *ctx, int x, int y);
+EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_move(Ecore_IMF_Context *ctx, int x, int y);
 
 /* The following entry points must be exported by each input method module
  */
