@@ -1681,7 +1681,7 @@ ecore_imf_context_input_panel_event_callback_add (Ecore_IMF_Context *ctx,
      }
 
    if (ctx->klass->input_panel_event_callback_add)
-     ctx->klass->input_panel_event_callback_add(ctx, type, func, data);
+     ctx->klass->input_panel_event_callback_add(ctx, type, func, (void *)data);
 }
 
 /**
@@ -1719,7 +1719,7 @@ ecore_imf_context_input_panel_event_callback_del (Ecore_IMF_Context *ctx,
  * @since 1.1.0
  */
 EINA_DEPRECATED EAPI void
-ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx, int x, int y)
+ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx __UNUSED__, int x __UNUSED__, int y __UNUSED__)
 {
    // will be deprecated
 }
