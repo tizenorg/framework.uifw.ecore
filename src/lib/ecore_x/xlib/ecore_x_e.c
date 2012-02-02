@@ -768,7 +768,7 @@ ecore_x_e_illume_quickpanel_position_update_send(Ecore_X_Window win)
                                  1, 0, 0, 0, 0);
 }
 
-/* added by doyoun.kang - for sliding window */
+/* for sliding window */
 EAPI void 
 ecore_x_e_illume_sliding_win_state_set(Ecore_X_Window win,
                                        unsigned int   is_visible)
@@ -1189,3 +1189,59 @@ ecore_x_e_comp_dri_buff_flip_supported_get(Ecore_X_Window root)
     }
   return EINA_FALSE;
 }
+
+static Ecore_X_Atom
+_ecore_x_e_illume_window_state_atom_get(Ecore_X_Illume_Window_State state)
+{
+   switch (state)
+     {
+      case ECORE_X_ILLUME_WINDOW_STATE_NORMAL:
+        return ECORE_X_ATOM_E_ILLUME_WINDOW_STATE_NORMAL;
+
+      case ECORE_X_ILLUME_WINDOW_STATE_INSET:
+        return ECORE_X_ATOM_E_ILLUME_WINDOW_STATE_INSET;
+
+      default:
+        break;
+     }
+   return 0;
+}
+
+static Ecore_X_Illume_Window_State
+_ecore_x_e_illume_window_state_get(Ecore_X_Atom atom)
+{
+   if (atom == ECORE_X_ATOM_E_ILLUME_WINDOW_STATE_NORMAL)
+     return ECORE_X_ILLUME_WINDOW_STATE_NORMAL;
+
+   if (atom == ECORE_X_ATOM_E_ILLUME_WINDOW_STATE_INSET)
+     return ECORE_X_ILLUME_WINDOW_STATE_INSET;
+
+   return ECORE_X_ILLUME_WINDOW_STATE_NORMAL;
+}
+
+EAPI void
+ecore_x_e_illume_window_state_set(Ecore_X_Window win,
+                                  Ecore_X_Illume_Window_State state)
+{
+   Ecore_X_Atom atom = 0;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   atom = _ecore_x_e_illume_window_state_atom_get(state);
+   ecore_x_window_prop_atom_set(win, ECORE_X_ATOM_E_ILLUME_WINDOW_STATE,
+                                &atom, 1);
+}
+
+EAPI Ecore_X_Illume_Window_State
+ecore_x_e_illume_window_state_get(Ecore_X_Window win)
+{
+   Ecore_X_Atom atom;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!ecore_x_window_prop_atom_get(win,
+                                     ECORE_X_ATOM_E_ILLUME_WINDOW_STATE,
+                                     &atom, 1))
+     return ECORE_X_ILLUME_WINDOW_STATE_NORMAL;
+
+   return _ecore_x_e_illume_window_state_get(atom);
+}
+
