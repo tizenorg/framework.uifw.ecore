@@ -1054,7 +1054,7 @@ ecore_imf_context_delete_surrounding_event_add(Ecore_IMF_Context *ctx, int offse
  * @param func The (callback) function to be called when the event is
  *        triggered
  * @param data The data pointer to be passed to @p func
- * @ingroup Ecore_IMF_Context_Module_Group
+ * @ingroup Ecore_IMF_Context_Group
  * @since 1.2.0
  */
 EAPI void
@@ -1095,7 +1095,7 @@ ecore_imf_context_event_callback_add(Ecore_IMF_Context *ctx, Ecore_IMF_Callback_
  * @param type The type of event that was trigerring the callback
  * @param func The (callback) function that was to be called when the event was triggered
  * @return the data pointer
- * @ingroup Ecore_IMF_Context_Module_Group
+ * @ingroup Ecore_IMF_Context_Group
  * @since 1.2.0
  */
 EAPI void *
@@ -1169,7 +1169,7 @@ ecore_imf_context_event_callback_call(Ecore_IMF_Context *ctx, Ecore_IMF_Callback
  * Ask the Input Method Context to show the control panel of using Input Method.
  *
  * @param ctx An #Ecore_IMF_Context.
- * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @ingroup Ecore_IMF_Context_Group
  * @since 1.1.0
  */
 EAPI void
@@ -1189,7 +1189,7 @@ ecore_imf_context_control_panel_show (Ecore_IMF_Context *ctx)
  * Ask the Input Method Context to hide the control panel of using Input Method.
  *
  * @param ctx An #Ecore_IMF_Context.
- * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @ingroup Ecore_IMF_Context_Group
  * @since 1.1.0
  */
 EAPI void
@@ -1209,7 +1209,7 @@ ecore_imf_context_control_panel_hide (Ecore_IMF_Context *ctx)
  * Ask the Input Method Context to show the input panel (virtual keyboard).
  *
  * @param ctx An #Ecore_IMF_Context.
- * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @ingroup Ecore_IMF_Context_Group
  * @since 1.1.0
  */
 EAPI void
@@ -1229,7 +1229,7 @@ ecore_imf_context_input_panel_show(Ecore_IMF_Context *ctx)
  * Ask the Input Method Context to hide the input panel.
  *
  * @param ctx An #Ecore_IMF_Context.
- * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @ingroup Ecore_IMF_Context_Group
  * @since 1.1.0
  */
 EAPI void
@@ -1250,7 +1250,7 @@ ecore_imf_context_input_panel_hide(Ecore_IMF_Context *ctx)
  *
  * @param ctx An #Ecore_IMF_Context.
  * @param layout see #ECORE_IMF_INPUT_PANEL_LAYOUT
- * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @ingroup Ecore_IMF_Context_Group
  * @since 1.1.0
  */
 EAPI void
@@ -1274,7 +1274,7 @@ ecore_imf_context_input_panel_layout_set (Ecore_IMF_Context *ctx, Ecore_IMF_Inpu
  *
  * @param ctx An #Ecore_IMF_Context.
  * @return layout see #Ecore_IMF_Input_Panel_Layout
- * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @ingroup Ecore_IMF_Context_Group
  * @since 1.1.0
  */
 EAPI Ecore_IMF_Input_Panel_Layout
@@ -1301,7 +1301,7 @@ ecore_imf_context_input_panel_layout_get (Ecore_IMF_Context *ctx)
  *
  * @param ctx An #Ecore_IMF_Context.
  * @param lang the language to be set to the input panel.
- * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @ingroup Ecore_IMF_Context_Group
  * @since 1.1.0
  */
 EAPI void
@@ -1325,7 +1325,7 @@ ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_In
  *
  * @param ctx An #Ecore_IMF_Context.
  * @return Ecore_IMF_Input_Panel_Lang
- * @ingroup Ecore_IMF_Context_IMControl_Group
+ * @ingroup Ecore_IMF_Context_Group
  * @since 1.1.0
  */
 EAPI Ecore_IMF_Input_Panel_Lang
