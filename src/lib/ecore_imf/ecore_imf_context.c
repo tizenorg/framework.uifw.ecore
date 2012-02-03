@@ -1475,7 +1475,7 @@ ecore_imf_context_input_panel_geometry_get (Ecore_IMF_Context *ctx, int *x, int 
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char *label, int key_value, const char *key_string)
 {
    Private_Key_Item *key_item;
@@ -1549,7 +1549,7 @@ ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layou
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EAPI Eina_List *
+EINA_DEPRECATED EAPI Eina_List *
 ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1574,7 +1574,7 @@ ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx)
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EAPI void
+EINA_DEPRECATED EAPI void
 ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled)
 {
    Disable_Key_Item *key_item;
@@ -1621,7 +1621,7 @@ ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layo
  * @ingroup Ecore_IMF_Context_IMControl_Group
  * @since 1.1.0
  */
-EAPI Eina_List *
+EINA_DEPRECATED EAPI Eina_List *
 ecore_imf_context_input_panel_key_disabled_list_get (Ecore_IMF_Context *ctx)
 {
    return ctx->disabled_key_list;
