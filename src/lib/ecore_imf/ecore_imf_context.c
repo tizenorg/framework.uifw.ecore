@@ -786,9 +786,6 @@ ecore_imf_context_new(const Ecore_IMF_Context_Class *ctxc)
    ctx->data = NULL;
    ctx->retrieve_surrounding_func = NULL;
    ctx->retrieve_surrounding_data = NULL;
-   ctx->input_panel_layout = ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
-   ctx->callbacks = NULL;
-
    return ctx;
 }
 
@@ -1285,7 +1282,7 @@ ecore_imf_context_input_panel_layout_get (Ecore_IMF_Context *ctx)
      {
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
                          "ecore_imf_context_input_panel_layout_get");
-        return ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
+        return ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID;
      }
 
    if (ctx->klass->input_panel_layout_get)
@@ -1293,7 +1290,7 @@ ecore_imf_context_input_panel_layout_get (Ecore_IMF_Context *ctx)
         return ctx->input_panel_layout;
      }
    else
-     return ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL;
+     return ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID;
 }
 
 /**
