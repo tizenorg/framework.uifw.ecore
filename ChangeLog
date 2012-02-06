@@ -465,3 +465,11 @@
         using "Plug" image object. Before only one to one communication 
         is possible, but now many "plug"s can show socket's canvas.
 
+2011-12-26  Christopher Michael (devilhorns)
+
+        * Add Ecore_X function to return the keycode from a given keyname.
+
+2012-02-06  Jihoon Kim (jihoon)
+
+        * Set ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL as default layout in ecore_imf_context_add.
+        * Add Ecore_IMF function to set or get the input panel-specific data.

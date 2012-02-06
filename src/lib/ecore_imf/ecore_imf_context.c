@@ -1386,18 +1386,19 @@ ecore_imf_context_input_panel_enabled_get (Ecore_IMF_Context *ctx)
 }
 
 /**
- * Set the specific data to pass to the input panel.
+ * Set the input panel-specific data to deliver to the input panel.
  * this API is used by applications to deliver specific data to the input panel.
- * the data format MUST be negotiated by both application and the input panel. 
+ * the data format MUST be negotiated by both application and the input panel.
+ * The size and format of data are defined by the input panel.
  *
  * @param ctx An #Ecore_IMF_Context.
  * @param data The specific data to be set to the input panel.
- * @param len the length of data
- * @ingroup Ecore_IMF_Context_IMControl_Group
- * @since 1.1.0
+ * @param len the length of data, in bytes, to send to the input panel
+ * @ingroup Ecore_IMF_Context_Group
+ * @since 1.2.0
  */
 EAPI void
-ecore_imf_context_input_panel_imdata_set (Ecore_IMF_Context *ctx, const char *data, int len)
+ecore_imf_context_input_panel_imdata_set(Ecore_IMF_Context *ctx, const void *data, int len)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1406,7 +1407,7 @@ ecore_imf_context_input_panel_imdata_set (Ecore_IMF_Context *ctx, const char *da
         return;
      }
 
-   if ((!data) || (len <=0)) return;
+   if (!data) return;
 
    if (ctx->klass->input_panel_imdata_set)
      ctx->klass->input_panel_imdata_set(ctx, data, len);
@@ -1418,11 +1419,11 @@ ecore_imf_context_input_panel_imdata_set (Ecore_IMF_Context *ctx, const char *da
  * @param ctx An #Ecore_IMF_Context.
  * @param data The specific data to be got from the input panel
  * @param len The length of data
- * @ingroup Ecore_IMF_Context_IMControl_Group
- * @since 1.1.0
+ * @ingroup Ecore_IMF_Context_Group
+ * @since 1.2.0
  */
 EAPI void
-ecore_imf_context_input_panel_imdata_get (Ecore_IMF_Context *ctx, char *data, int *len)
+ecore_imf_context_input_panel_imdata_get(Ecore_IMF_Context *ctx, void *data, int *len)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1446,7 +1447,7 @@ ecore_imf_context_input_panel_imdata_get (Ecore_IMF_Context *ctx, char *data, in
  * @param w width of the input panel
  * @param h height of the input panel
  * @ingroup Ecore_IMF_Context_IMControl_Group
- * @since 1.1.0
+ * @since 1.2.0
  */
 EAPI void
 ecore_imf_context_input_panel_geometry_get (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h)
@@ -1475,7 +1476,6 @@ ecore_imf_context_input_panel_geometry_get (Ecore_IMF_Context *ctx, int *x, int 
  * @param label text label to be appeared on private key
  * @param value value of key, If NULL it will use original value of key
  * @ingroup Ecore_IMF_Context_IMControl_Group
- * @since 1.1.0
  */
 EINA_DEPRECATED EAPI void
 ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char *label, int key_value, const char *key_string)
@@ -1549,7 +1549,6 @@ ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layou
  * @param ctx An #Ecore_IMF_Context.
  * @return Return the list of private key
  * @ingroup Ecore_IMF_Context_IMControl_Group
- * @since 1.1.0
  */
 EINA_DEPRECATED EAPI Eina_List *
 ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx)
@@ -1574,7 +1573,6 @@ ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx)
  * @param key_index index of key to be set
  * @param disabled The state
  * @ingroup Ecore_IMF_Context_IMControl_Group
- * @since 1.1.0
  */
 EINA_DEPRECATED EAPI void
 ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled)
@@ -1635,7 +1633,7 @@ ecore_imf_context_input_panel_key_disabled_list_get (Ecore_IMF_Context *ctx)
  * @param ctx An #Ecore_IMF_Context.
  * @param The state of input panel.
  * @ingroup Ecore_IMF_Context_IMControl_Group
- * @since 1.1.0
+ * @since 1.2.0
  */
 EAPI Ecore_IMF_Input_Panel_State
 ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx)
@@ -1722,4 +1720,3 @@ ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx __UNUSED__, int x __U
 {
    // will be deprecated
 }
-
