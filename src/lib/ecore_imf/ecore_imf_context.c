@@ -1450,7 +1450,7 @@ ecore_imf_context_input_panel_imdata_get(Ecore_IMF_Context *ctx, void *data, int
  * @since 1.2.0
  */
 EAPI void
-ecore_imf_context_input_panel_geometry_get (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h)
+ecore_imf_context_input_panel_geometry_get(Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1478,7 +1478,7 @@ ecore_imf_context_input_panel_geometry_get (Ecore_IMF_Context *ctx, int *x, int 
  * @ingroup Ecore_IMF_Context_IMControl_Group
  */
 EINA_DEPRECATED EAPI void
-ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char *label, int key_value, const char *key_string)
+ecore_imf_context_input_panel_private_key_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char *label, int key_value, const char *key_string)
 {
    Private_Key_Item *key_item;
    Eina_List *l;
@@ -1551,7 +1551,7 @@ ecore_imf_context_input_panel_private_key_set (Ecore_IMF_Context *ctx, int layou
  * @ingroup Ecore_IMF_Context_IMControl_Group
  */
 EINA_DEPRECATED EAPI Eina_List *
-ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx)
+ecore_imf_context_input_panel_private_key_list_get(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1575,7 +1575,7 @@ ecore_imf_context_input_panel_private_key_list_get  (Ecore_IMF_Context *ctx)
  * @ingroup Ecore_IMF_Context_IMControl_Group
  */
 EINA_DEPRECATED EAPI void
-ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled)
+ecore_imf_context_input_panel_key_disabled_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled)
 {
    Disable_Key_Item *key_item;
    Eina_List *l;
@@ -1622,7 +1622,7 @@ ecore_imf_context_input_panel_key_disabled_set (Ecore_IMF_Context *ctx, int layo
  * @since 1.1.0
  */
 EINA_DEPRECATED EAPI Eina_List *
-ecore_imf_context_input_panel_key_disabled_list_get (Ecore_IMF_Context *ctx)
+ecore_imf_context_input_panel_key_disabled_list_get(Ecore_IMF_Context *ctx)
 {
    return ctx->disabled_key_list;
 }
@@ -1636,7 +1636,7 @@ ecore_imf_context_input_panel_key_disabled_list_get (Ecore_IMF_Context *ctx)
  * @since 1.2.0
  */
 EAPI Ecore_IMF_Input_Panel_State
-ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx)
+ecore_imf_context_input_panel_state_get(Ecore_IMF_Context *ctx)
 {
    Ecore_IMF_Input_Panel_State state = ECORE_IMF_INPUT_PANEL_STATE_INVALID;
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1665,10 +1665,10 @@ ecore_imf_context_input_panel_state_get (Ecore_IMF_Context *ctx)
  * @since 1.1.0
  */
 EAPI void
-ecore_imf_context_input_panel_event_callback_add (Ecore_IMF_Context *ctx,
-                                                  Ecore_IMF_Input_Panel_Event type,
-                                                  void (*func) (void *data, Ecore_IMF_Context *ctx, int value),
-                                                  const void *data)
+ecore_imf_context_input_panel_event_callback_add(Ecore_IMF_Context *ctx,
+                                                 Ecore_IMF_Input_Panel_Event type,
+                                                 void (*func) (void *data, Ecore_IMF_Context *ctx, int value),
+                                                 const void *data)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1691,9 +1691,9 @@ ecore_imf_context_input_panel_event_callback_add (Ecore_IMF_Context *ctx,
  * @since 1.1.0
  */
 EAPI void
-ecore_imf_context_input_panel_event_callback_del (Ecore_IMF_Context *ctx,
-                                                  Ecore_IMF_Input_Panel_Event type,
-                                                  void (*func) (void *data, Ecore_IMF_Context *ctx, int value))
+ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx,
+                                                 Ecore_IMF_Input_Panel_Event type,
+                                                 void (*func) (void *data, Ecore_IMF_Context *ctx, int value))
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1716,7 +1716,7 @@ ecore_imf_context_input_panel_event_callback_del (Ecore_IMF_Context *ctx,
  * @since 1.1.0
  */
 EINA_DEPRECATED EAPI void
-ecore_imf_context_input_panel_move (Ecore_IMF_Context *ctx __UNUSED__, int x __UNUSED__, int y __UNUSED__)
+ecore_imf_context_input_panel_move(Ecore_IMF_Context *ctx __UNUSED__, int x __UNUSED__, int y __UNUSED__)
 {
    // will be deprecated
 }

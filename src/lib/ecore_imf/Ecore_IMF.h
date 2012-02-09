@@ -384,14 +384,10 @@ struct _Ecore_IMF_Context_Class
    void (*cursor_location_set) (Ecore_IMF_Context *ctx, int x, int y, int w, int h);
    void (*input_panel_imdata_set)(Ecore_IMF_Context *ctx, const void* data, int len);
    void (*input_panel_imdata_get)(Ecore_IMF_Context *ctx, void* data, int *len);
-
-   void (*input_panel_geometry_get)       (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
-   void (*input_panel_private_key_set)    (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, const char* value);
-   void (*input_panel_key_disabled_set)   (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
-
+   void (*input_panel_geometry_get)(Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
+   void (*input_panel_private_key_set)(Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, const char* value);
+   void (*input_panel_key_disabled_set)(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
    Ecore_IMF_Input_Panel_State (*input_panel_state_get) (Ecore_IMF_Context *ctx);
-
-   /* CallBack APIs  */
    void (*input_panel_event_callback_add) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
    void (*input_panel_event_callback_del) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
 };
