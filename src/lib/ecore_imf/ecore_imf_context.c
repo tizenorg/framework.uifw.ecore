@@ -1638,12 +1638,12 @@ ecore_imf_context_input_panel_key_disabled_list_get(Ecore_IMF_Context *ctx)
 EAPI Ecore_IMF_Input_Panel_State
 ecore_imf_context_input_panel_state_get(Ecore_IMF_Context *ctx)
 {
-   Ecore_IMF_Input_Panel_State state = ECORE_IMF_INPUT_PANEL_STATE_INVALID;
+   Ecore_IMF_Input_Panel_State state = ECORE_IMF_INPUT_PANEL_STATE_HIDE;
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
         ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
                          "ecore_imf_context_input_panel_state_get");
-        return ECORE_IMF_INPUT_PANEL_STATE_INVALID;
+        return ECORE_IMF_INPUT_PANEL_STATE_HIDE;
      }
 
    if (ctx->klass->input_panel_state_get)
