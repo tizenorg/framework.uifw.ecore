@@ -624,14 +624,14 @@ _ecore_evas_constructor_wayland_egl(int x, int y, int w, int h, const char *extr
 {
    char *disp_name = NULL;
    unsigned int frame = 0;
-//   Ecore_Evas *ee;
+   Ecore_Evas *ee;
 
    _ecore_evas_parse_extra_options_str(extra_options, "display=", &disp_name);
    _ecore_evas_parse_extra_options_uint(extra_options, "frame=", &frame);
-//   ee = ecore_evas_wayland_egl_new(disp_name, x, y, w, h, frame);
+   ee = ecore_evas_wayland_egl_new(disp_name, x, y, w, h, frame);
    free(disp_name);
 
-   return NULL;
+   return ee;
 }
 #endif
 
@@ -2005,7 +2005,7 @@ ecore_evas_fullscreen_get(const Ecore_Evas *ee)
  * Set whether or not an Ecore_Evas' window should avoid damage
  *
  * @param ee The Ecore_Evas
- * @param The type of the damage management
+ * @param on The type of the damage management
  *
  * This function causes @p ee to be drawn to a pixmap to avoid recalculations.
  * On expose events it will copy from the pixmap to the window.
@@ -2675,3 +2675,55 @@ ecore_evas_input_event_unregister(Ecore_Evas *ee)
 {
    ecore_event_window_unregister((Ecore_Window)ee);
 }
+
+#if defined(BUILD_ECORE_EVAS_WAYLAND_SHM) || defined (BUILD_ECORE_EVAS_WAYLAND_EGL)
+EAPI void 
+ecore_evas_wayland_resize(Ecore_Evas *ee, int location)
+{
+   if (!ee) return;
+   if (!strcmp(ee->driver, "wayland_shm"))
+     {
+#ifdef BUILD_ECORE_EVAS_WAYLAND_SHM
+        _ecore_evas_wayland_shm_resize(ee, location);
+#endif
+     }
+   else if (!strcmp(ee->driver, "wayland_egl"))
+     {
+#ifdef BUILD_ECORE_EVAS_WAYLAND_EGL
+        _ecore_evas_wayland_egl_resize(ee, location);
+#endif
+     }
+}
+
+EAPI void 
+ecore_evas_wayland_drag_start(Ecore_Evas *ee, Ecore_Evas *drag_ee, void *source)
+{
+   if ((!ee) || (!source)) return;
+   if (!ee->engine.wl.surface) return;
+
+   if (!strcmp(ee->driver, "wayland_shm"))
+     {
+#ifdef BUILD_ECORE_EVAS_WAYLAND_SHM
+        _ecore_evas_wayland_shm_drag_start(ee, drag_ee, source);
+#endif
+     }
+   else if (!strcmp(ee->driver, "wayland_egl"))
+     {
+#ifdef BUILD_ECORE_EVAS_WAYLAND_EGL
+        _ecore_evas_wayland_egl_drag_start(ee, drag_ee, source);
+#endif
+     }
+}
+#else
+EAPI void 
+ecore_evas_wayland_resize(Ecore_Evas *ee __UNUSED__, int location __UNUSED__)
+{
+
+}
+
+EAPI void 
+ecore_evas_wayland_drag_start(Ecore_Evas *ee __UNUSED__, Ecore_Evas *drag_ee __UNUSED__, void *source __UNUSED__)
+{
+
+}
+#endif

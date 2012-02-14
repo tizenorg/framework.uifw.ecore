@@ -70,6 +70,7 @@ static void _ecore_evas_wl_layer_set(Ecore_Evas *ee, int layer);
 static void _ecore_evas_wl_focus_set(Ecore_Evas *ee, int focus __UNUSED__);
 static void _ecore_evas_wl_iconified_set(Ecore_Evas *ee, int iconify);
 static void _ecore_evas_wl_maximized_set(Ecore_Evas *ee, int max);
+static void _ecore_evas_wl_fullscreen_set(Ecore_Evas *ee, int full __UNUSED__);
 static int _ecore_evas_wl_render(Ecore_Evas *ee);
 static void _ecore_evas_wl_screen_geometry_get(const Ecore_Evas *ee __UNUSED__, int *x, int *y, int *w, int *h);
 static void _ecore_evas_wl_buffer_new(Ecore_Evas *ee, void **dest);
@@ -84,6 +85,7 @@ static Eina_Bool _ecore_evas_wl_event_focus_in(void *data __UNUSED__, int type _
 static Eina_Bool _ecore_evas_wl_event_focus_out(void *data __UNUSED__, int type __UNUSED__, void *event);
 
 static void _ecore_evas_wl_handle_configure(void *data, struct wl_shell_surface *shell_surface __UNUSED__, uint32_t timestamp __UNUSED__, uint32_t edges __UNUSED__, int32_t width, int32_t height);
+static void _ecore_evas_wl_handle_popup_done(void *data __UNUSED__, struct wl_shell_surface *shell_surface __UNUSED__);
 
 /* SMART stuff for frame */
 static Evas_Smart *_ecore_evas_wl_smart = NULL;
@@ -104,6 +106,7 @@ static uint32_t _ecore_evas_wl_btn_timestamp;
 static const struct wl_shell_surface_listener _ecore_evas_wl_shell_surface_listener = 
 {
    _ecore_evas_wl_handle_configure,
+   _ecore_evas_wl_handle_popup_done
 };
 
 static Ecore_Evas_Engine_Func _ecore_wl_engine_func = 
@@ -147,7 +150,7 @@ static Ecore_Evas_Engine_Func _ecore_wl_engine_func =
    NULL, // func borderless set
    NULL, // func override set
    _ecore_evas_wl_maximized_set, 
-   NULL, // func fullscreen set
+   _ecore_evas_wl_fullscreen_set, 
    NULL, // func avoid_damage set
    NULL, // func withdrawn set
    NULL, // func sticky set
@@ -267,17 +270,6 @@ ecore_evas_wayland_shm_new(const char *disp_name, int x, int y, int w, int h, in
    return ee;
 }
 
-EAPI void 
-ecore_evas_wayland_shm_resize(Ecore_Evas *ee, int location)
-{
-   LOGFN(__FILE__, __LINE__, __FUNCTION__);
-
-   if ((!ee) || (!ee->engine.wl.shell_surface)) return;
-   wl_shell_surface_resize(ee->engine.wl.shell_surface, 
-                           ecore_wl_input_device_get(), 
-                           _ecore_evas_wl_btn_timestamp, location);
-}
-
 /* local functions */
 static int 
 _ecore_evas_wl_init(void)
@@ -378,6 +370,7 @@ _ecore_evas_wl_free(Ecore_Evas *ee)
    ee->engine.wl.surface = NULL;
 
    ecore_event_window_unregister(ee->prop.window);
+   ecore_evas_input_event_unregister(ee);
 
    _ecore_evas_wl_shutdown();
    ecore_wl_shutdown();
@@ -450,9 +443,12 @@ _ecore_evas_wl_move(Ecore_Evas *ee, int x, int y)
    ee->x = x;
    ee->y = y;
 
-   wl_shell_surface_move(ee->engine.wl.shell_surface, 
-                         ecore_wl_input_device_get(), 
-                         _ecore_evas_wl_btn_timestamp);
+   if (ee->engine.wl.shell_surface)
+     {
+        wl_shell_surface_move(ee->engine.wl.shell_surface, 
+                              ecore_wl_input_device_get(), 
+                              _ecore_evas_wl_btn_timestamp);
+     }
 
    if (ee->func.fn_move) ee->func.fn_move(ee);
 }
@@ -468,8 +464,21 @@ _ecore_evas_wl_resize(Ecore_Evas *ee, int w, int h)
    if (w < 1) w = 1;
    if (h < 1) h = 1;
    if ((ee->w == w) && (ee->h == h)) return;
+
    ee->req.w = w;
    ee->req.h = h;
+
+   if (ee->visible) 
+     {
+        /* damage old surface, if it exists */
+
+        /* NB: This removes any lingering screen artifacts in the compositor.
+         * This may be a 'HACK' if the issue is actually in the wayland 
+         * compositor, but for now lets implement this so we don't have screen 
+         * artifacts laying around during a resize */
+        if (ee->engine.wl.surface)
+          wl_surface_damage(ee->engine.wl.surface, 0, 0, ee->w, ee->h);
+     }
 
    /* get engine info */
    einfo = (Evas_Engine_Info_Wayland_Shm *)evas_engine_info_get(ee->evas);
@@ -497,6 +506,7 @@ _ecore_evas_wl_resize(Ecore_Evas *ee, int w, int h)
    /* change evas output & viewport sizes */
    evas_output_size_set(ee->evas, ee->w, ee->h);
    evas_output_viewport_set(ee->evas, 0, 0, ee->w, ee->h);
+   evas_damage_rectangle_add(ee->evas, 0, 0, ee->w, ee->h);
    if (ee->engine.wl.frame)
      evas_object_resize(ee->engine.wl.frame, ee->w, ee->h);
 
@@ -508,11 +518,11 @@ _ecore_evas_wl_resize(Ecore_Evas *ee, int w, int h)
 
    if (ee->visible) 
      {
-        /* if visible, attach to surface */
-        wl_surface_attach(ee->engine.wl.surface, ee->engine.wl.buffer, 0, 0);
-
         /* damage surface */
         wl_surface_damage(ee->engine.wl.surface, 0, 0, ee->w, ee->h);
+
+        /* if visible, attach to surface */
+        wl_surface_attach(ee->engine.wl.surface, ee->engine.wl.buffer, 0, 0);
      }
 
    if (ee->func.fn_resize) ee->func.fn_resize(ee);
@@ -540,10 +550,6 @@ _ecore_evas_wl_show(Ecore_Evas *ee)
    ee->engine.wl.shell_surface = 
      wl_shell_get_shell_surface(ecore_wl_shell_get(), ee->engine.wl.surface);
 
-   /* add configure listener for wayland resize events */
-   wl_shell_surface_add_listener(ee->engine.wl.shell_surface, 
-                                 &_ecore_evas_wl_shell_surface_listener, ee);
-
    /* set toplevel */
    wl_shell_surface_set_toplevel(ee->engine.wl.shell_surface);
 
@@ -558,6 +564,10 @@ _ecore_evas_wl_show(Ecore_Evas *ee)
 
    /* set new engine destination */
    evas_engine_info_set(ee->evas, (Evas_Engine_Info *)einfo);
+
+   /* add configure listener for wayland resize events */
+   wl_shell_surface_add_listener(ee->engine.wl.shell_surface, 
+                                 &_ecore_evas_wl_shell_surface_listener, ee);
 
    /* flush new buffer fd */
    ecore_wl_flush();
@@ -819,6 +829,16 @@ _ecore_evas_wl_maximized_set(Ecore_Evas *ee, int max)
    /* FIXME: Implement this in Wayland someshow */
 }
 
+static void 
+_ecore_evas_wl_fullscreen_set(Ecore_Evas *ee, int full __UNUSED__)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   if ((!ee) || (!ee->visible)) return;
+   if (!ee->engine.wl.shell_surface) return;
+   wl_shell_surface_set_fullscreen(ee->engine.wl.shell_surface);
+}
+
 static int 
 _ecore_evas_wl_render(Ecore_Evas *ee)
 {
@@ -861,6 +881,8 @@ _ecore_evas_wl_render(Ecore_Evas *ee)
              evas_render_updates_free(updates);
              _ecore_evas_idle_timeout_update(ee);
              rend = 1;
+
+             ecore_wl_flush();
           }
 
         if (ee->func.fn_post_render) ee->func.fn_post_render(ee);
@@ -1028,13 +1050,22 @@ _ecore_evas_wl_handle_configure(void *data, struct wl_shell_surface *shell_surfa
 {
    Ecore_Evas *ee;
 
+   /* NB: Trap to prevent compositor from crashing */
+   if ((width <= 0) || (height <= 0)) return;
+
    if (!(ee = data)) return;
+
    if ((shell_surface) && (ee->engine.wl.shell_surface)) 
      {
         if (ee->engine.wl.shell_surface != shell_surface) return;
+        ecore_evas_resize(ee, width, height);
      }
+}
 
-   ecore_evas_resize(ee, width, height);
+static void 
+_ecore_evas_wl_handle_popup_done(void *data __UNUSED__, struct wl_shell_surface *shell_surface __UNUSED__) 
+{
+
 }
 
 static void 
@@ -1194,6 +1225,27 @@ _ecore_evas_wl_frame_add(Evas *evas)
 
    _ecore_evas_wl_smart_init();
    return evas_object_smart_add(evas, _ecore_evas_wl_smart);
+}
+
+void 
+_ecore_evas_wayland_shm_resize(Ecore_Evas *ee, int location)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   if ((!ee) || (!ee->engine.wl.shell_surface)) return;
+   wl_shell_surface_resize(ee->engine.wl.shell_surface, 
+                           ecore_wl_input_device_get(), 
+                           _ecore_evas_wl_btn_timestamp, location);
+}
+
+void 
+_ecore_evas_wayland_shm_drag_start(Ecore_Evas *ee, Ecore_Evas *drag_ee, void *source)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   if ((!ee) || (!ee->engine.wl.surface)) return;
+   if ((!source) || (!drag_ee)) return;
+   ecore_wl_drag_start(source, ee->engine.wl.surface, drag_ee->engine.wl.buffer);
 }
 
 #else

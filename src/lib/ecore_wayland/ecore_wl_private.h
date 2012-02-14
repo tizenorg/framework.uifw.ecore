@@ -44,4 +44,42 @@ extern int _ecore_wl_log_dom;
 # endif
 # define CRIT(...) EINA_LOG_DOM_CRIT(_ecore_wl_log_dom, __VA_ARGS__)
 
+typedef struct _Ecore_Wl_Dnd_Source
+{
+   struct wl_data_offer *offer;
+   int refs;
+
+   Eina_Array *types;
+
+   uint32_t timestamp;
+   void *data;
+} Ecore_Wl_Dnd_Source;
+
+typedef struct _Ecore_Wl_Dnd_Target
+{
+   /* NB: These are not the real fields for this structure, 
+    * and it is Bound to change....soon */
+   struct wl_data_offer *offer;
+   int refs;
+
+   Eina_Array *types;
+
+   uint32_t timestamp;
+   void *data;
+} Ecore_Wl_Dnd_Target;
+
+struct _Ecore_Wl_Drag_Source
+{
+   struct wl_data_device *data_dev;
+   struct wl_buffer *buffer;
+
+   int32_t hotspot_x, hotspot_y;
+   int32_t offset_x, offset_y;
+   const char *mimetype;
+   uint32_t timestamp;
+   void *data;
+
+   struct wl_data_source *data_source;
+};
+
 #endif
