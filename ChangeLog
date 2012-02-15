@@ -473,3 +473,24 @@
 
         * Set ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL as default layout in ecore_imf_context_add.
         * Add Ecore_IMF function to set or get the input panel-specific data.
+
+2012-02-07  Jihoon Kim (jihoon)
+
+        * Support ecore_imf_context_input_panel_show/hide in XIM and SCIM module.
+
+2012-02-08 Carsten Haitzler (The Rasterman)
+
+        * Add ecore_con_url_http_version_set() to set url request version
+
+2012-02-09  Jihoon Kim (jihoon)
+
+        * Provide compose, string in key down/up event in case of scim-input-pad.
+
+2012-02-10  Christopher Michael (devilhorns)
+
+        * Add Ecore_Evas function to allow setting a mouse pointer from efl/elm wayland clients.
+
+2012-02-15  Jihoon Kim (jihoon)
+
+        * Add ecore_imf APIs to set return key type, disable return key.
+
