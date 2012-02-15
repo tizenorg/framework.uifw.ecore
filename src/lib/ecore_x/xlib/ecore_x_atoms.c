@@ -315,7 +315,11 @@ _ecore_x_atoms_init(void)
       /* for illume window state */
       { "_E_ILLUME_WINDOW_STATE", &ECORE_X_ATOM_E_ILLUME_WINDOW_STATE },
       { "_E_ILLUME_WINDOW_STATE_NORMAL", &ECORE_X_ATOM_E_ILLUME_WINDOW_STATE_NORMAL },
-      { "_E_ILLUME_WINDOW_STATE_INSET", &ECORE_X_ATOM_E_ILLUME_WINDOW_STATE_INSET }
+      { "_E_ILLUME_WINDOW_STATE_INSET", &ECORE_X_ATOM_E_ILLUME_WINDOW_STATE_INSET },
+
+      /* for SDB(Samsung Debug Bridge) */
+      { "_SDB_SERVER_CONNECT", &ECORE_X_ATOM_SDB_SERVER_CONNECT },
+      { "_SDB_SERVER_DISCONNECT", &ECORE_X_ATOM_SDB_SERVER_DISCONNECT }
    };
    Atom *atoms;
    char **names;

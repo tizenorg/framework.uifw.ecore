@@ -382,17 +382,12 @@ struct _Ecore_IMF_Context_Class
    void (*input_panel_language_set) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang);
    Ecore_IMF_Input_Panel_Lang (*input_panel_language_get) (Ecore_IMF_Context *ctx);
    void (*cursor_location_set) (Ecore_IMF_Context *ctx, int x, int y, int w, int h);
-
-   void (*input_panel_imdata_set)         (Ecore_IMF_Context *ctx, const char* data, int len);
-   void (*input_panel_imdata_get)         (Ecore_IMF_Context *ctx, char* data, int *len);
-
-   void (*input_panel_geometry_get)       (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
-   void (*input_panel_private_key_set)    (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, const char* value);
-   void (*input_panel_key_disabled_set)   (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
-
+   void (*input_panel_imdata_set)(Ecore_IMF_Context *ctx, const void* data, int len);
+   void (*input_panel_imdata_get)(Ecore_IMF_Context *ctx, void* data, int *len);
+   void (*input_panel_geometry_get)(Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
+   void (*input_panel_private_key_set)(Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, const char* value);
+   void (*input_panel_key_disabled_set)(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
    Ecore_IMF_Input_Panel_State (*input_panel_state_get) (Ecore_IMF_Context *ctx);
-
-   /* CallBack APIs  */
    void (*input_panel_event_callback_add) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
    void (*input_panel_event_callback_del) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
 };
@@ -468,16 +463,17 @@ EAPI void                          ecore_imf_context_input_panel_language_set(Ec
 EAPI Ecore_IMF_Input_Panel_Lang    ecore_imf_context_input_panel_language_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_input_panel_enabled_set(Ecore_IMF_Context *ctx, Eina_Bool enable);
 EAPI Eina_Bool                     ecore_imf_context_input_panel_enabled_get(Ecore_IMF_Context *ctx);
-EAPI void                          ecore_imf_context_input_panel_imdata_set(Ecore_IMF_Context *ctx, const char *data, int len);
-EAPI void                          ecore_imf_context_input_panel_imdata_get(Ecore_IMF_Context *ctx, char *data, int *len);
+EAPI void                          ecore_imf_context_input_panel_imdata_set(Ecore_IMF_Context *ctx, const void *data, int len);
+EAPI void                          ecore_imf_context_input_panel_imdata_get(Ecore_IMF_Context *ctx, void *data, int *len);
 EAPI void                          ecore_imf_context_input_panel_geometry_get(Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
-EAPI void                          ecore_imf_context_input_panel_private_key_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, int key_value, const char* key_string);
-EAPI Eina_List                    *ecore_imf_context_input_panel_private_key_list_get(Ecore_IMF_Context *ctx);
 EAPI Ecore_IMF_Input_Panel_State   ecore_imf_context_input_panel_state_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_input_panel_event_callback_add(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), const void *data);
 EAPI void                          ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
-EAPI void                          ecore_imf_context_input_panel_key_disabled_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
-EAPI Eina_List                    *ecore_imf_context_input_panel_key_disabled_list_get(Ecore_IMF_Context *ctx);
+
+EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_private_key_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, int key_value, const char* key_string);
+EINA_DEPRECATED EAPI Eina_List    *ecore_imf_context_input_panel_private_key_list_get(Ecore_IMF_Context *ctx);
+EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_key_disabled_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
+EINA_DEPRECATED EAPI Eina_List    *ecore_imf_context_input_panel_key_disabled_list_get(Ecore_IMF_Context *ctx);
 EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_move(Ecore_IMF_Context *ctx, int x, int y);
 
 /* The following entry points must be exported by each input method module
