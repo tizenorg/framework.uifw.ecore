@@ -2,7 +2,6 @@
 #define _ECORE_IMF_H
 
 #include <Eina.h>
-#include <Ecore_IMF_Input_Panel_Key.h>
 
 #ifdef EAPI
 # undef EAPI
@@ -52,23 +51,6 @@ typedef enum
    ECORE_IMF_INPUT_PANEL_STATE_HIDE,    /**< Hide Input panel */
    ECORE_IMF_INPUT_PANEL_STATE_INVALID
 } Ecore_IMF_Input_Panel_State;
-
-typedef struct
-{
-   int layout_idx;
-   int key_idx;
-   Eina_Bool disabled;
-} Disable_Key_Item;
-
-typedef struct
-{
-   int layout_idx;
-   int key_idx;
-   int type;
-   char data[128]; // label or image path
-   int key_value;
-   char key_string[32];
-} Private_Key_Item;
 
 /* Events sent by the Input Method */
 typedef struct _Ecore_IMF_Event_Preedit_Start      Ecore_IMF_Event_Preedit_Start;
@@ -399,8 +381,6 @@ struct _Ecore_IMF_Context_Class
    void (*input_panel_return_key_type_set) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Return_Key_Type return_key_type);
    void (*input_panel_return_key_disabled_set) (Ecore_IMF_Context *ctx, Eina_Bool disabled);
    void (*input_panel_geometry_get)(Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
-   void (*input_panel_private_key_set)(Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, const char* value);
-   void (*input_panel_key_disabled_set)(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
    Ecore_IMF_Input_Panel_State (*input_panel_state_get) (Ecore_IMF_Context *ctx);
    void (*input_panel_event_callback_add) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
    void (*input_panel_event_callback_del) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
