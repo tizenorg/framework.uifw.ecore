@@ -1173,7 +1173,7 @@ ecore_imf_context_event_callback_call(Ecore_IMF_Context *ctx, Ecore_IMF_Callback
  * @since 1.1.0
  */
 EAPI void
-ecore_imf_context_control_panel_show (Ecore_IMF_Context *ctx)
+ecore_imf_context_control_panel_show(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1193,7 +1193,7 @@ ecore_imf_context_control_panel_show (Ecore_IMF_Context *ctx)
  * @since 1.1.0
  */
 EAPI void
-ecore_imf_context_control_panel_hide (Ecore_IMF_Context *ctx)
+ecore_imf_context_control_panel_hide(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1254,7 +1254,7 @@ ecore_imf_context_input_panel_hide(Ecore_IMF_Context *ctx)
  * @since 1.1.0
  */
 EAPI void
-ecore_imf_context_input_panel_layout_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout)
+ecore_imf_context_input_panel_layout_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1278,7 +1278,7 @@ ecore_imf_context_input_panel_layout_set (Ecore_IMF_Context *ctx, Ecore_IMF_Inpu
  * @since 1.1.0
  */
 EAPI Ecore_IMF_Input_Panel_Layout
-ecore_imf_context_input_panel_layout_get (Ecore_IMF_Context *ctx)
+ecore_imf_context_input_panel_layout_get(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1288,9 +1288,7 @@ ecore_imf_context_input_panel_layout_get (Ecore_IMF_Context *ctx)
      }
 
    if (ctx->klass->input_panel_layout_get)
-     {
-        return ctx->input_panel_layout;
-     }
+     return ctx->input_panel_layout;
    else
      return ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID;
 }
@@ -1305,7 +1303,7 @@ ecore_imf_context_input_panel_layout_get (Ecore_IMF_Context *ctx)
  * @since 1.1.0
  */
 EAPI void
-ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang)
+ecore_imf_context_input_panel_language_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1329,7 +1327,7 @@ ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_In
  * @since 1.1.0
  */
 EAPI Ecore_IMF_Input_Panel_Lang
-ecore_imf_context_input_panel_language_get (Ecore_IMF_Context *ctx)
+ecore_imf_context_input_panel_language_get(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1351,7 +1349,7 @@ ecore_imf_context_input_panel_language_get (Ecore_IMF_Context *ctx)
  * @since 1.1.0
  */
 EAPI void
-ecore_imf_context_input_panel_enabled_set (Ecore_IMF_Context *ctx,
+ecore_imf_context_input_panel_enabled_set(Ecore_IMF_Context *ctx,
                                            Eina_Bool enabled)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1373,7 +1371,7 @@ ecore_imf_context_input_panel_enabled_set (Ecore_IMF_Context *ctx,
  * @since 1.1.0
  */
 EAPI Eina_Bool
-ecore_imf_context_input_panel_enabled_get (Ecore_IMF_Context *ctx)
+ecore_imf_context_input_panel_enabled_get(Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
