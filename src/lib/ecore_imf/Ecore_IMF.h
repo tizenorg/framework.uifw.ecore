@@ -40,16 +40,14 @@ typedef enum
    ECORE_IMF_INPUT_PANEL_MODE_EVENT,               /**< Input Panel MODE Event */
    ECORE_IMF_INPUT_PANEL_LANGUAGE_EVENT,           /**< Input Panel LANGUAGE Event */
    ECORE_IMF_INPUT_PANEL_SHIFT_MODE_EVENT,         /**< Input Panel SHIFT MODE */
-   ECORE_IMF_INPUT_PANEL_PREEDIT_MODE_EVENT,       /**< Input Panel PREEDIT MODE */
-   ECORE_IMF_INPUT_PANEL_COMPLETION_MODE_EVENT,    /**< Input Panel COMPLETION MODE */
-   ECORE_IMF_INPUT_PANEL_CUSTOM_INPUT_MODE_EVENT   /**< Input Panel CUSTOM INPUT MODE */
+   ECORE_IMF_INPUT_PANEL_PREDICTION_MODE_EVENT     /**< Input Panel PREDICTION MODE */
 } Ecore_IMF_Input_Panel_Event;
 
 typedef enum
 {
-   ECORE_IMF_INPUT_PANEL_STATE_SHOW,    /**< Show Input panel */
-   ECORE_IMF_INPUT_PANEL_STATE_HIDE,    /**< Hide Input panel */
-   ECORE_IMF_INPUT_PANEL_STATE_INVALID
+   ECORE_IMF_INPUT_PANEL_STATE_SHOW,        /**< Notification after the display of the input panel */
+   ECORE_IMF_INPUT_PANEL_STATE_HIDE,        /**< Notification prior to the dismissal of the input panel */
+   ECORE_IMF_INPUT_PANEL_STATE_WILL_SHOW    /**< Notification prior to the display of the input panel */
 } Ecore_IMF_Input_Panel_State;
 
 /* Events sent by the Input Method */
