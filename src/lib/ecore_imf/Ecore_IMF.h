@@ -2,7 +2,6 @@
 #define _ECORE_IMF_H
 
 #include <Eina.h>
-#include <Ecore_IMF_Input_Panel_Key.h>
 
 #ifdef EAPI
 # undef EAPI
@@ -41,43 +40,15 @@ typedef enum
    ECORE_IMF_INPUT_PANEL_MODE_EVENT,               /**< Input Panel MODE Event */
    ECORE_IMF_INPUT_PANEL_LANGUAGE_EVENT,           /**< Input Panel LANGUAGE Event */
    ECORE_IMF_INPUT_PANEL_SHIFT_MODE_EVENT,         /**< Input Panel SHIFT MODE */
-   ECORE_IMF_INPUT_PANEL_PREEDIT_MODE_EVENT,       /**< Input Panel PREEDIT MODE */
-   ECORE_IMF_INPUT_PANEL_COMPLETION_MODE_EVENT,    /**< Input Panel COMPLETION MODE */
-   ECORE_IMF_INPUT_PANEL_CUSTOM_INPUT_MODE_EVENT,  /**< Input Panel CUSTOM INPUT MODE */
-   ECORE_IMF_INPUT_PANEL_EVENT_INVALID
+   ECORE_IMF_INPUT_PANEL_PREDICTION_MODE_EVENT     /**< Input Panel PREDICTION MODE */
 } Ecore_IMF_Input_Panel_Event;
 
 typedef enum
 {
-   ECORE_IMF_INPUT_PANEL_STATE_SHOW,    /**< Show Input panel */
-   ECORE_IMF_INPUT_PANEL_STATE_HIDE,    /**< Hide Input panel */
-   ECORE_IMF_INPUT_PANEL_STATE_INVALID
+   ECORE_IMF_INPUT_PANEL_STATE_SHOW,        /**< Notification after the display of the input panel */
+   ECORE_IMF_INPUT_PANEL_STATE_HIDE,        /**< Notification prior to the dismissal of the input panel */
+   ECORE_IMF_INPUT_PANEL_STATE_WILL_SHOW    /**< Notification prior to the display of the input panel */
 } Ecore_IMF_Input_Panel_State;
-
-typedef enum
-{
-   ECORE_IMF_INPUT_PANEL_ORIENT_NONE,
-   ECORE_IMF_INPUT_PANEL_ORIENT_90_CW, /* Clockwise */
-   ECORE_IMF_INPUT_PANEL_ORIENT_180,
-   ECORE_IMF_INPUT_PANEL_ORIENT_90_CCW /* CounterClockwise */
-} Ecore_IMF_Input_Panel_Orient;
-
-typedef struct
-{
-   int layout_idx;
-   int key_idx;
-   Eina_Bool disabled;
-} Disable_Key_Item;
-
-typedef struct
-{
-   int layout_idx;
-   int key_idx;
-   int type;
-   char data[128]; // label or image path
-   int key_value;
-   char key_string[32];
-} Private_Key_Item;
 
 /* Events sent by the Input Method */
 typedef struct _Ecore_IMF_Event_Preedit_Start      Ecore_IMF_Event_Preedit_Start;
@@ -109,6 +80,17 @@ EAPI extern int ECORE_IMF_EVENT_PREEDIT_END;
 EAPI extern int ECORE_IMF_EVENT_PREEDIT_CHANGED;
 EAPI extern int ECORE_IMF_EVENT_COMMIT;
 EAPI extern int ECORE_IMF_EVENT_DELETE_SURROUNDING;
+
+typedef void (*Ecore_IMF_Event_Cb) (void *data, Ecore_IMF_Context *ctx, void *event_info);
+
+typedef enum
+{
+    ECORE_IMF_CALLBACK_PREEDIT_START,
+    ECORE_IMF_CALLBACK_PREEDIT_END,
+    ECORE_IMF_CALLBACK_PREEDIT_CHANGED,
+    ECORE_IMF_CALLBACK_COMMIT,
+    ECORE_IMF_CALLBACK_DELETE_SURROUNDING
+} Ecore_IMF_Callback_Type;
 
 typedef enum
 {
@@ -184,14 +166,29 @@ typedef enum
    ECORE_IMF_INPUT_PANEL_LAYOUT_IP,              /**< IP layout */
    ECORE_IMF_INPUT_PANEL_LAYOUT_MONTH,           /**< Month layout */
    ECORE_IMF_INPUT_PANEL_LAYOUT_NUMBERONLY,      /**< Number Only layout */
-   ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID
+   ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID,         /**< Never use this */
+   ECORE_IMF_INPUT_PANEL_LAYOUT_HEX,             /**< Hexadecimal layout @since 1.2 */
+   ECORE_IMF_INPUT_PANEL_LAYOUT_TERMINAL,        /**< Command-line terminal layout @since 1.2 */
+   ECORE_IMF_INPUT_PANEL_LAYOUT_PASSWORD         /**< Like normal, but no auto-correct, no auto-capitalization etc. @since 1.2 */
 } Ecore_IMF_Input_Panel_Layout;
 
 typedef enum
 {
-   ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC,    /**< Automatic */
-   ECORE_IMF_INPUT_PANEL_LANG_ALPHABET      /**< Alphabet */
+   ECORE_IMF_INPUT_PANEL_LANG_AUTOMATIC,    /**< Automatic @since 1.2 */
+   ECORE_IMF_INPUT_PANEL_LANG_ALPHABET      /**< Alphabet @since 1.2 */
 } Ecore_IMF_Input_Panel_Lang;
+
+typedef enum
+{
+   ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_DEFAULT, /**< Default @since 1.2 */
+   ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_DONE,    /**< Done @since 1.2 */
+   ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_GO,      /**< Go @since 1.2 */
+   ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_JOIN,    /**< Join @since 1.2 */
+   ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_LOGIN,   /**< Login @since 1.2 */
+   ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_NEXT,    /**< Next @since 1.2 */
+   ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_SEARCH,  /**< Search or magnifier icon @since 1.2 */
+   ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_SEND     /**< Send @since 1.2 */
+} Ecore_IMF_Input_Panel_Return_Key_Type;
 
 struct _Ecore_IMF_Event_Preedit_Start
 {
@@ -377,24 +374,14 @@ struct _Ecore_IMF_Context_Class
    void (*input_panel_language_set) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang);
    Ecore_IMF_Input_Panel_Lang (*input_panel_language_get) (Ecore_IMF_Context *ctx);
    void (*cursor_location_set) (Ecore_IMF_Context *ctx, int x, int y, int w, int h);
-
-   void (*input_panel_imdata_set)         (Ecore_IMF_Context *ctx, const char* data, int len);
-   void (*input_panel_imdata_get)         (Ecore_IMF_Context *ctx, char* data, int *len);
-
-   void (*input_panel_use_effect_set)     (Ecore_IMF_Context *ctx, Eina_Bool use_effect);
-   void (*input_panel_orient_set)         (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Orient orientation);
-
-   void (*input_panel_move) (Ecore_IMF_Context *ctx, int x, int y);
-   void (*input_panel_geometry_get)       (Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
-   void (*input_panel_private_key_set)    (Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, const char* value);
-   void (*input_panel_key_disabled_set)   (Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
-
-   void (*input_panel_reset)              (Ecore_IMF_Context *ctx); /* Same as reset to default property*/
+   void (*input_panel_imdata_set)(Ecore_IMF_Context *ctx, const void* data, int len);
+   void (*input_panel_imdata_get)(Ecore_IMF_Context *ctx, void* data, int *len);
+   void (*input_panel_return_key_type_set) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Return_Key_Type return_key_type);
+   void (*input_panel_return_key_disabled_set) (Ecore_IMF_Context *ctx, Eina_Bool disabled);
+   void (*input_panel_geometry_get)(Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
    Ecore_IMF_Input_Panel_State (*input_panel_state_get) (Ecore_IMF_Context *ctx);
-
-   /* CallBack APIs  */
-   void (*input_panel_event_callback_add) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallBackFunc) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
-   void (*input_panel_event_callback_del) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*pEventCallbackFunc) (void *data, Ecore_IMF_Context *ctx, int value));
+   void (*input_panel_event_callback_add) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
+   void (*input_panel_event_callback_del) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
 };
 
 struct _Ecore_IMF_Context_Info
@@ -449,6 +436,9 @@ EAPI void                          ecore_imf_context_preedit_end_event_add(Ecore
 EAPI void                          ecore_imf_context_preedit_changed_event_add(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_commit_event_add(Ecore_IMF_Context *ctx, const char *str);
 EAPI void                          ecore_imf_context_delete_surrounding_event_add(Ecore_IMF_Context *ctx, int offset, int n_chars);
+EAPI void                          ecore_imf_context_event_callback_add(Ecore_IMF_Context *ctx, Ecore_IMF_Callback_Type type, Ecore_IMF_Event_Cb func, const void *data);
+EAPI void                         *ecore_imf_context_event_callback_del(Ecore_IMF_Context *ctx, Ecore_IMF_Callback_Type type, Ecore_IMF_Event_Cb func);
+EAPI void                          ecore_imf_context_event_callback_call(Ecore_IMF_Context *ctx, Ecore_IMF_Callback_Type type, void *event_info);
 EAPI void                          ecore_imf_context_prediction_allow_set(Ecore_IMF_Context *ctx, Eina_Bool prediction);
 EAPI Eina_Bool                     ecore_imf_context_prediction_allow_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_autocapital_type_set(Ecore_IMF_Context *ctx, Ecore_IMF_Autocapital_Type autocapital_type);
@@ -465,17 +455,22 @@ EAPI void                          ecore_imf_context_input_panel_language_set(Ec
 EAPI Ecore_IMF_Input_Panel_Lang    ecore_imf_context_input_panel_language_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_input_panel_enabled_set(Ecore_IMF_Context *ctx, Eina_Bool enable);
 EAPI Eina_Bool                     ecore_imf_context_input_panel_enabled_get(Ecore_IMF_Context *ctx);
-EAPI void                          ecore_imf_context_input_panel_imdata_set(Ecore_IMF_Context *ctx, const char *data, int len);
-EAPI void                          ecore_imf_context_input_panel_imdata_get(Ecore_IMF_Context *ctx, char *data, int *len);
+EAPI void                          ecore_imf_context_input_panel_imdata_set(Ecore_IMF_Context *ctx, const void *data, int len);
+EAPI void                          ecore_imf_context_input_panel_imdata_get(Ecore_IMF_Context *ctx, void *data, int *len);
+EAPI void                          ecore_imf_context_input_panel_return_key_type_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Return_Key_Type actiontype);
+EAPI Ecore_IMF_Input_Panel_Return_Key_Type ecore_imf_context_input_panel_return_key_type_get(Ecore_IMF_Context *ctx);
+EAPI void                          ecore_imf_context_input_panel_return_key_disabled_set(Ecore_IMF_Context *ctx, Eina_Bool disabled);
+EAPI Eina_Bool                     ecore_imf_context_input_panel_return_key_disabled_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_input_panel_geometry_get(Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
-EAPI void                          ecore_imf_context_input_panel_private_key_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, int key_value, const char* key_string);
-EAPI Eina_List                    *ecore_imf_context_input_panel_private_key_list_get(Ecore_IMF_Context *ctx);
 EAPI Ecore_IMF_Input_Panel_State   ecore_imf_context_input_panel_state_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_input_panel_event_callback_add(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), const void *data);
 EAPI void                          ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
-EAPI void                          ecore_imf_context_input_panel_key_disabled_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
-EAPI Eina_List                    *ecore_imf_context_input_panel_key_disabled_list_get(Ecore_IMF_Context *ctx);
-EAPI void                          ecore_imf_context_input_panel_move(Ecore_IMF_Context *ctx, int x, int y);
+
+EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_private_key_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, int key_value, const char* key_string);
+EINA_DEPRECATED EAPI Eina_List    *ecore_imf_context_input_panel_private_key_list_get(Ecore_IMF_Context *ctx);
+EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_key_disabled_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
+EINA_DEPRECATED EAPI Eina_List    *ecore_imf_context_input_panel_key_disabled_list_get(Ecore_IMF_Context *ctx);
+EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_move(Ecore_IMF_Context *ctx, int x, int y);
 
 /* The following entry points must be exported by each input method module
  */

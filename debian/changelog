@@ -1,3 +1,76 @@
+ecore (1.1.0+svn.67695slp2+build01) unstable; urgency=low
+
+  * Package Upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.67695slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Wed, 15 Feb 2012 19:01:02 +0900
+
+ecore (1.1.0+svn.66972slp2+build03) unstable; urgency=low
+
+  * [ECORE_X] Add feature - illume window state for app-in-app
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.66972slp2+build03
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Thu, 02 Feb 2012 15:04:12 +0900
+
+ecore (1.1.0+svn.66972slp2+build02) unstable; urgency=low
+
+  * Use synchronous ecore_imf callback API
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.66972slp2+build02
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Tue, 31 Jan 2012 13:21:06 +0900
+
+ecore (1.1.0+svn.66972slp2+build01) unstable; urgency=low
+
+  * Package Upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.66972slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Mon, 16 Jan 2012 18:29:42 +0900
+
+ecore (1.1.0+svn.65878slp2+build05) unstable; urgency=low
+
+  * jpeg7 -> jpeg8
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.65878slp2+build05
+
+ -- ChunEon Park <chuneon.park@samsung.com>  Mon, 16 Jan 2012 11:14:18 +0900
+
+ecore (1.1.0+svn.65878slp2+build04) unstable; urgency=low
+
+  * Repackaging
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.65878slp2+build04
+
+ -- ChunEon Park <chuneon.park@samsung.com>  Fri, 30 Dec 2011 15:07:27 +0900
+
+ecore (1.1.0+svn.65878slp2+build03) unstable; urgency=low
+
+  * Just Bumped up version
+  * Git: slp-scm.sec.samsung.net:slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.65878slp2+build03
+
+ -- Tae-Hwan Kim <the81.kim@samsung.com>  Mon, 26 Dec 2011 15:20:31 +0900
+
+ecore (1.1.0+svn.65878slp2+build02) unstable; urgency=low
+
+  * Upstream sync related ecore_con  (r66414, 66462, sync after r65934)
+  * ecore_timer_dump is disabled as default
+  * Git: slp-scm.sec.samsung.net:slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.65878slp2+build02
+
+ -- Tae-Hwan Kim <the81.kim@samsung.com>  Fri, 23 Dec 2011 18:07:06 +0900
+
+ecore (1.1.0+svn.65878slp2+build01) unstable; urgency=low
+
+  * Package Upload for migration
+  * Git: slp-scm.sec.samsung.net:slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.65878slp2+build01
+
+ -- Jaehwan Kim <jae.hwan.kim@samsung.com>  Thu, 08 Dec 2011 13:51:03 +0900
+
 ecore (1.1.0+svn.65618slp2+build02) unstable; urgency=low
 
   * [Bug Fix] CQ H0100136744 - curl fd handler refactoring

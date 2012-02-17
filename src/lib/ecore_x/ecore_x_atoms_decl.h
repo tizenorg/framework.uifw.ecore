@@ -289,13 +289,21 @@ EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_ROOT_ANGLE = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_VIDEO_PARENT = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_VIDEO_POSITION = 0;
 
-/* added by doyoun.kang - for user created window */
+/* for user created window */
 EAPI Ecore_X_Atom ECORE_X_ATOM_USER_CREATED_WINDOW = 0;
 
-/* added by gl77.lee - XID that points to the parent border window */
+/* XID that points to the parent border window */
 EAPI Ecore_X_Atom ECORE_X_ATOM_PARENT_BORDER_WINDOW = 0;
 
-
-/* added by doyoun.kang - for sliding window */
+/* for sliding window */
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_STATE = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_GEOMETRY = 0;
+
+/* for illume window state */
+EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_WINDOW_STATE = 0;
+EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_WINDOW_STATE_NORMAL = 0;
+EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_WINDOW_STATE_INSET = 0;
+
+/* for SDB(Samsung Debug Bridge) */
+EAPI Ecore_X_Atom ECORE_X_ATOM_SDB_SERVER_CONNECT = 0;
+EAPI Ecore_X_Atom ECORE_X_ATOM_SDB_SERVER_DISCONNECT = 0;

@@ -1238,6 +1238,8 @@ EAPI int
  ecore_x_error_request_get(void);
 EAPI int
  ecore_x_error_code_get(void);
+EAPI Ecore_X_ID
+ecore_x_error_resource_id_get(void);
 
 EAPI void
 ecore_x_event_mask_set(Ecore_X_Window w,
@@ -2453,7 +2455,7 @@ EAPI void
 EAPI void
  ecore_x_e_illume_quickpanel_position_update_send(Ecore_X_Window win);
 
-/* added by doyoun.kang - for sliding window */
+/* for sliding window */
 EAPI void
  ecore_x_e_illume_sliding_win_state_set(Ecore_X_Window win,
                                        unsigned int is_visible);
@@ -3190,7 +3192,10 @@ EAPI Ecore_X_Randr_Edid_Display_Interface_Type
 ecore_x_randr_edid_display_interface_type_get(unsigned char *edid,
                                               unsigned long edid_length);
 
-/* ecore_x_randr_13.c */
+/* ecore_x_randr_12.c */
+
+EAPI Eina_Bool
+ecore_x_randr_output_backlight_available(void);
 EAPI void
 ecore_x_randr_screen_backlight_level_set(Ecore_X_Window root,
                                          double level);
@@ -3479,6 +3484,13 @@ EAPI Eina_Bool
 EAPI const char *
  ecore_x_keysym_string_get(int keysym);
 
+/**
+ * Given a keyname, return the keycode representing that key
+ *
+ * @since 1.2.0
+ */
+EAPI int ecore_x_keysym_keycode_get(const char *keyname);
+
 typedef struct _Ecore_X_Image Ecore_X_Image;
 
 EAPI Ecore_X_Image *
@@ -3687,6 +3699,20 @@ EAPI Eina_Bool
 ecore_x_gesture_event_ungrab(Ecore_X_Window win,
                              Ecore_X_Gesture_Event_Type type,
                              int num_fingers);
+
+/* Illume window states */
+typedef enum _Ecore_X_Illume_Window_State
+{
+   ECORE_X_ILLUME_WINDOW_STATE_NORMAL = 0,
+   ECORE_X_ILLUME_WINDOW_STATE_INSET
+} Ecore_X_Illume_Window_State;
+
+EAPI void
+ecore_x_e_illume_window_state_set(Ecore_X_Window win,
+                                  Ecore_X_Illume_Window_State state);
+
+EAPI Ecore_X_Illume_Window_State
+ecore_x_e_illume_window_state_get(Ecore_X_Window win);
 
 #ifdef __cplusplus
 }

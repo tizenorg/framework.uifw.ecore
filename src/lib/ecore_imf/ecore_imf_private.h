@@ -35,6 +35,7 @@ extern int _ecore_imf_log_dom;
 #define CRIT(...) EINA_LOG_DOM_CRIT(_ecore_imf_log_dom, __VA_ARGS__)
 
 typedef struct _Ecore_IMF_Module Ecore_IMF_Module;
+typedef struct _Ecore_IMF_Func_Node Ecore_IMF_Func_Node;
 
 struct _Ecore_IMF_Context
 {
@@ -45,18 +46,16 @@ struct _Ecore_IMF_Context
    int                            input_mode;
    void                          *window;
    void                          *client_canvas;
-   int                            input_panel_x;
-   int                            input_panel_y;
    Eina_Bool                    (*retrieve_surrounding_func)(void *data, Ecore_IMF_Context *ctx, char **text, int *cursor_pos);
    void                          *retrieve_surrounding_data;
+   Eina_List                     *callbacks;
    Ecore_IMF_Autocapital_Type     autocapital_type;
    Ecore_IMF_Input_Panel_Layout   input_panel_layout;
    Ecore_IMF_Input_Panel_Lang     input_panel_lang;
-   Eina_List                     *callbacks;
-   Eina_List                     *disabled_key_list;
-   Eina_List                     *private_key_list;
+   Ecore_IMF_Input_Panel_Return_Key_Type input_panel_return_key_type;
    Eina_Bool                      allow_prediction : 1;
    Eina_Bool                      input_panel_enabled : 1;
+   Eina_Bool                      input_panel_return_key_disabled : 1;
 };
 
 struct _Ecore_IMF_Module
@@ -64,6 +63,13 @@ struct _Ecore_IMF_Module
    const Ecore_IMF_Context_Info *info;
    Ecore_IMF_Context            *(*create)(void);
    Ecore_IMF_Context            *(*exit)(void);
+};
+
+struct _Ecore_IMF_Func_Node
+{
+   void (*func) ();
+   const void *data;
+   Ecore_IMF_Callback_Type type;
 };
 
 void               ecore_imf_module_init(void);

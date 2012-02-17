@@ -316,7 +316,10 @@ ecore_ipc_shutdown(void)
    if (--_ecore_ipc_init_count != 0)
      return _ecore_ipc_init_count;
 
-   while (servers) ecore_ipc_server_del(eina_list_data_get(servers));
+   Eina_List *l, *l2;
+   Ecore_Ipc_Server *svr;
+   EINA_LIST_FOREACH_SAFE(servers, l, l2, svr)
+     ecore_ipc_server_del(svr);
 
    for (i = 0; i < 6; i++)
      ecore_event_handler_del(handler[i]);
@@ -926,7 +929,7 @@ ecore_ipc_client_data_get(Ecore_Ipc_Client *cl)
 /**
  * Sets the max data payload size for an Ipc message in bytes
  *
- * @param   client        The given client.
+ * @param   cl        The given client.
  * @param   size          The maximum data payload size in bytes.
  * @ingroup Ecore_Ipc_Client_Group
  */
@@ -946,7 +949,6 @@ ecore_ipc_client_data_size_max_set(Ecore_Ipc_Client *cl, int size)
  * Sets the max data payload size for an Ipc message in bytes
  *
  * @param   cl            The given client.
- * @param   size          The maximum data payload size in bytes.
  * @ingroup Ecore_Ipc_Client_Group
  */
 EAPI int

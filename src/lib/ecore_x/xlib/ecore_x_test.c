@@ -42,7 +42,7 @@ ecore_x_test_fake_key_down(const char *key __UNUSED__)
 #else /* ifdef ECORE_XTEST */
    return EINA_FALSE;
 #endif /* ifdef ECORE_XTEST */
-} /* ecore_x_test_fake_key_down */
+}
 
 EAPI Eina_Bool
 #ifdef ECORE_XTEST
@@ -74,7 +74,7 @@ ecore_x_test_fake_key_up(const char *key __UNUSED__)
 #else /* ifdef ECORE_XTEST */
    return EINA_FALSE;
 #endif /* ifdef ECORE_XTEST */
-} /* ecore_x_test_fake_key_up */
+}
 
 EAPI Eina_Bool
 #ifdef ECORE_XTEST
@@ -145,11 +145,23 @@ ecore_x_test_fake_key_press(const char *key __UNUSED__)
 #else /* ifdef ECORE_XTEST */
    return EINA_FALSE;
 #endif /* ifdef ECORE_XTEST */
-} /* ecore_x_test_fake_key_press */
+}
 
 EAPI const char *
 ecore_x_keysym_string_get(int keysym)
 {
    return XKeysymToString(keysym);
-} /* ecore_x_keysym_string_get */
+}
 
+EAPI int 
+ecore_x_keysym_keycode_get(const char *keyname)
+{
+   int keycode = 0;
+
+   if (!strncmp(keyname, "Keycode-", 8))
+     keycode = atoi(keyname + 8);
+   else
+     keycode = XKeysymToKeycode(_ecore_x_disp, XStringToKeysym(keyname));
+
+   return keycode;
+}

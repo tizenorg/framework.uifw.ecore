@@ -167,6 +167,7 @@ struct _Ecore_Fd_Handler
    GPollFD                gfd;
 #endif
 };
+GENERIC_ALLOC_SIZE_DECLARE(Ecore_Fd_Handler);
 
 #ifdef _WIN32
 struct _Ecore_Win32_Handler
@@ -179,6 +180,7 @@ struct _Ecore_Win32_Handler
    int                   references;
    Eina_Bool             delete_me : 1;
 };
+GENERIC_ALLOC_SIZE_DECLARE(Ecore_Win32_Handler);
 #endif
 
 #ifndef USE_G_MAIN_LOOP
@@ -207,9 +209,7 @@ static void _ecore_main_win32_handlers_cleanup(void);
 #endif
 
 static int in_main_loop = 0;
-#ifndef USE_G_MAIN_LOOP
 static int do_quit = 0;
-#endif
 static Ecore_Fd_Handler *fd_handlers = NULL;
 static Ecore_Fd_Handler *fd_handler_current = NULL;
 static Eina_List *fd_handlers_with_prep = NULL;
@@ -848,6 +848,21 @@ _ecore_main_fd_handler_del(Ecore_Fd_Handler *fd_handler)
  * DO NOT use this function unless you are the person God comes to ask for
  * advice when He has trouble managing the Universe.
  */
+
+EAPI int
+ecore_main_loop_iterate_may_block(int may_block)
+{
+#ifndef USE_G_MAIN_LOOP
+   _ecore_lock();
+in_main_loop++;
+   _ecore_main_loop_iterate_internal(!may_block);
+in_main_loop--;
+   _ecore_unlock();
+   return _ecore_event_exist();
+#else
+   return g_main_context_iteration(NULL, may_block);
+#endif
+}
 EAPI void
 ecore_main_loop_iterate(void)
 {
@@ -889,8 +904,13 @@ ecore_main_loop_begin(void)
    in_main_loop--;
    _ecore_unlock();
 #else
-   ecore_main_loop = g_main_loop_new(NULL, FALSE);
-   g_main_loop_run(ecore_main_loop);
+   if (!do_quit)
+     {
+        if (!ecore_main_loop)
+          ecore_main_loop = g_main_loop_new(NULL, FALSE);
+        g_main_loop_run(ecore_main_loop);
+     }
+   do_quit = 0;
 #endif
 }
 
@@ -904,10 +924,10 @@ ecore_main_loop_begin(void)
 EAPI void
 ecore_main_loop_quit(void)
 {
-#ifndef USE_G_MAIN_LOOP
    do_quit = 1;
-#else
-   g_main_loop_quit(ecore_main_loop);
+#ifdef USE_G_MAIN_LOOP
+   if (ecore_main_loop)
+     g_main_loop_quit(ecore_main_loop);
 #endif
 }
 
@@ -987,7 +1007,7 @@ ecore_main_fd_handler_add(int                    fd,
 
    if ((fd < 0) || (flags == 0) || (!func)) goto unlock;
 
-   fdh = calloc(1, sizeof(Ecore_Fd_Handler));
+   fdh = ecore_fd_handler_calloc(1);
    if (!fdh) goto unlock;
    ECORE_MAGIC_SET(fdh, ECORE_MAGIC_FD_HANDLER);
    fdh->next_ready = NULL;
@@ -997,7 +1017,7 @@ ecore_main_fd_handler_add(int                    fd,
      {
         int err = errno;
         ERR("Failed to add poll on fd %d (errno = %d: %s)!", fd, err, strerror(err));
-        free(fdh);
+        ecore_fd_handler_mp_free(fdh);
         fdh = NULL;
         goto unlock;
      }
@@ -1030,7 +1050,7 @@ ecore_main_win32_handler_add(void                 *h,
 
    if (!h || !func) return NULL;
 
-   wh = calloc(1, sizeof(Ecore_Win32_Handler));
+   wh = ecore_win32_handler_calloc(1);
    if (!wh) return NULL;
    ECORE_MAGIC_SET(wh, ECORE_MAGIC_WIN32_HANDLER);
    wh->h = (HANDLE)h;
@@ -1260,7 +1280,7 @@ _ecore_main_shutdown(void)
         fd_handlers = (Ecore_Fd_Handler *)eina_inlist_remove(EINA_INLIST_GET(fd_handlers),
                                                              EINA_INLIST_GET(fdh));
         ECORE_MAGIC_SET(fdh, ECORE_MAGIC_NONE);
-        free(fdh);
+        ecore_fd_handler_mp_free(fdh);
      }
    if (fd_handlers_with_buffer)
      fd_handlers_with_buffer = eina_list_free(fd_handlers_with_buffer);
@@ -1283,7 +1303,7 @@ _ecore_main_shutdown(void)
         win32_handlers = (Ecore_Win32_Handler *)eina_inlist_remove(EINA_INLIST_GET(win32_handlers),
                                                                    EINA_INLIST_GET(wh));
         ECORE_MAGIC_SET(wh, ECORE_MAGIC_NONE);
-        free(wh);
+        ecore_win32_handler_mp_free(wh);
      }
    win32_handlers_delete_me = EINA_FALSE;
    win32_handler_current = NULL;
@@ -1524,7 +1544,7 @@ _ecore_main_fd_handlers_cleanup(void)
         fd_handlers = (Ecore_Fd_Handler *)
           eina_inlist_remove(EINA_INLIST_GET(fd_handlers), EINA_INLIST_GET(fdh));
         ECORE_MAGIC_SET(fdh, ECORE_MAGIC_NONE);
-        free(fdh);
+        ecore_fd_handler_mp_free(fdh);
         fd_handlers_to_delete = eina_list_remove_list(fd_handlers_to_delete, l);
      }
 }
@@ -1555,7 +1575,7 @@ _ecore_main_win32_handlers_cleanup(void)
                eina_inlist_remove(EINA_INLIST_GET(win32_handlers),
                                   EINA_INLIST_GET(wh));
              ECORE_MAGIC_SET(wh, ECORE_MAGIC_NONE);
-             free(wh);
+             ecore_win32_handler_mp_free(wh);
           }
      }
    if (!deleted_in_use) win32_handlers_delete_me = EINA_FALSE;
@@ -1737,14 +1757,14 @@ _ecore_main_loop_iterate_internal(int once_only)
    if (_ecore_event_exist())
      {
         /* but first conceptually enter an idle state */
-         _ecore_idle_enterer_call();
-         _ecore_throttle();
-         /* now quickly poll to see which input fd's are active */
-         _ecore_main_select(0.0);
-         /* allow newly queued timers to expire from now on */
-         _ecore_timer_enable_new();
-         /* go straight to processing the events we had queued */
-         goto process_all;
+        _ecore_idle_enterer_call();
+        _ecore_throttle();
+        /* now quickly poll to see which input fd's are active */
+        _ecore_main_select(0.0);
+        /* allow newly queued timers to expire from now on */
+        _ecore_timer_enable_new();
+        /* go straight to processing the events we had queued */
+        goto process_all;
      }
 
    if (once_only)
@@ -1753,17 +1773,17 @@ _ecore_main_loop_iterate_internal(int once_only)
          * if we got any events or signals, allow new timers to process.
          * use bitwise or to force both conditions to be tested and
          * merged together */
-          if (_ecore_main_select(0.0) | _ecore_signal_count_get())
-            {
-               _ecore_timer_enable_new();
-               goto process_all;
-            }
+        if (_ecore_main_select(0.0) | _ecore_signal_count_get())
+          {
+             _ecore_timer_enable_new();
+             goto process_all;
+          }
      }
    else
      {
         /* call idle enterers ... */
-         _ecore_idle_enterer_call();
-         _ecore_throttle();
+        _ecore_idle_enterer_call();
+        _ecore_throttle();
      }
 
    /* if these calls caused any buffered events to appear - deal with them */
@@ -1782,10 +1802,10 @@ _ecore_main_loop_iterate_internal(int once_only)
    if (once_only)
      {
         /* in once_only mode enter idle here instead and then return */
-         _ecore_idle_enterer_call();
-         _ecore_throttle();
-         _ecore_timer_enable_new();
-         goto done;
+        _ecore_idle_enterer_call();
+        _ecore_throttle();
+        _ecore_timer_enable_new();
+        goto done;
      }
 
    _ecore_fps_marker_1();
@@ -1803,23 +1823,23 @@ start_loop: /***************************************************************/
    if (!_ecore_event_exist())
      {
         /* init flags */
-         next_time = _ecore_timer_next_get();
-         /* no idlers */
-         if (!_ecore_idler_exist())
-           {
-     /* sleep until timeout or forever (-1.0) waiting for on fds */
-               _ecore_main_select(next_time);
-           }
-         else
-           {
-              int action = LOOP_CONTINUE;
+        next_time = _ecore_timer_next_get();
+        /* no idlers */
+        if (!_ecore_idler_exist())
+          {
+             /* sleep until timeout or forever (-1.0) waiting for on fds */
+             _ecore_main_select(next_time);
+          }
+        else
+          {
+             int action = LOOP_CONTINUE;
 
-     /* no timers - spin */
-              if (next_time < 0) action = _ecore_main_loop_spin_no_timers();
-     /* timers - spin */
-              else action = _ecore_main_loop_spin_timers();
-              if (action == SPIN_RESTART) goto start_loop;
-           }
+             /* no timers - spin */
+             if (next_time < 0) action = _ecore_main_loop_spin_no_timers();
+             /* timers - spin */
+             else action = _ecore_main_loop_spin_timers();
+             if (action == SPIN_RESTART) goto start_loop;
+          }
      }
    _ecore_fps_marker_2();
 
@@ -1842,8 +1862,8 @@ process_all: /***********************************************************/
    if (once_only)
      {
         /* if in once_only mode handle idle exiting */
-         _ecore_idle_enterer_call();
-         _ecore_throttle();
+        _ecore_idle_enterer_call();
+        _ecore_throttle();
      }
 
 done: /*******************************************************************/

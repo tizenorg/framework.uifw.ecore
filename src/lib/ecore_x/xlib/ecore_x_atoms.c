@@ -289,28 +289,37 @@ _ecore_x_atoms_init(void)
       { "_E_PARENT_BORDER_WINDOW", &ECORE_X_ATOM_E_PARENT_BORDER_WINDOW },
       { "_E_COMP_DRI_BUFF_FLIP_SUPPORTED", &ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED },
 
-      /* added by doyoun.kang 100218 - for rotation */
+      /* for rotation */
       { "_E_ILLUME_ROTATE_WINDOW_ANGLE", & ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE },
       { "_E_ILLUME_ROTATE_WINDOW_AVAILABLE_ANGLES", & ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_AVAILABLE_ANGLE },
       { "_E_ILLUME_ROTATE_OPERATOR", & ECORE_X_ATOM_E_ILLUME_ROTATE_OPERATOR },
       { "_E_ILLUME_ROTATE_ROOT_ANGLE", & ECORE_X_ATOM_E_ILLUME_ROTATE_ROOT_ANGLE },
 
-      /* added by doyoun.kang - for user created window */
+      /* for user created window */
       { "_ECORE_X_USER_CREATED_WINDOW", & ECORE_X_ATOM_USER_CREATED_WINDOW },
 
-      /* added by gl77.lee - XID that points to the parent border window */
+      /* XID that points to the parent border window */
       { "_ECORE_X_PARENT_BORDER_WINDOW", &ECORE_X_ATOM_PARENT_BORDER_WINDOW },
 
-      /* added by doyoun.kang - for indicator's state */
+      /* for indicator's state */
       { "_E_ILLUME_INDICATOR_STATE", &ECORE_X_ATOM_E_ILLUME_INDICATOR_STATE },
       { "_E_ILLUME_ROTATE_WINDOW_ANGLE", &ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_ANGLE },
       { "_E_ILLUME_ROTATE_WINDOW_AVAILABLE_ANGLES", &ECORE_X_ATOM_E_ILLUME_ROTATE_WINDOW_AVAILABLE_ANGLE },
       { "_E_ILLUME_ROTATE_OPERATOR", &ECORE_X_ATOM_E_ILLUME_ROTATE_OPERATOR },
       { "_E_ILLUME_ROTATE_ROOT_ANGLE", &ECORE_X_ATOM_E_ILLUME_ROTATE_ROOT_ANGLE },
 
-      /* added by doyoun.kang - for sliding window */
+      /* for sliding window */
       { "_E_ILLUME_SLIDING_WIN_STATE", &ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_STATE },
-      { "_E_ILLUME_SLIDING_WIN_GEOMETRY", &ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_GEOMETRY }
+      { "_E_ILLUME_SLIDING_WIN_GEOMETRY", &ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_GEOMETRY },
+
+      /* for illume window state */
+      { "_E_ILLUME_WINDOW_STATE", &ECORE_X_ATOM_E_ILLUME_WINDOW_STATE },
+      { "_E_ILLUME_WINDOW_STATE_NORMAL", &ECORE_X_ATOM_E_ILLUME_WINDOW_STATE_NORMAL },
+      { "_E_ILLUME_WINDOW_STATE_INSET", &ECORE_X_ATOM_E_ILLUME_WINDOW_STATE_INSET },
+
+      /* for SDB(Samsung Debug Bridge) */
+      { "_SDB_SERVER_CONNECT", &ECORE_X_ATOM_SDB_SERVER_CONNECT },
+      { "_SDB_SERVER_DISCONNECT", &ECORE_X_ATOM_SDB_SERVER_DISCONNECT }
    };
    Atom *atoms;
    char **names;
@@ -319,10 +328,12 @@ _ecore_x_atoms_init(void)
    num = sizeof(items) / sizeof(Atom_Item);
    atoms = alloca(num * sizeof(Atom));
    names = alloca(num * sizeof(char *));
-   for (i = 0; i < num; i++) names[i] = (char *)items[i].name;
+   for (i = 0; i < num; i++)
+     names[i] = (char *)items[i].name;
    XInternAtoms(_ecore_x_disp, names, num, False, atoms);
-   for (i = 0; i < num; i++) *(items[i].atom) = atoms[i];
-} /* _ecore_x_atoms_init */
+   for (i = 0; i < num; i++)
+     *(items[i].atom) = atoms[i];
+}
 
 /**
  * Retrieves the atom value associated with the given name.
@@ -337,11 +348,11 @@ ecore_x_atom_get(const char *name)
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    return XInternAtom(_ecore_x_disp, name, False);
-} /* ecore_x_atom_get */
+}
 
 EAPI void
-ecore_x_atoms_get(const char  **names,
-                  int           num,
+ecore_x_atoms_get(const char **names,
+                  int num,
                   Ecore_X_Atom *atoms)
 {
    Atom *atoms_int;
@@ -355,7 +366,7 @@ ecore_x_atoms_get(const char  **names,
    XInternAtoms(_ecore_x_disp, (char **)names, num, False, atoms_int);
    for (i = 0; i < num; i++)
      atoms[i] = atoms_int[i];
-} /* ecore_x_atoms_get */
+}
 
 EAPI char *
 ecore_x_atom_name_get(Ecore_X_Atom atom)
@@ -376,5 +387,5 @@ ecore_x_atom_name_get(Ecore_X_Atom atom)
    XFree(xname);
 
    return name;
-} /* ecore_x_atom_name_get */
+}
 
