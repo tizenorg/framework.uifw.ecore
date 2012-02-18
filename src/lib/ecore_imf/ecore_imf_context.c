@@ -223,6 +223,7 @@ ecore_imf_context_info_get(Ecore_IMF_Context *ctx)
 EAPI void
 ecore_imf_context_del(Ecore_IMF_Context *ctx)
 {
+   void *data;
    Ecore_IMF_Func_Node *fn;
 
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -240,6 +241,16 @@ ecore_imf_context_del(Ecore_IMF_Context *ctx)
      }
 
    ECORE_MAGIC_SET(ctx, ECORE_MAGIC_NONE);
+
+   EINA_LIST_FREE(ctx->private_key_list, data)
+      free(data);
+
+   EINA_LIST_FREE(ctx->disabled_key_list, data)
+      free(data);
+
+   ctx->private_key_list = NULL;
+   ctx->disabled_key_list = NULL;
+
    free(ctx);
 }
 
@@ -1162,7 +1173,7 @@ ecore_imf_context_event_callback_call(Ecore_IMF_Context *ctx, Ecore_IMF_Callback
  * @since 1.1.0
  */
 EAPI void
-ecore_imf_context_control_panel_show(Ecore_IMF_Context *ctx)
+ecore_imf_context_control_panel_show (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1182,7 +1193,7 @@ ecore_imf_context_control_panel_show(Ecore_IMF_Context *ctx)
  * @since 1.1.0
  */
 EAPI void
-ecore_imf_context_control_panel_hide(Ecore_IMF_Context *ctx)
+ecore_imf_context_control_panel_hide (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1243,7 +1254,7 @@ ecore_imf_context_input_panel_hide(Ecore_IMF_Context *ctx)
  * @since 1.1.0
  */
 EAPI void
-ecore_imf_context_input_panel_layout_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout)
+ecore_imf_context_input_panel_layout_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Layout layout)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1267,7 +1278,7 @@ ecore_imf_context_input_panel_layout_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input
  * @since 1.1.0
  */
 EAPI Ecore_IMF_Input_Panel_Layout
-ecore_imf_context_input_panel_layout_get(Ecore_IMF_Context *ctx)
+ecore_imf_context_input_panel_layout_get (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1277,7 +1288,9 @@ ecore_imf_context_input_panel_layout_get(Ecore_IMF_Context *ctx)
      }
 
    if (ctx->klass->input_panel_layout_get)
-     return ctx->input_panel_layout;
+     {
+        return ctx->input_panel_layout;
+     }
    else
      return ECORE_IMF_INPUT_PANEL_LAYOUT_INVALID;
 }
@@ -1292,7 +1305,7 @@ ecore_imf_context_input_panel_layout_get(Ecore_IMF_Context *ctx)
  * @since 1.1.0
  */
 EAPI void
-ecore_imf_context_input_panel_language_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang)
+ecore_imf_context_input_panel_language_set (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Lang lang)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1316,7 +1329,7 @@ ecore_imf_context_input_panel_language_set(Ecore_IMF_Context *ctx, Ecore_IMF_Inp
  * @since 1.1.0
  */
 EAPI Ecore_IMF_Input_Panel_Lang
-ecore_imf_context_input_panel_language_get(Ecore_IMF_Context *ctx)
+ecore_imf_context_input_panel_language_get (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1338,7 +1351,7 @@ ecore_imf_context_input_panel_language_get(Ecore_IMF_Context *ctx)
  * @since 1.1.0
  */
 EAPI void
-ecore_imf_context_input_panel_enabled_set(Ecore_IMF_Context *ctx,
+ecore_imf_context_input_panel_enabled_set (Ecore_IMF_Context *ctx,
                                            Eina_Bool enabled)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
@@ -1360,7 +1373,7 @@ ecore_imf_context_input_panel_enabled_set(Ecore_IMF_Context *ctx,
  * @since 1.1.0
  */
 EAPI Eina_Bool
-ecore_imf_context_input_panel_enabled_get(Ecore_IMF_Context *ctx)
+ecore_imf_context_input_panel_enabled_get (Ecore_IMF_Context *ctx)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1426,96 +1439,6 @@ ecore_imf_context_input_panel_imdata_get(Ecore_IMF_Context *ctx, void *data, int
 }
 
 /**
- * Set the "return" key type. This type is used to set string or icon on the "return" key of the input panel.
- *
- * An input panel displays the string or icon associated with this type
- *
- * @param ctx An #Ecore_IMF_Context.
- * @param return_key_type The type of "return" key on the input panel
- * @ingroup Ecore_IMF_Context_Group
- * @since 1.2.0
- */
-EAPI void
-ecore_imf_context_input_panel_return_key_type_set(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Return_Key_Type return_key_type)
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
-                         "ecore_imf_context_input_panel_return_key_type_set");
-        return;
-     }
-
-   ctx->input_panel_return_key_type = return_key_type;
-   if (ctx->klass->input_panel_return_key_type_set) ctx->klass->input_panel_return_key_type_set(ctx, return_key_type);
-}
-
-/**
- * Get the "return" key type.
- *
- * @see ecore_imf_context_input_panel_return_key_type_set() for more details
- *
- * @param ctx An #Ecore_IMF_Context.
- * @return The type of "return" key on the input panel
- * @ingroup Ecore_IMF_Context_Group
- * @since 1.2.0
- */
-EAPI Ecore_IMF_Input_Panel_Return_Key_Type
-ecore_imf_context_input_panel_return_key_type_get(Ecore_IMF_Context *ctx)
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
-                         "ecore_imf_context_input_panel_return_key_type_get");
-        return EINA_FALSE;
-     }
-
-   return ctx->input_panel_return_key_type;
-}
-
-/**
- * Set the return key on the input panel to be disabled.
- *
- * @param ctx An #Ecore_IMF_Context.
- * @param disabled The state
- * @ingroup Ecore_IMF_Context_Group
- * @since 1.2.0
- */
-EAPI void
-ecore_imf_context_input_panel_return_key_disabled_set(Ecore_IMF_Context *ctx, Eina_Bool disabled)
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
-                         "ecore_imf_context_input_panel_return_key_disabled_set");
-        return;
-     }
-
-   ctx->input_panel_return_key_disabled = disabled;
-   if (ctx->klass->input_panel_return_key_disabled_set) ctx->klass->input_panel_return_key_disabled_set(ctx, disabled);
-}
-
-/**
- * Get whether the return key on the input panel should be disabled or not.
- *
- * @param ctx An #Ecore_IMF_Context.
- * @return EINA_TRUE if it should be disabled
- * @ingroup Ecore_IMF_Context_Group
- * @since 1.2.0
- */
-EAPI Eina_Bool
-ecore_imf_context_input_panel_return_key_disabled_get(Ecore_IMF_Context *ctx)
-{
-   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
-     {
-        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
-                         "ecore_imf_context_input_panel_return_key_disabled_get");
-        return EINA_FALSE;
-     }
-
-   return ctx->input_panel_return_key_disabled;
-}
-
-/**
  * Get the position of the current active input panel.
  *
  * @param ctx An #Ecore_IMF_Context.
@@ -1557,7 +1480,67 @@ ecore_imf_context_input_panel_geometry_get(Ecore_IMF_Context *ctx, int *x, int *
 EINA_DEPRECATED EAPI void
 ecore_imf_context_input_panel_private_key_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char *label, int key_value, const char *key_string)
 {
-   // will be deleted
+   Private_Key_Item *key_item;
+   Eina_List *l;
+   Eina_Bool exist = EINA_FALSE;
+
+   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
+     {
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_private_key_set");
+        return;
+     }
+
+   if ((!label) && (!img_path)) return;
+
+   EINA_LIST_FOREACH(ctx->private_key_list, l, key_item)
+     {
+        if (key_item && (key_item->layout_idx == layout_index) &&
+            (key_item->key_idx == key_index))
+          {
+             // if exist in the list
+             exist = EINA_TRUE;
+             if (label)
+               {
+                  key_item->type = 0;
+                  strcpy(key_item->data, label);
+               }
+             else
+               {
+                  key_item->type = 1;
+                  strcpy(key_item->data, img_path);
+               }
+             key_item->key_value = key_value;
+             strcpy(key_item->key_string, key_string);
+          }
+     }
+
+   if (!exist)
+     {
+        key_item = calloc(1, sizeof(Private_Key_Item));
+        if (!key_item) return;
+
+        key_item->layout_idx = layout_index;
+        key_item->key_idx = key_index;;
+        if (label)
+          {
+             key_item->type = 0;
+             strcpy(key_item->data, label);
+          }
+        else
+          {
+             key_item->type = 1;
+             strcpy(key_item->data, img_path);
+          }
+        key_item->key_value = key_value;
+
+        if (key_string)
+          strcpy(key_item->key_string, key_string);
+
+        ctx->private_key_list = eina_list_append(ctx->private_key_list, key_item);
+     }
+
+//   if (ctx->klass->input_panel_private_key_set) ctx->klass->input_panel_private_key_set(ctx, layout_index, key_index, img_path, label, value);
 }
 
 /**
@@ -1570,8 +1553,14 @@ ecore_imf_context_input_panel_private_key_set(Ecore_IMF_Context *ctx, int layout
 EINA_DEPRECATED EAPI Eina_List *
 ecore_imf_context_input_panel_private_key_list_get(Ecore_IMF_Context *ctx)
 {
-   // will be deleted
-   return NULL;
+   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
+     {
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_private_key_list_get");
+        return NULL;
+     }
+
+   return ctx->private_key_list;
 }
 
 /**
@@ -1588,7 +1577,40 @@ ecore_imf_context_input_panel_private_key_list_get(Ecore_IMF_Context *ctx)
 EINA_DEPRECATED EAPI void
 ecore_imf_context_input_panel_key_disabled_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled)
 {
-   // will be deleted
+   Disable_Key_Item *key_item;
+   Eina_List *l;
+   Eina_Bool exist = EINA_FALSE;
+
+   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
+     {
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_key_disabled_set");
+        return;
+     }
+
+   EINA_LIST_FOREACH(ctx->disabled_key_list, l, key_item)
+     {
+        if (key_item && (key_item->layout_idx == layout_index) &&
+            (key_item->key_idx == key_index))
+          {
+             key_item->disabled = disabled;
+             exist = EINA_TRUE;
+          }
+     }
+
+   if (!exist)
+     {
+        key_item = calloc(1, sizeof(Disable_Key_Item));
+        if (!key_item) return;
+
+        key_item->layout_idx = layout_index;
+        key_item->key_idx = key_index;;
+        key_item->disabled = disabled;
+
+        ctx->disabled_key_list = eina_list_append(ctx->disabled_key_list, key_item);
+     }
+
+//   if (ctx->klass->input_panel_key_disabled_set) ctx->klass->input_panel_key_disabled_set(ctx, layout_index, key_index, disabled);
 }
 
 /**
@@ -1602,8 +1624,7 @@ ecore_imf_context_input_panel_key_disabled_set(Ecore_IMF_Context *ctx, int layou
 EINA_DEPRECATED EAPI Eina_List *
 ecore_imf_context_input_panel_key_disabled_list_get(Ecore_IMF_Context *ctx)
 {
-   // will be deleted
-   return NULL;
+   return ctx->disabled_key_list;
 }
 
 /**
