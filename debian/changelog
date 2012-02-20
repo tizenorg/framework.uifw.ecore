@@ -1,3 +1,11 @@
+ecore (1.1.0+svn.67695slp2+build02) unstable; urgency=low
+
+  * Add APIs related to input panel control
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.67695slp2+build02
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Mon, 20 Feb 2012 09:23:47 +0900
+
 ecore (1.1.0+svn.67695slp2+build01) unstable; urgency=low
 
   * Package Upload
