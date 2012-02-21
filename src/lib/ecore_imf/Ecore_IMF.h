@@ -51,23 +51,6 @@ typedef enum
    ECORE_IMF_INPUT_PANEL_STATE_WILL_SHOW    /**< Notification prior to the display of the input panel */
 } Ecore_IMF_Input_Panel_State;
 
-typedef struct
-{
-   int layout_idx;
-   int key_idx;
-   Eina_Bool disabled;
-} Disable_Key_Item;
-
-typedef struct
-{
-   int layout_idx;
-   int key_idx;
-   int type;
-   char data[128]; // label or image path
-   int key_value;
-   char key_string[32];
-} Private_Key_Item;
-
 /* Events sent by the Input Method */
 typedef struct _Ecore_IMF_Event_Preedit_Start      Ecore_IMF_Event_Preedit_Start;
 typedef struct _Ecore_IMF_Event_Preedit_End        Ecore_IMF_Event_Preedit_End;
