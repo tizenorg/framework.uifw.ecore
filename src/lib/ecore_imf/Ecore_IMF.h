@@ -38,7 +38,6 @@ extern "C" {
 typedef enum
 {
    ECORE_IMF_INPUT_PANEL_STATE_EVENT,              /**< Input Panel STATE Event */
-   ECORE_IMF_INPUT_PANEL_MODE_EVENT,               /**< Input Panel MODE Event */
    ECORE_IMF_INPUT_PANEL_LANGUAGE_EVENT,           /**< Input Panel LANGUAGE Event */
    ECORE_IMF_INPUT_PANEL_SHIFT_MODE_EVENT,         /**< Input Panel SHIFT MODE */
    ECORE_IMF_INPUT_PANEL_PREDICTION_MODE_EVENT     /**< Input Panel PREDICTION MODE */
