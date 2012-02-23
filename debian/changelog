@@ -1,3 +1,11 @@
+ecore (1.1.0+svn.67695slp2+build04) unstable; urgency=low
+
+  * [ecore_imf] cleanup code
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.67695slp2+build04
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Thu, 23 Feb 2012 17:36:50 +0900
+
 ecore (1.1.0+svn.67695slp2+build03) unstable; urgency=low
 
   * Package Upload
