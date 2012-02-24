@@ -466,12 +466,6 @@ EAPI Ecore_IMF_Input_Panel_State   ecore_imf_context_input_panel_state_get(Ecore
 EAPI void                          ecore_imf_context_input_panel_event_callback_add(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), const void *data);
 EAPI void                          ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
 
-EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_private_key_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char* label, int key_value, const char* key_string);
-EINA_DEPRECATED EAPI Eina_List    *ecore_imf_context_input_panel_private_key_list_get(Ecore_IMF_Context *ctx);
-EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_key_disabled_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled);
-EINA_DEPRECATED EAPI Eina_List    *ecore_imf_context_input_panel_key_disabled_list_get(Ecore_IMF_Context *ctx);
-EINA_DEPRECATED EAPI void          ecore_imf_context_input_panel_move(Ecore_IMF_Context *ctx, int x, int y);
-
 /* The following entry points must be exported by each input method module
  */
 

@@ -1541,72 +1541,6 @@ ecore_imf_context_input_panel_geometry_get(Ecore_IMF_Context *ctx, int *x, int *
 }
 
 /**
- * Set the private key of input panel.
- * Since the second parameter of this API requires a layout index, so before using this API 
- * application has to set a specific layout and that layout index should 
- * be passed in the 2nd argument of this API.
- *
- * @param ctx An #Ecore_IMF_Context.
- * @param layout_index index of layout page to be set
- * @param img_path the path of image file to be set
- * @param key_index index of key to be set
- * @param label text label to be appeared on private key
- * @param value value of key, If NULL it will use original value of key
- * @ingroup Ecore_IMF_Context_Group
- */
-EINA_DEPRECATED EAPI void
-ecore_imf_context_input_panel_private_key_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, const char *img_path, const char *label, int key_value, const char *key_string)
-{
-   // will be deleted
-}
-
-/**
- * Get the list of private key.
- *
- * @param ctx An #Ecore_IMF_Context.
- * @return Return the list of private key
- * @ingroup Ecore_IMF_Context_Group
- */
-EINA_DEPRECATED EAPI Eina_List *
-ecore_imf_context_input_panel_private_key_list_get(Ecore_IMF_Context *ctx)
-{
-   // will be deleted
-   return NULL;
-}
-
-/**
- * Set the key to be disabled.
- * Since the second parameter of this API requires a layout index, so before using this API application has to set a specific layout and that layout index 
- * should be passed in the 2nd argument of this API.
- *
- * @param ctx An #Ecore_IMF_Context.
- * @param layout_index index of layout page to be set
- * @param key_index index of key to be set
- * @param disabled The state
- * @ingroup Ecore_IMF_Context_Group
- */
-EINA_DEPRECATED EAPI void
-ecore_imf_context_input_panel_key_disabled_set(Ecore_IMF_Context *ctx, int layout_index, int key_index, Eina_Bool disabled)
-{
-   // will be deleted
-}
-
-/**
- * Get the list of disabled keys.
- *
- * @param ctx An #Ecore_IMF_Context.
- * @return Return the list of private key
- * @ingroup Ecore_IMF_Context_Group
- * @since 1.1.0
- */
-EINA_DEPRECATED EAPI Eina_List *
-ecore_imf_context_input_panel_key_disabled_list_get(Ecore_IMF_Context *ctx)
-{
-   // will be deleted
-   return NULL;
-}
-
-/**
  * Get state of current active input panel.
  *
  * @param ctx An #Ecore_IMF_Context.
@@ -1641,7 +1575,7 @@ ecore_imf_context_input_panel_state_get(Ecore_IMF_Context *ctx)
  * @param func the callback function
  * @param data application-input panel specific data.
  * @ingroup Ecore_IMF_Context_Group
- * @since 1.1.0
+ * @since 1.2.0
  */
 EAPI void
 ecore_imf_context_input_panel_event_callback_add(Ecore_IMF_Context *ctx,
@@ -1667,7 +1601,7 @@ ecore_imf_context_input_panel_event_callback_add(Ecore_IMF_Context *ctx,
  * @param func the callback function
  * @param data application-input panel specific data.
  * @ingroup Ecore_IMF_Context_Group
- * @since 1.1.0
+ * @since 1.2.0
  */
 EAPI void
 ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx,
@@ -1685,17 +1619,3 @@ ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx,
      ctx->klass->input_panel_event_callback_del(ctx, type, func);
 }
 
-/**
- * Move the soft keyboard to the new position.
- *
- * @param ctx An #Ecore_IMF_Context.
- * @param x X position to move the input panel to
- * @param y Y position to move the input panel to
- * @ingroup Ecore_IMF_Context_Group
- * @since 1.1.0
- */
-EINA_DEPRECATED EAPI void
-ecore_imf_context_input_panel_move(Ecore_IMF_Context *ctx __UNUSED__, int x __UNUSED__, int y __UNUSED__)
-{
-   // will be deprecated
-}
