@@ -1,3 +1,11 @@
+ecore (1.1.0+svn.67695slp2+build05) unstable; urgency=low
+
+  * [ecore_imf] add ecore_imf_context_input_panel_caps_lock_mode_set/get
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.67695slp2+build05
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Wed, 29 Feb 2012 14:21:16 +0900
+
 ecore (1.1.0+svn.67695slp2+build04) unstable; urgency=low
 
   * [ecore_imf] cleanup code
