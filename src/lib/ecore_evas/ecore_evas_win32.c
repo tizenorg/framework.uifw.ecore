@@ -420,7 +420,7 @@ _ecore_evas_win32_free(Ecore_Evas *ee)
 
 static void
 _ecore_evas_win32_callback_delete_request_set(Ecore_Evas *ee,
-                                              void (*func) (Ecore_Evas *ee))
+                                              Ecore_Evas_Event_Cb func)
 {
    ee->func.fn_delete_request = func;
 }
@@ -981,6 +981,13 @@ static Ecore_Evas_Engine_Func _ecore_win32_engine_func =
      NULL, /* _ecore_evas_x_ignore_events_set */
      NULL,  /* _ecore_evas_x_alpha_set */
      NULL, //transparent
+
+     NULL,
+     NULL,
+     NULL,
+     NULL,
+     NULL,
+     NULL,
 
      NULL, // render
      NULL  //screen_geometry_get

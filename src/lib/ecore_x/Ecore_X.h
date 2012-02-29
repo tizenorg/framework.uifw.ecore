@@ -1161,6 +1161,13 @@ typedef enum _Ecore_X_Illume_Quickpanel_State
    ECORE_X_ILLUME_QUICKPANEL_STATE_ON
 } Ecore_X_Illume_Quickpanel_State;
 
+typedef enum _Ecore_X_Illume_Indicator_State
+{
+   ECORE_X_ILLUME_INDICATOR_STATE_UNKNOWN = 0,
+   ECORE_X_ILLUME_INDICATOR_STATE_OFF,
+   ECORE_X_ILLUME_INDICATOR_STATE_ON
+} Ecore_X_Illume_Indicator_State;
+
 /* Window layer constants */
 #define ECORE_X_WINDOW_LAYER_BELOW  2
 #define ECORE_X_WINDOW_LAYER_NORMAL 4
@@ -2216,6 +2223,11 @@ ecore_x_netwm_strut_partial_get(Ecore_X_Window win,
                                 int *bottom_start_x,
                                 int *bottom_end_x);
 
+EAPI void
+ecore_x_netwm_icons_set(Ecore_X_Window win,
+                        Ecore_X_Icon *icon,
+                        int num);
+       
 EAPI Eina_Bool
 ecore_x_netwm_icons_get(Ecore_X_Window win,
                         Ecore_X_Icon **icon,
@@ -2825,6 +2837,11 @@ EAPI Eina_Bool
 EAPI Ecore_X_Randr_Mode_Info **
 ecore_x_randr_modes_info_get(Ecore_X_Window root,
                              int *num);
+EAPI Ecore_X_Randr_Mode
+ecore_x_randr_mode_info_add(Ecore_X_Window root,
+                            Ecore_X_Randr_Mode_Info *mode_info);
+EAPI void
+ecore_x_randr_mode_del(Ecore_X_Randr_Mode mode);
 EAPI Ecore_X_Randr_Mode_Info *
 ecore_x_randr_mode_info_get(Ecore_X_Window root,
                             Ecore_X_Randr_Mode mode);
@@ -2838,9 +2855,12 @@ EAPI Ecore_X_Randr_Output *ecore_x_randr_outputs_get(Ecore_X_Window root,
 EAPI Ecore_X_Randr_Output *
 ecore_x_randr_window_outputs_get(Ecore_X_Window window,
                                  int *num);
-EINA_DEPRECATED EAPI Ecore_X_Randr_Output *
+EAPI Ecore_X_Randr_Output *
 ecore_x_randr_current_output_get(Ecore_X_Window window,
                                  int *num);
+EAPI Ecore_X_Randr_Crtc *
+ecore_x_randr_window_crtcs_get(Ecore_X_Window window,
+                               int *num);
 EAPI Ecore_X_Randr_Crtc *
 ecore_x_randr_current_crtc_get(Ecore_X_Window window,
                                int *num);
@@ -2916,6 +2936,12 @@ ecore_x_randr_crtc_pos_relative_set(Ecore_X_Window root,
                                     Ecore_X_Randr_Crtc crtc_r2,
                                     Ecore_X_Randr_Output_Policy policy,
                                     Ecore_X_Randr_Relative_Alignment alignment);
+EAPI Eina_Bool
+ecore_x_randr_output_mode_add(Ecore_X_Randr_Output output,
+                              Ecore_X_Randr_Mode mode);
+EAPI void
+ecore_x_randr_output_mode_del(Ecore_X_Randr_Output output,
+                              Ecore_X_Randr_Mode mode);
 EAPI Ecore_X_Randr_Mode *
 ecore_x_randr_output_modes_get(Ecore_X_Window root,
                                Ecore_X_Randr_Output output,
@@ -3714,6 +3740,14 @@ ecore_x_e_illume_window_state_set(Ecore_X_Window win,
 EAPI Ecore_X_Illume_Window_State
 ecore_x_e_illume_window_state_get(Ecore_X_Window win);
 
+EAPI void
+ecore_x_e_illume_indicator_state_set(Ecore_X_Window win,
+                                     Ecore_X_Illume_Indicator_State state);
+EAPI Ecore_X_Illume_Indicator_State
+ecore_x_e_illume_indicator_state_get(Ecore_X_Window win);
+EAPI void
+ecore_x_e_illume_indicator_state_send(Ecore_X_Window win,
+                                      Ecore_X_Illume_Indicator_State state);
 #ifdef __cplusplus
 }
 #endif // ifdef __cplusplus

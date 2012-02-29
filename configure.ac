@@ -174,6 +174,7 @@ want_ecore_evas_directfb="no"
 want_ecore_evas_fb="no"
 want_ecore_evas_software_16_wince="no"
 want_ecore_evas_ews="yes"
+want_ecore_evas_extn="yes"
 want_ecore_evas_wayland_shm="no"
 want_ecore_evas_wayland_egl="no"
 
@@ -182,11 +183,12 @@ want_ecore_imf_xim="no"
 want_ecore_imf_scim="no"
 
 case "$host_os" in
-   mingw32ce* | cegcc*)
+   mingw32ce*)
       want_ecore_con="no"
       want_ecore_ipc="no"
       want_ecore_wince="yes"
       want_ecore_evas_software_16_wince="yes"
+      want_ecore_evas_extn="no"
       ;;
    mingw*)
       want_notify_win32="yes"
@@ -273,30 +275,6 @@ requirements_ecore_imf_xim=""
 requirements_ecore_imf_scim=""
 requirements_ecore_wayland=""
 
-AC_CHECK_DECL([MAXHOSTNAMELEN],[FOUND_MAXHOSTNAMELEN=yes])
-
-if test x$FOUND_MAXHOSTNAMELEN != xyes ; then
-  AC_MSG_CHECKING([for header that defines MAXHOSTNAMELEN])
-
-  FOUND_MAXHOSTNAMELEN='not found'
-
-  AC_COMPILE_IFELSE(
-	AC_LANG_PROGRAM([#include <sys/param.h>],
-		[int h = MAXHOSTNAMELEN;]),
-	[FOUND_MAXHOSTNAMELEN='sys/param.h'
-	   AC_DEFINE(NEED_SYS_PARAM_H,1,
-	     [Define to 1 if you need <sys/param.h> to define MAXHOSTNAMELEN])])
-
-	AC_COMPILE_IFELSE(
-	    AC_LANG_PROGRAM([#include <netdb.h>],
-			    [int h = MAXHOSTNAMELEN;]),
-	    [FOUND_MAXHOSTNAMELEN='netdb.h'
-	     AC_DEFINE(NEED_NETDB_H,1,
-	       [Define to 1 if you need <netdb.h> to define MAXHOSTNAMELEN])])
-
-  AC_MSG_RESULT([$FOUND_MAXHOSTNAMELEN])
-fi
-
 ### Additional options to configure
 
 want_glib_integration_always=no
@@ -376,10 +354,6 @@ AC_ARG_ENABLE([xim],
 if test "x${want_xim}" = "xyes" ; then
    AC_DEFINE([ENABLE_XIM], [1], [Enable X Input Method])
 fi
-
-# Unit tests
-
-EFL_CHECK_TESTS([enable_tests="yes"], [enable_tests="no"])
 
 ### Checks for programs
 
@@ -498,6 +472,21 @@ case "$host_vendor" in
       want_ecore_evas_psl1ght="yes"
       ;;
 esac
+
+
+### Checks for portability layer
+
+PKG_CHECK_MODULES([EXOTIC],
+   [exotic],
+   [enable_exotic="yes"],
+   [enable_exotic="no"])
+
+if test "x${enable_exotic}" = "xyes"; then
+    requirements_ecore="exotic ${requirements_ecore}"
+
+    AC_DEFINE([HAVE_EXOTIC], [1], [Define to 1 if you have Exotic.])
+fi
+AM_CONDITIONAL([ECORE_HAVE_EXOTIC], [test "x${enable_exotic}" = "xyes"])
 
 AC_SUBST(EFL_ECORE_BUILD)
 AC_SUBST(EFL_ECORE_CON_BUILD)
@@ -636,6 +625,45 @@ PKG_CHECK_MODULES([DIRECTFB],
 
 
 # Xlib and XCB (ecore_x)
+
+AC_CHECK_DECL([MAXHOSTNAMELEN], [FOUND_MAXHOSTNAMELEN=yes])
+
+if test "x${FOUND_MAXHOSTNAMELEN}" != "xyes" ; then
+   AC_MSG_CHECKING([for header that defines MAXHOSTNAMELEN])
+   FOUND_MAXHOSTNAMELEN="not found"
+
+   AC_COMPILE_IFELSE(
+      [
+       AC_LANG_PROGRAM(
+          [[
+#include <sys/param.h>
+          ]],
+          [[
+int h = MAXHOSTNAMELEN;
+          ]])
+      ],
+      [
+       FOUND_MAXHOSTNAMELEN="sys/param.h"
+       AC_DEFINE([NEED_SYS_PARAM_H], [1], [Define to 1 if you need <sys/param.h> to define MAXHOSTNAMELEN])
+      ])
+
+   AC_COMPILE_IFELSE(
+      [
+       AC_LANG_PROGRAM(
+          [[
+#include <netdb.h>
+          ]],
+          [[
+int h = MAXHOSTNAMELEN;
+          ]])
+      ],
+      [
+       FOUND_MAXHOSTNAMELEN="netdb.h"
+       AC_DEFINE([NEED_NETDB_H], [1], [Define to 1 if you need <netdb.h> to define MAXHOSTNAMELEN])
+      ])
+
+   AC_MSG_RESULT([$FOUND_MAXHOSTNAMELEN])
+fi
 
 have_x="no"
 have_ecore_x="no"
@@ -1390,6 +1418,30 @@ if ! test "x${have_atfile_source}" = "xno" ; then
       ])
 fi
 
+SHM_OPEN_LIBS=""
+AC_COMPILE_IFELSE(
+   [AC_LANG_PROGRAM(
+       [[
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+       ]],
+       [[
+int fd;
+fd = shm_open("/", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+shm_unlink("/");
+       ]])],
+   [
+    have_shm_open="yes"
+    AC_DEFINE(HAVE_SHM_OPEN, 1, [Have shm_open() call])
+    SHM_OPEN_LIBS="-lrt"
+   ],
+   [have_shm_open="no"])
+AC_SUBST(SHM_OPEN_LIBS)
+
+AC_MSG_CHECKING([shm_open])
+AC_MSG_RESULT([${have_shm_open}])
+
 ### Checks for optionnal feature
 AC_CHECK_FUNC([mallinfo],
    [
@@ -1648,7 +1700,7 @@ ECORE_CHECK_MODULE([wince], [${want_ecore_wince}], [WinCE], [${have_ecore_input}
 # ecore_evas
 
 ecore_evas_deps="no"
-if test "x${have_evas}" = "xyes" -a "x${have_ecore_input}" = "xyes" -a "x${have_ecore_input_evas}" = "xyes" ; then
+if test "x${have_evas}" = "xyes" && test "x${have_ecore_input}" = "xyes" && test "x${have_ecore_input_evas}" = "xyes" ; then
    ecore_evas_deps="yes"
 fi
 
@@ -1784,11 +1836,13 @@ fi
 
 # ecore_evas_software_sdl
 
-ECORE_EVAS_CHECK_MODULE([software-sdl],
-   [${want_ecore_evas_software_sdl}],
-   [Software SDL],
-   [${have_ecore_sdl}],
-   [requirements_ecore_evas="ecore-sdl >= 1.1.99 ${requirements_ecore_evas}"])
+have_ecore_evas_software_sdl="no"
+if test "x${have_ecore_sdl}" = "xyes"; then
+   requirements_ecore_evas="ecore-sdl >= 1.1.99 ${requirements_ecore_evas}"
+   have_ecore_evas_software_sdl="yes"
+   AC_DEFINE(BUILD_ECORE_EVAS_SOFTWARE_SDL, 1, [Support for Software SDL Engine in Ecore_Evas])
+   requirements_ecore_evas="ecore-sdl >= 1.1.99 ${requirements_ecore_evas}"
+fi
 
 # ecore_evas_gl_sdl
 
@@ -1837,6 +1891,24 @@ ECORE_EVAS_CHECK_MODULE_FULL([ews], [software-buffer],
    [Ecore Evas Single Process Windowing System],
    [yes], [])
 
+# ecore_evas_extn
+
+have_extn="yes"
+if test "x${have_ecore_ipc}" = "xno" || \
+   test "x${have_ecore_evas_software_buffer}" = "xno" || \
+   test "x${have_shm_open}" = "xno" ; then
+   have_extn="no"
+fi
+
+dnl THIS IS SPECIAL - dont use normal ECORE_EVAS_CHECK_MODULE
+have_ecore_evas_extn="no"
+if test "x${want_ecore_evas_extn}" = "xyes" && \
+   test "x${have_extn}" = "xyes" && \
+   test "x${have_ecore_evas}" = "xyes"; then
+   AC_DEFINE([BUILD_ECORE_EVAS_EXTN], [1], [Support for Extn Engine in Ecore_Evas])
+   have_ecore_evas_extn="yes"
+fi
+
 # ecore_evas_psl1ght
 
 ECORE_EVAS_CHECK_MODULE([psl1ght],
@@ -1850,7 +1922,7 @@ ECORE_EVAS_CHECK_MODULE([psl1ght],
 ecore_wayland_deps="no"
 have_wayland="no"
 if test "x${want_ecore_wayland}" = "xyes" ; then
-  PKG_CHECK_MODULES([WAYLAND], [wayland-client xkbcommon], [have_wayland="yes"], [have_wayland="no"])
+  PKG_CHECK_MODULES([WAYLAND], [egl wayland-egl wayland-client xkbcommon], [have_wayland="yes"], [have_wayland="no"])
 fi
 if test "x${have_ecore_input}" = "xyes" -a "x${have_wayland}" = "xyes" ; then
   ecore_wayland_deps="yes"
@@ -1858,7 +1930,7 @@ fi
 
 ECORE_CHECK_MODULE([wayland], [${want_ecore_wayland}], [Wayland], [${ecore_wayland_deps}])
 if test "x${have_ecore_wayland}" = "xyes" ; then
-  requirements_ecore_wayland="ecore-input >= 1.1.0 wayland-client xkbcommon ${requirements_ecore_wayland}"
+  requirements_ecore_wayland="ecore-input >= 1.1.0 egl wayland-egl wayland-client xkbcommon ${requirements_ecore_wayland}"
 fi
 
 ECORE_EVAS_CHECK_MODULE_FULL([wayland-shm], [wayland-shm], 
@@ -1867,7 +1939,7 @@ ECORE_EVAS_CHECK_MODULE_FULL([wayland-shm], [wayland-shm],
    [${have_ecore_wayland}],
    [requirements_ecore_evas="${requirements_ecore_wayland} ${requirements_ecore_evas}"])
 
-ECORE_EVAS_CHECK_MODULE_FULL([wayland-egl], [wayland-egl], 
+ECORE_EVAS_CHECK_MODULE_FULL([wayland-egl], [wayland-egl egl], 
    [${want_ecore_evas_wayland_egl}],
    [Wayland Egl],
    [${have_ecore_wayland}],
@@ -1877,6 +1949,10 @@ ECORE_EVAS_CHECK_MODULE_FULL([wayland-egl], [wayland-egl],
          requirements_ecore_evas="wayland-egl egl ${requirements_ecore_wayland} ${requirements_ecore_evas}"
       fi
    ])
+
+### Unit tests
+
+EFL_CHECK_TESTS([enable_tests="yes"], [enable_tests="no"])
 
 ### install and build examples
 
@@ -2112,6 +2188,7 @@ if test "x${have_ecore_evas}" = "xyes" ; then
   echo "    Sing.Proc. Windowing System: $have_ecore_evas_ews"
   echo "    Wayland Shm................: $have_ecore_evas_wayland_shm"
   echo "    Wayland Egl................: $have_ecore_evas_wayland_egl"
+  echo "    Extn (Plug/socket Extn)....: $have_ecore_evas_extn"
 fi
 echo
 echo "  Tests................: ${enable_tests}"

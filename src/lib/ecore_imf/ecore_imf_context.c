@@ -188,6 +188,10 @@ ecore_imf_context_add(const char *id)
     * set on the immodule */
    ecore_imf_context_input_panel_enabled_set(ctx, EINA_TRUE);
 
+   /* default input panel layout type is NORMAL type, so let's make sure it's
+    * set on the immodule */
+   ecore_imf_context_input_panel_layout_set(ctx, ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL);
+
    /* default input_mode is ECORE_IMF_INPUT_MODE_FULL, so let's make sure it's
     * set on the immodule */
    ecore_imf_context_input_mode_set(ctx, ECORE_IMF_INPUT_MODE_FULL);
@@ -520,7 +524,7 @@ ecore_imf_context_cursor_position_set(Ecore_IMF_Context *ctx, int cursor_pos)
  *
  * @param ctx An #Ecore_IMF_Context.
  * @param x cursor x position.
- * @param x cursor y position.
+ * @param y cursor y position.
  * @param w cursor width.
  * @param h cursor height.
  * @ingroup Ecore_IMF_Context_Group
@@ -607,7 +611,7 @@ ecore_imf_context_prediction_allow_get(Ecore_IMF_Context *ctx)
 }
 
 /**
- * Set the autocapitalization type on the immodule. 
+ * Set the autocapitalization type on the immodule.
  *
  * @param ctx An #Ecore_IMF_Context.
  * @param autocapital_type the autocapitalization type.
@@ -841,7 +845,7 @@ EAPI void *ecore_imf_context_data_get(Ecore_IMF_Context *ctx)
  *             If the function returns EINA_TRUE, then you must free
  *             the result stored in this location with free().
  * @param cursor_pos Location to store the position in characters of
- *                   the insertion cursor within @text.
+ *                   the insertion cursor within @p text.
  * @return EINA_TRUE if surrounding text was provided; otherwise EINA_FALSE.
  * @ingroup Ecore_IMF_Context_Module_Group
  */
@@ -1238,7 +1242,7 @@ ecore_imf_context_input_panel_hide(Ecore_IMF_Context *ctx)
  * Set the layout of the input panel.
  *
  * @param ctx An #Ecore_IMF_Context.
- * @param layout see #ECORE_IMF_INPUT_PANEL_LAYOUT
+ * @param layout see #Ecore_IMF_Input_Panel_Layout
  * @ingroup Ecore_IMF_Context_Group
  * @since 1.1.0
  */
@@ -1663,4 +1667,3 @@ ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx,
    if (ctx->klass->input_panel_event_callback_del)
      ctx->klass->input_panel_event_callback_del(ctx, type, func);
 }
-

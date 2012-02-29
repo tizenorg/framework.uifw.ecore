@@ -15,8 +15,10 @@ Additions:
      - ecore_con_url_timeout_set()
      - ecore_con_url_proxy_username_set
      - ecore_con_url_proxy_password_set()
+     - ecore_con_url_http_version_set()
     * ecore_x:
      - ecore_x_randr_output_backlight_available()
+     - ecore_x_randr_window_crtcs_get()
     * ecore_evas:
      - Add Shm and Egl engines for ecore_evas to draw in Wayland.
      - Add Socket and Plug to draw other process area.
@@ -42,7 +44,15 @@ Improvements:
      - certificates can now be added for STARTTTLS
     * ecore_win32:
      - fix modifiers value on Windows XP
+    * ecore_thread:
+     - use eina_lock
+     - use Ecore thread safe async call
+    * ecore_evas:
+     - use Evas buffer backend for SDL software engine
 
+Deprecations:
+    * ecore_x:
+     - ecore_x_randr_crtc_current_get()
 
 Ecore 1.1.0
 

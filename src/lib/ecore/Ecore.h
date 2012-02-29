@@ -320,7 +320,9 @@ sudo make install
 # include <signal.h>
 #else
 # include <sys/time.h>
-# include <signal.h>
+# if !defined (EXOTIC_NO_SIGNAL)
+#  include <signal.h>
+# endif
 #endif
 
 #include <sys/types.h>
@@ -592,7 +594,7 @@ struct _Ecore_Event_Signal_User    /** User signal event */
    int       number;  /**< The signal number. Either 1 or 2 */
    void     *ext_data;  /**< Extension data - not used */
 
-#if !defined (_WIN32) && !defined (__lv2ppu__)
+#if !defined (_WIN32) && !defined (__lv2ppu__) && !defined (EXOTIC_NO_SIGNAL)
    siginfo_t data; /**< Signal info */
 #endif
 };
@@ -601,7 +603,7 @@ struct _Ecore_Event_Signal_Hup    /** Hup signal event */
 {
    void     *ext_data;  /**< Extension data - not used */
 
-#if !defined (_WIN32) && !defined (__lv2ppu__)
+#if !defined (_WIN32) && !defined (__lv2ppu__) && !defined (EXOTIC_NO_SIGNAL)
    siginfo_t data; /**< Signal info */
 #endif
 };
@@ -613,7 +615,7 @@ struct _Ecore_Event_Signal_Exit    /** Exit request event */
    Eina_Bool terminate : 1; /**< Set if the exit request was a terminate singal */
    void     *ext_data; /**< Extension data - not used */
 
-#if !defined (_WIN32) && !defined (__lv2ppu__)
+#if !defined (_WIN32) && !defined (__lv2ppu__) && !defined (EXOTIC_NO_SIGNAL)
    siginfo_t data; /**< Signal info */
 #endif
 };
@@ -622,7 +624,7 @@ struct _Ecore_Event_Signal_Power    /** Power event */
 {
    void     *ext_data;  /**< Extension data - not used */
 
-#if !defined (_WIN32) && !defined (__lv2ppu__)
+#if !defined (_WIN32) && !defined (__lv2ppu__) && !defined (EXOTIC_NO_SIGNAL)
    siginfo_t data; /**< Signal info */
 #endif
 };
@@ -631,7 +633,7 @@ struct _Ecore_Event_Signal_Realtime    /** Realtime event */
 {
    int       num; /**< The realtime signal's number */
 
-#if !defined (_WIN32) && !defined (__lv2ppu__)
+#if !defined (_WIN32) && !defined (__lv2ppu__) && !defined (EXOTIC_NO_SIGNAL)
    siginfo_t data; /**< Signal info */
 #endif
 };
@@ -725,7 +727,7 @@ struct _Ecore_Exe_Event_Del    /** Process exit event */
    Eina_Bool  exited    : 1; /** < set to 1 if the process exited of its own accord */
    Eina_Bool  signalled : 1; /** < set to 1 id the process exited due to uncaught signal */
    void      *ext_data; /**< Extension data - not used */
-#if !defined (_WIN32) && !defined (__lv2ppu__)
+#if !defined (_WIN32) && !defined (__lv2ppu__) && !defined (EXOTIC_NO_SIGNAL)
    siginfo_t  data; /**< Signal info */
 #endif
 };
@@ -794,7 +796,7 @@ EAPI void ecore_exe_hup(Ecore_Exe *exe);
  *
  * An @ref Ecore_Fd_Handler can be used to watch on a file
  * descriptor without blocking, still being able to receive events,
- * expire timers, and other watch for other things that happen in
+ * expire timers, and watch for other things that happen in
  * the Ecore main loop.
  *
  * Example of use of a file descriptor handler:
@@ -853,7 +855,7 @@ EAPI void *ecore_main_win32_handler_del(Ecore_Win32_Handler *win32_handler);
  * These functions are for the need to poll information, but provide
  * a shared abstracted API to pool such polling to minimise wakeup
  * and ensure all the polling happens in as few spots as possible
- * areound a core poll interval.  For now only 1 core poller type is
+ * around a core poll interval.  For now only 1 core poller type is
  * supprted: ECORE_POLLER_CORE
  *
  * Example of @ref Ecore_Poller :
