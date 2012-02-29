@@ -494,3 +494,60 @@
 
         * Add ecore_imf APIs to set return key type, disable return key.
 
+2012-02-16  Leif Middelschulte (T_UNIX)
+
+        * Add ecore_x_randr_mode_add to add a mode to a display
+        * Add ecore_x_randr_mode_del to remove a mode from the display
+        * Add ecore_x_randr_output_mode_add to add a mode to an output
+        * Add ecore_x_randr_output_mode_del to remove a mode from an output
+
+2012-02-10  Jérémy Zurcher
+
+        * Improve callbacks in ecore_evas to use typedefs for readability.
+
+2012-02-20  Cedric Bail
+
+	* Rewrite internal of Ecore_Thread to use Eina_Lock and ecore_main_loop_thread_safe_call_async.
+
+2012-02-23  Cedric Bail
+
+	* Move to Evas buffer engine for Ecore_Evas SDL software backend.
+
+2012-02-23  Leif Middelschulte (T_UNIX)
+
+        * Add ecore_x_randr_window_crtcs_get to get the crtcs that display a
+		window.
+        * Deprecate ecore_x_randr_current_output_get. Use
+		ecore_x_randr_window_crtcs_get instead.
+
+2012-02-24  Doyun Kang
+
+	* Add indicator controls to ecore_x
+
+2012-02-26 Carsten Haitzler (The Rasterman)
+
+        * Fix ecore_file_download to not limit downloads to 30sec.
+
+2012-02-28 Carsten Haitzler (The Rasterman)
+
+        * Add ecore_x_netwm_icons_set()
+        * Add ecore_evas_window_group_set() ecore_evas_window_group_get()
+          ecore_evas_aspect_set() ecore_evas_aspect_get()
+          ecore_evas_urgent_set() ecore_evas_urgent_get()
+          ecore_evas_modal_set() ecore_evas_modal_get()
+          ecore_evas_demand_attention_set()
+          ecore_evas_demand_attention_get()
+          ecore_evas_focus_skip_set() ecore_evas_focus_skip_get()
+          ecore_evas_callback_state_change_set()
+
+2012-02-28 Christopher Michael (devilhorns)
+
+        * Refactor Ecore_Wayland code to improve running EFL
+          applications as Wayland Clients.
+        * Refactor Ecore_Evas Wayland code to match changes in 
+          Ecore_Wayland
+
+2012-02-29  Jihoon Kim (jihoon)
+
+        * Add ecore_imf_context_input_panel_caps_lock_mode_set/get to set the caps lock mode on the input panel
+
