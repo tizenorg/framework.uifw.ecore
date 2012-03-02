@@ -1667,3 +1667,52 @@ ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx,
    if (ctx->klass->input_panel_event_callback_del)
      ctx->klass->input_panel_event_callback_del(ctx, type, func);
 }
+
+/**
+ * Get the current language locale of the input panel.
+ *
+ * ex) fr_FR
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param lang language string
+ * @ingroup Ecore_IMF_Context_Group
+ */
+
+EAPI void
+ecore_imf_context_input_panel_language_locale_get(Ecore_IMF_Context *ctx, char *lang)
+{
+   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
+     {
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_input_panel_language_locale_get");
+        return;
+     }
+
+   if (ctx->klass->input_panel_language_locale_get)
+     ctx->klass->input_panel_language_locale_get(ctx, lang);
+}
+
+/**
+ * Get the geometry information of the candidate panel.
+ *
+ * @param ctx An #Ecore_IMF_Context.
+ * @param x top-left x co-ordinate of the candidate panel
+ * @param y top-left y co-ordinate of the candidate panel
+ * @param w width of the candidate panel
+ * @param h height of the candidate panel
+ * @ingroup Ecore_IMF_Context_Group
+ */
+EAPI void
+ecore_imf_context_candidate_panel_geometry_get(Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h)
+{
+   if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
+     {
+        ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,
+                         "ecore_imf_context_candidate_panel_geometry_get");
+        return;
+     }
+
+   if (ctx->klass->candidate_panel_geometry_get)
+     ctx->klass->candidate_panel_geometry_get(ctx, x, y, w, h);
+}
+
