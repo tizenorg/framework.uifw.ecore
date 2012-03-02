@@ -1,3 +1,11 @@
+ecore (1.1.0+svn.67695slp2+build06) unstable; urgency=low
+
+  * [ecore_imf] add language_locale_get, candidate_panel_geometry_get API
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.67695slp2+build06
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Fri, 02 Mar 2012 11:44:15 +0900
+
 ecore (1.1.0+svn.67695slp2+build05) unstable; urgency=low
 
   * [ecore_imf] add ecore_imf_context_input_panel_caps_lock_mode_set/get

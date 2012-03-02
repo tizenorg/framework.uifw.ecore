@@ -37,10 +37,12 @@ extern "C" {
 /* ecore_imf_context_input_panel_event_callback_add() flag */
 typedef enum
 {
-   ECORE_IMF_INPUT_PANEL_STATE_EVENT,              /**< Input Panel STATE Event */
-   ECORE_IMF_INPUT_PANEL_LANGUAGE_EVENT,           /**< Input Panel LANGUAGE Event */
-   ECORE_IMF_INPUT_PANEL_SHIFT_MODE_EVENT,         /**< Input Panel SHIFT MODE */
-   ECORE_IMF_INPUT_PANEL_PREDICTION_MODE_EVENT     /**< Input Panel PREDICTION MODE */
+   ECORE_IMF_INPUT_PANEL_STATE_EVENT,              /**< called when the state of the input panel is changed. */
+   ECORE_IMF_INPUT_PANEL_LANGUAGE_EVENT,           /**< called when the language of the input panel is changed. */
+   ECORE_IMF_INPUT_PANEL_SHIFT_MODE_EVENT,         /**< called when the shift key state of the input panel is changed */
+   ECORE_IMF_INPUT_PANEL_GEOMETRY_EVENT,           /**< called when the size of the input panel is changed. */
+   ECORE_IMF_CANDIDATE_PANEL_STATE_EVENT,          /**< called when the state of the candidate word panel is changed. */
+   ECORE_IMF_CANDIDATE_PANEL_GEOMETRY_EVENT        /**< called when the size of the candidate word panel is changed. */
 } Ecore_IMF_Input_Panel_Event;
 
 typedef enum
@@ -49,6 +51,18 @@ typedef enum
    ECORE_IMF_INPUT_PANEL_STATE_HIDE,        /**< Notification prior to the dismissal of the input panel */
    ECORE_IMF_INPUT_PANEL_STATE_WILL_SHOW    /**< Notification prior to the display of the input panel */
 } Ecore_IMF_Input_Panel_State;
+
+typedef enum
+{
+    ECORE_IMF_INPUT_PANEL_SHIFT_MODE_OFF,
+    ECORE_IMF_INPUT_PANEL_SHIFT_MODE_ON
+} Ecore_IMF_Input_Panel_Shift_Mode;
+
+typedef enum
+{
+   ECORE_IMF_CANDIDATE_PANEL_SHOW,        /**< Notification after the display of the candidate word panel */
+   ECORE_IMF_CANDIDATE_PANEL_HIDE         /**< Notification prior to the dismissal of the candidate word panel */
+} Ecore_IMF_Candidate_Panel_State;
 
 /* Events sent by the Input Method */
 typedef struct _Ecore_IMF_Event_Preedit_Start      Ecore_IMF_Event_Preedit_Start;
@@ -383,6 +397,8 @@ struct _Ecore_IMF_Context_Class
    Ecore_IMF_Input_Panel_State (*input_panel_state_get) (Ecore_IMF_Context *ctx);
    void (*input_panel_event_callback_add) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
    void (*input_panel_event_callback_del) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
+   void (*input_panel_language_locale_get) (Ecore_IMF_Context *ctx, char *lang);
+   void (*candidate_panel_geometry_get)(Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
 };
 
 struct _Ecore_IMF_Context_Info
@@ -468,6 +484,8 @@ EAPI void                          ecore_imf_context_input_panel_geometry_get(Ec
 EAPI Ecore_IMF_Input_Panel_State   ecore_imf_context_input_panel_state_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_input_panel_event_callback_add(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), const void *data);
 EAPI void                          ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
+EAPI void                          ecore_imf_context_input_panel_language_locale_get(Ecore_IMF_Context *ctx, char *lang);
+EAPI void                          ecore_imf_context_candidate_panel_geometry_get(Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
 
 /* The following entry points must be exported by each input method module
  */
