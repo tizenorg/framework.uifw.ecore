@@ -1,3 +1,11 @@
+ecore (1.1.0+svn.68529slp2+build01) unstable; urgency=low
+
+  * Package upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.68529slp2+build01
+
+ -- Jeonghyun Yun <jh0506.yun@samsung.com>  Fri, 02 Mar 2012 06:32:15 -0500
+
 ecore (1.1.0+svn.67695slp2+build06) unstable; urgency=low
 
   * [ecore_imf] add language_locale_get, candidate_panel_geometry_get API
