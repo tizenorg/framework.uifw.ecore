@@ -2,7 +2,6 @@
 #define _ECORE_IMF_H
 
 #include <Eina.h>
-#include <Ecore_IMF_Input_Panel_Key.h>
 
 #ifdef EAPI
 # undef EAPI
