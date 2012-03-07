@@ -171,8 +171,6 @@ ecore_wl_init(const char *name)
         return --_ecore_wl_init_count;
      }
 
-   _ecore_wl_disp->image_target_texture_2d = 
-     (void *)eglGetProcAddress("glEGLImageTargetTexture2DOES");
    _ecore_wl_disp->create_image = 
      (void *)eglGetProcAddress("eglCreateImageKHR");
    _ecore_wl_disp->destroy_image = 
@@ -307,6 +305,15 @@ ecore_wl_screen_size_get(int *w, int *h)
 
    if (w) *w = _ecore_wl_disp->output->allocation.w;
    if (h) *h = _ecore_wl_disp->output->allocation.h;
+}
+
+/* @since 1.2 */
+EAPI void 
+ecore_wl_pointer_xy_get(int *x, int *y)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   _ecore_wl_input_pointer_xy_get(x, y);
 }
 
 /* local functions */

@@ -1,10 +1,11 @@
 #ifndef _ECORE_WAYLAND_H_
 # define _ECORE_WAYLAND_H_
 
+# define GL_GLEXT_PROTOTYPES
+
 # include <Eina.h>
 # include <wayland-client.h>
 # include <wayland-egl.h> // NB: already includes wayland-client.h
-# include <GL/gl.h>
 # include <EGL/egl.h>
 # include <EGL/eglext.h>
 
@@ -92,7 +93,6 @@ struct _Ecore_Wl_Display
 
    Ecore_Wl_Output *output;
 
-   PFNGLEGLIMAGETARGETTEXTURE2DOESPROC image_target_texture_2d;
    PFNEGLCREATEIMAGEKHRPROC create_image;
    PFNEGLDESTROYIMAGEKHRPROC destroy_image;
 
@@ -149,8 +149,8 @@ struct _Ecore_Wl_Window
    Eina_Rectangle allocation, pending_allocation;
    Eina_Rectangle saved_allocation, server_allocation;
 
-   Eina_Bool redraw_scheduled : 1;
-   Eina_Bool resize_scheduled : 1;
+   /* Eina_Bool redraw_scheduled : 1; */
+   /* Eina_Bool resize_scheduled : 1; */
    Eina_Bool transparent : 1;
 
    Ecore_Wl_Window_Type type;
@@ -275,6 +275,7 @@ EAPI void ecore_wl_sync(void);
 EAPI struct wl_shm *ecore_wl_shm_get(void);
 EAPI struct wl_display *ecore_wl_display_get(void);
 EAPI void ecore_wl_screen_size_get(int *w, int *h);
+EAPI void ecore_wl_pointer_xy_get(int *x, int *y);
 
 EAPI Ecore_Wl_Window *ecore_wl_window_new(Ecore_Wl_Window *parent, int x, int y, int w, int h, int buffer_type);
 EAPI void ecore_wl_window_free(Ecore_Wl_Window *win);
