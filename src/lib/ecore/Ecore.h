@@ -137,7 +137,7 @@ sudo make install
  *
  * Timers serve two main purposes: doing something at a specified time and
  * repeatedly doing something with a set interval.
- * @see Ecore_Time_Group
+ * @see Ecore_Timer_Group
  *
  * @subsection poolers Poolers
  *
@@ -1227,16 +1227,39 @@ EAPI void ecore_animator_custom_tick(void);
  */
 
 /**
- * @defgroup Ecore_Time_Group Ecore Time functions
+ * @defgroup Ecore_Time_Group Ecore time functions
  *
- * Functions that deal with time. These functions include those
- * that simply retrieve it in a given format, and those that create
- * events based on it.
+ * These are function to retrieve time in a given format.
  *
- * The timer allows callbacks to be called at specific intervals.
- *
- * Examples with functions that deal with time:
+ * Examples:
  * @li @ref ecore_time_functions_example_c
+ * @{
+ */
+EAPI double ecore_time_get(void);
+EAPI double ecore_time_unix_get(void);
+EAPI double ecore_loop_time_get(void);
+
+/**
+ * @}
+ */
+
+/**
+ * @defgroup Ecore_Timer_Group Ecore Timer functions
+ *
+ * Ecore provides very flexible timer functionality. The basic usage of timers,
+ * to call a certain function at a certain interval can be achieved with a
+ * single line:
+ * @code
+ * Eina_Bool my_func(void *data) {
+ *    do_funky_stuff_with_data(data);
+ *    return EINA_TRUE;
+ * }
+ * ecore_timer_add(interval_in_seconds, my_func, data_given_to_function);
+ * @endcode
+ * @note If the function was to be executed only once simply return EINA_FALSE
+ * instead.
+ *
+ * An example that shows the usage of a lot of these:
  * @li @ref ecore_timer_example_c
  *
  * @ingroup Ecore_Main_Loop_Group
@@ -1245,10 +1268,6 @@ EAPI void ecore_animator_custom_tick(void);
  */
 
 typedef struct _Ecore_Timer Ecore_Timer; /**< A handle for timers */
-
-EAPI double ecore_time_get(void);
-EAPI double ecore_time_unix_get(void);
-EAPI double ecore_loop_time_get(void);
 
 EAPI Ecore_Timer *ecore_timer_add(double in, Ecore_Task_Cb func, const void *data);
 EAPI Ecore_Timer *ecore_timer_loop_add(double in, Ecore_Task_Cb func, const void *data);
@@ -1271,14 +1290,15 @@ EAPI char *ecore_timer_dump(void);
 /**
  * @defgroup Ecore_Idle_Group Ecore Idle functions
  *
- * Callbacks that are called when the program enters or exits an
- * idle state.
+ * The idler functionality in Ecore allows for callbacks to be called when the
+ * program isn't handling @ref Ecore_Event_Group "events", @ref Ecore_Timer_Group
+ * "timers" or @ref Ecore_FD_Handler_Group "fd handlers".
  *
- * The ecore main loop enters an idle state when it is waiting for
- * timers to time out, data to come in on a file descriptor or any
- * other event to occur.  You can set callbacks to be called when
- * the main loop enters an idle state, during an idle state or just
- * after the program wakes up.
+ * There are three types of idlers: Enterers, Idlers(proper) and Exiters. They
+ * are called, respectively, when the program is about to enter an idle state,
+ * when the program is in an idle state and when the program has just left an
+ * idle state and will begin processing @ref Ecore_Event_Group "events", @ref
+ * Ecore_Timer_Group "timers" or @ref Ecore_FD_Handler_Group "fd handlers".
  *
  * Enterer callbacks are good for updating your program's state, if
  * it has a state engine.  Once all of the enterer handlers are
@@ -1288,13 +1308,12 @@ EAPI char *ecore_timer_dump(void);
  * enterer handlers.  They are useful for interfaces that require
  * polling and timers would be too slow to use.
  *
+ * Exiter callbacks are called when the main loop wakes up from an idle state.
+ *
  * If no idler callbacks are specified, then the process literally
  * goes to sleep.  Otherwise, the idler callbacks are called
  * continuously while the loop is "idle", using as much CPU as is
  * available to the process.
- *
- * Exiter callbacks are called when the main loop wakes up from an
- * idle state.
  *
  * @note Idle state doesn't mean that the @b program is idle, but
  * that the <b>main loop</b> is idle. It doesn't have any timers,

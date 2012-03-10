@@ -50,6 +50,7 @@ EAPI int ECORE_WL_EVENT_DND_ENTER = 0;
 EAPI int ECORE_WL_EVENT_DND_POSITION = 0;
 EAPI int ECORE_WL_EVENT_DND_LEAVE = 0;
 EAPI int ECORE_WL_EVENT_DND_DROP = 0;
+EAPI int ECORE_WL_EVENT_INTERFACES_BOUND = 0;
 
 /**
  * @defgroup Ecore_Wl_Init_Group Wayland Library Init and Shutdown Functions
@@ -115,6 +116,7 @@ ecore_wl_init(const char *name)
         ECORE_WL_EVENT_DND_POSITION = ecore_event_type_new();
         ECORE_WL_EVENT_DND_LEAVE = ecore_event_type_new();
         ECORE_WL_EVENT_DND_DROP = ecore_event_type_new();
+        ECORE_WL_EVENT_INTERFACES_BOUND = ecore_event_type_new();
      }
 
    if (!(_ecore_wl_disp = malloc(sizeof(Ecore_Wl_Display))))
@@ -157,24 +159,24 @@ ecore_wl_init(const char *name)
                                   _ecore_wl_cb_handle_global, _ecore_wl_disp);
 
    /* FIXME: Process connection events ?? */
-   /* wl_display_iterate(_ecore_wl_disp->wl.display, WL_DISPLAY_READABLE); */
+   wl_display_iterate(_ecore_wl_disp->wl.display, WL_DISPLAY_READABLE);
 
-   if (!_ecore_wl_egl_init(_ecore_wl_disp))
-     {
-        ERR("Could not initialize EGL");
-        free(_ecore_wl_disp);
-        eina_log_domain_unregister(_ecore_wl_log_dom);
-        _ecore_wl_log_dom = -1;
-        ecore_event_shutdown();
-        ecore_shutdown();
-        eina_shutdown();
-        return --_ecore_wl_init_count;
-     }
+   /* if (!_ecore_wl_egl_init(_ecore_wl_disp)) */
+   /*   { */
+   /*      ERR("Could not initialize EGL"); */
+   /*      free(_ecore_wl_disp); */
+   /*      eina_log_domain_unregister(_ecore_wl_log_dom); */
+   /*      _ecore_wl_log_dom = -1; */
+   /*      ecore_event_shutdown(); */
+   /*      ecore_shutdown(); */
+   /*      eina_shutdown(); */
+   /*      return --_ecore_wl_init_count; */
+   /*   } */
 
-   _ecore_wl_disp->create_image = 
-     (void *)eglGetProcAddress("eglCreateImageKHR");
-   _ecore_wl_disp->destroy_image = 
-     (void *)eglGetProcAddress("eglDestroyImageKHR");
+   /* _ecore_wl_disp->create_image =  */
+   /*   (void *)eglGetProcAddress("eglCreateImageKHR"); */
+   /* _ecore_wl_disp->destroy_image =  */
+   /*   (void *)eglGetProcAddress("eglDestroyImageKHR"); */
 
    /* TODO: create pointer surfaces */
 
@@ -342,7 +344,7 @@ _ecore_wl_shutdown(Eina_Bool close)
           _ecore_wl_input_del(in);
 
         _ecore_wl_xkb_shutdown(_ecore_wl_disp);
-        _ecore_wl_egl_shutdown(_ecore_wl_disp);
+        /* _ecore_wl_egl_shutdown(_ecore_wl_disp); */
 
         if (_ecore_wl_disp->wl.shell) 
           wl_shell_destroy(_ecore_wl_disp->wl.shell);
@@ -354,7 +356,7 @@ _ecore_wl_shutdown(Eina_Bool close)
         if (_ecore_wl_disp->wl.display)
           {
              wl_display_flush(_ecore_wl_disp->wl.display);
-             wl_display_destroy(_ecore_wl_disp->wl.display);
+             wl_display_disconnect(_ecore_wl_disp->wl.display);
           }
         free(_ecore_wl_disp);
      }
@@ -400,7 +402,13 @@ _ecore_wl_cb_handle_global(struct wl_display *disp, unsigned int id, const char 
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
+   if ((!strcmp(interface, "wl_display")) || 
+       (!strcmp(interface, "wl_drm")) || 
+       (!strcmp(interface, "desktop_shell")))
+     return;
+
    ewd = data;
+
    if (!strcmp(interface, "wl_compositor"))
      ewd->wl.compositor = wl_display_bind(disp, id, &wl_compositor_interface);
    else if (!strcmp(interface, "wl_output"))
@@ -415,6 +423,20 @@ _ecore_wl_cb_handle_global(struct wl_display *disp, unsigned int id, const char 
      {
         ewd->wl.data_device_manager = 
           wl_display_bind(disp, id, &wl_data_device_manager_interface);
+     }
+
+   if ((ewd->wl.compositor) && (ewd->wl.shm) && (ewd->wl.shell))
+     {
+        Ecore_Wl_Event_Interfaces_Bound *ev;
+
+        if (!(ev = calloc(1, sizeof(Ecore_Wl_Event_Interfaces_Bound))))
+          return;
+
+        ev->compositor = (ewd->wl.compositor != NULL);
+        ev->shm = (ewd->wl.shm != NULL);
+        ev->shell = (ewd->wl.shell != NULL);
+
+        ecore_event_add(ECORE_WL_EVENT_INTERFACES_BOUND, ev, NULL, NULL);
      }
 }
 
