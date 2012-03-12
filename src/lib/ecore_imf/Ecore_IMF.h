@@ -457,7 +457,7 @@ struct _Ecore_IMF_Context_Class
    Ecore_IMF_Input_Panel_State (*input_panel_state_get) (Ecore_IMF_Context *ctx);
    void (*input_panel_event_callback_add) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), void *data);
    void (*input_panel_event_callback_del) (Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
-   void (*input_panel_language_locale_get) (Ecore_IMF_Context *ctx, char *lang);
+   void (*input_panel_language_locale_get) (Ecore_IMF_Context *ctx, char **lang);
    void (*candidate_panel_geometry_get)(Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
 };
 
@@ -544,7 +544,7 @@ EAPI void                          ecore_imf_context_input_panel_geometry_get(Ec
 EAPI Ecore_IMF_Input_Panel_State   ecore_imf_context_input_panel_state_get(Ecore_IMF_Context *ctx);
 EAPI void                          ecore_imf_context_input_panel_event_callback_add(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value), const void *data);
 EAPI void                          ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx, Ecore_IMF_Input_Panel_Event type, void (*func) (void *data, Ecore_IMF_Context *ctx, int value));
-EAPI void                          ecore_imf_context_input_panel_language_locale_get(Ecore_IMF_Context *ctx, char *lang);
+EAPI void                          ecore_imf_context_input_panel_language_locale_get(Ecore_IMF_Context *ctx, char **lang);
 EAPI void                          ecore_imf_context_candidate_panel_geometry_get(Ecore_IMF_Context *ctx, int *x, int *y, int *w, int *h);
 
 /* The following entry points must be exported by each input method module

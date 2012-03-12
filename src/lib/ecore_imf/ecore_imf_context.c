@@ -1687,12 +1687,12 @@ ecore_imf_context_input_panel_event_callback_del(Ecore_IMF_Context *ctx,
  * ex) fr_FR
  *
  * @param ctx An #Ecore_IMF_Context.
- * @param lang language string
+ * @param lang Location to store the retrieved language string. The
+ *             string retrieved must be freed with free().
  * @ingroup Ecore_IMF_Context_Group
  */
-
 EAPI void
-ecore_imf_context_input_panel_language_locale_get(Ecore_IMF_Context *ctx, char *lang)
+ecore_imf_context_input_panel_language_locale_get(Ecore_IMF_Context *ctx, char **lang)
 {
    if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
      {
@@ -1703,6 +1703,10 @@ ecore_imf_context_input_panel_language_locale_get(Ecore_IMF_Context *ctx, char *
 
    if (ctx->klass->input_panel_language_locale_get)
      ctx->klass->input_panel_language_locale_get(ctx, lang);
+   else
+     {
+        if (lang) *lang = strdup("");
+     }
 }
 
 /**
