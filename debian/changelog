@@ -1,3 +1,19 @@
+ecore (1.1.0+svn.69115slp2+build03) unstable; urgency=low
+
+  * [Ecore_X] Remove unused APIs, unused Atoms and duplicated Atoms
+    - ecore_x_e_comp_dri_buff_flip_supported_set
+    - ecore_x_e_comp_dri_buff_flip_supported_get
+    - ECORE_X_ATOM_E_USER_CREATED_WINDOW
+    - ECORE_X_ATOM_E_PARENT_BORDER_WINDOW
+    - ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED
+    - ECORE_X_ATOM_E_ILLUME_ROTATE_OPERATOR
+    - ECORE_X_ATOM_USER_CREATED_WINDOW
+    - ECORE_X_ATOM_PARENT_BORDER_WINDOW
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.69115slp2+build03
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Wed, 14 Mar 2012 09:01:03 +0900
+
 ecore (1.1.0+svn.69115slp2+build02) unstable; urgency=low
 
   * Change parameter of ecore_imf_context_input_panel_language_locale_get

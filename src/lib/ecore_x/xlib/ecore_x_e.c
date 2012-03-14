@@ -1228,61 +1228,6 @@ ecore_x_e_comp_pixmap_get(Ecore_X_Window win)
    return pixmap;
 }
 
-EAPI void
-ecore_x_e_comp_dri_buff_flip_supported_set(Ecore_X_Window root, Eina_Bool enabled)
-{
-  Ecore_X_Window win;
-  
-  if (!root) root = DefaultRootWindow(_ecore_x_disp);
-  LOGFN(__FILE__, __LINE__, __FUNCTION__);
-  if (enabled)
-    {
-      win = ecore_x_window_new(root, 1, 2, 3, 4);
-      ecore_x_window_prop_xid_set(win, ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED,
-                                  ECORE_X_ATOM_WINDOW, &win, 1);
-      ecore_x_window_prop_xid_set(root, ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED,
-                                  ECORE_X_ATOM_WINDOW, &win, 1);
-    }
-  else
-    {
-      int ret =
-        ecore_x_window_prop_xid_get(root,
-                                    ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED,
-                                    ECORE_X_ATOM_WINDOW,
-                                    &win, 1);
-      if ((ret == 1) && (win))
-        {
-          ecore_x_window_prop_property_del(root, ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED);
-          ecore_x_window_free(win);
-        }
-    }
-}
-
-EAPI Eina_Bool
-ecore_x_e_comp_dri_buff_flip_supported_get(Ecore_X_Window root)
-{
-  Ecore_X_Window win, win2;
-  int ret;
-  
-  LOGFN(__FILE__, __LINE__, __FUNCTION__);
-  if (!root) root = DefaultRootWindow(_ecore_x_disp);
-  ret =
-    ecore_x_window_prop_xid_get(root,
-                                ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED,
-                                ECORE_X_ATOM_WINDOW,
-                                &win, 1);
-  if ((ret == 1) && (win))
-    {
-      ret =
-        ecore_x_window_prop_xid_get(win,
-                                    ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED,
-                                    ECORE_X_ATOM_WINDOW,
-                                    &win2, 1);
-      if ((ret == 1) && (win2 == win)) return EINA_TRUE;
-    }
-  return EINA_FALSE;
-}
-
 static Ecore_X_Atom
 _ecore_x_e_indicator_atom_get(Ecore_X_Illume_Indicator_State state)
 {

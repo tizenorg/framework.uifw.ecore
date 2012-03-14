@@ -290,20 +290,9 @@ EAPI Ecore_X_Atom ECORE_X_ATOM_E_COMP_FLUSH = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_COMP_DUMP = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_COMP_PIXMAP = 0;
 
-EAPI Ecore_X_Atom ECORE_X_ATOM_E_USER_CREATED_WINDOW = 0;
-EAPI Ecore_X_Atom ECORE_X_ATOM_E_PARENT_BORDER_WINDOW = 0;
-EAPI Ecore_X_Atom ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED = 0;
-EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_ROTATE_OPERATOR = 0;
-
 /* currently Emotion and E17 specific extension */
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_VIDEO_PARENT = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_VIDEO_POSITION = 0;
-
-/* for user created window */
-EAPI Ecore_X_Atom ECORE_X_ATOM_USER_CREATED_WINDOW = 0;
-
-/* XID that points to the parent border window */
-EAPI Ecore_X_Atom ECORE_X_ATOM_PARENT_BORDER_WINDOW = 0;
 
 /* for sliding window */
 EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_STATE = 0;
