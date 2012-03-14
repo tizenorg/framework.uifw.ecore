@@ -1,11 +1,11 @@
 Name:       ecore
 Summary:    Enlightened Core X interface library
-Version:    1.0.999.svn61874
-Release:    1
+Version:    1.1.0+svn.67695slp2
+Release:    1.2
 Group:      TO_BE/FILLED_IN
 License:    BSD
 URL:        http://www.enlightenment.org
-Source0:    %{name}-%{version}.tar.bz2
+Source0:    %{name}-%{version}.tar.gz
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:  pkgconfig(eina)
@@ -247,7 +247,7 @@ rm -rf %{buildroot}
 
 %files tools
 %defattr(-,root,root,-)
-/usr/bin/ecore_test
+#/usr/bin/ecore_test
 
 %files con
 %defattr(-,root,root,-)
