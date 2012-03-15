@@ -1,3 +1,11 @@
+ecore (1.1.0+svn.69115slp2+build04) unstable; urgency=low
+
+  * Package Upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.69115slp2+build04
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Thu, 15 Mar 2012 21:23:10 +0900
+
 ecore (1.1.0+svn.69115slp2+build03) unstable; urgency=low
 
   * [Ecore_X] Remove unused APIs, unused Atoms and duplicated Atoms
