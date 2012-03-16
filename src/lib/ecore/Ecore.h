@@ -522,34 +522,51 @@ EAPI int ecore_thread_main_loop_end(void);
 /**
  * @defgroup Ecore_Event_Group Ecore Event functions
  *
- * Ecore events are used to wake up the Ecore main loop to warn
- * about state changes, tasks completed, data available for reading
- * or writing, etc. They are the base of the event oriented
- * programming.
+ * Ecore events provide two main features that are of use to those using ecore:
+ * creating events and being notified of events. Those two will usually be used
+ * in different contexts, creating events is mainly done by libraries wrapping
+ * some system functionality while being notified of events is mainly a
+ * necessity of applications.
  *
- * The idea is to write many functions (callbacks) that will be
- * registered to specific events, and called when these events
- * happen. This way, when the system state changes (a mouse click is
- * detected, a key is pressed, or the content of a file changes, for
- * example), the respective callbacks will be called with some
- * information about that event. Usually the function/callback will
- * have a data pointer to the event info (the position in the screen
- * where the mouse was clicked, the name of the key that was
- * pressed, or the name of the file that has changed).
+ * For a program to be notified of events it's interested in it needs to have a
+ * function to process the event and to register that function as the callback
+ * to the event, that's all:
+ * @code
+ * ecore_event_handler_add(EVENT_TYPE, _my_event_handler, some_data);
+ * ...
+ * static Eina_Bool
+ * _my_event_handler(void *data, int type, void *event)
+ * {
+ *    //data is some_data
+ *    //event is provided by whoever created the event
+ *    //Do really cool stuff with event
+ * }
+ * @endcode
  *
- * The basic usage, when one needs to watch for an existing event,
- * is to register a callback to it using ecore_event_add(). Of
- * course it's necessary to know beforehand what are the types of
- * events that the system/library will emmit.  This should be
- * available with the documentation from that system/library.
+ * One very important thing to note here is the @c EVENT_TYPE, to register a
+ * handler for an event you must know it's type before hand. This information
+ * can be found on the documentation of the library emitting the signal, so,
+ * for example, for events related to windowing one would look in @ref
+ * Ecore_Evas_Group.
  *
- * When writing a library or group of functions that need to inform
- * about something, and you already are running on top of a main
- * loop, it is usually a good approach to use events. This way you
- * allow others to register as many callbacks as necessary to this
- * event, and don't have to care about who is registering to it. The
- * functions ecore_event_type_new() and ecore_event_add() are
- * available for this purpose.
+ * Examples of libraries that integrate into ecore's main loop by providing
+ * events are @ref Ecore_Con_Group, @ref Ecore_Evas_Group and @ref
+ * Ecore_Exe_Group amongst others. This usage can be divided into two parts,
+ * setup and adding events. The setup is very simple, all that needs doing is
+ * getting a type id for the event:
+ * @code
+ * int MY_EV_TYPE = ecore_event_type_new();
+ * @endcode
+ * @note This variable should be declared in the header since it'll be needed by
+ * anyone wishing to register a handler to your event.
+ *
+ * The complexity of adding of an event to the queue depends on whether that
+ * event sends uses @c event, if it doesn't it a one-liner:
+ * @code
+ * ecore_event_add(MY_EV_TYPE, NULL, NULL, NULL);
+ * @endcode
+ * The usage when an @c event is needed is not that much more complex and can be
+ * seen in @ref ecore_event_add.
  *
  * Example that deals with events:
  *
@@ -647,16 +664,156 @@ struct _Ecore_Event_Signal_Realtime    /** Realtime event */
 #endif
 };
 
+/**
+ * @brief Add an event handler.
+ * @param type The type of the event this handler will get called for
+ * @param func The function to call when the event is found in the queue
+ * @param data A data pointer to pass to the called function @p func
+ * @return A new Event handler, or NULL on failure
+ *
+ * Add an event handler to the list of handlers. This will, on success, return
+ * a handle to the event handler object that was created, that can be used
+ * later to remove the handler using ecore_event_handler_del(). The @p type
+ * parameter is the integer of the event type that will trigger this callback
+ * to be called. The callback @p func is called when this event is processed
+ * and will be passed the event type, a pointer to the private event
+ * structure that is specific to that event type, and a data pointer that is
+ * provided in this call as the @p data parameter.
+ *
+ * When the callback @p func is called, it must return 1 or 0. If it returns
+ * 1 (or ECORE_CALLBACK_PASS_ON), It will keep being called as per normal, for
+ * each handler set up for that event type. If it returns 0 (or
+ * ECORE_CALLBACK_DONE), it will cease processing handlers for that particular
+ * event, so all handler set to handle that event type that have not already
+ * been called, will not be.
+ */
 EAPI Ecore_Event_Handler *ecore_event_handler_add(int type, Ecore_Event_Handler_Cb func, const void *data);
+/**
+ * @brief Delete an event handler.
+ * @param event_handler Event handler handle to delete
+ * @return Data passed to handler
+ *
+ * Delete a specified event handler from the handler list. On success this will
+ * delete the event handler and return the pointer passed as @p data when the
+ * handler was added by ecore_event_handler_add(). On failure NULL will be
+ * returned. Once a handler is deleted it will no longer be called.
+ */
 EAPI void *ecore_event_handler_del(Ecore_Event_Handler *event_handler);
+/**
+ * @brief Add an event to the event queue.
+ * @param type The event type to add to the end of the event queue
+ * @param ev The data structure passed as @c event to event handlers
+ * @param func_free The function to be called to free @a ev
+ * @param data The data pointer to be passed to the free function
+ * @return A Handle for that event on success, otherwise NULL
+ *
+ * If it succeeds, an event of type @a type will be added to the queue for
+ * processing by event handlers added by ecore_event_handler_add(). The @a ev
+ * parameter will be passed as the @c event parameter of the handler. When the
+ * event is no longer needed, @a func_free will be called and passed @a ev for
+ * cleaning up. If @p func_free is NULL, free() will be called with the private
+ * structure pointer.
+ */
 EAPI Ecore_Event *ecore_event_add(int type, void *ev, Ecore_End_Cb func_free, void *data);
+/**
+ * @brief Delete an event from the queue.
+ * @param event The event handle to delete
+ * @return The data pointer originally set for the event free function
+ *
+ * This deletes the event @p event from the event queue, and returns the
+ * @p data parameter originally set when adding it with ecore_event_add(). This
+ * does not immediately call the free function, and it may be called later on
+ * cleanup, and so if the free function depends on the data pointer to work,
+ * you should defer cleaning of this till the free function is called later.
+ */
 EAPI void *ecore_event_del(Ecore_Event *event);
+/**
+ * @brief Get the data associated with an #Ecore_Event_Handler
+ * @param eh The event handler
+ * @return The data
+ *
+ * This function returns the data previously associated with @p eh by
+ * ecore_event_handler_add().
+ */
 EAPI void *ecore_event_handler_data_get(Ecore_Event_Handler *eh);
+/**
+ * @brief Set the data associated with an #Ecore_Event_Handler
+ * @param eh The event handler
+ * @param data The data to associate
+ * @return The previous data
+ *
+ * This function sets @p data to @p eh and returns the old data pointer
+ * which was previously associated with @p eh by ecore_event_handler_add().
+ */
 EAPI void *ecore_event_handler_data_set(Ecore_Event_Handler *eh, const void *data);
+/**
+ * @brief Allocate a new event type id sensibly and return the new id.
+ * @return A new event type id.
+ *
+ * This function allocates a new event type id and returns it. Once an event
+ * type has been allocated it can never be de-allocated during the life of
+ * the program. There is no guarantee of the contents of this event ID, or how
+ * it is calculated, except that the ID will be unique to the current instance
+ * of the process.
+ */
 EAPI int ecore_event_type_new(void);
+/**
+ * @brief Add a filter the current event queue.
+ *
+ * @param func_start Function to call just before filtering and return data
+ * @param func_filter Function to call on each event
+ * @param func_end Function to call after the queue has been filtered
+ * @param data Data to pass to the filter functions
+ * @return A filter handle on success, NULL otherwise
+ *
+ * Adds a callback to filter events from the event queue. Filters are called on
+ * the queue just before Event handler processing to try and remove redundant
+ * events. Just as processing is about to start @a func_start is called and
+ * passed the @a data pointer, the return value of this functions is passed to
+ * @a func_filter as loop_data. @a func_filter is also passed @a data and the
+ * event type and event structure. If this @a func_filter returns #EINA_FALSE,
+ * the event is removed from the queue, if it returns #EINA_TRUE, the event is
+ * kept. When processing is finished @p func_end is called and is passed the
+ * loop_data(returned by @c func_start) and @p data pointer to clean up.
+ */
 EAPI Ecore_Event_Filter *ecore_event_filter_add(Ecore_Data_Cb func_start, Ecore_Filter_Cb func_filter, Ecore_End_Cb func_end, const void *data);
+/**
+ * @brief Delete an event filter.
+ * @param ef The event filter handle
+ * @return The data set for the filter on success, NULL otherwise
+ *
+ * Delete a filter that has been added by its @p ef handle.
+ */
 EAPI void *ecore_event_filter_del(Ecore_Event_Filter *ef);
+/**
+ * @brief Return the current event type being handled.
+ * @return The current event type being handled if inside a handler callback,
+ * ECORE_EVENT_NONE otherwise
+ *
+ * If the program is currently inside an Ecore event handler callback this
+ * will return the type of the current event being processed.
+ *
+ * This is useful when certain Ecore modules such as Ecore_Evas "swallow"
+ * events and not all the original information is passed on. In special cases
+ * this extra information may be useful or needed and using this call can let
+ * the program know if the event type being handled is one it wants to get more
+ * information about.
+ */
 EAPI int ecore_event_current_type_get(void);
+/**
+ * @brief Return the current event type pointer handled.
+ * @return The current event pointer being handled if inside a handler callback,
+ * NULL otherwise
+ *
+ * If the program is currently inside an Ecore event handler callback this
+ * will return the pointer of the current event being processed.
+ *
+ * This is useful when certain Ecore modules such as Ecore_Evas "swallow"
+ * events and not all the original information is passed on. In special cases
+ * this extra information may be useful or needed and using this call can let
+ * the program access the event data if the type of the event is handled by
+ * the program.
+ */
 EAPI void *ecore_event_current_event_get(void);
 
 /**
@@ -862,13 +1019,30 @@ EAPI void *ecore_main_win32_handler_del(Ecore_Win32_Handler *win32_handler);
 /**
  * @defgroup Ecore_Poller_Group Ecore Poll functions
  *
- * These functions are for the need to poll information, but provide
- * a shared abstracted API to pool such polling to minimise wakeup
- * and ensure all the polling happens in as few spots as possible
- * around a core poll interval.  For now only 1 core poller type is
- * supprted: ECORE_POLLER_CORE
+ * Ecore poller provides infrastructure for the creation of pollers. Pollers
+ * are, in essence, callbacks that share a single timer per type. Because not
+ * all pollers need to be called at the same frequency the user may specify the
+ * frequency in ticks(each expiration of the shared timer is called a tick, in
+ * ecore poller parlance) for each added poller. Ecore pollers should only be
+ * used when the poller doesn't have specific requirements on the exact times
+ * to poll.
  *
- * Example of @ref Ecore_Poller :
+ * This architecture means that the main loop is only woken up once to handle
+ * all pollers of that type, this will save power as the CPU has more of a
+ * chance to go into a low power state the longer it is asleep for, so this
+ * should be used in situations where power usage is a concern.
+ *
+ * For now only 1 core poller type is supported: ECORE_POLLER_CORE, the default
+ * interval for ECORE_POLLER_CORE is 0.125(or 1/8th) second.
+ *
+ * The creation of a poller is extremely simple and only required one line:
+ * @code
+ * ecore_poller_add(ECORE_POLLER_CORE, 1, my_poller_function, NULL);
+ * @endcode
+ * This sample creates a poller to call @c my_poller_function at every tick with
+ * @c NULL as data.
+ *
+ * Example:
  * @li @ref ecore_poller_example_c
  *
  * @ingroup Ecore_Main_Loop_Group
@@ -884,11 +1058,76 @@ typedef enum _Ecore_Poller_Type Ecore_Poller_Type;
 
 typedef struct _Ecore_Poller    Ecore_Poller; /**< A handle for pollers */
 
+/**
+ * @brief Sets the time(in seconds) between ticks for the given poller type.
+ * @param type The poller type to adjust.
+ * @param poll_time The time(in seconds) between ticks of the timer.
+ *
+ * This will adjust the time between ticks of the given timer type defined by
+ * @p type to the time period defined by @p poll_time.
+ */
 EAPI void ecore_poller_poll_interval_set(Ecore_Poller_Type type, double poll_time);
+/**
+ * @brief Gets the time(in seconds) between ticks for the given poller type.
+ * @param type The poller type to query.
+ * @return The time in seconds between ticks of the poller timer.
+ *
+ * This will get the time between ticks of the specified poller timer.
+ */
 EAPI double ecore_poller_poll_interval_get(Ecore_Poller_Type type);
+/**
+ * @brief Changes the polling interval rate of @p poller.
+ * @param poller The Ecore_Poller to change the interval of.
+ * @param interval The tick interval to set; must be a power of 2 and <= 32768.
+ * @return Returns true on success, false on failure.
+ *
+ * This allows the changing of a poller's polling interval. It is useful when
+ * you want to alter a poll rate without deleting and re-creating a poller.
+ */
 EAPI Eina_Bool ecore_poller_poller_interval_set(Ecore_Poller *poller, int interval);
+/**
+ * @brief Gets the polling interval rate of @p poller.
+ * @param poller The Ecore_Poller to change the interval of.
+ * @return Returns the interval, in ticks, that @p poller polls at.
+ *
+ * This returns a poller's polling interval, or 0 on error.
+ */
 EAPI int ecore_poller_poller_interval_get(Ecore_Poller *poller);
+/**
+ * @brief Creates a poller to call the given function at a particular tick interval.
+ * @param type The ticker type to attach the poller to. Must be ECORE_POLLER_CORE.
+ * @param interval The poll interval.
+ * @param func The poller function.
+ * @param data Data to pass to @a func when it is called.
+ * @return A poller object on success, @c NULL otherwise.
+ *
+ * This function adds @a func as a poller callback that will be called every @a
+ * interval ticks together with other pollers of type @a type. @a func will be
+ * passed the @p data pointer as a parameter.
+ *
+ * The @p interval must be between 1 and 32768 inclusive, and must be a power of
+ * 2 (i.e. 1, 2, 4, 8, 16, ... 16384, 32768). The exact tick in which @a func
+ * will be called is undefined, as only the interval between calls can be
+ * defined. Ecore will endeavor to keep pollers synchronized and to call as
+ * many in 1 wakeup event as possible. If @a interval is not a power of two, the
+ * closest power of 2 greater than @a interval will be used.
+ *
+ * When the poller @p func is called, it must return a value of either
+ * ECORE_CALLBACK_RENEW(or 1) or ECORE_CALLBACK_CANCEL(or 0). If it
+ * returns 1, it will be called again at the next tick, or if it returns
+ * 0 it will be deleted automatically making any references/handles for it
+ * invalid.
+ */
 EAPI Ecore_Poller *ecore_poller_add(Ecore_Poller_Type type, int interval, Ecore_Task_Cb func, const void *data);
+/**
+ * @brief Delete the specified poller from the timer list.
+ * @param poller The poller to delete.
+ * @return The data pointer set for the timer when @ref ecore_poller_add was
+ * called on success, @c NULL otherwise.
+ *
+ * @note @a poller must be a valid handle. If the poller function has already
+ * returned 0, the handle is no longer valid (and does not need to be deleted).
+ */
 EAPI void *ecore_poller_del(Ecore_Poller *poller);
 
 /**
