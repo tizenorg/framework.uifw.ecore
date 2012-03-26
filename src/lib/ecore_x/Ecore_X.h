@@ -3760,20 +3760,6 @@ ecore_x_gesture_event_ungrab(Ecore_X_Window win,
                              Ecore_X_Gesture_Event_Type type,
                              int num_fingers);
 
-/* Illume window states */
-typedef enum _Ecore_X_Illume_Window_State
-{
-   ECORE_X_ILLUME_WINDOW_STATE_NORMAL = 0,
-   ECORE_X_ILLUME_WINDOW_STATE_INSET
-} Ecore_X_Illume_Window_State;
-
-EAPI void
-ecore_x_e_illume_window_state_set(Ecore_X_Window win,
-                                  Ecore_X_Illume_Window_State state);
-
-EAPI Ecore_X_Illume_Window_State
-ecore_x_e_illume_window_state_get(Ecore_X_Window win);
-
 EAPI void
 ecore_x_e_illume_indicator_state_set(Ecore_X_Window win,
                                      Ecore_X_Illume_Indicator_State state);
