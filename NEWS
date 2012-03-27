@@ -37,6 +37,12 @@ Additions:
      - ecore_imf_context_input_panel_return_key_disabled_get()
      - ecore_imf_context_input_panel_caps_lock_mode_set()
      - ecore_imf_context_input_panel_caps_lock_mode_get()
+    * ecore_win32:
+     - ecore_win32_focus()
+     - ecore_win32_focus_get()
+    * ecore_wince:
+     - ecore_wince_focus()
+     - ecore_wince_focus_get()
 
 Fixes:
     * ecore_thread:
@@ -44,6 +50,8 @@ Fixes:
      - prevent double free that could cause crash when an Ecore_Thread stop.
     * ecore_x:
      - ecore_x_randr_modes_info_get does not cut off the trailing '\0' anymore.
+    * ecore_win32/wince:
+     - do not autorepeat Ctrl, Shift, Alt and Win keys
 
 Improvements:
     * ecore:
@@ -58,6 +66,10 @@ Improvements:
 Deprecations:
     * ecore_x:
      - ecore_x_randr_crtc_current_get()
+
+Removal:
+    * ecore_win32:
+     - ecore_win32_focus_set()
 
 Ecore 1.1.0
 

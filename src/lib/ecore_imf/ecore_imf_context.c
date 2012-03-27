@@ -143,6 +143,32 @@ ecore_imf_context_default_id_by_canvas_type_get(const char *canvas_type)
  * @return Return a #Ecore_IMF_Context_Info for the Input Method Context with @p id;
  *         on failure it returns NULL.
  * @ingroup Ecore_IMF_Context_Group
+ * 
+ * Example
+ * @code
+ *
+ * const char *ctx_id;
+ * const Ecore_IMF_Context_Info *ctx_info;
+ * Ecore_IMF_Context *imf_context;
+ * ctx_id = ecore_imf_context_default_id_get();
+ * if (ctx_id)
+ *   {
+ *      ctx_info = ecore_imf_context_info_by_id_get(ctx_id);
+ *      if (!ctx_info->canvas_type ||
+ *          strcmp(ctx_info->canvas_type, "evas") == 0)
+ *        {
+ *           imf_context = ecore_imf_context_add(ctx_id);
+ *        }
+ *      else
+ *        {
+ *           ctx_id = ecore_imf_context_default_id_by_canvas_type_get("evas");
+ *           if (ctx_id)
+ *             {
+ *                imf_context = ecore_imf_context_add(ctx_id);
+ *             }
+ *        }
+ *   }
+ * @endcode
  */
 EAPI const Ecore_IMF_Context_Info *
 ecore_imf_context_info_by_id_get(const char *id)
@@ -407,7 +433,7 @@ ecore_imf_context_preedit_string_get(Ecore_IMF_Context *ctx, char **str, int *cu
 }
 
 /**
- * Retrieve the current preedit string, atrributes and
+ * Retrieve the current preedit string, attributes and
  * cursor position for the Input Method Context.
  *
  * @param ctx An #Ecore_IMF_Context.
@@ -417,6 +443,49 @@ ecore_imf_context_preedit_string_get(Ecore_IMF_Context *ctx, char **str, int *cu
  * @param cursor_pos Location to store position of cursor (in characters)
  *                   within the preedit string.
  * @ingroup Ecore_IMF_Context_Group
+ *
+ * Example
+ * @code
+ * char *preedit_string;
+ * int cursor_pos;
+ * Eina_List *attrs = NULL, *l = NULL;
+ * Ecore_IMF_Preedit_Attr *attr;
+ *
+ * ecore_imf_context_preedit_string_with_attributes_get(imf_context,
+ *                                                      &preedit_string,
+ *                                                      &attrs, &cursor_pos);
+ * if (!preedit_string) return;
+ *
+ *  if (strlen(preedit_string) > 0)
+ *    {
+ *       if (attrs)
+ *         {
+ *            EINA_LIST_FOREACH(attrs, l, attr)
+ *              {
+ *                 if (attr->preedit_type == ECORE_IMF_PREEDIT_TYPE_SUB1)
+ *                   {
+ *                      // Something to do
+ *                   }
+ *                 else if (attr->preedit_type == ECORE_IMF_PREEDIT_TYPE_SUB2)
+ *                   {
+ *                      // Something to do
+ *                   }
+ *                 else if (attr->preedit_type == ECORE_IMF_PREEDIT_TYPE_SUB3)
+ *                   {
+ *                      // Something to do
+ *                   }
+ *              }
+ *         }
+ *    }
+ * 
+ * // delete attribute list
+ * if (attrs)
+ *   {
+ *      EINA_LIST_FREE(attrs, attr) free(attr);
+ *   }
+ *
+ * free(preedit_string);
+ * @endcode
  * @since 1.1.0
  */
 EAPI void
@@ -444,6 +513,18 @@ ecore_imf_context_preedit_string_with_attributes_get(Ecore_IMF_Context *ctx, cha
  *
  * @param ctx An #Ecore_IMF_Context.
  * @ingroup Ecore_IMF_Context_Group
+ *
+ * Example
+ * @code
+ * static void
+ * _focus_in_cb(void *data, Evas_Object *o, const char *emission, const char *source)
+ * {
+ *    ecore_imf_context_reset(imf_context);
+ *    ecore_imf_context_focus_in(imf_context);
+ * }
+ *
+ * evas_object_event_callback_add(obj, EVAS_CALLBACK_FOCUS_IN, _focus_in_cb, ed);
+ * @endcode
  */
 EAPI void
 ecore_imf_context_focus_in(Ecore_IMF_Context *ctx)
@@ -463,6 +544,18 @@ ecore_imf_context_focus_in(Ecore_IMF_Context *ctx)
  *
  * @param ctx An #Ecore_IMF_Context.
  * @ingroup Ecore_IMF_Context_Group
+ *
+ * Example
+ * @code
+ * static void
+ * _focus_out_cb(void *data, Evas_Object *o, const char *emission, const char *source)
+ * {
+ *    ecore_imf_context_reset(imf_context);
+ *    ecore_imf_context_focus_out(imf_context);
+ * }
+ *
+ * evas_object_event_callback_add(obj, EVAS_CALLBACK_FOCUS_OUT, _focus_out_cb, ed);
+ * @endcode
  */
 EAPI void
 ecore_imf_context_focus_out(Ecore_IMF_Context *ctx)
@@ -483,6 +576,18 @@ ecore_imf_context_focus_out(Ecore_IMF_Context *ctx)
  *
  * @param ctx An #Ecore_IMF_Context.
  * @ingroup Ecore_IMF_Context_Group
+ * 
+ * Example
+ * @code
+ * static void
+ * _focus_out_cb(void *data, Evas_Object *o, const char *emission, const char *source)
+ * {
+ *    ecore_imf_context_reset(imf_context);
+ *    ecore_imf_context_focus_out(imf_context);
+ * }
+ *
+ * evas_object_event_callback_add(obj, EVAS_CALLBACK_FOCUS_OUT, _focus_out_cb, ed);
+ * @endcode
  */
 EAPI void
 ecore_imf_context_reset(Ecore_IMF_Context *ctx)
@@ -738,6 +843,28 @@ ecore_imf_context_input_mode_get(Ecore_IMF_Context *ctx)
  * @param event The event itself.
  * @return EINA_TRUE if the event was handled; otherwise EINA_FALSE.
  * @ingroup Ecore_IMF_Context_Group
+ *
+ * Example
+ * @code
+ * static void
+ * _key_down_cb(void *data, Evas *e, Evas_Object *obj, void *event_info)
+ * {
+ *    Evas_Event_Key_Down *ev = event_info;
+ *    if (!ev->keyname) return;
+ *
+ *    if (imf_context)
+ *      {
+ *         Ecore_IMF_Event_Key_Down ecore_ev;
+ *         ecore_imf_evas_event_key_down_wrap(ev, &ecore_ev);
+ *         if (ecore_imf_context_filter_event(imf_context,
+ *                                            ECORE_IMF_EVENT_KEY_DOWN,
+ *                                            (Ecore_IMF_Event *)&ecore_ev))
+ *           return;
+ *      }
+ * }
+ *
+ * evas_object_event_callback_add(obj, EVAS_CALLBACK_KEY_DOWN, _key_down_cb, data);
+ * @endcode
  */
 EAPI Eina_Bool
 ecore_imf_context_filter_event(Ecore_IMF_Context *ctx, Ecore_IMF_Event_Type type, Ecore_IMF_Event *event)
@@ -1062,6 +1189,18 @@ ecore_imf_context_delete_surrounding_event_add(Ecore_IMF_Context *ctx, int offse
  * @param data The data pointer to be passed to @p func
  * @ingroup Ecore_IMF_Context_Group
  * @since 1.2.0
+ *
+ * Example
+ * @code
+ * static void
+ * _imf_event_commit_cb(void *data, Ecore_IMF_Context *ctx, void *event_info)
+ * {
+ *    char *commit_str = event_info;
+ *    // something to do
+ * }
+ *
+ * ecore_imf_context_event_callback_add(en->imf_context, ECORE_IMF_CALLBACK_COMMIT, _imf_event_commit_cb, data);
+ * @endcode
  */
 EAPI void
 ecore_imf_context_event_callback_add(Ecore_IMF_Context *ctx, Ecore_IMF_Callback_Type type, Ecore_IMF_Event_Cb func, const void *data)
@@ -1098,7 +1237,7 @@ ecore_imf_context_event_callback_add(Ecore_IMF_Context *ctx, Ecore_IMF_Callback_
  * @see ecore_imf_context_event_callback_add() for more details
  *
  * @param ctx Ecore_IMF_Context to remove a callback from.
- * @param type The type of event that was trigerring the callback
+ * @param type The type of event that was triggering the callback
  * @param func The (callback) function that was to be called when the event was triggered
  * @return the data pointer
  * @ingroup Ecore_IMF_Context_Group
@@ -1391,8 +1530,8 @@ ecore_imf_context_input_panel_enabled_get(Ecore_IMF_Context *ctx)
 
 /**
  * Set the input panel-specific data to deliver to the input panel.
- * this API is used by applications to deliver specific data to the input panel.
- * the data format MUST be negotiated by both application and the input panel.
+ * This API is used by applications to deliver specific data to the input panel.
+ * The data format MUST be negotiated by both application and the input panel.
  * The size and format of data are defined by the input panel.
  *
  * @param ctx An #Ecore_IMF_Context.

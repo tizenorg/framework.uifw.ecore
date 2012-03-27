@@ -575,3 +575,24 @@
 
         * Fix ecore_x_randr_modes_info_get to not cut off the trailing '\0'
 		anymore
+
+2012-03-20  Vincent Torri
+
+        * Rename ecore_win32_window_focus_set() to ecore_win32_window_focus()
+	to match ecore_x API.
+	* Add ecore_wince_window_focus(), ecore_wince_window_focus_get()
+	and ecore_win32_window_focus_get().
+
+2012-03-26  Shinwoo Kim
+
+        * Do not autorepeat Ctrl, Shift, Alt and Win keys on Windows
+
+2012-03-26 Christopher Michael (devilhorns)
+
+	Ecore_Wayland:
+	* Add ecore_wl_dpi_get
+	* Implement functions for input grab/ungrab
+	* Implement setting surface input & opaque regions
+	* Implement popup windows
+	* Implement ecore_wl_window_transparent_set function
+	* Implement function to allow setting Ecore_Wl_Window type.

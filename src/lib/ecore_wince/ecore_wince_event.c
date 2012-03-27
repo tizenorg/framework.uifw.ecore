@@ -77,6 +77,9 @@ _ecore_wince_event_keystroke_get(int       key,
   char *kn;
   char *ks;
   char *kc;
+  int previous_key_state;
+
+  previous_key_state = msg->data_param & 0x40000000;
 
   *keyname = NULL;
   *keysymbol = NULL;
@@ -269,6 +272,7 @@ _ecore_wince_event_keystroke_get(int       key,
 
           if (is_down)
             {
+               if (previous_key_state) return 0;
                res = GetKeyState(VK_LSHIFT);
                if (res & 0x8000)
                  {
@@ -315,6 +319,7 @@ _ecore_wince_event_keystroke_get(int       key,
 
           if (is_down)
             {
+               if (previous_key_state) return 0;
                res = GetKeyState(VK_LCONTROL);
                if (res & 0x8000)
                  {
@@ -365,6 +370,7 @@ _ecore_wince_event_keystroke_get(int       key,
 
           if (is_down)
             {
+               if (previous_key_state) return 0;
                res = GetKeyState(VK_LMENU);
                if (res & 0x8000)
                  {
@@ -402,6 +408,44 @@ _ecore_wince_event_keystroke_get(int       key,
                     kc = "";
                     _ecore_wince_key_mask &= ~ECORE_WINCE_KEY_MASK_RMENU;
                  }
+            }
+          break;
+       }
+     case VK_LWIN:
+       {
+          if (is_down)
+            {
+               if (previous_key_state) return 0;
+               kn = "Super_L";
+               ks = "Super_L";
+               kc = "";
+               *modifiers |= ECORE_EVENT_MODIFIER_WIN;
+            }
+          else /* is_up */
+            {
+               kn = "Super_L";
+               ks = "Super_L";
+               kc = "";
+               *modifiers &= ~ECORE_EVENT_MODIFIER_WIN;
+            }
+          break;
+       }
+     case VK_RWIN:
+       {
+          if (is_down)
+            {
+               if (previous_key_state) return 0;
+               kn = "Super_R";
+               ks = "Super_R";
+               kc = "";
+               *modifiers |= ECORE_EVENT_MODIFIER_WIN;
+            }
+          else /* is_up */
+            {
+               kn = "Super_R";
+               ks = "Super_R";
+               kc = "";
+               *modifiers &= ~ECORE_EVENT_MODIFIER_WIN;
             }
           break;
        }

@@ -290,7 +290,7 @@ sudo make install
 /*
    @page Ecore_Config_Page The Enlightened Property Library
 
-   The Enlightened Property Library (Ecore_Config) is an adbstraction
+   The Enlightened Property Library (Ecore_Config) is an abstraction
    from the complexities of writing your own configuration. It provides
    many features using the Enlightenment 17 development libraries.
 
@@ -394,7 +394,7 @@ EAPI int ecore_shutdown(void);
  */
 
 #define ECORE_VERSION_MAJOR 1
-#define ECORE_VERSION_MINOR 0
+#define ECORE_VERSION_MINOR 2
 
 typedef struct _Ecore_Version
 {
@@ -490,7 +490,7 @@ EAPI void *ecore_main_loop_thread_safe_call_sync(Ecore_Data_Cb callback, void *d
  * in this thread, if the main loop was suspended correctly. If not, it return @c -1.
  *
  * This function suspend the main loop in a know state, this let you
- * use any EFL call you want after it return. Be carefull, the main loop
+ * use any EFL call you want after it return. Be carefully, the main loop
  * is blocked until you call ecore_thread_main_loop_end(). This is
  * the only sane way to achieve pseudo thread safety.
  *
@@ -510,7 +510,7 @@ EAPI int ecore_thread_main_loop_begin(void);
  * the main loop is unlocked again. @c -1 will be returned if you are trying to unlock
  * when there wasn't enough call to ecore_thread_main_loop_begin().
  *
- * After a call to ecore_thread_main_loop_begin(), you need to absolutly
+ * After a call to ecore_thread_main_loop_begin(), you need to absolutely
  * call ecore_thread_main_loop_end(), or you application will stay frozen.
  */
 EAPI int ecore_thread_main_loop_end(void);
@@ -638,7 +638,7 @@ struct _Ecore_Event_Signal_Exit    /** Exit request event */
 {
    Eina_Bool interrupt : 1; /**< Set if the exit request was an interrupt  signal*/
    Eina_Bool quit      : 1; /**< set if the exit request was a quit signal */
-   Eina_Bool terminate : 1; /**< Set if the exit request was a terminate singal */
+   Eina_Bool terminate : 1; /**< Set if the exit request was a terminate signal */
    void     *ext_data; /**< Extension data - not used */
 
 #if !defined (_WIN32) && !defined (__lv2ppu__) && !defined (EXOTIC_NO_SIGNAL)
@@ -947,24 +947,30 @@ EAPI void ecore_exe_hup(Ecore_Exe *exe);
 /**
  * @defgroup Ecore_FD_Handler_Group File Event Handling Functions
  *
- * Functions that deal with file descriptor handlers.
+ * @brief Functions that deal with file descriptor handlers.
  *
- * The @ref Ecore_Fd_Handler can be used to watch a file descriptor
- * for data available for reading, for the availability to write
- * without blocking, and for errors on the file descriptor.
+ * File descriptor handlers facilitate reading, writing and checking for errors
+ * without blocking the program or doing expensive pooling. This can be used to
+ * monitor a socket, pipe, or other stream for which an FD can be had.
  *
- *ecore_main_fd_handler_add() is used to setup a handler for a
- * given file descriptor. This file descriptor can be the standard
- * input, a network socket, a stream received through some driver
- * of a hardware decoder, etc. Thus it can contain errors, like a
- * disconnection, a broken pipe, and so, and that's why it's
- * possible to check for these errors with the @ref ECORE_FD_ERROR
- * flag.
+ * @warning This function @b can't be used for monitoring to regular files!
  *
- * An @ref Ecore_Fd_Handler can be used to watch on a file
- * descriptor without blocking, still being able to receive events,
- * expire timers, and watch for other things that happen in
- * the Ecore main loop.
+ * One common FD to be monitored is the standard input(stdin), monitoring it for
+ * reading requires a single call:
+ * @code
+ * static Eina_Bool
+ * _my_cb_func(void *data, Ecore_Fd_Handler *handler)
+ * {
+ *    char c;
+ *    scanf("%c", &c); //Guaranteed not to block
+ *    ... do stuff with c ...
+ * }
+ * ecore_main_fd_handler_add(STDIN_FILENO, ECORE_FD_READ, _my_cb_func, NULL, NULL, NULL);
+ * @endcode
+ *
+ * When using a socket, pipe or other stream it's important to remember that
+ * errors may occur and as such to monitor not only for reading/writing but also
+ * for errors using the @ref ECORE_FD_ERROR flag.
  *
  * Example of use of a file descriptor handler:
  * @li @ref ecore_fd_handler_example_c
@@ -1002,11 +1008,93 @@ typedef void (*Ecore_Fd_Prep_Cb)(void *data, Ecore_Fd_Handler *fd_handler);
  */
 typedef Eina_Bool (*Ecore_Win32_Handle_Cb)(void *data, Ecore_Win32_Handler *wh);
 
+/**
+ * @brief Adds a callback for activity on the given file descriptor.
+ *
+ * @param fd The file descriptor to watch.
+ * @param flags To monitor it for reading use @c ECORE_FD_READ, for writing @c
+ * ECORE_FD_WRITE, and for error @c ECORE_FD_ERROR. Values bay |(ored).
+ * @param func The callback function.
+ * @param data The data to pass to the callback.
+ * @param buf_func The function to call to check if any data has been buffered
+ * and already read from the fd. May be @c NULL.
+ * @param buf_data The data to pass to the @p buf_func function.
+ * @return A fd handler handle on success, @c NULL otherwise.
+ *
+ * @a func will be called during the execution of @ref Ecore_Main_Loop_Page
+ * when the file descriptor is available for reading, writing, or there has been
+ * an error(depending on the given @a flags).
+ *
+ * When @a func returns ECORE_CALLBACK_CANCEL, it indicates that the
+ * handler should be marked for deletion (identical to calling @ref
+ * ecore_main_fd_handler_del).
+ *
+ * @warning @a buf_func is meant for @b internal use only and should be @b
+ * avoided.
+ *
+ * The return value of @a buf_func has a different meaning, when it returns
+ * ECORE_CALLBACK_CANCEL, it indicates that @a func @b shouldn't be called, and
+ * when it returns ECORE_CALLBACK_RENEW it indicates @a func should be called.
+ * The return value of @a buf_func will not cause the FD handler to be deleted.
+ *
+ * @a buf_func is called during event loop handling to check if data that has
+ * been read from the file descriptor is in a buffer and is available to read.
+ * Some systems, notably xlib, handle their own buffering, and would otherwise
+ * not work with select(). These systems should use a @a buf_func. This is a
+ * most annoying hack, only ecore_x uses it, so refer to that for an example.
+ */
 EAPI Ecore_Fd_Handler *ecore_main_fd_handler_add(int fd, Ecore_Fd_Handler_Flags flags, Ecore_Fd_Cb func, const void *data, Ecore_Fd_Cb buf_func, const void *buf_data);
+/**
+ * @brief Set the prepare callback with data for a given #Ecore_Fd_Handler
+ *
+ * @param fd_handler The fd handler
+ * @param func The prep function
+ * @param data The data to pass to the prep function
+ *
+ * This function will be called prior to any fd handler's callback function
+ * (even the other fd handlers), before entering the main loop select function.
+ *
+ * @note Once a prepare callback is set for a fd handler, it cannot be changed.
+ * You need to delete the fd handler and create a new one, to set another
+ * callback.
+ * @note You probably don't need this function. It is only necessary for very
+ * uncommon cases that need special behavior.
+ */
 EAPI void ecore_main_fd_handler_prepare_callback_set(Ecore_Fd_Handler *fd_handler, Ecore_Fd_Prep_Cb func, const void *data);
+/**
+ * @brief Marks an FD handler for deletion.
+ * @param fd_handler The FD handler.
+ * @return The data pointer set using @ref ecore_main_fd_handler_add, for @a
+ * fd_handler on success, @c NULL otherwise.
+ * This function marks an fd handler to be deleted during an iteration of the
+ * main loop. It does NOT close the associated fd!
+ *
+ * @warning If the underlying fd is already closed ecore may complain if the
+ * main loop is using epoll internally, and also in some rare cases this may
+ * cause crashes and instability. Remember to delete your fd handlers before the
+ * fds they listen to are closed.
+ */
 EAPI void *ecore_main_fd_handler_del(Ecore_Fd_Handler *fd_handler);
+/**
+ * @brief Retrieves the file descriptor that the given handler is handling.
+ * @param fd_handler The given FD handler.
+ * @return The file descriptor the handler is watching.
+ */
 EAPI int ecore_main_fd_handler_fd_get(Ecore_Fd_Handler *fd_handler);
+/**
+ * @brief Gets which flags are active on an FD handler.
+ * @param fd_handler The given FD handler.
+ * @param flags The flags, @c ECORE_FD_READ, @c ECORE_FD_WRITE or @c
+ * ECORE_FD_ERROR to query.
+ * @return  #EINA_TRUE if any of the given flags are active, #EINA_FALSE
+ * otherwise.
+ */
 EAPI Eina_Bool ecore_main_fd_handler_active_get(Ecore_Fd_Handler *fd_handler, Ecore_Fd_Handler_Flags flags);
+/**
+ * @brief Set what active streams the given FD handler should be monitoring.
+ * @param fd_handler The given FD handler.
+ * @param flags The flags to be watching.
+ */
 EAPI void ecore_main_fd_handler_active_set(Ecore_Fd_Handler *fd_handler, Ecore_Fd_Handler_Flags flags);
 
 EAPI Ecore_Win32_Handler *ecore_main_win32_handler_add(void *h, Ecore_Win32_Handle_Cb func, const void *data);
@@ -1202,7 +1290,7 @@ typedef enum _Ecore_Animator_Source Ecore_Animator_Source;
 typedef Eina_Bool (*Ecore_Timeline_Cb)(void *data, double pos);
 
 /**
- * @brief Add an animator to call @p func at every animaton tick during main
+ * @brief Add an animator to call @p func at every animation tick during main
  * loop execution.
  *
  * @param func The function to call when it ticks off
@@ -1272,7 +1360,7 @@ EAPI void *ecore_animator_del(Ecore_Animator *animator);
  *
  * @param animator The animator to delete
  *
- * The specified @p animator will be temporarly removed from the set of
+ * The specified @p animator will be temporarily removed from the set of
  * animators that are executed during main loop.
  *
  * @warning Freezing an animator doesn't freeze accounting of how long that
@@ -1330,7 +1418,7 @@ EAPI double ecore_animator_frametime_get(void);
  * has "overshot" the mark) using some interpolation (mapping) algorithm.
  *
  * This function useful to create non-linear animations. It offers a variety
- * of possible animaton curves to be used:
+ * of possible animation curves to be used:
  * @li ECORE_POS_MAP_LINEAR - Linear, returns @p pos
  * @li ECORE_POS_MAP_ACCELERATE - Start slow then speed up
  * @li ECORE_POS_MAP_DECELERATE - Start fast then slow down
@@ -1368,7 +1456,7 @@ EAPI double ecore_animator_frametime_get(void);
  * y = (y1 * out) + (y2 * (1.0 - out));
  * move_my_object_to(myobject, x, y);
  * @endcode
- * This will make an animaton that bounces 7 each times diminishing by a
+ * This will make an animation that bounces 7 each times diminishing by a
  * factor of 1.8.
  *
  * @see _Ecore_Pos_Map
@@ -1623,7 +1711,7 @@ EAPI void *ecore_idle_exiter_del(Ecore_Idle_Exiter *idle_exiter);
  * thread, the one running the main loop. This problem can be solved
  * by running a thread that sends messages to the main one using an
  * @ref Ecore_Pipe_Group "Ecore_Pipe", but when you need to handle other
- * things like cancelling the thread, your code grows in coplexity and gets
+ * things like cancelling the thread, your code grows in complexity and gets
  * much harder to maintain.
  *
  * Ecore Thread is here to solve that problem. It is @b not a simple wrapper
@@ -1794,7 +1882,7 @@ EAPI Ecore_Thread *ecore_thread_run(Ecore_Thread_Cb func_blocking, Ecore_Thread_
  * with ecore_thread_feedback().
  *
  * Like with ecore_thread_run(), a new thread will be launched to run
- * @p func_heavy unless the maximum number of simultaneous threadas has been
+ * @p func_heavy unless the maximum number of simultaneous threads has been
  * reached, in which case the function will be scheduled to run whenever a
  * running task ends and a thread becomes free. But if @p try_no_queue is
  * set, Ecore will first try to launch a thread outside of the pool to run
@@ -2356,7 +2444,7 @@ EAPI int ecore_pipe_wait(Ecore_Pipe *p, int message_count, double wait);
  * also will be executed in the order in which they were added.
  *
  * A good use for them is when you don't want to execute an action
- * immeditately, but want to give the control back to the main loop
+ * immediately, but want to give the control back to the main loop
  * so that it will call your job callback when jobs start being
  * processed (and if there are other jobs added before yours, they
  * will be processed first). This also gives the chance to other
