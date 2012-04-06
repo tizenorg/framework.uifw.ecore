@@ -1,3 +1,11 @@
+ecore (1.2.0+svn.69928slp2+build01) unstable; urgency=low
+
+  * Package Upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.2.0+svn.69928slp2+build01
+
+ -- Jeonghyun Yun <jh0506.yun@samsung.com>  Fri, 06 Apr 2012 18:14:52 +0900
+
 ecore (1.1.0+svn.69655slp2+build01) unstable; urgency=low
 
   * Package Upload
