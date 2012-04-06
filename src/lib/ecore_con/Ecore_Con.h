@@ -68,7 +68,7 @@
 
 
 /**
- * @defgroup Ecore_Con_Events_Group Events
+ * @defgroup Ecore_Con_Events_Group Ecore Connection Events Functions
  *
  * @li ECORE_CON_CLIENT_ADD: Whenever a client connection is made to an
  * @c Ecore_Con_Server, an event of this type is emitted, allowing the
@@ -106,7 +106,7 @@
  */
 
 /**
- * @defgroup Ecore_Con_Buffer Buffering
+ * @defgroup Ecore_Con_Buffer Ecore Connection Buffering
  * 
  * As Ecore_Con works on an event driven design, as data arrives, events will
  * be produced containing the data that arrived. It is up to the user of
@@ -1359,6 +1359,7 @@ typedef enum _Ecore_Con_Url_Http_Version
 
 /**
  * Change the HTTP version used for the request
+ * @param url_con Connection object through which the request will be sent.
  * @param version The version to be used
  * @return EINA_TRUE on success, EINA_FALSE on failure to change version
  * @since 1.2

@@ -470,6 +470,10 @@ struct _Ecore_IMF_Context_Info
    int         canvas_required; /* Whether the canvas usage is required for this input method */
 };
 
+/**
+ * @}
+ */
+
 EAPI int                           ecore_imf_init(void);
 EAPI int                           ecore_imf_shutdown(void);
 
@@ -561,7 +565,3 @@ EAPI void                          ecore_imf_context_candidate_panel_geometry_ge
 #endif
 
 #endif
-
-/**
- * @}
- */

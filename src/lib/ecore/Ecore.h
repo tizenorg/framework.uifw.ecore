@@ -544,14 +544,25 @@ EAPI int ecore_thread_main_loop_end(void);
  * @endcode
  *
  * One very important thing to note here is the @c EVENT_TYPE, to register a
- * handler for an event you must know it's type before hand. This information
- * can be found on the documentation of the library emitting the signal, so,
- * for example, for events related to windowing one would look in @ref
- * Ecore_Evas_Group.
+ * handler for an event you must know its type before hand. Ecore provides
+ * the following events which are emitted in response to POSIX
+ * signals(https://en.wikipedia.org/wiki/Signal_%28computing%29):
+ * @li @b ECORE_EVENT_SIGNAL_USER
+ * @li @b ECORE_EVENT_SIGNAL_HUP
+ * @li @b ECORE_EVENT_SIGNAL_POWER
+ * @li @b ECORE_EVENT_SIGNAL_EXIT
+ *
+ * @warning Don't override these using the @c signal or @c sigaction calls.
+ * These, however, aren't the only signals one can handle. Many
+ * libraries(including ecore modules) have their own signals that can be
+ * listened for and handled, to do that one only needs to know the type of the
+ * event. This information can be found on the documentation of the library
+ * emitting the signal, so, for example, for events related to windowing one
+ * would look in @ref Ecore_Evas_Group.
  *
  * Examples of libraries that integrate into ecore's main loop by providing
  * events are @ref Ecore_Con_Group, @ref Ecore_Evas_Group and @ref
- * Ecore_Exe_Group amongst others. This usage can be divided into two parts,
+ * Ecore_Exe_Group, amongst others. This usage can be divided into two parts,
  * setup and adding events. The setup is very simple, all that needs doing is
  * getting a type id for the event:
  * @code
@@ -568,9 +579,9 @@ EAPI int ecore_thread_main_loop_end(void);
  * The usage when an @c event is needed is not that much more complex and can be
  * seen in @ref ecore_event_add.
  *
- * Example that deals with events:
- *
- * @li @ref ecore_event_example_c
+ * Examples that deals with events:
+ * @li @ref ecore_event_example_01_c
+ * @li @ref ecore_event_example_02_c
  *
  * @ingroup Ecore_Main_Loop_Group
  *
@@ -1123,7 +1134,7 @@ EAPI void *ecore_main_win32_handler_del(Ecore_Win32_Handler *win32_handler);
  * For now only 1 core poller type is supported: ECORE_POLLER_CORE, the default
  * interval for ECORE_POLLER_CORE is 0.125(or 1/8th) second.
  *
- * The creation of a poller is extremely simple and only required one line:
+ * The creation of a poller is extremely simple and only requires one line:
  * @code
  * ecore_poller_add(ECORE_POLLER_CORE, 1, my_poller_function, NULL);
  * @endcode
@@ -1861,7 +1872,7 @@ typedef void (*Ecore_Thread_Notify_Cb)(void *data, Ecore_Thread *thread, void *m
  */
 EAPI Ecore_Thread *ecore_thread_run(Ecore_Thread_Cb func_blocking, Ecore_Thread_Cb func_end, Ecore_Thread_Cb func_cancel, const void *data);
 /**
- * Launch a thread to run a task than can talk back to the main thread
+ * Launch a thread to run a task that can talk back to the main thread
  *
  * @param func_heavy The function that should run in another thread.
  * @param func_notify Function that receives the data sent from the thread

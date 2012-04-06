@@ -29,8 +29,6 @@ static Eina_Bool _ecore_wl_shutdown(Eina_Bool close);
 static int _ecore_wl_cb_event_mask_update(unsigned int mask, void *data);
 static Eina_Bool _ecore_wl_cb_handle_data(void *data, Ecore_Fd_Handler *hdl __UNUSED__);
 static void _ecore_wl_cb_handle_global(struct wl_display *disp, unsigned int id, const char *interface, unsigned int version __UNUSED__, void *data);
-static Eina_Bool _ecore_wl_egl_init(Ecore_Wl_Display *ewd);
-static Eina_Bool _ecore_wl_egl_shutdown(Ecore_Wl_Display *ewd);
 static Eina_Bool _ecore_wl_xkb_init(Ecore_Wl_Display *ewd);
 static Eina_Bool _ecore_wl_xkb_shutdown(Ecore_Wl_Display *ewd);
 
@@ -161,29 +159,11 @@ ecore_wl_init(const char *name)
    /* FIXME: Process connection events ?? */
    /* wl_display_iterate(_ecore_wl_disp->wl.display, WL_DISPLAY_READABLE); */
 
-   /* if (!_ecore_wl_egl_init(_ecore_wl_disp)) */
-   /*   { */
-   /*      ERR("Could not initialize EGL"); */
-   /*      free(_ecore_wl_disp); */
-   /*      eina_log_domain_unregister(_ecore_wl_log_dom); */
-   /*      _ecore_wl_log_dom = -1; */
-   /*      ecore_event_shutdown(); */
-   /*      ecore_shutdown(); */
-   /*      eina_shutdown(); */
-   /*      return --_ecore_wl_init_count; */
-   /*   } */
-
-   /* _ecore_wl_disp->create_image =  */
-   /*   (void *)eglGetProcAddress("eglCreateImageKHR"); */
-   /* _ecore_wl_disp->destroy_image =  */
-   /*   (void *)eglGetProcAddress("eglDestroyImageKHR"); */
-
    /* TODO: create pointer surfaces */
 
    if (!_ecore_wl_xkb_init(_ecore_wl_disp))
      {
         ERR("Could not initialize XKB");
-        _ecore_wl_egl_shutdown(_ecore_wl_disp);
         free(_ecore_wl_disp);
         eina_log_domain_unregister(_ecore_wl_log_dom);
         _ecore_wl_log_dom = -1;
@@ -237,7 +217,6 @@ ecore_wl_flush(void)
 
    while (_ecore_wl_disp->mask & WL_DISPLAY_WRITABLE)
      wl_display_iterate(_ecore_wl_disp->wl.display, WL_DISPLAY_WRITABLE);
-//   wl_display_flush(_ecore_wl_disp->wl.display); // old flush code
 }
 
 /**
@@ -250,14 +229,9 @@ ecore_wl_flush(void)
 EAPI void 
 ecore_wl_sync(void)
 {
-   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+//   LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
    wl_display_sync(_ecore_wl_disp->wl.display);
-
-   //wl_display_roundtrip(_ecore_wl_disp->wl.display);
-
-   // old sync code
-//   wl_display_iterate(_ecore_wl_disp->wl.display, WL_DISPLAY_READABLE);
 }
 
 /**
@@ -321,6 +295,17 @@ ecore_wl_pointer_xy_get(int *x, int *y)
    _ecore_wl_input_pointer_xy_get(x, y);
 }
 
+/**
+ * Return the screen DPI
+ *
+ * This is a simplistic call to get DPI. It does not account for differing
+ * DPI in the x amd y axes nor does it accoutn for multihead or xinerama and
+ * xrander where different parts of the screen may have differen DPI etc.
+ *
+ * @return the general screen DPI (dots/pixels per inch).
+ * 
+ * @since 1.2
+ */
 EAPI int 
 ecore_wl_dpi_get(void)
 {
@@ -333,6 +318,12 @@ ecore_wl_dpi_get(void)
 
    w = _ecore_wl_disp->output->allocation.w;
    return (((w * 254) / mw) + 5) / 10;
+}
+
+EAPI void 
+ecore_wl_display_iterate(void)
+{
+   wl_display_iterate(_ecore_wl_disp->wl.display, WL_DISPLAY_READABLE);
 }
 
 /* local functions */
@@ -361,7 +352,6 @@ _ecore_wl_shutdown(Eina_Bool close)
           _ecore_wl_input_del(in);
 
         _ecore_wl_xkb_shutdown(_ecore_wl_disp);
-        /* _ecore_wl_egl_shutdown(_ecore_wl_disp); */
 
         if (_ecore_wl_disp->wl.shell) 
           wl_shell_destroy(_ecore_wl_disp->wl.shell);
@@ -450,85 +440,6 @@ _ecore_wl_cb_handle_global(struct wl_display *disp, unsigned int id, const char 
 
         ecore_event_add(ECORE_WL_EVENT_INTERFACES_BOUND, ev, NULL, NULL);
      }
-}
-
-static Eina_Bool 
-_ecore_wl_egl_init(Ecore_Wl_Display *ewd)
-{
-   EGLint major, minor, n;
-   static const EGLint context_attribs[] = 
-     {
-        EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE
-     };
-   static const EGLint argb_attribs[] = 
-     {
-        EGL_RED_SIZE, 8, EGL_GREEN_SIZE, 8, EGL_BLUE_SIZE, 8, 
-        EGL_ALPHA_SIZE, 1, EGL_DEPTH_SIZE, 0, EGL_STENCIL_SIZE, 0, 
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT, EGL_SURFACE_TYPE, 
-        EGL_WINDOW_BIT, EGL_NONE
-     };
-
-   LOGFN(__FILE__, __LINE__, __FUNCTION__);
-
-   ewd->egl.display = eglGetDisplay(ewd->wl.display);
-   if (!eglInitialize(ewd->egl.display, &major, &minor))
-     {
-        ERR("Failed to initialize EGL display");
-        return EINA_FALSE;
-     }
-
-   if (!eglBindAPI(EGL_OPENGL_ES_API))
-     {
-        ERR("Failed to bind EGL Api");
-        return EINA_FALSE;
-     }
-
-   if ((!eglChooseConfig(ewd->egl.display, argb_attribs, &ewd->egl.argb_config,
-                        1, &n)) || (n == 0))
-     {
-        ERR("Failed to choose ARGB config");
-        return EINA_FALSE;
-     }
-
-   ewd->egl.argb_context = 
-     eglCreateContext(ewd->egl.display, ewd->egl.argb_config, 
-                      EGL_NO_CONTEXT, context_attribs);
-   if (!ewd->egl.argb_context)
-     {
-        ERR("Failed to create ARGB context");
-        return EINA_FALSE;
-     }
-
-   if (!eglMakeCurrent(ewd->egl.display, EGL_NO_SURFACE, 
-                       EGL_NO_SURFACE, ewd->egl.argb_context))
-     {
-        ERR("Failed to make ARGB context current");
-        return EINA_FALSE;
-     }
-
-   return EINA_TRUE;
-}
-
-static Eina_Bool 
-_ecore_wl_egl_shutdown(Ecore_Wl_Display *ewd)
-{
-   LOGFN(__FILE__, __LINE__, __FUNCTION__);
-
-   eglMakeCurrent(ewd->egl.display, 
-                  EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-
-   eglDestroyContext(ewd->egl.display, ewd->egl.argb_context);
-
-   /* NB: This is hanging when we run elm apps as wayland clients 
-    * inside the weston compositor */
-
-   /* printf("Egl Terminate\n"); */
-   /* eglTerminate(ewd->egl.display); */
-   /* printf("Egl Terminate Done\n"); */
-
-   eglReleaseThread();
-
-   return EINA_TRUE;
 }
 
 static Eina_Bool 

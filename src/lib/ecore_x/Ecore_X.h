@@ -3546,6 +3546,7 @@ EAPI const char *
 
 /**
  * Given a keyname, return the keycode representing that key
+ * @return The keycode of the key.
  *
  * @since 1.2.0
  */

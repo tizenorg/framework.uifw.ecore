@@ -531,7 +531,7 @@ EAPI Eina_Bool   ecore_evas_modal_get(const Ecore_Evas *ee);
  * @brief Set the "i demand attention" flag on a canvas window
  *
  * @param ee The Ecore_Evas
- * @param demand_attention The flag state to set
+ * @param demand The flag state to set
  *
  * A window may demand attention now (eg you must enter a password before
  * continuing), and so it may flag a window with this.
@@ -990,6 +990,7 @@ EAPI Ecore_Evas     *ecore_evas_ews_new(int x, int y, int w, int h);
 /**
  * Returns the backing store image object that represents the given
  * window in EWS.
+ * @return The evas object of EWS backing store.
  *
  * @note This should not be modified anyhow, but may be helpful to
  *       determine stacking and geometry of it for window managers

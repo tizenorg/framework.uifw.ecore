@@ -526,9 +526,9 @@ window_to_screen_geometry_get(Ecore_X_Window client_win, int *x, int *y)
         win = ecore_x_window_parent_get(win);
      }
 
-   if (x) 
+   if (x)
      *x = sum_x;
-   if (y) 
+   if (y)
      *y = sum_y;
 }
 
@@ -1014,16 +1014,13 @@ isf_imf_context_cursor_location_set(Ecore_IMF_Context *ctx, int cx, int cy, int 
    EcoreIMFContextISF *context_scim = (EcoreIMFContextISF *)ecore_imf_context_data_get(ctx);
    Ecore_Evas *ee;
    int canvas_x, canvas_y;
+   int new_cursor_x, new_cursor_y;
 
    if (cw == 0 && ch == 0)
      return;
 
    if (context_scim && context_scim->impl && context_scim == _focused_ic)
      {
-        // Don't update spot location while updating preedit string.
-        if (context_scim->impl->preedit_updating)
-          return;
-
         if (context_scim->impl->client_canvas)
           {
              ee = ecore_evas_ecore_evas_get(context_scim->impl->client_canvas);
@@ -1039,10 +1036,17 @@ isf_imf_context_cursor_location_set(Ecore_IMF_Context *ctx, int cx, int cy, int 
                return;
           }
 
-        if (context_scim->impl->cursor_x != canvas_x + cx || context_scim->impl->cursor_y != canvas_y + cy + ch)
+        new_cursor_x = canvas_x + cx;
+        new_cursor_y = canvas_y + cy + ch;
+
+        // Don't update spot location while updating preedit string.
+        if (context_scim->impl->preedit_updating && (context_scim->impl->cursor_y == new_cursor_y))
+          return;
+
+        if (context_scim->impl->cursor_x != new_cursor_x || context_scim->impl->cursor_y != new_cursor_y)
           {
-             context_scim->impl->cursor_x     = canvas_x + cx;
-             context_scim->impl->cursor_y     = canvas_y + cy + ch;
+             context_scim->impl->cursor_x     = new_cursor_x;
+             context_scim->impl->cursor_y     = new_cursor_y;
              _panel_client.prepare(context_scim->id);
              panel_req_update_spot_location(context_scim);
              _panel_client.send();
@@ -1365,7 +1369,6 @@ isf_imf_context_autocapital_type_set(Ecore_IMF_Context* ctx, Ecore_IMF_Autocapit
  * the event was not handled), but there is no obligation of any events to be
  * submitted to this function.
  */
-
 EAPI Eina_Bool
 isf_imf_context_filter_event(Ecore_IMF_Context *ctx, Ecore_IMF_Event_Type type, Ecore_IMF_Event *event)
 {
