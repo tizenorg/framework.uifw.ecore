@@ -47,13 +47,13 @@ main(void)
    Eina_List *engines, *l;
    char *data;
 
-   if(ecore_evas_init() <= 0)
-      return 1;
+   if (ecore_evas_init() <= 0)
+     return 1;
 
    engines = ecore_evas_engines_get();
    printf("Available engines:\n");
    EINA_LIST_FOREACH(engines, l, data)
-      printf("%s\n", data);
+     printf("%s\n", data);
    ecore_evas_engines_free(engines);
 
    ee = ecore_evas_new(NULL, 0, 0, 200, 200, NULL);
@@ -68,8 +68,8 @@ main(void)
    printf("Using %s engine!\n", ecore_evas_engine_name_get(ee));
 
    canvas = ecore_evas_get(ee);
-   if(ecore_evas_ecore_evas_get(canvas) == ee)
-      printf("Everything is sane!\n");
+   if (ecore_evas_ecore_evas_get(canvas) == ee)
+     printf("Everything is sane!\n");
 
    bg = evas_object_rectangle_add(canvas);
    evas_object_color_set(bg, 0, 0, 255, 255);

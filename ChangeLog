@@ -449,7 +449,7 @@
 
 2011-12-29 Carsten Haitzler (The Rasterman)
 
-        * Fix massive post data probile in ecore-con that would cause
+        * Fix massive post data problem in ecore-con that would cause
         post data to be corrupted (as it was never copied into the
         ecore con url struct) or could cause crashes if the memory
         pointed to became invalid.
@@ -607,3 +607,12 @@
         it didn't work right on the fb. (timestamps wrong, focus
         handling etc.). This makes it work fully again.
 
+2012-04-13 Gustavo Sverzut Barbieri (k-s)
+
+	* remove EAPI from _ecore_event_signal_user_new(). It should never
+	be exported outside of libecore.so
+	* stop leaking every system signal event.
+
+2012-04-16  Shinwoo Kim
+
+	* Check control charater and convert into printing character on Windows
