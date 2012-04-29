@@ -36,14 +36,12 @@
 # include <Escape.h>
 #endif
 
+#ifdef HAVE_EXOTIC
+# include <Exotic.h>
+#endif
+
 #include "Ecore.h"
 #include "ecore_private.h"
-
-#ifdef _WIN32
-# define FMT_SSIZE_T "%Id"
-#else
-# define FMT_SSIZE_T "%zd"
-#endif
 
 /* How of then we should retry to write to the pipe */
 #define ECORE_PIPE_WRITE_RETRY 6
@@ -79,6 +77,9 @@
 # define PIPE_FD_ERROR   -1
 
 #endif /* ! _WIN32 */
+
+#include <Ecore.h>
+#include "ecore_private.h"
 
 struct _Ecore_Pipe
 {
@@ -124,6 +125,7 @@ ecore_pipe_add(Ecore_Pipe_Cb handler,
    Ecore_Pipe *p;
    int fds[2];
 
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(NULL);
    if (!handler) return NULL;
 
    p = ecore_pipe_calloc(1);
@@ -161,6 +163,7 @@ ecore_pipe_del(Ecore_Pipe *p)
 {
    void *data;
 
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(NULL);
    if (!ECORE_MAGIC_CHECK(p, ECORE_MAGIC_PIPE))
      {
         ECORE_MAGIC_FAIL(p, ECORE_MAGIC_PIPE, "ecore_pipe_del");
@@ -184,6 +187,7 @@ ecore_pipe_del(Ecore_Pipe *p)
 EAPI void
 ecore_pipe_read_close(Ecore_Pipe *p)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN;
    if (!ECORE_MAGIC_CHECK(p, ECORE_MAGIC_PIPE))
      {
         ECORE_MAGIC_FAIL(p, ECORE_MAGIC_PIPE, "ecore_pipe_read_close");
@@ -211,6 +215,7 @@ ecore_pipe_read_close(Ecore_Pipe *p)
 EAPI void
 ecore_pipe_freeze(Ecore_Pipe *p)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN;
    if (!ECORE_MAGIC_CHECK(p, ECORE_MAGIC_PIPE))
      {
         ECORE_MAGIC_FAIL(p, ECORE_MAGIC_PIPE, "ecore_pipe_read_freeze");
@@ -234,6 +239,7 @@ ecore_pipe_freeze(Ecore_Pipe *p)
 EAPI void
 ecore_pipe_thaw(Ecore_Pipe *p)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN;
    if (!ECORE_MAGIC_CHECK(p, ECORE_MAGIC_PIPE))
      {
         ECORE_MAGIC_FAIL(p, ECORE_MAGIC_PIPE, "ecore_pipe_read_thaw");
@@ -272,6 +278,7 @@ ecore_pipe_wait(Ecore_Pipe *p,
    int ret;
    int total = 0;
 
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(-1);
    if (p->fd_read == PIPE_FD_INVALID)
      return -1;
 
@@ -279,7 +286,7 @@ ecore_pipe_wait(Ecore_Pipe *p,
    FD_SET(p->fd_read, &rset);
 
    if (wait >= 0.0)
-     end = ecore_time_get() + wait;
+     end = ecore_loop_time_get() + wait;
    timeout = wait;
 
    while (message_count > 0 && (timeout > 0.0 || wait <= 0.0))
@@ -334,7 +341,7 @@ ecore_pipe_wait(Ecore_Pipe *p,
           }
 
         if (wait >= 0.0)
-          timeout = end - ecore_time_get();
+          timeout = end - ecore_loop_time_get();
      }
 
    return total;
@@ -414,7 +421,7 @@ ecore_pipe_write(Ecore_Pipe  *p,
           ;
         else
           {
-             ERR("An unhandled error (ret: " FMT_SSIZE_T " errno: %d)"
+             ERR("An unhandled error (ret: %zd errno: %d)"
                  "occurred while writing to the pipe the length",
                  ret, errno);
           }
@@ -448,7 +455,7 @@ ecore_pipe_write(Ecore_Pipe  *p,
           ;
         else
           {
-             ERR("An unhandled error (ret: " FMT_SSIZE_T " errno: %d)"
+             ERR("An unhandled error (ret: %zd errno: %d)"
                  "occurred while writing to the pipe the length",
                  ret, errno);
           }

@@ -229,10 +229,14 @@ static Eina_Bool win32_handlers_delete_me = EINA_FALSE;
 #ifdef _WIN32
 Ecore_Select_Function main_loop_select = _ecore_main_win32_select;
 #else
-# ifdef HAVE_SYS_SELECT_H
-#  include <sys/select.h>
-# endif
+# if !defined EXOTIC_NO_SELECT
+#  ifdef HAVE_SYS_SELECT_H
+#   include <sys/select.h>
+#  endif
 Ecore_Select_Function main_loop_select = select;
+# else
+Ecore_Select_Function main_loop_select = NULL;
+# endif
 #endif
 
 #ifndef USE_G_MAIN_LOOP
@@ -852,6 +856,7 @@ _ecore_main_fd_handler_del(Ecore_Fd_Handler *fd_handler)
 EAPI int
 ecore_main_loop_iterate_may_block(int may_block)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(0);
 #ifndef USE_G_MAIN_LOOP
    _ecore_lock();
 in_main_loop++;
@@ -866,6 +871,7 @@ in_main_loop--;
 EAPI void
 ecore_main_loop_iterate(void)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN;
 #ifndef USE_G_MAIN_LOOP
    _ecore_lock();
    _ecore_main_loop_iterate_internal(1);
@@ -896,6 +902,7 @@ ecore_main_loop_iterate(void)
 EAPI void
 ecore_main_loop_begin(void)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN;
 #ifndef USE_G_MAIN_LOOP
    _ecore_lock();
    in_main_loop++;
@@ -924,6 +931,7 @@ ecore_main_loop_begin(void)
 EAPI void
 ecore_main_loop_quit(void)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN;
    do_quit = 1;
 #ifdef USE_G_MAIN_LOOP
    if (ecore_main_loop)
@@ -946,6 +954,7 @@ ecore_main_loop_quit(void)
 EAPI void
 ecore_main_loop_select_func_set(Ecore_Select_Function func)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN;
    main_loop_select = func;
 }
 
@@ -957,42 +966,10 @@ ecore_main_loop_select_func_set(Ecore_Select_Function func)
 EAPI Ecore_Select_Function
 ecore_main_loop_select_func_get(void)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(NULL);
    return main_loop_select;
 }
 
-/**
- * Adds a callback for activity on the given file descriptor.
- *
- * @p func will be called during the execution of @ref ecore_main_loop_begin
- * when the file descriptor is available for reading, or writing, or both.
- *
- * Normally when @p func returns ECORE_CALLBACK_CANCEL, it indicates that the
- * handler should be marked for deletion (identical to calling @ref ecore_main_fd_handler_del).
- * However, if the @p buf_func is supplied, then the return value from the @p func indicates that
- * @p func should be called repeatedly until it returns ECORE_CALLBACK_CANCEL.
- *
- * @p buf_func is called during event loop handling to check if data that has
- * been read from the file descriptor is in a buffer and is available to
- * read.  Some systems (notably xlib) handle their own buffering, and would
- * otherwise not work with select().  These systems should use a @p buf_func.
- * This is a most annoying hack, only ecore_x uses it, so refer to that for
- * an example.  NOTE - @p func should probably return ECORE_CALLBACK_RENEW always if
- * @p buf_func is used, to avoid confusion with the other return value
- * semantics.
- *
- * @param   fd       The file descriptor to watch.
- * @param   flags    To watch it for read (@c ECORE_FD_READ) and/or
- *                   (@c ECORE_FD_WRITE) write ability.  @c ECORE_FD_ERROR
- *
- * @param   func     The callback function.
- * @param   data     The data to pass to the callback.
- * @param   buf_func The function to call to check if any data has been
- *                   buffered and already read from the fd.  Can be @c NULL.
- * @param   buf_data The data to pass to the @p buf_func function.
- * @return  A fd handler handle if successful.  @c NULL otherwise.
- * @note This function CANNOT be used for reading/writing to regular files!
- * @ingroup Ecore_FD_Handler_Group
- */
 EAPI Ecore_Fd_Handler *
 ecore_main_fd_handler_add(int                    fd,
                           Ecore_Fd_Handler_Flags flags,
@@ -1003,6 +980,7 @@ ecore_main_fd_handler_add(int                    fd,
 {
    Ecore_Fd_Handler *fdh = NULL;
 
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(NULL);
    _ecore_lock();
 
    if ((fd < 0) || (flags == 0) || (!func)) goto unlock;
@@ -1048,6 +1026,7 @@ ecore_main_win32_handler_add(void                 *h,
 {
    Ecore_Win32_Handler *wh;
 
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(NULL);
    if (!h || !func) return NULL;
 
    wh = ecore_win32_handler_calloc(1);
@@ -1074,25 +1053,12 @@ ecore_main_win32_handler_add(void                 *h __UNUSED__,
 
 #endif
 
-/**
- * Marks an FD handler for deletion.
- * @param   fd_handler The FD handler.
- * @return  The data pointer set using @ref ecore_main_fd_handler_add,
- *          for @p fd_handler on success.  @c NULL otherwise.
- * @ingroup Ecore_FD_Handler_Group
- * This function marks an fd handler to be deleted during an iteration of the main loop.
- * It does NOT close the associated fd!
- *
- * @note If the underlying fd is already closed ecore may complain if the main loop
- * is using epoll internally, and also in some rare cases this may cause
- * crashes and instability. Remember to delete your fd handlers before the
- * fds they listen to are closed.
- */
 EAPI void *
 ecore_main_fd_handler_del(Ecore_Fd_Handler *fd_handler)
 {
    void *ret = NULL;
 
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(NULL);
    _ecore_lock();
 
    if (!ECORE_MAGIC_CHECK(fd_handler, ECORE_MAGIC_FD_HANDLER))
@@ -1111,6 +1077,7 @@ unlock:
 EAPI void *
 ecore_main_win32_handler_del(Ecore_Win32_Handler *win32_handler)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(NULL);
    if (!ECORE_MAGIC_CHECK(win32_handler, ECORE_MAGIC_WIN32_HANDLER))
      {
         ECORE_MAGIC_FAIL(win32_handler, ECORE_MAGIC_WIN32_HANDLER,
@@ -1131,29 +1098,12 @@ ecore_main_win32_handler_del(Ecore_Win32_Handler *win32_handler __UNUSED__)
 
 #endif
 
-/**
- * @brief Set the prepare callback with data for a given #Ecore_Fd_Handler
- *
- * @param fd_handler The fd handler
- * @param func The prep function
- * @param data The data to pass to the prep function
- *
- * This function will be called prior to any fd handler's callback function
- * (even the other fd handlers), before entering the main loop select function.
- *
- * @note Once a prepare callback is set for a fd handler, it cannot be changed.
- * You need to delete the fd handler and create a new one, to set another
- * callback.
- * @note You probably don't need this function. It is only necessary for very
- * uncommon cases that need special behavior.
- *
- * @ingroup Ecore_FD_Handler_Group
- */
 EAPI void
 ecore_main_fd_handler_prepare_callback_set(Ecore_Fd_Handler *fd_handler,
                                            Ecore_Fd_Prep_Cb  func,
                                            const void       *data)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN;
    _ecore_lock();
 
    if (!ECORE_MAGIC_CHECK(fd_handler, ECORE_MAGIC_FD_HANDLER))
@@ -1172,17 +1122,12 @@ unlock:
    _ecore_unlock();
 }
 
-/**
- * Retrieves the file descriptor that the given handler is handling.
- * @param   fd_handler The given FD handler.
- * @return  The file descriptor the handler is watching.
- * @ingroup Ecore_FD_Handler_Group
- */
 EAPI int
 ecore_main_fd_handler_fd_get(Ecore_Fd_Handler *fd_handler)
 {
    int fd = -1;
 
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(-1);
    _ecore_lock();
 
    if (!ECORE_MAGIC_CHECK(fd_handler, ECORE_MAGIC_FD_HANDLER))
@@ -1197,21 +1142,13 @@ unlock:
    return fd;
 }
 
-/**
- * Return if read, write or error, or a combination thereof, is active on the
- * file descriptor of the given FD handler.
- * @param   fd_handler The given FD handler.
- * @param   flags      The flags, @c ECORE_FD_READ, @c ECORE_FD_WRITE or
- *                     @c ECORE_FD_ERROR to query.
- * @return  #EINA_TRUE if any of the given flags are active. #EINA_FALSE otherwise.
- * @ingroup Ecore_FD_Handler_Group
- */
 EAPI Eina_Bool
 ecore_main_fd_handler_active_get(Ecore_Fd_Handler      *fd_handler,
                                  Ecore_Fd_Handler_Flags flags)
 {
    int ret = EINA_FALSE;
 
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(EINA_FALSE);
    _ecore_lock();
 
    if (!ECORE_MAGIC_CHECK(fd_handler, ECORE_MAGIC_FD_HANDLER))
@@ -1228,18 +1165,13 @@ unlock:
    return ret;
 }
 
-/**
- * Set what active streams the given FD handler should be monitoring.
- * @param   fd_handler The given FD handler.
- * @param   flags      The flags to be watching.
- * @ingroup Ecore_FD_Handler_Group
- */
 EAPI void
 ecore_main_fd_handler_active_set(Ecore_Fd_Handler      *fd_handler,
                                  Ecore_Fd_Handler_Flags flags)
 {
    int ret;
 
+   EINA_MAIN_LOOP_CHECK_RETURN;
    _ecore_lock();
 
    if (!ECORE_MAGIC_CHECK(fd_handler, ECORE_MAGIC_FD_HANDLER))

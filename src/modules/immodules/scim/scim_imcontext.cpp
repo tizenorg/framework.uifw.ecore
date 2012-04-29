@@ -363,13 +363,14 @@ analyze_surrounding_text(Ecore_IMF_Context *ctx)
 {
    char *plain_str = NULL;
    char *markup_str = NULL;
-   const char *puncs[3] = {". ", "! ", "? "};
+   const char *puncs[] = {". ", "! ", "? "};
    Eina_Bool ret = EINA_FALSE;
    int cursor_pos = 0;
    int i = 0;
    Eina_Unicode *tail = NULL;
    Eina_Unicode *ustr = NULL;
-   Eina_Unicode *uni_puncs[3];
+   const int punc_num = sizeof(puncs) / sizeof(puncs[0]);
+   Eina_Unicode *uni_puncs[punc_num];
    EcoreIMFContextISF *context_scim;
 
    if (!ctx) return EINA_FALSE;
@@ -386,7 +387,7 @@ analyze_surrounding_text(Ecore_IMF_Context *ctx)
          break;
      }
 
-   for (i = 0; i < 3; i++)
+   for (i = 0; i < punc_num; i++)
      uni_puncs[i] = eina_unicode_utf8_to_unicode(puncs[i], NULL);
 
    ecore_imf_context_surrounding_get(ctx, &markup_str, &cursor_pos);
@@ -432,7 +433,7 @@ analyze_surrounding_text(Ecore_IMF_Context *ctx)
 
         if (tail)
           {
-             for (i = 0; i < 3; i++)
+             for (i = 0; i < punc_num; i++)
                {
                   if (!eina_unicode_strcmp(tail, uni_puncs[i]))
                     {
@@ -450,7 +451,7 @@ done:
    if (markup_str) free(markup_str);
    if (plain_str) free(plain_str);
 
-   for (i = 0; i < 3; i++)
+   for (i = 0; i < punc_num; i++)
      if (uni_puncs[i]) free(uni_puncs[i]);
 
    return ret;
@@ -507,6 +508,30 @@ feed_key_event(Evas *evas, const char *str, Eina_Bool fake)
      }
 }
 
+static void
+window_to_screen_geometry_get(Ecore_X_Window client_win, int *x, int *y)
+{
+   Ecore_X_Window root_window, win;
+   int win_x, win_y;
+   int sum_x = 0, sum_y = 0;
+
+   root_window = ecore_x_window_root_get(client_win);
+   win = client_win;
+
+   while (root_window != win)
+     {
+        ecore_x_window_geometry_get(win, &win_x, &win_y, NULL, NULL);
+        sum_x += win_x;
+        sum_y += win_y;
+        win = ecore_x_window_parent_get(win);
+     }
+
+   if (x)
+     *x = sum_x;
+   if (y)
+     *y = sum_y;
+}
+
 /* Public functions */
 /**
  * isf_imf_context_new
@@ -521,13 +546,6 @@ isf_imf_context_new(void)
 {
    SCIM_DEBUG_FRONTEND(1) << __FUNCTION__ << "...\n";
    char *env;
-
-   Ecore_X_Display  *display = ecore_x_display_get();
-   if (!display)
-     {
-        std::cerr << "ecore_x_display_get() failed !!!";
-        return NULL;
-     }
 
    EcoreIMFContextISF *context_scim = new EcoreIMFContextISF;
    if (context_scim == NULL)
@@ -926,6 +944,9 @@ isf_imf_context_focus_in(Ecore_IMF_Context *ctx)
 
         _panel_client.send();
      }
+
+   if (ecore_imf_context_input_panel_enabled_get(ctx))
+     ecore_imf_context_input_panel_show(ctx);
 }
 
 /**
@@ -968,6 +989,9 @@ isf_imf_context_focus_out(Ecore_IMF_Context *ctx)
         _panel_client.send();
         _focused_ic = 0;
      }
+
+   if (ecore_imf_context_input_panel_enabled_get(ctx))
+     ecore_imf_context_input_panel_hide(ctx);
 }
 
 /**
@@ -990,28 +1014,39 @@ isf_imf_context_cursor_location_set(Ecore_IMF_Context *ctx, int cx, int cy, int 
    EcoreIMFContextISF *context_scim = (EcoreIMFContextISF *)ecore_imf_context_data_get(ctx);
    Ecore_Evas *ee;
    int canvas_x, canvas_y;
+   int new_cursor_x, new_cursor_y;
 
    if (cw == 0 && ch == 0)
      return;
 
    if (context_scim && context_scim->impl && context_scim == _focused_ic)
      {
-        // Don't update spot location while updating preedit string.
-        if (context_scim->impl->preedit_updating)
-          return;
-
-        if (!context_scim->impl->client_canvas)
-          return;
-
-        ee = ecore_evas_ecore_evas_get(context_scim->impl->client_canvas);
-        if (!ee) return;
-
-        ecore_evas_geometry_get(ee, &canvas_x, &canvas_y, NULL, NULL);
-
-        if (context_scim->impl->cursor_x != canvas_x + cx || context_scim->impl->cursor_y != canvas_y + cy + ch)
+        if (context_scim->impl->client_canvas)
           {
-             context_scim->impl->cursor_x     = canvas_x + cx;
-             context_scim->impl->cursor_y     = canvas_y + cy + ch;
+             ee = ecore_evas_ecore_evas_get(context_scim->impl->client_canvas);
+             if (!ee) return;
+
+             ecore_evas_geometry_get(ee, &canvas_x, &canvas_y, NULL, NULL);
+          }
+        else
+          {
+             if (context_scim->impl->client_window)
+               window_to_screen_geometry_get(context_scim->impl->client_window, &canvas_x, &canvas_y);
+             else
+               return;
+          }
+
+        new_cursor_x = canvas_x + cx;
+        new_cursor_y = canvas_y + cy + ch;
+
+        // Don't update spot location while updating preedit string.
+        if (context_scim->impl->preedit_updating && (context_scim->impl->cursor_y == new_cursor_y))
+          return;
+
+        if (context_scim->impl->cursor_x != new_cursor_x || context_scim->impl->cursor_y != new_cursor_y)
+          {
+             context_scim->impl->cursor_x     = new_cursor_x;
+             context_scim->impl->cursor_y     = new_cursor_y;
              _panel_client.prepare(context_scim->id);
              panel_req_update_spot_location(context_scim);
              _panel_client.send();
@@ -1334,7 +1369,6 @@ isf_imf_context_autocapital_type_set(Ecore_IMF_Context* ctx, Ecore_IMF_Autocapit
  * the event was not handled), but there is no obligation of any events to be
  * submitted to this function.
  */
-
 EAPI Eina_Bool
 isf_imf_context_filter_event(Ecore_IMF_Context *ctx, Ecore_IMF_Event_Type type, Ecore_IMF_Event *event)
 {
@@ -1389,6 +1423,32 @@ isf_imf_context_filter_event(Ecore_IMF_Context *ctx, Ecore_IMF_Event_Type type, 
    _panel_client.send();
 
    return ret;
+}
+
+EAPI void
+isf_imf_context_input_panel_show(Ecore_IMF_Context *ctx)
+{
+   SCIM_DEBUG_FRONTEND(1) << __FUNCTION__ << "...\n";
+
+   EcoreIMFContextISF *ic = (EcoreIMFContextISF*)ecore_imf_context_data_get(ctx);
+   if (ic == NULL || ic->impl == NULL)
+     return;
+
+   ecore_x_e_virtual_keyboard_state_set
+        (ic->impl->client_window, ECORE_X_VIRTUAL_KEYBOARD_STATE_ON);
+}
+
+EAPI void
+isf_imf_context_input_panel_hide(Ecore_IMF_Context *ctx)
+{
+   SCIM_DEBUG_FRONTEND(1) << __FUNCTION__ << "...\n";
+
+   EcoreIMFContextISF *ic = (EcoreIMFContextISF*)ecore_imf_context_data_get(ctx);
+   if (ic == NULL || ic->impl == NULL)
+     return;
+
+   ecore_x_e_virtual_keyboard_state_set
+        (ic->impl->client_window, ECORE_X_VIRTUAL_KEYBOARD_STATE_OFF);
 }
 
 /* Panel Slot functions */
@@ -1507,8 +1567,8 @@ panel_slot_process_key_event(int context, const KeyEvent &key)
    EcoreIMFContextISF *ic = find_ic(context);
    SCIM_DEBUG_FRONTEND(1) << __FUNCTION__ << " context=" << context << " key=" << key.get_key_string() << " ic=" << ic << "\n";
 
-   if (ic && ic->impl && ic->impl->client_canvas)
-     feed_key_event(ic->impl->client_canvas, key.get_key_string().c_str(), EINA_FALSE);
+   if (key.is_key_press())
+     ecore_x_test_fake_key_press(key.get_key_string().c_str());
 }
 
 static void

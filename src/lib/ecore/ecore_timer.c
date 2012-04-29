@@ -56,29 +56,33 @@ static double last_check = 0.0;
 static double precision = 10.0 / 1000000.0;
 
 /**
- * @addtogroup Ecore_Time_Group
+ * @addtogroup Ecore_Timer_Group
  *
  * @{
  */
 
 /**
  * Retrieves the current precision used by timer infrastructure.
- *
+ * @return Current precision.
  * @see ecore_timer_precision_set()
  */
 EAPI double
 ecore_timer_precision_get(void)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(0.0);
    return precision;
 }
 
 /**
- * Sets the precision to be used by timer infrastructure.
+ * @brief Sets the precision to be used by timer infrastructure.
  *
- * When system calculates time to expire the next timer we'll be able
- * to delay the timer by the given amount so more timers will fit in
- * the same dispatch, waking up the system less often and thus being
- * able to save power.
+ * @param value allowed introduced timeout delay, in seconds.
+ *
+ * This sets the precision for @b all timers. The precision determines how much
+ * of an difference from the requested interval is acceptable. One common reason
+ * to use this function is to @b increase the allowed timeout and thus @b
+ * decrease precision of the timers, this is because less precise the timers
+ * result in the system waking up less often and thus consuming less resources.
  *
  * Be aware that kernel may delay delivery even further, these delays
  * are always possible due other tasks having higher priorities or
@@ -93,12 +97,11 @@ ecore_timer_precision_get(void)
  * @note Ecore is smart enough to see if there are timers in the
  * precision range, if it does not, in our example if no second timer
  * in (T + precision) existed, then it would use the minimum timeout.
- *
- * @param value allowed introduced timeout delay, in seconds.
  */
 EAPI void
 ecore_timer_precision_set(double value)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN;
    _ecore_lock();
 
    if (value < 0.0)
@@ -138,6 +141,7 @@ ecore_timer_add(double        in,
    double now;
    Ecore_Timer *timer = NULL;
 
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(NULL);
    _ecore_lock();
    if (!func) goto unlock;
    if (in < 0.0) in = 0.0;
@@ -176,6 +180,7 @@ ecore_timer_loop_add(double        in,
 {
    Ecore_Timer *timer;
 
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(NULL);
    _ecore_lock();
    timer = _ecore_timer_loop_add(in, func, data);
    _ecore_unlock();
@@ -197,6 +202,7 @@ ecore_timer_del(Ecore_Timer *timer)
 {
    void *data = NULL;
 
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(NULL);
    _ecore_lock();
 
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
@@ -224,6 +230,7 @@ EAPI void
 ecore_timer_interval_set(Ecore_Timer *timer,
                          double       in)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN;
    _ecore_lock();
 
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
@@ -248,6 +255,7 @@ ecore_timer_interval_get(Ecore_Timer *timer)
 {
    double interval;
 
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(0.0);
    _ecore_lock();
 
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
@@ -275,6 +283,7 @@ EAPI void
 ecore_timer_delay(Ecore_Timer *timer,
                   double       add)
 {
+   EINA_MAIN_LOOP_CHECK_RETURN;
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
      {
         ECORE_MAGIC_FAIL(timer, ECORE_MAGIC_TIMER,
@@ -301,6 +310,7 @@ EAPI void
 ecore_timer_reset(Ecore_Timer *timer)
 {
    double now, add;
+   EINA_MAIN_LOOP_CHECK_RETURN;
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
      {
         ECORE_MAGIC_FAIL(timer, ECORE_MAGIC_TIMER,
@@ -322,7 +332,8 @@ ecore_timer_reset(Ecore_Timer *timer)
  * Get the pending time regarding a timer.
  *
  * @param        timer The timer to learn from.
- * @ingroup        Ecore_Time_Group
+ * @return The pending time.
+ * @ingroup        Ecore_Timer_Group
  */
 EAPI double
 ecore_timer_pending_get(Ecore_Timer *timer)
@@ -330,6 +341,7 @@ ecore_timer_pending_get(Ecore_Timer *timer)
    double now;
    double ret = 0.0;
 
+   EINA_MAIN_LOOP_CHECK_RETURN_VAL(0.0);
    _ecore_lock();
 
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
@@ -369,6 +381,7 @@ ecore_timer_freeze(Ecore_Timer *timer)
 {
    double now;
 
+   EINA_MAIN_LOOP_CHECK_RETURN;
    _ecore_lock();
 
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
@@ -412,6 +425,7 @@ ecore_timer_thaw(Ecore_Timer *timer)
 {
    double now;
 
+   EINA_MAIN_LOOP_CHECK_RETURN;
    _ecore_lock();
 
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
@@ -444,6 +458,7 @@ ecore_timer_dump(void)
    int living_timer = 0;
    int unknow_timer = 0;
 
+   EINA_MAIN_LOOP_CHECK_RETURN(NULL);
    _ecore_lock();
    result = eina_strbuf_new();
 

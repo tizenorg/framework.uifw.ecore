@@ -1,8 +1,9 @@
+#sbs-git:slp/pkgs/e/ecore ecore 1.1.0+svn.69115slp2+build01 f1fcb7acee67ba61b43c4c5bcf6a0255195b3bbe
 Name:       ecore
 Summary:    Enlightened Core X interface library
-Version:    1.1.0+svn.67695slp2
-Release:    1.2
-Group:      TO_BE/FILLED_IN
+Version:    1.2.0+svn.69928slp2+build01
+Release:    1
+Group:      System/Libraries
 License:    BSD
 URL:        http://www.enlightenment.org
 Source0:    %{name}-%{version}.tar.gz
@@ -160,11 +161,27 @@ Core abstraction layer for enlightenment (fb)
 
 
 %build
+export CFLAGS+=" -fvisibility=hidden -fPIC"
+export LDFLAGS+=" -fvisibility=hidden -Wl,--hash-style=both -Wl,--as-needed"
 
 %autogen
 %configure --disable-static \
+	--enable-ecore-fb \
+	--enable-dependency-tracking \
+	--disable-ecore-directfb \
+	--enable-ecore-evas-fb \
+	--disable-rpath \
+	--disable-openssl \
+	--disable-gnutls \
+	--disable-tslib \
+	--enable-simple-x11 \
+	--enable-ecore-evas-opengl-x11 \
+	--disable-ecore-evas-xrender-x11 \
+	--enable-curl \
         --enable-glib-integration-always \
-        --disable-xim
+	--enable-ecore-x-gesture \
+        --disable-xim \
+	--disable-ecore-imf-scim
 
 make %{?jobs:-j%jobs}
 

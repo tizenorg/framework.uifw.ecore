@@ -224,7 +224,7 @@ ecore_x_window_input_new(Ecore_X_Window parent,
  * @c _NET_WM_PID.
  *
  * @param   win The given window.
- * @ingroup Ecore_X_Window_Properties_Groups
+ * @ingroup Ecore_X_Window_Properties_Group
  */
 EAPI void
 ecore_x_window_defaults_set(Ecore_X_Window win)
@@ -597,7 +597,7 @@ ecore_x_window_focus_at_time(Ecore_X_Window win,
 }
 
 /**
- * gets the focus to the window @p win.
+ * gets the window that has focus.
  * @return  The window that has focus.
  * @ingroup Ecore_X_Window_Focus_Functions
  */
@@ -694,7 +694,7 @@ ecore_x_window_size_get(Ecore_X_Window win,
 /**
  * Retrieves the geometry of the given window.
  *
- * Note that the x & y coordingates are relative to your parent.  In
+ * Note that the x & y coordinates are relative to your parent.  In
  * particular for reparenting window managers - relative to you window border.
  * If you want screen coordinates either walk the window tree to the root,
  * else for ecore_evas applications see ecore_evas_geometry_get().  Elementary

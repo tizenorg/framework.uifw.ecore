@@ -1,3 +1,139 @@
+ecore (1.1.0+svn.69655slp2+build01) unstable; urgency=low
+
+  * Package Upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.69655slp2+build01
+
+ -- Jeonghyun Yun <jh0506.yun@samsung.com>  Wed, 28 Mar 2012 14:28:49 +0900
+
+ecore (1.1.0+svn.69424slp2+build03) unstable; urgency=low
+
+  * [ECORE_X] remove feature - illume window state for app-in-app
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.69424slp2+build03
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Mon, 26 Mar 2012 13:56:33 +0900
+
+ecore (1.1.0+svn.69424slp2+build02) unstable; urgency=low
+
+  * Package Upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.69424slp2+build02
+
+ -- Jeonghyun Yun <jh0506.yun@samsung.com>  Sun, 18 Mar 2012 14:02:16 +0900
+
+ecore (1.1.0+svn.69424slp2+build01) unstable; urgency=low
+
+  * EFL migration
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.69424slp2+build01
+
+ -- Jeonghyun Yun <jh0506.yun@samsung.com>  Fri, 16 Mar 2012 21:50:01 +0900
+
+ecore (1.1.0+svn.69115slp2+build04) unstable; urgency=low
+
+  * Package Upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.69115slp2+build04
+
+ -- WooHyun Jung <wh0705.jung@samsung.com>  Thu, 15 Mar 2012 21:23:10 +0900
+
+ecore (1.1.0+svn.69115slp2+build03) unstable; urgency=low
+
+  * [Ecore_X] Remove unused APIs, unused Atoms and duplicated Atoms
+    - ecore_x_e_comp_dri_buff_flip_supported_set
+    - ecore_x_e_comp_dri_buff_flip_supported_get
+    - ECORE_X_ATOM_E_USER_CREATED_WINDOW
+    - ECORE_X_ATOM_E_PARENT_BORDER_WINDOW
+    - ECORE_X_ATOM_E_COMP_DRI_BUFF_FLIP_SUPPORTED
+    - ECORE_X_ATOM_E_ILLUME_ROTATE_OPERATOR
+    - ECORE_X_ATOM_USER_CREATED_WINDOW
+    - ECORE_X_ATOM_PARENT_BORDER_WINDOW
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.69115slp2+build03
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Wed, 14 Mar 2012 09:01:03 +0900
+
+ecore (1.1.0+svn.69115slp2+build02) unstable; urgency=low
+
+  * Change parameter of ecore_imf_context_input_panel_language_locale_get
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.69115slp2+build02
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Mon, 12 Mar 2012 14:43:53 +0900
+
+ecore (1.1.0+svn.69115slp2+build01) unstable; urgency=low
+
+  * Package Upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.69115slp2+build01
+
+ -- Jeonghyun Yun <jh0506.yun@samsung.com>  Sat, 10 Mar 2012 13:51:23 +0900
+
+ecore (1.1.0+svn.68762slp2+build02) unstable; urgency=low
+
+  * 69115
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.68762slp2+build02
+
+ -- Jeonghyun Yun <jh0506.yun@samsung.com>  Sat, 10 Mar 2012 13:20:45 +0900
+
+ecore (1.1.0+svn.68762slp2+build01) unstable; urgency=low
+
+  * Package Upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.68762slp2+build01
+
+ -- Jeonghyun Yun <jh0506.yun@samsung.com>  Wed, 07 Mar 2012 16:44:23 +0900
+
+ecore (1.1.0+svn.68529slp2+build01) unstable; urgency=low
+
+  * Package upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.68529slp2+build01
+
+ -- Jeonghyun Yun <jh0506.yun@samsung.com>  Fri, 02 Mar 2012 06:32:15 -0500
+
+ecore (1.1.0+svn.67695slp2+build06) unstable; urgency=low
+
+  * [ecore_imf] add language_locale_get, candidate_panel_geometry_get API
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.67695slp2+build06
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Fri, 02 Mar 2012 11:44:15 +0900
+
+ecore (1.1.0+svn.67695slp2+build05) unstable; urgency=low
+
+  * [ecore_imf] add ecore_imf_context_input_panel_caps_lock_mode_set/get
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.67695slp2+build05
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Wed, 29 Feb 2012 14:21:16 +0900
+
+ecore (1.1.0+svn.67695slp2+build04) unstable; urgency=low
+
+  * [ecore_imf] cleanup code
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.67695slp2+build04
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Thu, 23 Feb 2012 17:36:50 +0900
+
+ecore (1.1.0+svn.67695slp2+build03) unstable; urgency=low
+
+  * Package Upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.67695slp2+build03
+
+ -- ChunEon Park <chuneon.park@samsung.com>  Mon, 20 Feb 2012 20:15:54 +0900
+
+ecore (1.1.0+svn.67695slp2+build02) unstable; urgency=low
+
+  * Add APIs related to input panel control
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.1.0+svn.67695slp2+build02
+
+ -- Jihoon Kim <jihoon48.kim@samsung.com>  Mon, 20 Feb 2012 09:23:47 +0900
+
 ecore (1.1.0+svn.67695slp2+build01) unstable; urgency=low
 
   * Package Upload
