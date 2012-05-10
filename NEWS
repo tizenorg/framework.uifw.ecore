@@ -1,3 +1,13 @@
+Ecore 1.3.0
+
+Changes since Ecore 1.2.0:
+
+Fixes:
+    * ecore
+     - Prevent running out of fd when cycling ecore_init/ecore_shutdown.
+     - Reduce rounding error in ecore_animator_pos_map.
+     - Send mouse move event before mouse down event in ecore_extn
+
 Ecore 1.2.0
 
 Changes since Ecore 1.1.0:
