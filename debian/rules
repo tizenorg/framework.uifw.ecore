@@ -23,6 +23,7 @@ DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb \
 	--enable-glib-integration-always \
 	--enable-ecore-x-gesture \
 	--disable-xim \
+	--disable-ecore-imf-xim \
 	--disable-ecore-imf-scim
 DEB_MAKE_EXTRA_ARGS := V=0
 

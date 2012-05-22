@@ -1,7 +1,7 @@
-#sbs-git:slp/pkgs/e/ecore ecore 1.1.0+svn.69115slp2+build01 f1fcb7acee67ba61b43c4c5bcf6a0255195b3bbe
+#sbs-git:slp/pkgs/e/ecore ecore 1.2.0+svn.70444slp2+build03 f1fcb7acee67ba61b43c4c5bcf6a0255195b3bbe
 Name:       ecore
 Summary:    Enlightened Core X interface library
-Version:    1.2.0+svn.70444slp2+build02
+Version:    1.2.0+svn.70444slp2+build03
 Release:    1
 Group:      System/Libraries
 License:    BSD
@@ -178,9 +178,10 @@ export LDFLAGS+=" -fvisibility=hidden -Wl,--hash-style=both -Wl,--as-needed"
 	--enable-ecore-evas-opengl-x11 \
 	--disable-ecore-evas-xrender-x11 \
 	--enable-curl \
-        --enable-glib-integration-always \
+	--enable-glib-integration-always \
 	--enable-ecore-x-gesture \
-        --disable-xim \
+	--disable-xim \
+	--disable-ecore-imf-xim \
 	--disable-ecore-imf-scim
 
 make %{?jobs:-j%jobs}
@@ -289,7 +290,6 @@ rm -rf %{buildroot}
 %files input
 %defattr(-,root,root,-)
 %{_libdir}/libecore_input.so.*
-/usr/lib/ecore/immodules/xim.so
 
 %files input-evas
 %defattr(-,root,root,-)
