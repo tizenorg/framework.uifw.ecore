@@ -1,7 +1,7 @@
 #sbs-git:slp/pkgs/e/ecore ecore 1.2.0+svn.70444slp2+build03 f1fcb7acee67ba61b43c4c5bcf6a0255195b3bbe
 Name:       ecore
 Summary:    Enlightened Core X interface library
-Version:    1.2.0+svn.70444slp2+build03
+Version:    1.2.0+svn.70444slp2+build04
 Release:    1
 Group:      System/Libraries
 License:    BSD
