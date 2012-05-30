@@ -7,6 +7,7 @@ Group:      System/Libraries
 License:    BSD
 URL:        http://www.enlightenment.org
 Source0:    %{name}-%{version}.tar.gz
+Source1001: packaging/ecore.manifest 
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
 BuildRequires:  pkgconfig(eina)
@@ -161,6 +162,7 @@ Core abstraction layer for enlightenment (fb)
 
 
 %build
+cp %{SOURCE1001} .
 export CFLAGS+=" -fvisibility=hidden -fPIC"
 export LDFLAGS+=" -fvisibility=hidden -Wl,--hash-style=both -Wl,--as-needed"
 
@@ -243,10 +245,12 @@ rm -rf %{buildroot}
 %postun fb -p /sbin/ldconfig
 
 %files 
+%manifest ecore.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libecore.so.*
 
 %files devel
+%manifest ecore.manifest
 %defattr(-,root,root,-)
 %{_includedir}/ecore-1/*.h
 %{_libdir}/pkgconfig/ecore*.pc
@@ -263,47 +267,58 @@ rm -rf %{buildroot}
 %{_libdir}/libecore_fb.so
 
 %files tools
+%manifest ecore.manifest
 %defattr(-,root,root,-)
 #/usr/bin/ecore_test
 
 %files con
+%manifest ecore.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libecore_con.so.*
 
 %files evas
+%manifest ecore.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libecore_evas.so.*
 
 %files file
+%manifest ecore.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libecore_file.so.*
 
 %files imf
+%manifest ecore.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libecore_imf.so.*
 
 %files imf-evas
+%manifest ecore.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libecore_imf_evas.so.*
 
 %files input
+%manifest ecore.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libecore_input.so.*
 /usr/lib/ecore/immodules/xim.so
 
 %files input-evas
+%manifest ecore.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libecore_input_evas.so.*
 
 %files ipc
+%manifest ecore.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libecore_ipc.so.*
 
 %files x
+%manifest ecore.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libecore_x.so.*
 
 %files fb
+%manifest ecore.manifest
 %defattr(-,root,root,-)
 %{_libdir}/libecore_fb.so.*
 
