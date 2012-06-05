@@ -349,6 +349,20 @@ typedef enum _Ecore_X_Randr_Property_Change
    ECORE_X_RANDR_PROPERTY_CHANGE_DEL
 } Ecore_X_Randr_Property_Change;
 
+typedef enum _Ecore_X_Netwm_Direction
+{
+   ECORE_X_NETWM_DIRECTION_SIZE_TL = 0,
+   ECORE_X_NETWM_DIRECTION_SIZE_T = 1,
+   ECORE_X_NETWM_DIRECTION_SIZE_TR = 2,
+   ECORE_X_NETWM_DIRECTION_SIZE_R = 3,
+   ECORE_X_NETWM_DIRECTION_SIZE_BR = 4,
+   ECORE_X_NETWM_DIRECTION_SIZE_B = 5,
+   ECORE_X_NETWM_DIRECTION_SIZE_BL = 6,
+   ECORE_X_NETWM_DIRECTION_SIZE_L = 7,
+   ECORE_X_NETWM_DIRECTION_MOVE = 8,
+   ECORE_X_NETWM_DIRECTION_CANCEL = 11,
+} Ecore_X_Netwm_Direction;
+
 typedef struct _Ecore_X_Event_Mouse_In                     Ecore_X_Event_Mouse_In;
 typedef struct _Ecore_X_Event_Mouse_Out                    Ecore_X_Event_Mouse_Out;
 typedef struct _Ecore_X_Event_Window_Focus_In              Ecore_X_Event_Window_Focus_In;
@@ -1190,6 +1204,12 @@ typedef enum _Ecore_X_Illume_Indicator_Opacity_Mode
    ECORE_X_ILLUME_INDICATOR_TRANSLUCENT,
    ECORE_X_ILLUME_INDICATOR_TRANSPARENT
 } Ecore_X_Illume_Indicator_Opacity_Mode;
+
+typedef enum _Ecore_X_Illume_Window_State
+{
+   ECORE_X_ILLUME_WINDOW_STATE_NORMAL = 0,
+   ECORE_X_ILLUME_WINDOW_STATE_FLOATING
+} Ecore_X_Illume_Window_State;
 
 /* Window layer constants */
 #define ECORE_X_WINDOW_LAYER_BELOW  2
@@ -2347,6 +2367,12 @@ EAPI void
 ecore_x_netwm_desktop_request_send(Ecore_X_Window win,
                                    Ecore_X_Window root,
                                    unsigned int desktop);
+EAPI void
+ecore_x_netwm_moveresize_request_send(Ecore_X_Window win,
+                                      int x,
+                                      int y,
+                                      Ecore_X_Netwm_Direction direction,
+                                      unsigned int button);
 
 EAPI void
  ecore_x_e_init(void);
@@ -3791,6 +3817,13 @@ ecore_x_e_illume_indicator_opacity_get(Ecore_X_Window win);
 EAPI void
 ecore_x_e_illume_indicator_opacity_send(Ecore_X_Window win,
                                       Ecore_X_Illume_Indicator_Opacity_Mode mode);
+
+EAPI void
+ecore_x_e_illume_window_state_set(Ecore_X_Window win,
+                                  Ecore_X_Illume_Window_State state);
+
+EAPI Ecore_X_Illume_Window_State
+ecore_x_e_illume_window_state_get(Ecore_X_Window win);
 
 #ifdef __cplusplus
 }
