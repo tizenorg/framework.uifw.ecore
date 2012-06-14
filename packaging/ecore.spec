@@ -2,29 +2,29 @@
 Name:       ecore
 Summary:    Enlightened Core X interface library
 Version:    1.2.0+svn.70444slp2+build05
-Release:    1
+Release:    2
 Group:      System/Libraries
 License:    BSD
 URL:        http://www.enlightenment.org
 Source0:    %{name}-%{version}.tar.gz
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
-BuildRequires:  pkgconfig(eina)
-BuildRequires:  pkgconfig(eet)
-BuildRequires:  pkgconfig(evas)
-BuildRequires:  pkgconfig(glib-2.0)
-BuildRequires:  pkgconfig(xcursor)
-BuildRequires:  pkgconfig(xrender)
-BuildRequires:  pkgconfig(xinerama)
-BuildRequires:  pkgconfig(xrandr)
-BuildRequires:  pkgconfig(xext)
-BuildRequires:  pkgconfig(xi)
-BuildRequires:  pkgconfig(xfixes)
-BuildRequires:  pkgconfig(xcomposite)
-BuildRequires:  pkgconfig(xdamage)
-BuildRequires:  pkgconfig(xextproto)
-BuildRequires:  pkgconfig(xtst)
-BuildRequires:  pkgconfig(libcurl)
+BuildRequires:  eina-devel
+BuildRequires:  eet-devel
+BuildRequires:  evas-devel
+BuildRequires:  glib2-devel
+BuildRequires:  libxcursor-devel
+BuildRequires:  libxrender-devel
+BuildRequires:  libxinerama-devel
+BuildRequires:  libxrandr-devel
+BuildRequires:  libxext-devel
+BuildRequires:  libxi-devel
+BuildRequires:  libxfixes-devel
+BuildRequires:  libxcomposite-devel
+BuildRequires:  libxdamage-devel
+BuildRequires:  x11proto-xext
+BuildRequires:  libxtst-devel
+BuildRequires:  curl-devel
 BuildRequires:  libjpeg-devel
 
 
