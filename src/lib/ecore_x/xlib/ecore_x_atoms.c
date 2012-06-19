@@ -298,7 +298,10 @@ _ecore_x_atoms_init(void)
       { "_E_COMP_DUMP", &ECORE_X_ATOM_E_COMP_DUMP },
       { "_E_COMP_PIXMAP", &ECORE_X_ATOM_E_COMP_PIXMAP },
       { "_E_VIDEO_PARENT", &ECORE_X_ATOM_E_VIDEO_PARENT },
-      { "_E_VIDEO_POSITION", &ECORE_X_ATOM_E_VIDEO_POSITION }
+      { "_E_VIDEO_POSITION", &ECORE_X_ATOM_E_VIDEO_POSITION },
+
+      { "_E_PROFILE", &ECORE_X_ATOM_E_PROFILE },
+      { "_E_PROFILE_LIST", &ECORE_X_ATOM_E_PROFILE_LIST }
 
       /* SLP additions after the comma */ ,
 

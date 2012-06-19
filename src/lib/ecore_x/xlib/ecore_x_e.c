@@ -1023,6 +1023,124 @@ ecore_x_e_comp_sync_draw_size_done_send(Ecore_X_Window root,
 }
 
 EAPI void
+ecore_x_e_window_profile_list_set(Ecore_X_Window  win,
+                                  const char    **profiles,
+                                  unsigned int    num_profiles)
+{
+   Ecore_X_Atom *atoms;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!win)
+     return;
+
+   if (!num_profiles)
+     ecore_x_window_prop_property_del(win, ECORE_X_ATOM_E_PROFILE_LIST);
+   else
+     {
+        atoms = alloca(num_profiles * sizeof(Ecore_X_Atom));
+        ecore_x_atoms_get(profiles, num_profiles, atoms);
+        ecore_x_window_prop_property_set(win,
+                                         ECORE_X_ATOM_E_PROFILE_LIST,
+                                         XA_ATOM, 32, (void *)atoms,
+                                         num_profiles);
+     }
+}
+
+EAPI Eina_Bool
+ecore_x_e_window_profile_list_get(Ecore_X_Window   win,
+                                  const char    ***profiles,
+                                  int             *ret_num)
+{
+   unsigned char *data;
+   Ecore_X_Atom *atoms;
+   int num, i;
+
+   if (ret_num)
+     *ret_num = 0;
+
+   if (profiles)
+     *profiles = NULL;
+
+   if (!win)
+     return EINA_FALSE;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!ecore_x_window_prop_property_get(win,
+                                         ECORE_X_ATOM_E_PROFILE_LIST,
+                                         XA_ATOM, 32, &data, &num))
+     return EINA_FALSE;
+
+   if (ret_num)
+     *ret_num = num;
+
+   if (profiles)
+     {
+        (*profiles) = calloc(num, sizeof(char *));
+        if (!(*profiles))
+          {
+             if (ret_num)
+               *ret_num = 0;
+
+             if (data)
+               free(data);
+
+             return EINA_FALSE;
+          }
+
+        atoms = (Ecore_X_Atom *)data;
+        for (i = 0; i < num; i++)
+           (*profiles)[i] = ecore_x_atom_name_get(atoms[i]);
+     }
+
+   if (data)
+     XFree(data);
+
+   return EINA_TRUE;
+}
+
+EAPI void
+ecore_x_e_window_profile_set(Ecore_X_Window win,
+                             const char    *profile)
+{
+   Ecore_X_Atom atom;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!win)
+     return;
+
+   if (!profile)
+     ecore_x_window_prop_property_del(win, ECORE_X_ATOM_E_PROFILE);
+   else
+     {
+        atom = ecore_x_atom_get(profile);
+        ecore_x_window_prop_property_set(win, ECORE_X_ATOM_E_PROFILE,
+                                         XA_ATOM, 32, (void *)&atom, 1);
+     }
+}
+
+EAPI char *
+ecore_x_e_window_profile_get(Ecore_X_Window win)
+{
+   Ecore_X_Atom *atom = NULL;
+   unsigned char *data;
+   char *profile = NULL;
+   int num;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!ecore_x_window_prop_property_get(win, ECORE_X_ATOM_E_PROFILE,
+                                         XA_ATOM, 32, &data, &num))
+     return NULL;
+
+   if (data)
+     atom = (Ecore_X_Atom *)data;
+
+   if (atom)
+     profile = ecore_x_atom_name_get(atom[0]);
+
+   return profile;
+}
+
+EAPI void
 ecore_x_e_comp_sync_supported_set(Ecore_X_Window root,
                                   Eina_Bool enabled)
 {

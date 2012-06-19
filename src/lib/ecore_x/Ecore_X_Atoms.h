@@ -269,6 +269,10 @@ EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_PIXMAP;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_VIDEO_PARENT;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_VIDEO_POSITION;
 
+/* currently elementary and E specific extension */
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_PROFILE;
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_PROFILE_LIST;
+
 /* for sliding window */
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_STATE;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_GEOMETRY;

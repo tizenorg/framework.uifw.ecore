@@ -995,6 +995,7 @@ static Ecore_Evas_Engine_Func _ecore_win32_engine_func =
      NULL, /* _ecore_evas_x_ignore_events_set */
      NULL,  /* _ecore_evas_x_alpha_set */
      NULL, //transparent
+     NULL, // profiles_set
 
      NULL,
      NULL,

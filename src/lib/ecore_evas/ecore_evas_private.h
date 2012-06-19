@@ -177,6 +177,7 @@ struct _Ecore_Evas_Engine_Func
    void (*fn_ignore_events_set) (Ecore_Evas *ee, int ignore);
    void (*fn_alpha_set) (Ecore_Evas *ee, int alpha);
    void (*fn_transparent_set) (Ecore_Evas *ee, int transparent);
+   void (*fn_profiles_set) (Ecore_Evas *ee, const char **profiles, int num_profiles);
 
    void (*fn_window_group_set) (Ecore_Evas *ee, const Ecore_Evas *ee_group);
    void (*fn_aspect_set) (Ecore_Evas *ee, double aspect);
@@ -330,6 +331,7 @@ struct _Ecore_Evas
       char           *title;
       char           *name;
       char           *clas;
+      char           *profile;
       struct {
 	 int          w, h;
       } min,

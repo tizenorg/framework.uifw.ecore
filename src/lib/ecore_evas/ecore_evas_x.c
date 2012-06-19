@@ -730,6 +730,34 @@ _ecore_evas_x_event_property_change(void *data __UNUSED__, int type __UNUSED__, 
              break;
           }
      }
+   else if (e->atom == ECORE_X_ATOM_E_PROFILE)
+     {
+        char *p = ecore_x_e_window_profile_get(e->win);
+        if ((p) && (ee->prop.profile))
+          {
+             if (strcmp(p, ee->prop.profile) != 0)
+               {
+                  free(ee->prop.profile);
+                  ee->prop.profile = strdup(p);
+                  state_change = 1;
+               }
+          }
+        else if ((!p) && (ee->prop.profile))
+          {
+             free(ee->prop.profile);
+             ee->prop.profile = NULL;
+             state_change = 1;
+          }
+        else if ((p) && (!ee->prop.profile))
+          {
+             ee->prop.profile = strdup(p);
+             state_change = 1;
+          }
+
+        if (p)
+          free(p);
+     }
+
    if (state_change)
      {
         if (ee->func.fn_state_change) ee->func.fn_state_change(ee);
@@ -2743,6 +2771,13 @@ _ecore_evas_x_fullscreen_set(Ecore_Evas *ee, int on)
 }
 
 static void
+_ecore_evas_x_profiles_set(Ecore_Evas *ee, const char **plist, int n)
+{
+   /* Ecore_Evas's profile will be updated when WM sets the E_PROFILE. */
+   ecore_x_e_window_profile_list_set(ee->prop.window, plist, n);
+}
+
+static void
 _ecore_evas_x_avoid_damage_set(Ecore_Evas *ee, int on)
 {
    if (ee->prop.avoid_damage == on) return;
@@ -2989,6 +3024,7 @@ static Ecore_Evas_Engine_Func _ecore_x_engine_func =
      _ecore_evas_x_ignore_events_set,
      _ecore_evas_x_alpha_set,
      _ecore_evas_x_transparent_set,
+     _ecore_evas_x_profiles_set,
    
      _ecore_evas_x_window_group_set,
      _ecore_evas_x_aspect_set,

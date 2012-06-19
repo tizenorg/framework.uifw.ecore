@@ -1918,6 +1918,31 @@ ecore_evas_maximized_get(const Ecore_Evas *ee)
 }
 
 EAPI void
+ecore_evas_profiles_set(Ecore_Evas *ee, const char **profiles, unsigned int num_profiles)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_profiles_set");
+        return;
+     }
+   IFC(ee, fn_profiles_set) (ee, profiles, num_profiles);
+   IFE;
+}
+
+EAPI const char *
+ecore_evas_profile_get(const Ecore_Evas *ee)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_profile_get");
+        return NULL;
+     }
+   return ee->prop.profile;
+}
+
+EAPI void
 ecore_evas_fullscreen_set(Ecore_Evas *ee, Eina_Bool on)
 {
    if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))

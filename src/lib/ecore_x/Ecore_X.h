@@ -2589,6 +2589,57 @@ EAPI void
 EAPI Ecore_X_Pixmap
 ecore_x_e_comp_pixmap_get(Ecore_X_Window win);
 
+/**
+ * @brief Set the window profile list.
+ *
+ * @param win The window
+ * @param profiles The profile name list 
+ * @param num_profiles The number of profile names
+ *
+ * @since 1.3.0
+ */
+EAPI void
+ecore_x_e_window_profile_list_set(Ecore_X_Window  win,
+                                  const char    **profiles,
+                                  unsigned int    num_profiles);
+
+/**
+ * @brief Get the window profile list.
+ *
+ * @param win The window
+ * @param[out] profiles Returns the profile name list
+ * @param[out] ret_num Returns the number of profile names
+ *
+ * @since 1.3.0
+ */
+EAPI Eina_Bool
+ecore_x_e_window_profile_list_get(Ecore_X_Window   win,
+                                  const char    ***profiles,
+                                  int             *ret_num);
+
+/**
+ * @brief Set the window profile.
+ *
+ * @param win The window
+ * @param profile The profile name
+ *
+ * @since 1.3.0
+ */
+EAPI void
+ecore_x_e_window_profile_set(Ecore_X_Window win,
+                             const char    *profile);
+
+/**
+ * @brief Get the window profile.
+ *
+ * @param win The window
+ * @return The profile name
+ *
+ * @since 1.3.0
+ */
+EAPI char *
+ecore_x_e_window_profile_get(Ecore_X_Window win);
+
 EAPI Ecore_X_Sync_Alarm
  ecore_x_sync_alarm_new(Ecore_X_Sync_Counter counter);
 EAPI Eina_Bool

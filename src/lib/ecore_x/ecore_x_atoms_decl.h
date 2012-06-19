@@ -304,3 +304,7 @@ EAPI Ecore_X_Atom ECORE_X_ATOM_E_ILLUME_SLIDING_WIN_GEOMETRY = 0;
 /* for SDB(Samsung Debug Bridge) */
 EAPI Ecore_X_Atom ECORE_X_ATOM_SDB_SERVER_CONNECT = 0;
 EAPI Ecore_X_Atom ECORE_X_ATOM_SDB_SERVER_DISCONNECT = 0;
+
+/* currently elementary and E specific extension */
+EAPI Ecore_X_Atom ECORE_X_ATOM_E_PROFILE = 0;
+EAPI Ecore_X_Atom ECORE_X_ATOM_E_PROFILE_LIST = 0;
