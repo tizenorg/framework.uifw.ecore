@@ -54,6 +54,7 @@ static void _ecore_evas_wl_callback_mouse_in_set(Ecore_Evas *ee, void (*func)(Ec
 static void _ecore_evas_wl_callback_mouse_out_set(Ecore_Evas *ee, void (*func)(Ecore_Evas *ee));
 static void _ecore_evas_wl_move(Ecore_Evas *ee, int x, int y);
 static void _ecore_evas_wl_resize(Ecore_Evas *ee, int w, int h);
+static void _ecore_evas_wl_move_resize(Ecore_Evas *ee, int x, int y, int w, int h);
 static void _ecore_evas_wl_show(Ecore_Evas *ee);
 static void _ecore_evas_wl_hide(Ecore_Evas *ee);
 static void _ecore_evas_wl_raise(Ecore_Evas *ee);
@@ -72,6 +73,7 @@ static void _ecore_evas_wl_alpha_set(Ecore_Evas *ee, int alpha);
 static void _ecore_evas_wl_transparent_set(Ecore_Evas *ee, int transparent);
 static int _ecore_evas_wl_render(Ecore_Evas *ee);
 static void _ecore_evas_wl_screen_geometry_get(const Ecore_Evas *ee __UNUSED__, int *x, int *y, int *w, int *h);
+static void _ecore_evas_wl_ensure_pool_size(Ecore_Evas *ee, int w, int h);
 static struct wl_shm_pool *_ecore_evas_wl_shm_pool_create(int size, void **data);
 
 static void _ecore_evas_wl_buffer_new(Ecore_Evas *ee, struct wl_shm_pool *pool);
@@ -118,7 +120,7 @@ static Ecore_Evas_Engine_Func _ecore_wl_engine_func =
    _ecore_evas_wl_move,
    NULL, // managed_move
    _ecore_evas_wl_resize,
-   NULL, // move_resize
+   _ecore_evas_wl_move_resize,
    NULL, // rotation_set
    NULL, // shaped_set
    _ecore_evas_wl_show,
@@ -147,13 +149,13 @@ static Ecore_Evas_Engine_Func _ecore_wl_engine_func =
    _ecore_evas_wl_alpha_set,
    _ecore_evas_wl_transparent_set,
    NULL, // func profiles set
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   NULL,
-   _ecore_evas_wl_render, 
+   NULL, // window group set
+   NULL, // aspect set
+   NULL, // urgent set
+   NULL, // modal set
+   NULL, // demand attention set
+   NULL, // focus skip set
+   _ecore_evas_wl_render,
    _ecore_evas_wl_screen_geometry_get
 };
 
@@ -219,6 +221,7 @@ ecore_evas_wayland_shm_new(const char *disp_name, unsigned int parent, int x, in
    ee->prop.request_pos = 0;
    ee->prop.sticky = 0;
    ee->prop.draw_frame = frame;
+   ee->alpha = EINA_FALSE;
 
    ee->evas = evas_new();
    evas_data_attach_set(ee->evas, ee);
@@ -230,8 +233,7 @@ ecore_evas_wayland_shm_new(const char *disp_name, unsigned int parent, int x, in
    if (ee->prop.draw_frame)
      evas_output_framespace_set(ee->evas, 4, 18, 8, 22);
 
-   if (parent)
-     p = ecore_wl_window_find(parent);
+   if (parent) p = ecore_wl_window_find(parent);
 
    /* FIXME: Get if parent is alpha, and set */
 
@@ -242,6 +244,8 @@ ecore_evas_wayland_shm_new(const char *disp_name, unsigned int parent, int x, in
 
    if ((einfo = (Evas_Engine_Info_Wayland_Shm *)evas_engine_info_get(ee->evas)))
      {
+        einfo->info.rotation = ee->rotation;
+        einfo->info.destination_alpha = ee->alpha;
         einfo->info.rotation = ee->rotation;
         einfo->info.debug = EINA_FALSE;
         if (!evas_engine_info_set(ee->evas, (Evas_Engine_Info *)einfo))
@@ -339,21 +343,10 @@ _ecore_evas_wl_shutdown(void)
 static void 
 _ecore_evas_wl_pre_free(Ecore_Evas *ee)
 {
-   /* Evas_Engine_Info_Wayland_Shm *einfo; */
-
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
+   if (!ee) return;
    if (ee->engine.wl.frame) evas_object_del(ee->engine.wl.frame);
-
-   /* FIXME: remove the shm pool */
-   /* einfo = (Evas_Engine_Info_Wayland_Shm *)evas_engine_info_get(ee->evas); */
-   /* if ((einfo) && (einfo->info.dest)) */
-   /*   { */
-   /*      int ret = 0; */
-
-   /*      ret = munmap(einfo->info.dest, ((ee->w * sizeof(int)) * ee->h)); */
-   /*      if (!ret) ERR("Failed to unmap engine destination: %m"); */
-   /*   } */
 }
 
 static void 
@@ -459,11 +452,13 @@ _ecore_evas_wl_move(Ecore_Evas *ee, int x, int y)
 static void 
 _ecore_evas_wl_resize(Ecore_Evas *ee, int w, int h)
 {
+   Evas_Engine_Info_Wayland_Shm *einfo;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
    if (!ee) return;
    if (w < 1) w = 1;
    if (h < 1) h = 1;
-
-   LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
    if (ee->prop.min.w > w) w = ee->prop.min.w;
    else if (w > ee->prop.max.w) w = ee->prop.max.w;
@@ -504,56 +499,20 @@ _ecore_evas_wl_resize(Ecore_Evas *ee, int w, int h)
         if (ee->engine.wl.buffer) wl_buffer_destroy(ee->engine.wl.buffer);
         ee->engine.wl.buffer = NULL;
 
-   Evas_Engine_Info_Wayland_Shm *einfo;
-   struct wl_shm_pool *pool = NULL;
-   int stride = 0;
-   size_t len = 0;
-   void *data;
-
-   stride = ee->w * sizeof(int);
-   len = stride * ee->h;
-
-   if ((ee->engine.wl.pool) && (len < ee->engine.wl.pool_size))
-     {
-        pool = ee->engine.wl.pool;
-        data = ee->engine.wl.pool_data;
-     }
-   else
-     {
-        int w = 0, size = 0;
-
-        ecore_wl_screen_size_get(&w, NULL);
-
-        if (w == 0) w = 1024;
-
-        size = (6 * w * w);
-        pool = 
-          _ecore_evas_wl_shm_pool_create(size, &data);
-        ee->engine.wl.pool_size = size;
-     }
-
-   if (data != ee->engine.wl.pool_data)
-     {
-        if (ee->engine.wl.pool)
-          wl_shm_pool_destroy(ee->engine.wl.pool);
-
-        ee->engine.wl.pool = pool;
-        ee->engine.wl.pool_data = data;
-     }
-
+        _ecore_evas_wl_ensure_pool_size(ee, w, h);
 
         if (ee->engine.wl.pool)
           _ecore_evas_wl_buffer_new(ee, ee->engine.wl.pool);
 
-   einfo = (Evas_Engine_Info_Wayland_Shm *)evas_engine_info_get(ee->evas);
-   if (!einfo)
-     {
-        ERR("Failed to get Evas Engine Info for '%s'", ee->driver);
-        return;
-     }
+        einfo = (Evas_Engine_Info_Wayland_Shm *)evas_engine_info_get(ee->evas);
+        if (!einfo)
+          {
+            ERR("Failed to get Evas Engine Info for '%s'", ee->driver);
+            return;
+          }
 
-   einfo->info.dest = data;
-   evas_engine_info_set(ee->evas, (Evas_Engine_Info *)einfo);
+        einfo->info.dest = ee->engine.wl.pool_data;
+        evas_engine_info_set(ee->evas, (Evas_Engine_Info *)einfo);
 
         if (ee->engine.wl.win)
           {
@@ -567,51 +526,63 @@ _ecore_evas_wl_resize(Ecore_Evas *ee, int w, int h)
 }
 
 static void 
+_ecore_evas_wl_move_resize(Ecore_Evas *ee, int x, int y, int w, int h)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   if (!ee) return;
+   if ((ee->x != x) || (ee->y != y))
+     _ecore_evas_wl_move(ee, x, y);
+   if ((ee->w != w) || (ee->h != h))
+     _ecore_evas_wl_resize(ee, w, h);
+}
+
+static void
+_ecore_evas_wl_ensure_pool_size(Ecore_Evas *ee, int w, int h)
+{
+   int stride = 0;
+   size_t len = 0;
+
+   stride = w * sizeof(int);
+   len = stride * h;
+
+   if ((ee->engine.wl.pool) && (len < ee->engine.wl.pool_size))
+     return;
+   else
+     {
+        struct wl_shm_pool *pool = NULL;
+        void *data;
+        int size;
+
+        if (ee->engine.wl.pool)
+          wl_shm_pool_destroy(ee->engine.wl.pool);
+
+        /*
+         * Make the pool 1.5 times the current requirement to allow growth
+         * without requiring a new pool allocation
+         */
+        size = 1.5 * len;
+        pool = _ecore_evas_wl_shm_pool_create(size, &data);
+
+        ee->engine.wl.pool = pool;
+        ee->engine.wl.pool_size = size;
+        ee->engine.wl.pool_data = data;
+     }
+}
+
+static void
 _ecore_evas_wl_show(Ecore_Evas *ee)
 {
    Evas_Engine_Info_Wayland_Shm *einfo;
-   struct wl_shm_pool *pool = NULL;
-   int stride = 0;
-   size_t len = 0;
-   void *data;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
    if ((!ee) || (ee->visible)) return;
 
-   stride = ee->w * sizeof(int);
-   len = stride * ee->h;
+   _ecore_evas_wl_ensure_pool_size(ee, ee->w, ee->h);
 
-   if ((ee->engine.wl.pool) && (len < ee->engine.wl.pool_size))
-     {
-        pool = ee->engine.wl.pool;
-        data = ee->engine.wl.pool_data;
-     }
-   else
-     {
-        int w = 0, size = 0;
-
-        ecore_wl_screen_size_get(&w, NULL);
-
-        /* set a default width */
-        if (w == 0) w = 1024;
-
-        size = (6 * w * w);
-        pool = 
-          _ecore_evas_wl_shm_pool_create(size, &data);
-        ee->engine.wl.pool_size = size;
-     }
-
-   if (data != ee->engine.wl.pool_data)
-     {
-        if (ee->engine.wl.pool)
-          wl_shm_pool_destroy(ee->engine.wl.pool);
-
-        ee->engine.wl.pool = pool;
-        ee->engine.wl.pool_data = data;
-     }
-
-   _ecore_evas_wl_buffer_new(ee, pool);
+   if (ee->engine.wl.pool)
+     _ecore_evas_wl_buffer_new(ee, ee->engine.wl.pool);
 
    einfo = (Evas_Engine_Info_Wayland_Shm *)evas_engine_info_get(ee->evas);
    if (!einfo)
@@ -620,7 +591,7 @@ _ecore_evas_wl_show(Ecore_Evas *ee)
         return;
      }
 
-   einfo->info.dest = data;
+   einfo->info.dest = ee->engine.wl.pool_data;
    evas_engine_info_set(ee->evas, (Evas_Engine_Info *)einfo);
 
    /* ecore_wl_flush(); */
@@ -631,6 +602,13 @@ _ecore_evas_wl_show(Ecore_Evas *ee)
         ecore_wl_window_buffer_attach(ee->engine.wl.win, 
                                       ee->engine.wl.buffer, 0, 0);
         ecore_wl_window_update_size(ee->engine.wl.win, ee->w, ee->h);
+
+        if ((ee->prop.clas) && (ee->engine.wl.win->shell_surface))
+          wl_shell_surface_set_class(ee->engine.wl.win->shell_surface, 
+                                     ee->prop.clas);
+        if ((ee->prop.title) && (ee->engine.wl.win->shell_surface))
+          wl_shell_surface_set_title(ee->engine.wl.win->shell_surface, 
+                                     ee->prop.title);
      }
 
    if (ee->engine.wl.frame)
@@ -697,6 +675,10 @@ _ecore_evas_wl_title_set(Ecore_Evas *ee, const char *title)
         if (!(sd = evas_object_smart_data_get(ee->engine.wl.frame))) return;
         evas_object_text_text_set(sd->text, ee->prop.title);
      }
+
+   if ((ee->prop.title) && (ee->engine.wl.win->shell_surface))
+     wl_shell_surface_set_title(ee->engine.wl.win->shell_surface, 
+                                ee->prop.title);
 }
 
 static void 
@@ -711,7 +693,10 @@ _ecore_evas_wl_name_class_set(Ecore_Evas *ee, const char *n, const char *c)
    ee->prop.clas = NULL;
    if (n) ee->prop.name = strdup(n);
    if (c) ee->prop.clas = strdup(c);
-   /* FIXME: Forward these changes to Wayland somehow */
+
+   if ((ee->prop.clas) && (ee->engine.wl.win->shell_surface))
+     wl_shell_surface_set_class(ee->engine.wl.win->shell_surface, 
+                                ee->prop.clas);
 }
 
 static void 
@@ -1022,7 +1007,7 @@ _ecore_evas_wl_cb_mouse_in(void *data __UNUSED__, int type __UNUSED__, void *eve
         if (ee->func.fn_mouse_in) ee->func.fn_mouse_in(ee);
         ecore_event_evas_modifier_lock_update(ee->evas, ev->modifiers);
         evas_event_feed_mouse_in(ee->evas, ev->timestamp, NULL);
-        _ecore_evas_mouse_move_process(ee, ev->x, ev->y, ev->timestamp);
+//        _ecore_evas_mouse_move_process(ee, ev->x, ev->y, ev->timestamp);
         ee->in = EINA_TRUE;
      }
    return ECORE_CALLBACK_PASS_ON;
@@ -1043,7 +1028,7 @@ _ecore_evas_wl_cb_mouse_out(void *data __UNUSED__, int type __UNUSED__, void *ev
    if (ee->in)
      {
         ecore_event_evas_modifier_lock_update(ee->evas, ev->modifiers);
-        _ecore_evas_mouse_move_process(ee, ev->x, ev->y, ev->timestamp);
+//        _ecore_evas_mouse_move_process(ee, ev->x, ev->y, ev->timestamp);
         evas_event_feed_mouse_out(ee->evas, ev->timestamp, NULL);
         if (ee->func.fn_mouse_out) ee->func.fn_mouse_out(ee);
         if (ee->prop.cursor.object) evas_object_hide(ee->prop.cursor.object);

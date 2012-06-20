@@ -211,6 +211,16 @@ _XReply(Display *disp,
 
 #endif /* ifdef LOGRT */
 
+/* wrapper to use XkbKeycodeToKeysym when possible */
+KeySym
+_ecore_x_XKeycodeToKeysym(Display *display, KeyCode keycode, int idx)
+{
+#ifdef ECORE_XKB
+   return XkbKeycodeToKeysym(display, keycode, 0, idx);
+#endif
+   return XKeycodeToKeysym(display, keycode, idx);
+}
+
 void
 _ecore_x_modifiers_get(void)
 {
@@ -813,16 +823,16 @@ ecore_x_screen_index_get(const Ecore_X_Screen *screen)
 /**
  * Retrieves the screen based on index number.
  *
- * @param index The index that will be used to retrieve the screen.
+ * @param idx The index that will be used to retrieve the screen.
  * @return  The Ecore_X_Screen at this index.
  * @ingroup Ecore_X_Display_Attr_Group
  *
  * @since 1.1
  */
 EAPI Ecore_X_Screen *
-ecore_x_screen_get(int index)
+ecore_x_screen_get(int idx)
 {
-   return XScreenOfDisplay(_ecore_x_disp, index);
+   return XScreenOfDisplay(_ecore_x_disp, idx);
 }
 
 /**
@@ -1056,7 +1066,8 @@ _ecore_x_key_mask_get(KeySym sym)
        {
           for (j = 0; j < 8; j++)
             {
-               sym2 = XKeycodeToKeysym(_ecore_x_disp, mod->modifiermap[i], j);
+               sym2 = _ecore_x_XKeycodeToKeysym(_ecore_x_disp,
+                                                mod->modifiermap[i], j);
                if (sym2 != 0)
                  break;
             }
@@ -1955,6 +1966,66 @@ ecore_x_mouse_up_send(Ecore_X_Window win,
    xev.xbutton.button = b;
    xev.xbutton.same_screen = 1;
    return XSendEvent(_ecore_x_disp, win, True, ButtonReleaseMask, &xev) ? EINA_TRUE : EINA_FALSE;
+}
+
+EAPI Eina_Bool
+ecore_x_mouse_in_send(Ecore_X_Window win,
+                      int x,
+                      int y)
+{
+   XEvent xev;
+   XWindowAttributes att;
+   Window tw;
+   int rx, ry;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   XGetWindowAttributes(_ecore_x_disp, win, &att);
+   XTranslateCoordinates(_ecore_x_disp, win, att.root, x, y, &rx, &ry, &tw);
+   xev.xcrossing.type = EnterNotify;
+   xev.xcrossing.window = win;
+   xev.xcrossing.root = att.root;
+   xev.xcrossing.subwindow = win;
+   xev.xcrossing.time = _ecore_x_event_last_time;
+   xev.xcrossing.x = x;
+   xev.xcrossing.y = y;
+   xev.xcrossing.x_root = rx;
+   xev.xcrossing.y_root = ry;
+   xev.xcrossing.mode = NotifyNormal;
+   xev.xcrossing.detail = NotifyNonlinear;
+   xev.xcrossing.same_screen = 1;
+   xev.xcrossing.focus = 0;
+   xev.xcrossing.state = 0;
+   return XSendEvent(_ecore_x_disp, win, True, EnterWindowMask, &xev) ? EINA_TRUE : EINA_FALSE;
+}
+
+EAPI Eina_Bool
+ecore_x_mouse_out_send(Ecore_X_Window win,
+                      int x,
+                      int y)
+{
+   XEvent xev;
+   XWindowAttributes att;
+   Window tw;
+   int rx, ry;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   XGetWindowAttributes(_ecore_x_disp, win, &att);
+   XTranslateCoordinates(_ecore_x_disp, win, att.root, x, y, &rx, &ry, &tw);
+   xev.xcrossing.type = LeaveNotify;
+   xev.xcrossing.window = win;
+   xev.xcrossing.root = att.root;
+   xev.xcrossing.subwindow = win;
+   xev.xcrossing.time = _ecore_x_event_last_time;
+   xev.xcrossing.x = x;
+   xev.xcrossing.y = y;
+   xev.xcrossing.x_root = rx;
+   xev.xcrossing.y_root = ry;
+   xev.xcrossing.mode = NotifyNormal;
+   xev.xcrossing.detail = NotifyNonlinear;
+   xev.xcrossing.same_screen = 1;
+   xev.xcrossing.focus = 0;
+   xev.xcrossing.state = 0;
+   return XSendEvent(_ecore_x_disp, win, True, LeaveWindowMask, &xev) ? EINA_TRUE : EINA_FALSE;
 }
 
 EAPI void

@@ -38,7 +38,8 @@ extern int _ecore_ipc_log_dom;
 #define ECORE_MAGIC_IPC_CLIENT             0x78875665
 
 typedef struct _Ecore_Ipc_Msg_Head Ecore_Ipc_Msg_Head;
-
+#define ECORE_IPC_TYPE 0x0f
+#define ECORE_IPC_SSL  0xf0
 
 #if defined (_MSC_VER) || (defined (__SUNPRO_C) && __SUNPRO_C < 0x5100)
 # pragma pack(1)
@@ -69,6 +70,7 @@ struct _Ecore_Ipc_Client
 {
    ECORE_MAGIC;
    Ecore_Con_Client  *client;
+   Ecore_Ipc_Server  *svr;
    void              *data;
    unsigned char     *buf;
    int                buf_size;

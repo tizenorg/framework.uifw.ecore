@@ -652,6 +652,106 @@ ecore_x_mouse_move_send(Ecore_X_Window win, int x, int y)
 }
 
 EAPI Eina_Bool
+ecore_x_mouse_in_send(Ecore_X_Window win, int x, int y)
+{
+   xcb_translate_coordinates_cookie_t cookie;
+   xcb_translate_coordinates_reply_t *reply;
+   xcb_enter_notify_event_t ev;
+   xcb_void_cookie_t vcookie;
+   xcb_generic_error_t *err;
+   Ecore_X_Window root = 0;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   root = ecore_x_window_root_get(win);
+   cookie = xcb_translate_coordinates(_ecore_xcb_conn, win, root, x, y);
+   reply = xcb_translate_coordinates_reply(_ecore_xcb_conn, cookie, NULL);
+   if (!reply) return EINA_FALSE;
+
+   memset(&ev, 0, sizeof(xcb_enter_notify_event_t));
+
+   ev.response_type = XCB_ENTER_NOTIFY;
+   ev.event = win;
+   ev.child = win;
+   ev.root = root;
+   ev.event_x = x;
+   ev.event_y = y;
+   ev.same_screen_focus = 1;
+   ev.mode = XCB_NOTIFY_MODE_NORMAL;
+   ev.detail = XCB_NOTIFY_DETAIL_NONLINEAR;
+   /* ev.focus = 0; */
+   ev.state = 0;
+   ev.root_x = reply->dst_x;
+   ev.root_y = reply->dst_y;
+   ev.time = ecore_x_current_time_get();
+   free(reply);
+
+   vcookie = xcb_send_event(_ecore_xcb_conn, 1, win,
+                            XCB_EVENT_MASK_ENTER_WINDOW, (const char *)&ev);
+
+   err = xcb_request_check(_ecore_xcb_conn, vcookie);
+   if (err)
+     {
+        _ecore_xcb_error_handle(err);
+        free(err);
+        return EINA_FALSE;
+     }
+
+   return EINA_TRUE;
+}
+
+EAPI Eina_Bool
+ecore_x_mouse_out_send(Ecore_X_Window win, int x, int y)
+{
+   xcb_translate_coordinates_cookie_t cookie;
+   xcb_translate_coordinates_reply_t *reply;
+   xcb_leave_notify_event_t ev;
+   xcb_void_cookie_t vcookie;
+   xcb_generic_error_t *err;
+   Ecore_X_Window root = 0;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   root = ecore_x_window_root_get(win);
+   cookie = xcb_translate_coordinates(_ecore_xcb_conn, win, root, x, y);
+   reply = xcb_translate_coordinates_reply(_ecore_xcb_conn, cookie, NULL);
+   if (!reply) return EINA_FALSE;
+
+   memset(&ev, 0, sizeof(xcb_leave_notify_event_t));
+
+   ev.response_type = XCB_LEAVE_NOTIFY;
+   ev.event = win;
+   ev.child = win;
+   ev.root = root;
+   ev.event_x = x;
+   ev.event_y = y;
+   ev.same_screen_focus = 1;
+   ev.mode = XCB_NOTIFY_MODE_NORMAL;
+   ev.detail = XCB_NOTIFY_DETAIL_NONLINEAR;
+   /* ev.focus = 0; */
+   ev.state = 0;
+   ev.root_x = reply->dst_x;
+   ev.root_y = reply->dst_y;
+   ev.time = ecore_x_current_time_get();
+   free(reply);
+
+   vcookie = xcb_send_event(_ecore_xcb_conn, 1, win,
+                            XCB_EVENT_MASK_LEAVE_WINDOW, (const char *)&ev);
+
+   err = xcb_request_check(_ecore_xcb_conn, vcookie);
+   if (err)
+     {
+        _ecore_xcb_error_handle(err);
+        free(err);
+        return EINA_FALSE;
+     }
+
+   return EINA_TRUE;
+}
+
+EAPI Eina_Bool
 ecore_x_keyboard_grab(Ecore_X_Window win)
 {
    xcb_grab_keyboard_cookie_t cookie;
@@ -1208,14 +1308,14 @@ ecore_x_screen_index_get(const Ecore_X_Screen *screen)
 /**
  * Retrieves the screen based on index number.
  *
- * @param index The index that will be used to retrieve the screen.
+ * @param idx The index that will be used to retrieve the screen.
  * @return  The Ecore_X_Screen at this index.
  * @ingroup Ecore_X_Display_Attr_Group
  *
  * @since 1.1
  */
 EAPI Ecore_X_Screen *
-ecore_x_screen_get(int index)
+ecore_x_screen_get(int idx)
 {
    xcb_screen_iterator_t iter;
    int i = 0;
@@ -1225,7 +1325,7 @@ ecore_x_screen_get(int index)
    iter =
      xcb_setup_roots_iterator(xcb_get_setup(_ecore_xcb_conn));
    for (i = 0; iter.rem; xcb_screen_next(&iter), i++)
-     if (i == index) return iter.data;
+     if (i == idx) return iter.data;
 
    return NULL;
 }
