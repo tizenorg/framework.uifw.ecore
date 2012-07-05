@@ -1594,6 +1594,7 @@ EAPI void                            ecore_x_netwm_ping_send(Ecore_X_Window win)
 EAPI void                            ecore_x_netwm_sync_request_send(Ecore_X_Window win, unsigned int serial);
 EAPI void                            ecore_x_netwm_state_request_send(Ecore_X_Window win, Ecore_X_Window root, Ecore_X_Window_State s1, Ecore_X_Window_State s2, Eina_Bool set);
 EAPI void                            ecore_x_netwm_desktop_request_send(Ecore_X_Window win, Ecore_X_Window root, unsigned int desktop);
+EAPI void                            ecore_x_netwm_moveresize_request_send(Ecore_X_Window win, int x, int y, Ecore_X_Netwm_Direction direction, unsigned int button);
 
 EAPI void                            ecore_x_e_init(void);
 EAPI void                            ecore_x_e_frame_size_set(Ecore_X_Window win, int fl, int fr, int ft, int fb);
@@ -1672,6 +1673,45 @@ EAPI void                            ecore_x_e_comp_flush_send(Ecore_X_Window wi
 EAPI void                            ecore_x_e_comp_dump_send(Ecore_X_Window win);
 EAPI void                            ecore_x_e_comp_pixmap_set(Ecore_X_Window win, Ecore_X_Pixmap pixmap);
 EAPI Ecore_X_Pixmap                  ecore_x_e_comp_pixmap_get(Ecore_X_Window win);
+
+/**
+ * @brief Set the window profile list.
+ *
+ * @param win The window
+ * @param profiles The profile name list 
+ * @param num_profiles The number of profile names
+ *
+ * @since 1.3.0
+ */
+EAPI void                            ecore_x_e_window_profile_list_set(Ecore_X_Window win, const char **profiles, unsigned int num_profiles);
+/**
+ * @brief Get the window profile list.
+ *
+ * @param win The window
+ * @param[out] profiles Returns the profile name list
+ * @param[out] ret_num Returns the number of profile names
+ *
+ * @since 1.3.0
+ */
+EAPI Eina_Bool                       ecore_x_e_window_profile_list_get(Ecore_X_Window win, const char ***profiles, int *ret_num);
+/**
+ * @brief Set the window profile.
+ *
+ * @param win The window
+ * @param profile The profile name
+ *
+ * @since 1.3.0
+ */
+EAPI void                            ecore_x_e_window_profile_set(Ecore_X_Window win, const char *profile);
+/**
+ * @brief Get the window profile.
+ *
+ * @param win The window
+ * @return The profile name
+ *
+ * @since 1.3.0
+ */
+EAPI char                           *ecore_x_e_window_profile_get(Ecore_X_Window win);
 
 EAPI Ecore_X_Sync_Alarm              ecore_x_sync_alarm_new(Ecore_X_Sync_Counter counter);
 EAPI Eina_Bool                       ecore_x_sync_alarm_free(Ecore_X_Sync_Alarm alarm);
@@ -2365,12 +2405,8 @@ EAPI Ecore_X_Illume_Indicator_Opacity_Mode ecore_x_e_illume_indicator_opacity_ge
 
 EAPI void                                  ecore_x_e_illume_indicator_opacity_send(Ecore_X_Window win, Ecore_X_Illume_Indicator_Opacity_Mode mode);
 
-EAPI void
-ecore_x_e_illume_window_state_set(Ecore_X_Window win,
-                                  Ecore_X_Illume_Window_State state);
-
-EAPI Ecore_X_Illume_Window_State
-ecore_x_e_illume_window_state_get(Ecore_X_Window win);
+EAPI void                                  ecore_x_e_illume_window_state_set(Ecore_X_Window win, Ecore_X_Illume_Window_State state);
+EAPI Ecore_X_Illume_Window_State           ecore_x_e_illume_window_state_get(Ecore_X_Window win);
 
 #ifdef __cplusplus
 }

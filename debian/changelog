@@ -1,3 +1,19 @@
+ecore (1.2.0+svn.72988slp2+build02) unstable; urgency=low
+
+  * [ecore_x] Add missing features in Ecore_X.h
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.2.0+svn.72988slp2+build02
+
+ -- Doyoun Kang <doyoun.kang@samsung.com>  Thu, 05 Jul 2012 16:22:21 +0900
+
+ecore (1.2.0+svn.72988slp2+build01) unstable; urgency=low
+
+  * Package Upload
+  * Git: slp/pkgs/e/ecore
+  * Tag: ecore_1.2.0+svn.72988slp2+build01
+
+ -- Jiyoun Park <jy0703.park@samsung.com>  Wed, 04 Jul 2012 18:31:50 +0900
+
 ecore (1.2.0+svn.70444slp2+build06) unstable; urgency=low
 
   * Added per-window profile feature to support multi-head display.
