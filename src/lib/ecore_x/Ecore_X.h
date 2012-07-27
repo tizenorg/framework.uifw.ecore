@@ -3869,8 +3869,12 @@ EAPI void
 ecore_x_e_illume_indicator_opacity_send(Ecore_X_Window win,
                                       Ecore_X_Illume_Indicator_Opacity_Mode mode);
 
-EAPI void                                  ecore_x_e_illume_window_state_set(Ecore_X_Window win, Ecore_X_Illume_Window_State state);
-EAPI Ecore_X_Illume_Window_State           ecore_x_e_illume_window_state_get(Ecore_X_Window win);
+EAPI void
+ecore_x_e_illume_window_state_set(Ecore_X_Window win,
+                                  Ecore_X_Illume_Window_State state);
+
+EAPI Ecore_X_Illume_Window_State
+ecore_x_e_illume_window_state_get(Ecore_X_Window win);
 
 #ifdef __cplusplus
 }
