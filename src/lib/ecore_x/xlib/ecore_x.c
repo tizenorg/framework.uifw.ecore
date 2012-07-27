@@ -126,11 +126,10 @@ EAPI int ECORE_X_EVENT_STARTUP_SEQUENCE_REMOVE = 0;
 
 EAPI int ECORE_X_EVENT_GENERIC = 0;
 
-EAPI int ECORE_X_MODIFIER_SHIFT = 0;
-EAPI int ECORE_X_MODIFIER_CTRL = 0;
-EAPI int ECORE_X_MODIFIER_ALT = 0;
-EAPI int ECORE_X_MODIFIER_WIN = 0;
-EAPI int ECORE_X_MODIFIER_ALTGR = 0;
+int ECORE_X_MODIFIER_SHIFT = 0;
+int ECORE_X_MODIFIER_CTRL = 0;
+int ECORE_X_MODIFIER_ALT = 0;
+int ECORE_X_MODIFIER_WIN = 0;
 
 EAPI int ECORE_X_LOCK_SCROLL = 0;
 EAPI int ECORE_X_LOCK_NUM = 0;
@@ -218,9 +217,8 @@ _ecore_x_XKeycodeToKeysym(Display *display, KeyCode keycode, int idx)
 {
 #ifdef ECORE_XKB
    return XkbKeycodeToKeysym(display, keycode, 0, idx);
-#else
-   return XKeycodeToKeysym(display, keycode, idx);
 #endif
+   return XKeycodeToKeysym(display, keycode, idx);
 }
 
 void
@@ -241,9 +239,10 @@ _ecore_x_modifiers_get(void)
    /* the windows key... a valid modifier :) */
    ECORE_X_MODIFIER_WIN = _ecore_x_key_mask_get(XK_Super_L);
    if (!ECORE_X_MODIFIER_WIN)
-     ECORE_X_MODIFIER_WIN = _ecore_x_key_mask_get(XK_Meta_L);
+     ECORE_X_MODIFIER_WIN = _ecore_x_key_mask_get(XK_Mode_switch);
 
-   ECORE_X_MODIFIER_ALTGR = _ecore_x_key_mask_get(XK_Mode_switch);
+   if (!ECORE_X_MODIFIER_WIN)
+     ECORE_X_MODIFIER_WIN = _ecore_x_key_mask_get(XK_Meta_L);
 
    if (ECORE_X_MODIFIER_WIN == ECORE_X_MODIFIER_ALT)
      ECORE_X_MODIFIER_WIN = 0;
@@ -2155,9 +2154,6 @@ _ecore_x_event_modifier(unsigned int state)
 
    if (state & ECORE_EVENT_MODIFIER_WIN)
      xmodifiers |= ECORE_X_MODIFIER_WIN;
-
-   if (state & ECORE_EVENT_MODIFIER_ALTGR)
-     xmodifiers |= ECORE_X_MODIFIER_ALTGR;
 
    if (state & ECORE_EVENT_LOCK_SCROLL)
      xmodifiers |= ECORE_X_LOCK_SCROLL;

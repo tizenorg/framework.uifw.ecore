@@ -451,8 +451,8 @@ ecore_thread_main_loop_end(void)
 }
 
 EAPI void
-ecore_print_warning(const char *function __UNUSED__,
-                    const char *sparam __UNUSED__)
+ecore_print_warning(const char *function,
+                    const char *sparam)
 {
    WRN("***** Developer Warning ***** :\n"
        "\tThis program is calling:\n\n"
@@ -467,7 +467,7 @@ EAPI void
 _ecore_magic_fail(const void *d,
                   Ecore_Magic m,
                   Ecore_Magic req_m,
-                  const char *fname __UNUSED__)
+                  const char *fname)
 {
    ERR("\n"
        "*** ECORE ERROR: Ecore Magic Check Failed!!!\n"

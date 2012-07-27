@@ -27,7 +27,6 @@ EAPI int ECORE_X_MODIFIER_SHIFT = 0;
 EAPI int ECORE_X_MODIFIER_CTRL = 0;
 EAPI int ECORE_X_MODIFIER_ALT = 0;
 EAPI int ECORE_X_MODIFIER_WIN = 0;
-EAPI int ECORE_X_MODIFIER_ALTGR = 0;
 EAPI int ECORE_X_LOCK_SCROLL = 0;
 EAPI int ECORE_X_LOCK_NUM = 0;
 EAPI int ECORE_X_LOCK_CAPS = 0;
@@ -71,9 +70,9 @@ _ecore_xcb_keymap_finalize(void)
 
    ECORE_X_MODIFIER_WIN = _ecore_xcb_keymap_mask_get(reply, XK_Super_L);
    if (!ECORE_X_MODIFIER_WIN)
+     ECORE_X_MODIFIER_WIN = _ecore_xcb_keymap_mask_get(reply, XK_Mode_switch);
+   if (!ECORE_X_MODIFIER_WIN)
      ECORE_X_MODIFIER_WIN = _ecore_xcb_keymap_mask_get(reply, XK_Meta_L);
-
-   ECORE_X_MODIFIER_ALTGR = _ecore_xcb_keymap_mask_get(reply, XK_Mode_switch);
 
    if (ECORE_X_MODIFIER_WIN == ECORE_X_MODIFIER_ALT)
      ECORE_X_MODIFIER_WIN = 0;
