@@ -1,9 +1,9 @@
 #ifndef _ECORE_DIRECTFB_H
 #define _ECORE_DIRECTFB_H
 
-#include <Eina.h>
-
 #include <directfb.h>
+
+#include <Eina.h>
 
 #ifdef EAPI
 # undef EAPI

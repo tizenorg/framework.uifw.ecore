@@ -3,6 +3,21 @@
 #endif
 
 #include <fcntl.h>
+
+/* FIXME: This gives BTN_LEFT/RIGHT/MIDDLE for linux systems ... 
+ *        What about other OSs ?? */
+#ifdef __linux__
+# include <linux/input.h>
+#else
+# define BTN_LEFT 0x110
+# define BTN_RIGHT 0x111
+# define BTN_MIDDLE 0x112
+# define BTN_SIDE 0x113
+# define BTN_EXTRA 0x114
+# define BTN_FORWARD 0x115
+# define BTN_BACK 0x116
+#endif
+
 #include "ecore_wl_private.h"
 
 /* local function prototypes */
@@ -316,24 +331,6 @@ ecore_wl_display_iterate(void)
    wl_display_iterate(_ecore_wl_disp->wl.display, WL_DISPLAY_READABLE);
 }
 
-/**
- * Retrieves the requested cursor from the cursor theme
- * 
- * @param cursor_name The desired cursor name to be looked up in the theme
- * @return the cursor or NULL if the cursor cannot be found
- *
- * @since 1.2
- */
-EAPI struct wl_cursor *
-ecore_wl_cursor_get(const char *cursor_name)
-{
-   if ((!_ecore_wl_disp) || (!_ecore_wl_disp->cursor_theme)) 
-     return NULL;
-
-   return wl_cursor_theme_get_cursor(_ecore_wl_disp->cursor_theme,
-                                     cursor_name);
-}
-
 /* local functions */
 static Eina_Bool 
 _ecore_wl_shutdown(Eina_Bool close)
@@ -403,7 +400,7 @@ _ecore_wl_cb_handle_data(void *data, Ecore_Fd_Handler *hdl __UNUSED__)
 {
    Ecore_Wl_Display *ewd;
 
-   /* LOGFN(__FILE__, __LINE__, __FUNCTION__); */
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
    if (!(ewd = data)) return ECORE_CALLBACK_RENEW;
    wl_display_iterate(ewd->wl.display, ewd->mask);
@@ -425,17 +422,14 @@ _ecore_wl_cb_handle_global(struct wl_display *disp, unsigned int id, const char 
      ewd->wl.compositor = wl_display_bind(disp, id, &wl_compositor_interface);
    else if (!strcmp(interface, "wl_output"))
      _ecore_wl_output_add(ewd, id);
-   else if (!strcmp(interface, "wl_seat"))
+   else if (!strcmp(interface, "wl_input_device"))
      _ecore_wl_input_add(ewd, id);
    else if (!strcmp(interface, "wl_shell"))
      ewd->wl.shell = wl_display_bind(disp, id, &wl_shell_interface);
    /* else if (!strcmp(interface, "desktop_shell")) */
    /*   ewd->wl.desktop_shell = wl_display_bind(disp, id, &wl_shell_interface); */
    else if (!strcmp(interface, "wl_shm"))
-     {
-        ewd->wl.shm = wl_display_bind(disp, id, &wl_shm_interface);
-        ewd->cursor_theme = wl_cursor_theme_load(NULL, 32, ewd->wl.shm);
-     }
+     ewd->wl.shm = wl_display_bind(disp, id, &wl_shm_interface);
    else if (!strcmp(interface, "wl_data_device_manager"))
      {
         ewd->wl.data_device_manager = 
@@ -460,10 +454,21 @@ _ecore_wl_cb_handle_global(struct wl_display *disp, unsigned int id, const char 
 static Eina_Bool 
 _ecore_wl_xkb_init(Ecore_Wl_Display *ewd)
 {
+   struct xkb_rule_names names;
+
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
-   if (!(ewd->xkb.context = xkb_context_new(0)))
-     return EINA_FALSE;
+   names.rules = "evdev";
+   names.model = "evdev";
+   names.layout = "us";
+   names.variant = "";
+   names.options = "";
+
+   if (!(ewd->xkb = xkb_compile_keymap_from_rules(&names)))
+     {
+        ERR("Failed to compile keymap");
+        return EINA_FALSE;
+     }
 
    return EINA_TRUE;
 }
@@ -473,7 +478,6 @@ _ecore_wl_xkb_shutdown(Ecore_Wl_Display *ewd)
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
-   xkb_context_unref(ewd->xkb.context);
-
+   if (ewd->xkb) xkb_free_keymap(ewd->xkb);
    return EINA_TRUE;
 }

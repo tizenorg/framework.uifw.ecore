@@ -8,7 +8,6 @@ AM_CPPFLAGS = \
 @EFL_ECORE_CON_BUILD@ \
 @SSL_CFLAGS@ \
 @CURL_CFLAGS@ \
-@EVIL_CFLAGS@ \
 @EINA_CFLAGS@ \
 @TLS_CFLAGS@ \
 @CARES_CFLAGS@ \
@@ -25,8 +24,6 @@ ecore_con_ssl.c \
 ecore_con_url.c \
 ecore_con_alloc.c
 
-libecore_con_la_CFLAGS = @WIN32_CFLAGS@
-
 if ECORE_HAVE_WIN32
 libecore_con_la_SOURCES += ecore_con_local_win32.c
 else
@@ -36,17 +33,13 @@ endif
 if HAVE_CARES
 libecore_con_la_SOURCES += ecore_con_ares.c
 else
-if HAVE_IPV6
-libecore_con_la_CFLAGS += @ECORE_CON_CFLAGS@
-libecore_con_la_SOURCES += ecore_con_dns.c dns.c dns.h
-else
 libecore_con_la_SOURCES += ecore_con_info.c
 endif
-endif
 
+libecore_con_la_CFLAGS = @WIN32_CFLAGS@
 libecore_con_la_LIBADD = \
 $(top_builddir)/src/lib/ecore/libecore.la \
-@SSL_LIBS@ @CURL_LIBS@ @EINA_LIBS@ @EVIL_LIBS@ @TLS_LIBS@ @CARES_LIBS@ @WIN32_LIBS@
+@SSL_LIBS@ @CURL_LIBS@ @EINA_LIBS@ @TLS_LIBS@ @CARES_LIBS@ @WIN32_LIBS@
 
 libecore_con_la_LDFLAGS = -no-undefined @lt_enable_auto_import@ -version-info @version_info@ @release_info@
 

@@ -444,14 +444,13 @@ ecore_con_server_connect(Ecore_Con_Type compl_type,
    svr->data = (void *)data;
    svr->created = EINA_FALSE;
    svr->use_cert = (compl_type & ECORE_CON_SSL & ECORE_CON_LOAD_CERT) == ECORE_CON_LOAD_CERT;
-   svr->disable_proxy = (compl_type & ECORE_CON_SUPER_SSL & ECORE_CON_NO_PROXY) == ECORE_CON_NO_PROXY;
    svr->reject_excess_clients = EINA_FALSE;
    svr->clients = NULL;
    svr->client_limit = -1;
 
    type = compl_type & ECORE_CON_TYPE;
 
-   if ((!svr->disable_proxy) && (type > ECORE_CON_LOCAL_ABSTRACT))
+   if (type > ECORE_CON_LOCAL_ABSTRACT)
      {
         /* never use proxies on local connections */
         if (_ecore_con_proxy_once)
@@ -1316,7 +1315,6 @@ _ecore_con_client_free(Ecore_Con_Client *cl)
              break;
           }
      }
-   cl->host_server->clients = eina_list_remove(cl->host_server->clients, cl);
 
 #ifdef _WIN32
    ecore_con_local_win32_client_del(cl);
@@ -2384,7 +2382,7 @@ _ecore_con_event_client_del_free(Ecore_Con_Server *svr,
                _ecore_con_server_free(svr);
           }
         if (!e->client->event_count)
-          _ecore_con_client_free(e->client);
+          ecore_con_client_del(e->client);
      }
    ecore_con_event_client_del_free(e);
    _ecore_con_event_count--;

@@ -4,6 +4,13 @@
 /* NB: Increment if you add new atoms */
 #define ECORE_X_ATOMS_COUNT 199
 
+typedef struct _Xcb_Atom Xcb_Atom;
+struct _Xcb_Atom
+{
+   const char   *name;
+   Ecore_X_Atom *atom;
+};
+
 /* local function prototypes */
 
 /* local variables */
@@ -284,12 +291,12 @@ _ecore_xcb_atoms_init(void)
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    CHECK_XCB_CONN;
 
-   num = (sizeof(atom_items) / sizeof(Atom_Item));
+   num = (sizeof(atoms) / sizeof(Xcb_Atom));
    for (i = 0; i < num; i++)
      {
         cookies[i] =
           xcb_intern_atom_unchecked(_ecore_xcb_conn, 0,
-                                    strlen(atom_items[i].name), atom_items[i].name);
+                                    strlen(atoms[i].name), atoms[i].name);
      }
 }
 
@@ -301,14 +308,14 @@ _ecore_xcb_atoms_finalize(void)
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    CHECK_XCB_CONN;
 
-   num = (sizeof(atom_items) / sizeof(Atom_Item));
+   num = (sizeof(atoms) / sizeof(Xcb_Atom));
    for (i = 0; i < num; i++)
      {
         xcb_intern_atom_reply_t *reply = NULL;
 
         if (!(reply = xcb_intern_atom_reply(_ecore_xcb_conn, cookies[i], 0)))
           continue;
-        *(atom_items[i].atom) = reply->atom;
+        *(atoms[i].atom) = reply->atom;
         free(reply);
      }
 }

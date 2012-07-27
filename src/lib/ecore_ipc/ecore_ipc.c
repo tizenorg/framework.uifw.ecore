@@ -412,16 +412,12 @@ ecore_ipc_server_connect(Ecore_Ipc_Type compl_type, char *name, int port, const 
    Ecore_Ipc_Server *svr;
    Ecore_Ipc_Type type;
    Ecore_Con_Type extra = 0;
-   int features;
 
    svr = calloc(1, sizeof(Ecore_Ipc_Server));
    if (!svr) return NULL;
-   type = compl_type & ECORE_IPC_TYPE;
-   features = compl_type & ECORE_IPC_SSL;
-   if ((features & ECORE_IPC_USE_SSL) == ECORE_IPC_USE_SSL)
-     extra |= ECORE_CON_USE_SSL;
-   if ((features & ECORE_IPC_NO_PROXY) == ECORE_IPC_NO_PROXY)
-     extra |= ECORE_CON_NO_PROXY;
+   type = compl_type;
+   type &= ~ECORE_IPC_USE_SSL;
+   if (compl_type & ECORE_IPC_USE_SSL) extra = ECORE_CON_USE_SSL;
    switch (type)
      {
       case ECORE_IPC_LOCAL_USER:
@@ -477,7 +473,7 @@ ecore_ipc_server_del(Ecore_Ipc_Server *svr)
 
         EINA_LIST_FREE(svr->clients, cl)
           ecore_ipc_client_del(cl);
-        if (svr->server) ecore_con_server_del(svr->server);
+        ecore_con_server_del(svr->server);
         servers = eina_list_remove(servers, svr);
 
         if (svr->buf) free(svr->buf);
@@ -814,8 +810,6 @@ ecore_ipc_client_send(Ecore_Ipc_Client *cl, int major, int minor, int ref, int r
                          "ecore_ipc_client_send");
         return 0;
      }
-   EINA_SAFETY_ON_TRUE_RETURN_VAL(!cl->client, 0);
-   EINA_SAFETY_ON_TRUE_RETURN_VAL(!ecore_con_client_connected_get(cl->client), 0);
    if (size < 0) size = 0;
    msg.major    = major;
    msg.minor    = minor;
@@ -859,7 +853,7 @@ ecore_ipc_client_server_get(Ecore_Ipc_Client *cl)
                          "ecore_ipc_client_server_get");
         return NULL;
      }
-   return cl->svr;
+   return (ecore_con_server_data_get(ecore_con_client_server_get(cl->client)));
 }
 
 /**
@@ -886,8 +880,8 @@ ecore_ipc_client_del(Ecore_Ipc_Client *cl)
    cl->delete_me = 1;
    if (cl->event_count == 0)
      {
-        svr = cl->svr;
-        if (cl->client) ecore_con_client_del(cl->client);
+        svr = ecore_con_server_data_get(ecore_con_client_server_get(cl->client));
+        ecore_con_client_del(cl->client);
         svr->clients = eina_list_remove(svr->clients, cl);
         if (cl->buf) free(cl->buf);
         ECORE_MAGIC_SET(cl, ECORE_MAGIC_NONE);
@@ -1027,18 +1021,17 @@ static Eina_Bool
 _ecore_ipc_event_client_add(void *data __UNUSED__, int ev_type __UNUSED__, void *ev)
 {
    Ecore_Con_Event_Client_Add *e;
-   Ecore_Ipc_Server *svr;
 
    e = ev;
-   svr = ecore_con_server_data_get(ecore_con_client_server_get(e->client));
-   if (!eina_list_data_find(servers, svr)) return ECORE_CALLBACK_RENEW;
+   if (!eina_list_data_find(servers, ecore_con_server_data_get(ecore_con_client_server_get(e->client)))) return ECORE_CALLBACK_RENEW;
    /* handling code here */
      {
         Ecore_Ipc_Client *cl;
+        Ecore_Ipc_Server *svr;
 
         cl = calloc(1, sizeof(Ecore_Ipc_Client));
         if (!cl) return ECORE_CALLBACK_CANCEL;
-        cl->svr = svr;
+        svr = ecore_con_server_data_get(ecore_con_client_server_get(e->client));
         ECORE_MAGIC_SET(cl, ECORE_MAGIC_IPC_CLIENT);
         cl->client = e->client;
         cl->max_buf_size = 32 * 1024;
@@ -1066,21 +1059,19 @@ static Eina_Bool
 _ecore_ipc_event_client_del(void *data __UNUSED__, int ev_type __UNUSED__, void *ev)
 {
    Ecore_Con_Event_Client_Del *e;
-   Ecore_Ipc_Server *svr;
 
    e = ev;
-   if (!e->client) return ECORE_CALLBACK_RENEW;
-   svr = ecore_con_server_data_get(ecore_con_client_server_get(e->client));
-   if (!eina_list_data_find(servers, svr)) return ECORE_CALLBACK_RENEW;
+   if (!eina_list_data_find(servers, ecore_con_server_data_get(ecore_con_client_server_get(e->client)))) return ECORE_CALLBACK_RENEW;
    /* handling code here */
      {
         Ecore_Ipc_Client *cl;
 
         cl = ecore_con_client_data_get(e->client);
-        cl->client = NULL;
           {
              Ecore_Ipc_Event_Client_Del *e2;
+             Ecore_Ipc_Server *svr;
 
+             svr = ecore_con_server_data_get(ecore_con_client_server_get(e->client));
              svr->client_list = eina_list_remove(svr->client_list, cl);
              if (!cl->delete_me)
                {
@@ -1139,7 +1130,6 @@ _ecore_ipc_event_server_del(void *data __UNUSED__, int ev_type __UNUSED__, void 
         Ecore_Ipc_Server *svr;
 
         svr = ecore_con_server_data_get(e->server);
-        svr->server = NULL;
         if (!svr->delete_me)
           {
              Ecore_Ipc_Event_Server_Del *e2;
@@ -1202,11 +1192,9 @@ static Eina_Bool
 _ecore_ipc_event_client_data(void *data __UNUSED__, int ev_type __UNUSED__, void *ev)
 {
    Ecore_Con_Event_Client_Data *e;
-   Ecore_Ipc_Server *svr;
 
    e = ev;
-   svr = ecore_con_server_data_get(ecore_con_client_server_get(e->client));
-   if (!eina_list_data_find(servers, svr)) return ECORE_CALLBACK_RENEW;
+   if (!eina_list_data_find(servers, ecore_con_server_data_get(ecore_con_client_server_get(e->client)))) return ECORE_CALLBACK_RENEW;
    /* handling code here */
      {
         Ecore_Ipc_Client *cl;
@@ -1275,9 +1263,11 @@ _ecore_ipc_event_client_data(void *data __UNUSED__, int ev_type __UNUSED__, void
              if ((cl->buf_size - offset) >= (s + msg.size))
                {
                   Ecore_Ipc_Event_Client_Data *e2;
+                  Ecore_Ipc_Server *svr;
                   int max, max2;
 
                   buf = NULL;
+                  svr = ecore_con_server_data_get(ecore_con_client_server_get(cl->client));
                   max = svr->max_buf_size;
                   max2 = cl->max_buf_size;
                   if ((max >= 0) && (max2 >= 0))

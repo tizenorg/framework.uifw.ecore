@@ -860,7 +860,6 @@ ecore_main_loop_iterate(void)
    EINA_MAIN_LOOP_CHECK_RETURN;
 #ifndef USE_G_MAIN_LOOP
    _ecore_lock();
-   _ecore_time_loop_time = ecore_time_get();
    _ecore_main_loop_iterate_internal(1);
    _ecore_unlock();
 #else
@@ -891,7 +890,6 @@ ecore_main_loop_iterate_may_block(int may_block)
    EINA_MAIN_LOOP_CHECK_RETURN_VAL(0);
 #ifndef USE_G_MAIN_LOOP
    _ecore_lock();
-   _ecore_time_loop_time = ecore_time_get();
 in_main_loop++;
    _ecore_main_loop_iterate_internal(!may_block);
 in_main_loop--;
@@ -927,7 +925,6 @@ ecore_main_loop_begin(void)
 #ifndef USE_G_MAIN_LOOP
    _ecore_lock();
    in_main_loop++;
-   _ecore_time_loop_time = ecore_time_get();
    while (do_quit == 0) _ecore_main_loop_iterate_internal(0);
    do_quit = 0;
    in_main_loop--;
@@ -1223,7 +1220,7 @@ _ecore_main_shutdown(void)
    if (in_main_loop)
      {
         ERR("\n"
-            "*** ECORE WARNING: Calling ecore_shutdown() while still in the main loop.\n"
+            "*** ECORE WARINING: Calling ecore_shutdown() while still in the main loop.\n"
             "***                 Program may crash or behave strangely now.");
         return;
      }

@@ -156,13 +156,13 @@ START_TEST(ecore_test_ecore_main_loop_timer)
 }
 END_TEST
 
-static Eina_Bool _timer3(void *data __UNUSED__)
+static Eina_Bool _timer3(void *data)
 {
    /* timer 3, do nothing */
    return EINA_FALSE;
 }
 
-static Eina_Bool _timer2(void *data __UNUSED__)
+static Eina_Bool _timer2(void *data)
 {
    /* timer 2, quit inner mainloop */
    ecore_main_loop_quit();
@@ -287,7 +287,7 @@ START_TEST(ecore_test_ecore_main_loop_event)
 END_TEST
 
 static Eina_Bool
-_timer_quit_recursive(void *data __UNUSED__)
+_timer_quit_recursive(void *data)
 {
    INF("   _timer_quit_recursive: begin");
    ecore_main_loop_quit(); /* quits inner main loop */
@@ -296,8 +296,9 @@ _timer_quit_recursive(void *data __UNUSED__)
 }
 
 static Eina_Bool
-_event_recursive_cb(void *data __UNUSED__, int type __UNUSED__, void *event __UNUSED__)
+_event_recursive_cb(void *data, int type, void *event)
 {
+   Ecore_Event *e;
    static int guard = 0;
 
    /* If we enter this callback more than once, it's wrong! */

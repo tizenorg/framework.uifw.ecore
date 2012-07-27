@@ -55,9 +55,7 @@ SRCS = \
 	ecore_evas_basics_example.c \
 	ecore_evas_buffer_example_01.c \
 	ecore_evas_buffer_example_02.c \
-        ecore_evas_ews_example.c \
-        ecore_exe_example.c \
-        ecore_exe_example_child.c
+	ecore_evas_ews_example.c
 
 EXTRA_DIST = $(SRCS) \
 	$(srcdir)/red.png
@@ -97,9 +95,7 @@ examples_PROGRAMS += \
 	ecore_evas_buffer_example_02 \
 	ecore_evas_ews_example \
 	ecore_client_bench \
-        ecore_server_bench \
-        ecore_exe_example \
-        ecore_exe_example_child
+	ecore_server_bench
 
 ecore_con_lookup_example_LDADD = $(ECOREBASELDADD) $(top_builddir)/src/lib/ecore_con/libecore_con.la
 ecore_con_url_headers_example_LDADD = $(ECOREBASELDADD) $(top_builddir)/src/lib/ecore_con/libecore_con.la

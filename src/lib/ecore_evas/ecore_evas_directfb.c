@@ -593,7 +593,6 @@ ecore_evas_directfb_new(const char *disp_name __UNUSED__, int windowed __UNUSED_
 EAPI Ecore_DirectFB_Window *
 ecore_evas_directfb_window_get(const Ecore_Evas *ee)
 {
-   if (!(!strcmp(ee->driver, "directfb"))) return 0;
    return (Ecore_DirectFB_Window *) _ecore_evas_directfb_window_get(ee);
 }
 #else

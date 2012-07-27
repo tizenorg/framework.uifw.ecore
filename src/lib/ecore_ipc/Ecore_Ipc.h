@@ -1,8 +1,6 @@
 #ifndef _ECORE_IPC_H
 #define _ECORE_IPC_H
 
-#include <Eina.h>
-
 #ifdef EAPI
 # undef EAPI
 #endif
@@ -222,8 +220,7 @@ typedef enum _Ecore_Ipc_Type
    ECORE_IPC_LOCAL_USER,
    ECORE_IPC_LOCAL_SYSTEM,
    ECORE_IPC_REMOTE_SYSTEM,
-   ECORE_IPC_USE_SSL = (1 << 4),
-   ECORE_IPC_NO_PROXY = (1 << 5)
+   ECORE_IPC_USE_SSL = 16
 } Ecore_Ipc_Type;
    
 typedef struct _Ecore_Ipc_Event_Client_Add  Ecore_Ipc_Event_Client_Add;
