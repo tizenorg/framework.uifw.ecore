@@ -1,11 +1,3 @@
-ecore (1.2.0+svn.72988slp2+build03) unstable; urgency=low
-
-  * [ecore_x] Add missing atoms in Ecore_X
-  * Git: slp/pkgs/e/ecore
-  * Tag: ecore_1.2.0+svn.72988slp2+build03
-
- -- Doyoun Kang <doyoun.kang@samsung.com>  Fri, 06 Jul 2012 21:03:34 +0900
-
 ecore (1.2.0+svn.72988slp2+build02) unstable; urgency=low
 
   * [ecore_x] Add missing features in Ecore_X.h
