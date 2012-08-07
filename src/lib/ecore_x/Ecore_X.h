@@ -356,7 +356,7 @@ typedef enum _Ecore_X_Netwm_Direction
  * Defines the error codes of Ecore_X which wraps the X Window Systems
  * protocol's errors.
  *
- * @since 1.3.0
+ * @since 1.7.0
  */
 typedef enum _Ecore_X_Error_Code
 {
@@ -1056,11 +1056,11 @@ EAPI extern int ECORE_X_EVENT_XDND_LEAVE;
 EAPI extern int ECORE_X_EVENT_XDND_DROP;
 EAPI extern int ECORE_X_EVENT_XDND_FINISHED;
 
-EAPI extern int ECORE_X_MODIFIER_SHIFT; /**< @since 1.3 */
-EAPI extern int ECORE_X_MODIFIER_CTRL;  /**< @since 1.3 */
-EAPI extern int ECORE_X_MODIFIER_ALT;   /**< @since 1.3 */
-EAPI extern int ECORE_X_MODIFIER_WIN;   /**< @since 1.3 */
-EAPI extern int ECORE_X_MODIFIER_ALTGR; /**< @since 1.3 */
+EAPI extern int ECORE_X_MODIFIER_SHIFT; /**< @since 1.7 */
+EAPI extern int ECORE_X_MODIFIER_CTRL;  /**< @since 1.7 */
+EAPI extern int ECORE_X_MODIFIER_ALT;   /**< @since 1.7 */
+EAPI extern int ECORE_X_MODIFIER_WIN;   /**< @since 1.7 */
+EAPI extern int ECORE_X_MODIFIER_ALTGR; /**< @since 1.7 */
 
 EAPI extern int ECORE_X_LOCK_SCROLL;
 EAPI extern int ECORE_X_LOCK_NUM;
@@ -1594,7 +1594,6 @@ EAPI void                            ecore_x_netwm_ping_send(Ecore_X_Window win)
 EAPI void                            ecore_x_netwm_sync_request_send(Ecore_X_Window win, unsigned int serial);
 EAPI void                            ecore_x_netwm_state_request_send(Ecore_X_Window win, Ecore_X_Window root, Ecore_X_Window_State s1, Ecore_X_Window_State s2, Eina_Bool set);
 EAPI void                            ecore_x_netwm_desktop_request_send(Ecore_X_Window win, Ecore_X_Window root, unsigned int desktop);
-EAPI void                            ecore_x_netwm_moveresize_request_send(Ecore_X_Window win, int x, int y, Ecore_X_Netwm_Direction direction, unsigned int button);
 
 EAPI void                            ecore_x_e_init(void);
 EAPI void                            ecore_x_e_frame_size_set(Ecore_X_Window win, int fl, int fr, int ft, int fb);
@@ -1674,44 +1673,10 @@ EAPI void                            ecore_x_e_comp_dump_send(Ecore_X_Window win
 EAPI void                            ecore_x_e_comp_pixmap_set(Ecore_X_Window win, Ecore_X_Pixmap pixmap);
 EAPI Ecore_X_Pixmap                  ecore_x_e_comp_pixmap_get(Ecore_X_Window win);
 
-/**
- * @brief Set the window profile list.
- *
- * @param win The window
- * @param profiles The profile name list 
- * @param num_profiles The number of profile names
- *
- * @since 1.3.0
- */
-EAPI void                            ecore_x_e_window_profile_list_set(Ecore_X_Window win, const char **profiles, unsigned int num_profiles);
-/**
- * @brief Get the window profile list.
- *
- * @param win The window
- * @param[out] profiles Returns the profile name list
- * @param[out] ret_num Returns the number of profile names
- *
- * @since 1.3.0
- */
-EAPI Eina_Bool                       ecore_x_e_window_profile_list_get(Ecore_X_Window win, const char ***profiles, int *ret_num);
-/**
- * @brief Set the window profile.
- *
- * @param win The window
- * @param profile The profile name
- *
- * @since 1.3.0
- */
-EAPI void                            ecore_x_e_window_profile_set(Ecore_X_Window win, const char *profile);
-/**
- * @brief Get the window profile.
- *
- * @param win The window
- * @return The profile name
- *
- * @since 1.3.0
- */
-EAPI char                           *ecore_x_e_window_profile_get(Ecore_X_Window win);
+EAPI char                            *ecore_x_e_window_profile_get(Ecore_X_Window win);
+EAPI void                             ecore_x_e_window_profile_set(Ecore_X_Window win, const char *profile);
+EAPI void                             ecore_x_e_window_profile_list_set(Ecore_X_Window  win, const char **profiles, unsigned int num_profiles);
+EAPI Eina_Bool                        ecore_x_e_window_profile_list_get(Ecore_X_Window win, const char ***profiles, int *ret_num);
 
 EAPI Ecore_X_Sync_Alarm              ecore_x_sync_alarm_new(Ecore_X_Sync_Counter counter);
 EAPI Eina_Bool                       ecore_x_sync_alarm_free(Ecore_X_Sync_Alarm alarm);
@@ -2118,13 +2083,15 @@ EAPI Eina_Bool                                 ecore_x_randr_output_signal_forma
 EAPI Ecore_X_Randr_Signal_Property            *ecore_x_randr_output_signal_properties_get(Ecore_X_Window root, Ecore_X_Randr_Output output, int *num);
 EAPI int                                       ecore_x_randr_output_connector_number_get(Ecore_X_Window root, Ecore_X_Randr_Output output);
 EAPI Ecore_X_Randr_Connector_Type              ecore_x_randr_output_connector_type_get(Ecore_X_Window root, Ecore_X_Randr_Output output);
+/* WTF - these dont exist in ecore-x!!!!   
 EAPI Eina_Rectangle                           *ecore_x_randr_crtc_panning_area_get(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc, int *x, int *y, int *w, int *h);
 EAPI Eina_Bool                                 ecore_x_randr_crtc_panning_area_set(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc, int x, const int y, const int w, const int h);
 EAPI Eina_Rectangle                           *ecore_x_randr_crtc_tracking_area_get(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc, int *x, int *y, int *w, int *h);
 EAPI Eina_Bool                                 ecore_x_randr_crtc_tracking_area_set(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc, int x, const int y, const int w, const int h);
 EAPI Eina_Rectangle                           *ecore_x_randr_crtc_border_area_get(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc);
 EAPI Eina_Bool                                 ecore_x_randr_crtc_border_area_set(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc, int left, const int top, const int right, const int bottom);
-
+*/
+   
 /* XRender Support (horrendously incomplete) */
 typedef Ecore_X_ID Ecore_X_Picture;
 
@@ -2404,6 +2371,13 @@ EAPI void                                  ecore_x_e_illume_indicator_opacity_se
 EAPI Ecore_X_Illume_Indicator_Opacity_Mode ecore_x_e_illume_indicator_opacity_get(Ecore_X_Window win);
 
 EAPI void                                  ecore_x_e_illume_indicator_opacity_send(Ecore_X_Window win, Ecore_X_Illume_Indicator_Opacity_Mode mode);
+
+EAPI void
+ecore_x_e_illume_window_state_set(Ecore_X_Window win,
+                                  Ecore_X_Illume_Window_State state);
+
+EAPI Ecore_X_Illume_Window_State
+ecore_x_e_illume_window_state_get(Ecore_X_Window win);
 
 EAPI void
 ecore_x_e_illume_window_state_set(Ecore_X_Window win,

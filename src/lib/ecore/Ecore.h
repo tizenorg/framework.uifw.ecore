@@ -24,6 +24,10 @@
    @li @ref Ecore_Con_Group
    @li @ref Ecore_Evas_Group
    @li @ref Ecore_FB_Group
+   @li @ref Ecore_IMF_Lib_Group
+   @li @ref Ecore_IMF_Context_Group
+   @li @ref Ecore_IMF_Context_Module_Group
+   @li @ref Ecore_IMF_Evas_Group
    @li @link Ecore_Ipc.h    Ecore_IPC - Inter Process Communication functions. @endlink
    @li @link Ecore_X.h      Ecore_X - X Windows System wrapper. @endlink
    @li @ref Ecore_Win32_Group
@@ -396,7 +400,7 @@ EAPI int ecore_shutdown(void);
  */
 
 #define ECORE_VERSION_MAJOR 1
-#define ECORE_VERSION_MINOR 2
+#define ECORE_VERSION_MINOR 6
 
 typedef struct _Ecore_Version
 {
@@ -930,8 +934,8 @@ struct _Ecore_Exe_Event_Del    /** Process exit event */
 
 struct _Ecore_Exe_Event_Data_Line    /**< Lines from a child process */
 {
-   char *line;
-   int   size;
+   char *line; /**< The bytes of a line of buffered data */
+   int   size; /**< The size of the line buffer in bytes */
 };
 
 struct _Ecore_Exe_Event_Data    /** Data from a child process event */
@@ -1047,7 +1051,7 @@ typedef Eina_Bool (*Ecore_Win32_Handle_Cb)(void *data, Ecore_Win32_Handler *wh);
  *
  * @param fd The file descriptor to watch.
  * @param flags To monitor it for reading use @c ECORE_FD_READ, for writing @c
- * ECORE_FD_WRITE, and for error @c ECORE_FD_ERROR. Values bay |(ored).
+ * ECORE_FD_WRITE, and for error @c ECORE_FD_ERROR. Values by |(ored).
  * @param func The callback function.
  * @param data The data to pass to the callback.
  * @param buf_func The function to call to check if any data has been buffered

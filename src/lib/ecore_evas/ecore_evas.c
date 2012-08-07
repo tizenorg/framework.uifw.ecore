@@ -69,7 +69,7 @@ _ecore_evas_idle_enter(void *data __UNUSED__)
 }
 
 /**
- * Query if a particular renginering engine target has support
+ * Query if a particular rendering engine target has support
  * @param  engine The engine to check support for
  * @return 1 if the particular engine is supported, 0 if it is not
  *
@@ -2315,6 +2315,22 @@ ecore_evas_screen_geometry_get(const Ecore_Evas *ee, int *x, int *y, int *w, int
      }
 
    IFC(ee, fn_screen_geometry_get) (ee, x, y, w, h);
+   IFE;
+}
+
+EAPI void
+ecore_evas_screen_dpi_get(const Ecore_Evas *ee, int *xdpi, int *ydpi)
+{
+   if (xdpi) *xdpi = 0;
+   if (ydpi) *ydpi = 0;
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_screen_geometry_get");
+        return;
+     }
+
+   IFC(ee, fn_screen_dpi_get) (ee, xdpi, ydpi);
    IFE;
 }
 

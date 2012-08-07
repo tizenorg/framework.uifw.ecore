@@ -270,8 +270,10 @@ ecore_wl_window_buffer_attach(Ecore_Wl_Window *win, struct wl_buffer *buffer, in
       case ECORE_WL_WINDOW_BUFFER_TYPE_SHM:
         if (win->surface)
           {
-             if (buffer)
-               wl_surface_attach(win->surface, buffer, x, y);
+             /* if (buffer) */
+             wl_surface_attach(win->surface, buffer, x, y);
+             wl_surface_damage(win->surface, 0, 0, 
+                               win->allocation.w, win->allocation.h);
 
              wl_surface_damage(win->surface, 0, 0, 
                                win->allocation.w, win->allocation.h);
@@ -337,14 +339,14 @@ ecore_wl_window_show(Ecore_Wl_Window *win)
         break;
       case ECORE_WL_WINDOW_TYPE_TRANSIENT:
         wl_shell_surface_set_transient(win->shell_surface, 
-                                       win->parent->shell_surface, 
+                                       win->parent->surface, 
                                        win->allocation.x, win->allocation.y, 0);
         break;
       case ECORE_WL_WINDOW_TYPE_MENU:
         wl_shell_surface_set_popup(win->shell_surface, 
                                    _ecore_wl_disp->input->seat,
                                    _ecore_wl_disp->serial,
-                                   win->parent->shell_surface, 
+                                   win->parent->surface, 
                                    win->allocation.x, win->allocation.y, 0);
         break;
       case ECORE_WL_WINDOW_TYPE_NONE:
@@ -357,21 +359,21 @@ ecore_wl_window_show(Ecore_Wl_Window *win)
         break;
      }
 
-   if (win->type != ECORE_WL_WINDOW_TYPE_FULLSCREEN)
-     {
-        win->region.input = 
-          wl_compositor_create_region(_ecore_wl_disp->wl.compositor);
-        wl_region_add(win->region.input, win->allocation.x, win->allocation.y, 
-                      win->allocation.w, win->allocation.h);
-     }
+   /* if (win->type != ECORE_WL_WINDOW_TYPE_FULLSCREEN) */
+   /*   { */
+   /*      win->region.input =  */
+   /*        wl_compositor_create_region(_ecore_wl_disp->wl.compositor); */
+   /*      wl_region_add(win->region.input, win->allocation.x, win->allocation.y,  */
+   /*                    win->allocation.w, win->allocation.h); */
+   /*   } */
 
-   if (!win->transparent)
-     {
-        win->region.opaque = 
-          wl_compositor_create_region(_ecore_wl_disp->wl.compositor);
-        wl_region_add(win->region.opaque, win->allocation.x, win->allocation.y, 
-                      win->allocation.w, win->allocation.h);
-     }
+   /* if (!win->transparent) */
+   /*   { */
+   /*      win->region.opaque =  */
+   /*        wl_compositor_create_region(_ecore_wl_disp->wl.compositor); */
+   /*      wl_region_add(win->region.opaque, win->allocation.x, win->allocation.y,  */
+   /*                    win->allocation.w, win->allocation.h); */
+   /*   } */
 }
 
 /**

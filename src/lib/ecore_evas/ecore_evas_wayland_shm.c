@@ -73,6 +73,7 @@ static void _ecore_evas_wl_alpha_set(Ecore_Evas *ee, int alpha);
 static void _ecore_evas_wl_transparent_set(Ecore_Evas *ee, int transparent);
 static int _ecore_evas_wl_render(Ecore_Evas *ee);
 static void _ecore_evas_wl_screen_geometry_get(const Ecore_Evas *ee __UNUSED__, int *x, int *y, int *w, int *h);
+static void _ecore_evas_wl_screen_dpi_get(const Ecore_Evas *ee __UNUSED__, int *xdpi, int *ydpi);
 static void _ecore_evas_wl_ensure_pool_size(Ecore_Evas *ee, int w, int h);
 static struct wl_shm_pool *_ecore_evas_wl_shm_pool_create(int size, void **data);
 
@@ -155,8 +156,9 @@ static Ecore_Evas_Engine_Func _ecore_wl_engine_func =
    NULL, // modal set
    NULL, // demand attention set
    NULL, // focus skip set
-   _ecore_evas_wl_render,
-   _ecore_evas_wl_screen_geometry_get
+   _ecore_evas_wl_render, 
+   _ecore_evas_wl_screen_geometry_get,
+   _ecore_evas_wl_screen_dpi_get
 };
 
 /* external variables */
@@ -453,6 +455,7 @@ static void
 _ecore_evas_wl_resize(Ecore_Evas *ee, int w, int h)
 {
    Evas_Engine_Info_Wayland_Shm *einfo;
+   int fw = 0, fh = 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
@@ -467,6 +470,10 @@ _ecore_evas_wl_resize(Ecore_Evas *ee, int w, int h)
 
    ee->req.w = w;
    ee->req.h = h;
+
+   evas_output_framespace_get(ee->evas, NULL, NULL, &fw, &fh);
+   w += fw;
+   h += fh;
 
    if ((ee->w != w) || (ee->h != h))
      {
@@ -516,9 +523,9 @@ _ecore_evas_wl_resize(Ecore_Evas *ee, int w, int h)
 
         if (ee->engine.wl.win)
           {
+             ecore_wl_window_update_size(ee->engine.wl.win, w, h);
              ecore_wl_window_buffer_attach(ee->engine.wl.win, 
                                            ee->engine.wl.buffer, 0, 0);
-             ecore_wl_window_update_size(ee->engine.wl.win, w, h);
           }
 
         if (ee->func.fn_resize) ee->func.fn_resize(ee);
@@ -902,6 +909,21 @@ _ecore_evas_wl_screen_geometry_get(const Ecore_Evas *ee __UNUSED__, int *x, int 
    if (x) *x = 0;
    if (y) *y = 0;
    ecore_wl_screen_size_get(w, h);
+}
+
+static void 
+_ecore_evas_wl_screen_dpi_get(const Ecore_Evas *ee __UNUSED__, int *xdpi, int *ydpi)
+{
+   int dpi = 0;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   if (xdpi) *xdpi = 0;
+   if (ydpi) *ydpi = 0;
+   /* FIXME: Ideally this needs to get the DPI from a specific screen */
+   dpi = ecore_wl_dpi_get();
+   if (xdpi) *xdpi = dpi;
+   if (ydpi) *ydpi = dpi;
 }
 
 static struct wl_shm_pool *

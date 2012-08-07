@@ -441,7 +441,8 @@ static Ecore_Evas_Engine_Func _ecore_sdl_engine_func =
    NULL,
 
    NULL, // render
-   NULL  // screen_geometry_get
+   NULL, // screen_geometry_get
+   NULL  // screen_dpi_get
 };
 
 static Ecore_Evas*
@@ -642,7 +643,7 @@ ecore_evas_gl_sdl_new(const char* name, int w, int h, int fullscreen, int nofram
    if (!rmethod) return NULL;
 
    ee = _ecore_evas_internal_sdl_new(rmethod, name, w, h, fullscreen, 0, noframe, 0);
-   ee->driver = "gl_sdl";
+   if (ee) ee->driver = "gl_sdl";
    return ee;
 }
 #else

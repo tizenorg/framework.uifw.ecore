@@ -41,31 +41,31 @@ extern "C" {
 /* ecore_imf_context_input_panel_event_callback_add() flag */
 typedef enum
 {
-   ECORE_IMF_INPUT_PANEL_STATE_EVENT,              /**< called when the state of the input panel is changed. */
-   ECORE_IMF_INPUT_PANEL_LANGUAGE_EVENT,           /**< called when the language of the input panel is changed. */
-   ECORE_IMF_INPUT_PANEL_SHIFT_MODE_EVENT,         /**< called when the shift key state of the input panel is changed */
-   ECORE_IMF_INPUT_PANEL_GEOMETRY_EVENT,           /**< called when the size of the input panel is changed. */
-   ECORE_IMF_CANDIDATE_PANEL_STATE_EVENT,          /**< called when the state of the candidate word panel is changed. */
-   ECORE_IMF_CANDIDATE_PANEL_GEOMETRY_EVENT        /**< called when the size of the candidate word panel is changed. */
+   ECORE_IMF_INPUT_PANEL_STATE_EVENT,              /**< called when the state of the input panel is changed. @since 1.7 */
+   ECORE_IMF_INPUT_PANEL_LANGUAGE_EVENT,           /**< called when the language of the input panel is changed. @since 1.7 */
+   ECORE_IMF_INPUT_PANEL_SHIFT_MODE_EVENT,         /**< called when the shift key state of the input panel is changed @since 1.7 */
+   ECORE_IMF_INPUT_PANEL_GEOMETRY_EVENT,           /**< called when the size of the input panel is changed. @since 1.7 */
+   ECORE_IMF_CANDIDATE_PANEL_STATE_EVENT,          /**< called when the state of the candidate word panel is changed. @since 1.7 */
+   ECORE_IMF_CANDIDATE_PANEL_GEOMETRY_EVENT        /**< called when the size of the candidate word panel is changed. @since 1.7 */
 } Ecore_IMF_Input_Panel_Event;
 
 typedef enum
 {
-   ECORE_IMF_INPUT_PANEL_STATE_SHOW,        /**< Notification after the display of the input panel */
-   ECORE_IMF_INPUT_PANEL_STATE_HIDE,        /**< Notification prior to the dismissal of the input panel */
-   ECORE_IMF_INPUT_PANEL_STATE_WILL_SHOW    /**< Notification prior to the display of the input panel */
+   ECORE_IMF_INPUT_PANEL_STATE_SHOW,        /**< Notification after the display of the input panel @since 1.7 */
+   ECORE_IMF_INPUT_PANEL_STATE_HIDE,        /**< Notification prior to the dismissal of the input panel @since 1.7 */
+   ECORE_IMF_INPUT_PANEL_STATE_WILL_SHOW    /**< Notification prior to the display of the input panel @since 1.7 */
 } Ecore_IMF_Input_Panel_State;
 
 typedef enum
 {
-    ECORE_IMF_INPUT_PANEL_SHIFT_MODE_OFF,
-    ECORE_IMF_INPUT_PANEL_SHIFT_MODE_ON
+    ECORE_IMF_INPUT_PANEL_SHIFT_MODE_OFF, /**< @since 1.7 */
+    ECORE_IMF_INPUT_PANEL_SHIFT_MODE_ON   /**< @since 1.7 */
 } Ecore_IMF_Input_Panel_Shift_Mode;
 
 typedef enum
 {
-   ECORE_IMF_CANDIDATE_PANEL_SHOW,        /**< Notification after the display of the candidate word panel */
-   ECORE_IMF_CANDIDATE_PANEL_HIDE         /**< Notification prior to the dismissal of the candidate word panel */
+   ECORE_IMF_CANDIDATE_PANEL_SHOW,        /**< Notification after the display of the candidate word panel @since 1.7 */
+   ECORE_IMF_CANDIDATE_PANEL_HIDE         /**< Notification prior to the dismissal of the candidate word panel @since 1.7 */
 } Ecore_IMF_Candidate_Panel_State;
 
 /* Events sent by the Input Method */
@@ -110,11 +110,11 @@ typedef void (*Ecore_IMF_Event_Cb) (void *data, Ecore_IMF_Context *ctx, void *ev
  */
 typedef enum
 {
-   ECORE_IMF_CALLBACK_PREEDIT_START,      /**< "PREEDIT_START" is called when a new preediting sequence starts. */
-   ECORE_IMF_CALLBACK_PREEDIT_END,        /**< "PREEDIT_END" is called when a preediting sequence has been completed or canceled. */
-   ECORE_IMF_CALLBACK_PREEDIT_CHANGED,    /**< "PREEDIT_CHANGED" is called whenever the preedit sequence currently being entered has changed. */
-   ECORE_IMF_CALLBACK_COMMIT,             /**< "COMMIT" is called when a complete input sequence has been entered by the user */
-   ECORE_IMF_CALLBACK_DELETE_SURROUNDING  /**< "DELETE_SURROUNDING" is called when the input method needs to delete all or part of the context surrounding the cursor */
+   ECORE_IMF_CALLBACK_PREEDIT_START,      /**< "PREEDIT_START" is called when a new preediting sequence starts. @since 1.2 */
+   ECORE_IMF_CALLBACK_PREEDIT_END,        /**< "PREEDIT_END" is called when a preediting sequence has been completed or canceled. @since 1.2 */
+   ECORE_IMF_CALLBACK_PREEDIT_CHANGED,    /**< "PREEDIT_CHANGED" is called whenever the preedit sequence currently being entered has changed. @since 1.2 */
+   ECORE_IMF_CALLBACK_COMMIT,             /**< "COMMIT" is called when a complete input sequence has been entered by the user @since 1.2 */
+   ECORE_IMF_CALLBACK_DELETE_SURROUNDING  /**< "DELETE_SURROUNDING" is called when the input method needs to delete all or part of the context surrounding the cursor @since 1.2 */
 } Ecore_IMF_Callback_Type;
 
 /**
@@ -146,7 +146,7 @@ typedef enum
    ECORE_IMF_KEYBOARD_MODIFIER_ALT   = 1 << 1, /**< "Alt" is pressed */
    ECORE_IMF_KEYBOARD_MODIFIER_SHIFT = 1 << 2, /**< "Shift" is pressed */
    ECORE_IMF_KEYBOARD_MODIFIER_WIN   = 1 << 3, /**< "Win" (between "Ctrl" and "Alt") is pressed */
-   ECORE_IMF_KEYBOARD_MODIFIER_ALTGR = 1 << 4  /**< "AltGr" is pressed @since 1.3 */
+   ECORE_IMF_KEYBOARD_MODIFIER_ALTGR = 1 << 4  /**< "AltGr" is pressed @since 1.7 */
 } Ecore_IMF_Keyboard_Modifiers;
 
 /**
@@ -160,6 +160,7 @@ typedef enum
    ECORE_IMF_KEYBOARD_LOCK_CAPS      = 1 << 1, /**< "Caps" lock is active */
    ECORE_IMF_KEYBOARD_LOCK_SCROLL    = 1 << 2  /**< "Scroll" lock is active */
 } Ecore_IMF_Keyboard_Locks;
+
 /**
  * @typedef Ecore_IMF_Mouse_Flags
  * Type for Ecore_IMF mouse flags
@@ -192,10 +193,10 @@ typedef enum
  */
 typedef enum
 {
-   ECORE_IMF_PREEDIT_TYPE_NONE, /**< None style */
-   ECORE_IMF_PREEDIT_TYPE_SUB1, /**< Substring style 1 */
-   ECORE_IMF_PREEDIT_TYPE_SUB2, /**< Substring style 2 */
-   ECORE_IMF_PREEDIT_TYPE_SUB3  /**< Substring style 3 */
+   ECORE_IMF_PREEDIT_TYPE_NONE, /**< None style @since 1.1 */
+   ECORE_IMF_PREEDIT_TYPE_SUB1, /**< Substring style 1 @since 1.1 */
+   ECORE_IMF_PREEDIT_TYPE_SUB2, /**< Substring style 2 @since 1.1 */
+   ECORE_IMF_PREEDIT_TYPE_SUB3  /**< Substring style 3 @since 1.1 */
 } Ecore_IMF_Preedit_Type;
 
 /**
@@ -207,10 +208,10 @@ typedef enum
  */
 typedef enum
 {
-   ECORE_IMF_AUTOCAPITAL_TYPE_NONE,         /**< No auto-capitalization when typing */
-   ECORE_IMF_AUTOCAPITAL_TYPE_WORD,         /**< Autocapitalize each word typed */
-   ECORE_IMF_AUTOCAPITAL_TYPE_SENTENCE,     /**< Autocapitalize the start of each sentence */
-   ECORE_IMF_AUTOCAPITAL_TYPE_ALLCHARACTER, /**< Autocapitalize all letters */
+   ECORE_IMF_AUTOCAPITAL_TYPE_NONE,         /**< No auto-capitalization when typing @since 1.1 */
+   ECORE_IMF_AUTOCAPITAL_TYPE_WORD,         /**< Autocapitalize each word typed @since 1.1 */
+   ECORE_IMF_AUTOCAPITAL_TYPE_SENTENCE,     /**< Autocapitalize the start of each sentence @since 1.1 */
+   ECORE_IMF_AUTOCAPITAL_TYPE_ALLCHARACTER, /**< Autocapitalize all letters @since 1.1 */
 } Ecore_IMF_Autocapital_Type;
 
 /**

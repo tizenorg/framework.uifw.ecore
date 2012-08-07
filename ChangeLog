@@ -505,6 +505,10 @@
 
         * Improve callbacks in ecore_evas to use typedefs for readability.
 
+2012-02-20  Cedric Bail
+
+	* Rewrite internal of Ecore_Thread to use Eina_Lock and ecore_main_loop_thread_safe_call_async.
+
 2012-02-23  Cedric Bail
 
 	* Move to Evas buffer engine for Ecore_Evas SDL software backend.
@@ -780,3 +784,70 @@
         query a sequence of keysyms for a final compose string (utf8)
         that you free if you get it.
 
+2012-07-02  Mike Blumenkrantz
+
+        * Fix crash which occurred in ecore-con when dns resolution failed
+          immediately due to lack of connectivity
+
+2012-07-03  Cedric Bail
+
+	* Fix unitialized use of Ecore_X_Atom.
+
+2012-07-03 Christopher Michael
+
+	* Merge Tizen EFL changes to upsteam.
+	* Add ecore_evas functions to get/set profiles
+	* Fix GL buffer. some GL drivers are doing buffer copy in a separate thread.
+		we need to check whether GL driver sends SYNC_DRAW_DONE msg afger copying
+		that are required in order to exactly render. - added by gl77.lee
+	* Add Ecore_X atoms for Illume Rotate Window
+	* Add event callbacks for Ecore_Imf Input Panel
+	* Add functions to retrieve input panel geometry & state from Ecore_Imf.
+
+2012-07-05  Carsten Haitzler (The Rasterman)
+
+        * Add ecore_evas_screen_dpi_get()
+        * Fix ecore_evas_screen_geometry_get(0 for x11 to return zone
+          pos/size as it should.
+        * Fix ecore-fb to use key repeat like x so apps dont break in fb
+        * Fix ecore-fb string lookup table to include ctrl+keys
+        * Fix ecore-fb to trap sigint (ctrl+c) so it doesnt exit your fb app
+        * Fix ecore-fb mouse to swap button 2 and 3 ro work right.
+
+2012-07-13  Jiyoun Park
+
+        * Fix bug in Ecore_extn to call pre/post render function
+
+2012-07-16  Carsten Haitzler (The Rasterman)
+
+        * Fix ecore-x selection handling to fall back to getting
+          selection directly if getting targets fails. This fixes e17 to
+          elm cnp.
+
+2012-08-01  Mike Blumenkrantz
+
+        * Add ecore_main_fd_handler_file_add() for integrating file descriptors
+          from regular files into the main loop
+
+2012-08-01  Rob Bradford
+
+	* Support setting fullscreen on Ecore_Evas's under the Wayland engine
+	before they are visible. The fullscreening will then be applied when
+	they become visible.
+
+2012-08-01  Rob Bradford
+
+	* Use libxkbcommon function to map keysym to unicode characters in the
+	Wayland backend. Removing the need to have our own function to do this
+	and increasing the range of supported keysms. Fixes #1105.
+
+2012-08-03  Rob Bradford
+
+	* In the Wayland backend handle the case that events can be received
+	for surfaces that have been since destroyed - the client side
+	marshaller changes the pointer to NULL to when the object is destroyed
+	on the client side. Fixes #1258.
+
+2012-08-09  Cedric Bail
+
+	* Correctly shutdown Ecore_Thread.

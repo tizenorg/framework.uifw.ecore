@@ -4,12 +4,15 @@ Changes since Ecore 1.2.0:
 --------------------------
 
 Additions:
+    * ecore:
+     - Add ecore_main_fd_handler_file_add()
     * ecore_evas:
      - Add transparency support on Windows (GDI engine only)
-	* ecore_x:
-     - Add Ecore_X_Error_Code enumeration
+     - Add API functions to get/set an Ecore_Evas's profile.
     * ecore_x:
+     - Add Ecore_X_Error_Code enumeration
      - ECORE_X_RANDR_OUTPUT_POLICY_ASK
+     - Add API functions to get/set an Ecore_X window's profile
     * ecore_con:
      - ECORE_{CON,IPC}_NO_PROXY now available for disabling proxying on certain connections
      - New dns.c resolver backend for faster dns lookups
@@ -24,6 +27,10 @@ Fixes:
      - Reduce race condition on shutdown of Ecore_Thread.
      - Force cancel of all running Ecore_Thread on shutdown.
      - Make Ecore_Thread work reliably when called without a running main loop.
+     - Correctly shutdown Ecore_Thread.
+
+    * ecore_x
+     - Fix unitialized Ecore_X_Atom use.
 
 
 Ecore 1.2.0
@@ -144,6 +151,9 @@ Improvements:
      - certificates can now be added for STARTTTLS
     * ecore_win32:
      - fix modifiers value on Windows XP
+    * ecore_thread:
+     - use eina_lock
+     - use Ecore thread safe async call
     * ecore_evas:
      - use Evas buffer backend for SDL software engine
      - clean up ecore-evas-buffer code somewhat
