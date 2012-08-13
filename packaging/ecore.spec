@@ -1,6 +1,6 @@
 Name:       ecore
 Summary:    Enlightened Core X interface library
-Version:    1.2.0+svn.70444slp2+build08
+Version:    1.2.0+svn.70444slp2+build09
 Release:    2
 Group:      System/Libraries
 License:    BSD
@@ -25,6 +25,7 @@ BuildRequires:  x11proto-xext
 BuildRequires:  libxtst-devel
 BuildRequires:  curl-devel
 BuildRequires:  libjpeg-devel
+BuildRequires:  libXgesture-devel
 
 
 %description
