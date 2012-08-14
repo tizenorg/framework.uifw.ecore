@@ -8,7 +8,7 @@
 
    @mainpage Ecore
 
-   @version 1.1
+   @version 1.2
    @date 2000-2012
 
    Please see the @ref authors page for contact details.
@@ -116,6 +116,8 @@ sudo make install
    @author Bluezery <ohpowel@gmail.com>
    @author Doyoun Kang <wayofmine@gmail.com> <doyoun.kang@samsung.com>
    @author Haifeng Deng <haifeng.deng@samsung.com>
+   @author Jérémy Zurcher <jeremy@asynk.ch>
+   @author Vikram Narayanan <vikram186@gmail.com>
 
    Please contact <enlightenment-devel@lists.sourceforge.net> to get in
    contact with the developers and maintainers.
@@ -350,7 +352,7 @@ sudo make install
 
 #ifdef _WIN32
 # include <winsock2.h>
-#elif (defined (__FreeBSD__) && (__FreeBSD_version >= 420001)) || defined (__OpenBSD__)
+#elif defined (__FreeBSD__) || defined (__OpenBSD__)
 # include <sys/select.h>
 # include <signal.h>
 #else
@@ -835,7 +837,14 @@ EAPI void *ecore_event_current_event_get(void);
 /**
  * @defgroup Ecore_Exe_Group Process Spawning Functions
  *
- * Functions that deal with and send signals to spawned processes.
+ * This module is responsible for managing portable processes using Ecore.
+ * With this module you're able to spawn processes and you also can pause,
+ * quit your spawned processes.
+ * An interaction between your process and those spawned is possible
+ * using pipes or signals.
+ *
+ * Example
+ * @li @ref Ecore_exe_simple_example_c
  *
  * @ingroup Ecore_Main_Loop_Group
  *
@@ -1067,6 +1076,9 @@ typedef Eina_Bool (*Ecore_Win32_Handle_Cb)(void *data, Ecore_Win32_Handler *wh);
  * Some systems, notably xlib, handle their own buffering, and would otherwise
  * not work with select(). These systems should use a @a buf_func. This is a
  * most annoying hack, only ecore_x uses it, so refer to that for an example.
+ *
+ * @warning This function should @b not be used for monitoring "normal" files, like text files.
+ *
  */
 EAPI Ecore_Fd_Handler *ecore_main_fd_handler_add(int fd, Ecore_Fd_Handler_Flags flags, Ecore_Fd_Cb func, const void *data, Ecore_Fd_Cb buf_func, const void *buf_data);
 /**
@@ -2108,7 +2120,7 @@ EAPI int ecore_thread_max_get(void);
  * @param num The new maximum
  *
  * This sets a new value for the maximum number of concurrently running
- * Ecore_Thread's. It @b must an integer between 1 and (2 * @c x), where @c x
+ * Ecore_Thread's. It @b must an integer between 1 and (16 * @c x), where @c x
  * is the number for CPUs available.
  *
  * @see ecore_thread_max_get()

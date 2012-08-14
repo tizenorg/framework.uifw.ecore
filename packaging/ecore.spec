@@ -1,13 +1,14 @@
 Name:       ecore
 Summary:    Enlightened Core X interface library
-Version:    1.2.0+svn.70444slp2+build09
-Release:    2
+Version:    1.2.0+svn.72988slp2+build02
+Release:    1
 Group:      System/Libraries
 License:    BSD
 URL:        http://www.enlightenment.org
 Source0:    %{name}-%{version}.tar.gz
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
+BuildRequires:  gettext
 BuildRequires:  eina-devel
 BuildRequires:  eet-devel
 BuildRequires:  evas-devel
@@ -246,6 +247,7 @@ rm -rf %{buildroot}
 %files 
 %defattr(-,root,root,-)
 %{_libdir}/libecore.so.*
+/usr/share/locale/*
 
 %files devel
 %defattr(-,root,root,-)

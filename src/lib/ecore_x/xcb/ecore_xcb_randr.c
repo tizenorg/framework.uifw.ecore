@@ -74,8 +74,10 @@ static Eina_Bool                                       _ecore_xcb_randr_crtc_val
                                                                                       Ecore_X_Randr_Crtc crtc);
 static Eina_Bool                                       _ecore_xcb_randr_root_validate(Ecore_X_Window root);
 static int                                             _ecore_xcb_randr_root_to_screen(Ecore_X_Window root);
+#ifdef ECORE_XCB_RANDR
 static xcb_randr_get_screen_resources_reply_t         *_ecore_xcb_randr_12_get_resources(Ecore_X_Window win);
 static xcb_randr_get_screen_resources_current_reply_t *_ecore_xcb_randr_13_get_resources(Ecore_X_Window win);
+#endif
 static xcb_timestamp_t                                 _ecore_xcb_randr_12_get_resource_timestamp(Ecore_X_Window win);
 static xcb_timestamp_t                                 _ecore_xcb_randr_13_get_resource_timestamp(Ecore_X_Window win);
 
@@ -191,7 +193,11 @@ _ecore_xcb_randr_finalize(void)
 }
 
 static Eina_Bool
+#ifdef ECORE_XCB_RANDR
 _ecore_xcb_randr_root_validate(Ecore_X_Window root)
+#else
+_ecore_xcb_randr_root_validate(Ecore_X_Window root __UNUSED__)
+#endif
 {
 #ifdef ECORE_XCB_RANDR
    Ecore_X_Randr_Screen scr = -1;
@@ -842,8 +848,8 @@ ecore_x_randr_mode_info_get(Ecore_X_Window     root,
 EAPI Ecore_X_Randr_Mode 
 ecore_x_randr_mode_info_add(Ecore_X_Window root, Ecore_X_Randr_Mode_Info *mode_info)
 {
-#ifdef ECORE_XCB_RANDR
    Ecore_X_Randr_Mode mode = Ecore_X_Randr_None;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_create_mode_cookie_t cookie;
    xcb_randr_create_mode_reply_t *reply;
    xcb_randr_mode_info_t info;
@@ -1628,7 +1634,7 @@ ecore_x_randr_window_crtcs_get(Ecore_X_Window window,
 
    root = ecore_x_window_root_get(window);
    crtcs = ecore_x_randr_crtcs_get(root, &ncrtcs);
-   if (!crtcs) return NULL;
+   if (!crtcs) goto _ecore_x_randr_window_crtcs_get_fail;
 
    /* now get window RELATIVE to root window - thats what matters. */
    cookie = xcb_translate_coordinates(_ecore_xcb_conn, window, root, 0, 0);
@@ -1637,6 +1643,12 @@ ecore_x_randr_window_crtcs_get(Ecore_X_Window window,
    w_geo.y = trans->dst_y;
    free(trans);
 
+   ret = calloc(1, ncrtcs * sizeof(Ecore_X_Randr_Crtc));
+   if (!ret)
+     {
+        free(crtcs);
+        goto _ecore_x_randr_window_crtcs_get_fail;
+     }
    for (i = 0, nret = 0; i < ncrtcs; i++)
      {
         /* if crtc is not enabled, don't bother about it any further */
@@ -1647,9 +1659,8 @@ ecore_x_randr_window_crtcs_get(Ecore_X_Window window,
                                          &c_geo.w, &c_geo.h);
          if (eina_rectangles_intersect(&w_geo, &c_geo))
            {
-              ret = realloc(ret, (++nret *
-                                   sizeof(Ecore_X_Randr_Output)));
               ret[nret] = crtcs[i];
+              nret++;
            }
      }
    free(crtcs);
@@ -1657,6 +1668,7 @@ ecore_x_randr_window_crtcs_get(Ecore_X_Window window,
    if (num) *num = nret;
    return ret;
 
+_ecore_x_randr_window_crtcs_get_fail:
 #endif
    if (num) *num = 0;
    return NULL;
@@ -1842,6 +1854,8 @@ ecore_x_randr_crtc_pos_relative_set(Ecore_X_Window                   root,
 
       case ECORE_X_RANDR_OUTPUT_POLICY_NONE:
         break;
+      default:
+        return EINA_FALSE;
      }
 
    if ((xn == r1.x) && (yn == r1.x)) return EINA_TRUE;
@@ -2442,7 +2456,7 @@ ecore_x_randr_window_outputs_get(Ecore_X_Window window,
 #ifdef ECORE_XCB_RANDR
    Ecore_X_Window root;
    Ecore_X_Randr_Crtc *crtcs;
-   Ecore_X_Randr_Output *outputs, *ret = NULL;
+   Ecore_X_Randr_Output *outputs, *ret = NULL, *tret;
    int ncrtcs, noutputs, i, nret = 0;
 #endif
 
@@ -2465,10 +2479,13 @@ ecore_x_randr_window_outputs_get(Ecore_X_Window window,
               &noutputs);
         if (!outputs)
           goto _ecore_x_randr_current_output_get_fail_free;
-        nret += noutputs;
-        ret = realloc(ret, (nret * sizeof(Ecore_X_Randr_Output)));
+        tret = realloc(ret, ((nret + noutputs) * sizeof(Ecore_X_Randr_Output)));
+        if (!tret) goto _ecore_x_randr_current_output_get_fail_free;
+        ret = tret;
         memcpy(&ret[nret], outputs, (noutputs * sizeof(Ecore_X_Randr_Output)));
+        nret += noutputs;
         free(outputs);
+        outputs = NULL;
      }
    free(crtcs);
 
@@ -2923,6 +2940,7 @@ _ecore_xcb_randr_12_output_modes_get(Ecore_X_Window       root,
                                      int                 *npreferred)
 {
    Ecore_X_Randr_Mode *modes = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_reply_t *reply;
 
    reply = _ecore_xcb_randr_12_get_resources(root);
@@ -2956,7 +2974,7 @@ _ecore_xcb_randr_12_output_modes_get(Ecore_X_Window       root,
           }
         free(reply);
      }
-
+#endif
    return modes;
 }
 
@@ -2967,6 +2985,7 @@ _ecore_xcb_randr_13_output_modes_get(Ecore_X_Window       root,
                                      int                 *npreferred)
 {
    Ecore_X_Randr_Mode *modes = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_timestamp_t stamp = 0;
    xcb_randr_get_output_info_cookie_t ocookie;
    xcb_randr_get_output_info_reply_t *oreply;
@@ -2993,7 +3012,7 @@ _ecore_xcb_randr_13_output_modes_get(Ecore_X_Window       root,
           }
         free(oreply);
      }
-
+#endif
    return modes;
 }
 
@@ -3002,6 +3021,7 @@ _ecore_xcb_randr_12_mode_info_get(Ecore_X_Window     root,
                                   Ecore_X_Randr_Mode mode)
 {
    Ecore_X_Randr_Mode_Info *ret = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_reply_t *reply;
 
    reply = _ecore_xcb_randr_12_get_resources(root);
@@ -3052,6 +3072,7 @@ _ecore_xcb_randr_12_mode_info_get(Ecore_X_Window     root,
 
         free(reply);
      }
+#endif
    return ret;
 }
 
@@ -3060,6 +3081,7 @@ _ecore_xcb_randr_13_mode_info_get(Ecore_X_Window     root,
                                   Ecore_X_Randr_Mode mode)
 {
    Ecore_X_Randr_Mode_Info *ret = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_current_reply_t *reply;
 
    reply = _ecore_xcb_randr_13_get_resources(root);
@@ -3111,6 +3133,7 @@ _ecore_xcb_randr_13_mode_info_get(Ecore_X_Window     root,
 
         free(reply);
      }
+#endif
    return ret;
 }
 
@@ -3119,6 +3142,7 @@ _ecore_xcb_randr_12_modes_info_get(Ecore_X_Window root,
                                    int           *num)
 {
    Ecore_X_Randr_Mode_Info **ret = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_reply_t *reply;
 
    reply = _ecore_xcb_randr_12_get_resources(root);
@@ -3178,6 +3202,7 @@ _ecore_xcb_randr_12_modes_info_get(Ecore_X_Window root,
           }
         free(reply);
      }
+#endif
    return ret;
 }
 
@@ -3186,6 +3211,7 @@ _ecore_xcb_randr_13_modes_info_get(Ecore_X_Window root,
                                    int           *num)
 {
    Ecore_X_Randr_Mode_Info **ret = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_current_reply_t *reply;
 
    reply = _ecore_xcb_randr_13_get_resources(root);
@@ -3246,6 +3272,7 @@ _ecore_xcb_randr_13_modes_info_get(Ecore_X_Window root,
           }
         free(reply);
      }
+#endif
    return ret;
 }
 
@@ -3255,6 +3282,10 @@ _ecore_xcb_randr_12_mode_size_get(Ecore_X_Window     root,
                                   int               *w,
                                   int               *h)
 {
+   if (w) *w = 0;
+   if (h) *h = 0;
+
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_reply_t *reply;
 
    reply = _ecore_xcb_randr_12_get_resources(root);
@@ -3278,6 +3309,7 @@ _ecore_xcb_randr_12_mode_size_get(Ecore_X_Window     root,
           }
         free(reply);
      }
+#endif
 }
 
 static void
@@ -3286,6 +3318,10 @@ _ecore_xcb_randr_13_mode_size_get(Ecore_X_Window     root,
                                   int               *w,
                                   int               *h)
 {
+   if (w) *w = 0;
+   if (h) *h = 0;
+
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_current_reply_t *reply;
 
    reply = _ecore_xcb_randr_13_get_resources(root);
@@ -3309,6 +3345,7 @@ _ecore_xcb_randr_13_mode_size_get(Ecore_X_Window     root,
           }
         free(reply);
      }
+#endif
 }
 
 static Ecore_X_Randr_Output *
@@ -3317,6 +3354,7 @@ _ecore_xcb_randr_12_output_clones_get(Ecore_X_Window       root,
                                       int                 *num)
 {
    Ecore_X_Randr_Output *outputs = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_reply_t *reply;
 
    reply = _ecore_xcb_randr_12_get_resources(root);
@@ -3345,6 +3383,7 @@ _ecore_xcb_randr_12_output_clones_get(Ecore_X_Window       root,
           }
         free(reply);
      }
+#endif
    return outputs;
 }
 
@@ -3354,6 +3393,7 @@ _ecore_xcb_randr_13_output_clones_get(Ecore_X_Window       root,
                                       int                 *num)
 {
    Ecore_X_Randr_Output *outputs = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_current_reply_t *reply;
 
    reply = _ecore_xcb_randr_13_get_resources(root);
@@ -3382,6 +3422,7 @@ _ecore_xcb_randr_13_output_clones_get(Ecore_X_Window       root,
           }
         free(reply);
      }
+#endif
    return outputs;
 }
 
@@ -3391,6 +3432,7 @@ _ecore_xcb_randr_12_output_possible_crtcs_get(Ecore_X_Window       root,
                                               int                 *num)
 {
    Ecore_X_Randr_Crtc *crtcs = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_reply_t *reply;
 
    reply = _ecore_xcb_randr_12_get_resources(root);
@@ -3418,6 +3460,7 @@ _ecore_xcb_randr_12_output_possible_crtcs_get(Ecore_X_Window       root,
           }
         free(reply);
      }
+#endif
    return crtcs;
 }
 
@@ -3427,6 +3470,7 @@ _ecore_xcb_randr_13_output_possible_crtcs_get(Ecore_X_Window       root,
                                               int                 *num)
 {
    Ecore_X_Randr_Crtc *crtcs = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_current_reply_t *reply;
 
    reply = _ecore_xcb_randr_13_get_resources(root);
@@ -3454,6 +3498,7 @@ _ecore_xcb_randr_13_output_possible_crtcs_get(Ecore_X_Window       root,
           }
         free(reply);
      }
+#endif
    return crtcs;
 }
 
@@ -3463,6 +3508,7 @@ _ecore_xcb_randr_12_output_name_get(Ecore_X_Window       root,
                                     int                 *len)
 {
    char *ret = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_reply_t *reply;
 
    reply = _ecore_xcb_randr_12_get_resources(root);
@@ -3495,6 +3541,7 @@ _ecore_xcb_randr_12_output_name_get(Ecore_X_Window       root,
           }
         free(reply);
      }
+#endif
    return ret;
 }
 
@@ -3504,6 +3551,7 @@ _ecore_xcb_randr_13_output_name_get(Ecore_X_Window       root,
                                     int                 *len)
 {
    char *ret = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_current_reply_t *reply;
 
    reply = _ecore_xcb_randr_13_get_resources(root);
@@ -3536,6 +3584,7 @@ _ecore_xcb_randr_13_output_name_get(Ecore_X_Window       root,
           }
         free(reply);
      }
+#endif
    return ret;
 }
 
@@ -3544,6 +3593,7 @@ _ecore_xcb_randr_12_output_connection_status_get(Ecore_X_Window       root,
                                                  Ecore_X_Randr_Output output)
 {
    Ecore_X_Randr_Connection_Status ret = ECORE_X_RANDR_CONNECTION_STATUS_UNKNOWN;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_reply_t *reply;
 
    reply = _ecore_xcb_randr_12_get_resources(root);
@@ -3564,6 +3614,7 @@ _ecore_xcb_randr_12_output_connection_status_get(Ecore_X_Window       root,
           }
         free(reply);
      }
+#endif
    return ret;
 }
 
@@ -3572,6 +3623,7 @@ _ecore_xcb_randr_13_output_connection_status_get(Ecore_X_Window       root,
                                                  Ecore_X_Randr_Output output)
 {
    Ecore_X_Randr_Connection_Status ret = ECORE_X_RANDR_CONNECTION_STATUS_UNKNOWN;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_current_reply_t *reply;
 
    reply = _ecore_xcb_randr_13_get_resources(root);
@@ -3592,6 +3644,7 @@ _ecore_xcb_randr_13_output_connection_status_get(Ecore_X_Window       root,
           }
         free(reply);
      }
+#endif
    return ret;
 }
 
@@ -3600,6 +3653,7 @@ _ecore_xcb_randr_12_outputs_get(Ecore_X_Window root,
                                 int           *num)
 {
    Ecore_X_Randr_Output *ret = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_reply_t *reply;
 
    reply = _ecore_xcb_randr_12_get_resources(root);
@@ -3612,6 +3666,7 @@ _ecore_xcb_randr_12_outputs_get(Ecore_X_Window root,
                  sizeof(Ecore_X_Randr_Output) * reply->num_outputs);
         free(reply);
      }
+#endif
    return ret;
 }
 
@@ -3620,6 +3675,7 @@ _ecore_xcb_randr_13_outputs_get(Ecore_X_Window root,
                                 int           *num)
 {
    Ecore_X_Randr_Output *ret = NULL;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_current_reply_t *reply;
 
    reply = _ecore_xcb_randr_13_get_resources(root);
@@ -3632,6 +3688,7 @@ _ecore_xcb_randr_13_outputs_get(Ecore_X_Window root,
                  sizeof(Ecore_X_Randr_Output) * reply->num_outputs);
         free(reply);
      }
+#endif
    return ret;
 }
 
@@ -3640,6 +3697,7 @@ _ecore_xcb_randr_12_output_crtc_get(Ecore_X_Window       root,
                                     Ecore_X_Randr_Output output)
 {
    Ecore_X_Randr_Crtc ret = Ecore_X_Randr_None;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_reply_t *reply;
 
    reply = _ecore_xcb_randr_12_get_resources(root);
@@ -3660,6 +3718,7 @@ _ecore_xcb_randr_12_output_crtc_get(Ecore_X_Window       root,
           }
         free(reply);
      }
+#endif
    return ret;
 }
 
@@ -3668,6 +3727,7 @@ _ecore_xcb_randr_13_output_crtc_get(Ecore_X_Window       root,
                                     Ecore_X_Randr_Output output)
 {
    Ecore_X_Randr_Crtc ret = Ecore_X_Randr_None;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_current_reply_t *reply;
 
    reply = _ecore_xcb_randr_13_get_resources(root);
@@ -3688,6 +3748,7 @@ _ecore_xcb_randr_13_output_crtc_get(Ecore_X_Window       root,
           }
         free(reply);
      }
+#endif
    return ret;
 }
 
@@ -3720,11 +3781,13 @@ static xcb_timestamp_t
 _ecore_xcb_randr_12_get_resource_timestamp(Ecore_X_Window win)
 {
    xcb_timestamp_t stamp = 0;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_reply_t *reply;
 
    reply = _ecore_xcb_randr_12_get_resources(win);
    stamp = reply->config_timestamp;
    free(reply);
+#endif
    return stamp;
 }
 
@@ -3732,11 +3795,13 @@ static xcb_timestamp_t
 _ecore_xcb_randr_13_get_resource_timestamp(Ecore_X_Window win)
 {
    xcb_timestamp_t stamp = 0;
+#ifdef ECORE_XCB_RANDR
    xcb_randr_get_screen_resources_current_reply_t *reply;
 
    reply = _ecore_xcb_randr_13_get_resources(win);
    stamp = reply->config_timestamp;
    free(reply);
+#endif
    return stamp;
 }
 

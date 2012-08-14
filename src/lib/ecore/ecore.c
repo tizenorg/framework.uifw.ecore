@@ -171,12 +171,16 @@ ecore_init(void)
    _ecore_job_init();
    _ecore_time_init();
 
-   eina_lock_new(&_thread_safety);
    eina_lock_new(&_thread_mutex);
    eina_condition_new(&_thread_cond, &_thread_mutex);
    eina_lock_new(&_thread_feedback_mutex);
    eina_condition_new(&_thread_feedback_cond, &_thread_feedback_mutex);
-   _thread_call = ecore_pipe_add(_thread_callback, NULL);
+   if (!_thread_call)
+     {
+       _thread_call = ecore_pipe_add(_thread_callback, NULL);
+       eina_lock_new(&_thread_safety);
+     }
+
    eina_lock_new(&_thread_id_lock);
 
    eina_lock_new(&_ecore_main_loop_lock);
@@ -224,6 +228,12 @@ ecore_shutdown(void)
     * take a lock here because _ecore_event_shutdown() does callbacks
     */
      _ecore_lock();
+     if (_ecore_init_count <= 0)
+       {
+          ERR("Init count not greater than 0 in shutdown.");
+          _ecore_unlock();
+          return 0;
+       }
      if (--_ecore_init_count != 0)
        goto unlock;
    
@@ -241,8 +251,8 @@ ecore_shutdown(void)
      _thread_call = NULL;
      ecore_pipe_wait(p, 1, 0.1);
      ecore_pipe_del(p);
-    */
      eina_lock_free(&_thread_safety);
+    */
      eina_condition_free(&_thread_cond);
      eina_lock_free(&_thread_mutex);
      eina_condition_free(&_thread_feedback_cond);
@@ -699,10 +709,8 @@ _thread_safe_cleanup(void *data)
    eina_lock_free(&call->m);
 }
 
-static void
-_thread_callback(void        *data __UNUSED__,
-                 void        *buffer __UNUSED__,
-                 unsigned int nbyte __UNUSED__)
+void
+_ecore_main_call_flush(void)
 {
    Ecore_Safe_Call *call;
    Eina_List *callback;
@@ -750,5 +758,13 @@ _thread_callback(void        *data __UNUSED__,
              free(call);
           }
      }
+}
+
+static void
+_thread_callback(void        *data __UNUSED__,
+                 void        *buffer __UNUSED__,
+                 unsigned int nbyte __UNUSED__)
+{
+   _ecore_main_call_flush();
 }
 

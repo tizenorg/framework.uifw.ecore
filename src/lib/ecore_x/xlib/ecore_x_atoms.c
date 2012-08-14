@@ -25,14 +25,7 @@ void *alloca(size_t);
 #include "ecore_x_private.h"
 #include "Ecore_X.h"
 #include "Ecore_X_Atoms.h"
-
 #include "ecore_x_atoms_decl.h"
-
-typedef struct
-{
-   const char   *name;
-   Ecore_X_Atom *atom;
-} Atom_Item;
 
 void
 _ecore_x_atoms_init(void)
@@ -317,14 +310,14 @@ _ecore_x_atoms_init(void)
    char **names;
    int i, num;
 
-   num = sizeof(items) / sizeof(Atom_Item);
+   num = sizeof(atom_items) / sizeof(Atom_Item);
    atoms = alloca(num * sizeof(Atom));
    names = alloca(num * sizeof(char *));
    for (i = 0; i < num; i++)
-     names[i] = (char *)items[i].name;
+     names[i] = (char *) atom_items[i].name;
    XInternAtoms(_ecore_x_disp, names, num, False, atoms);
    for (i = 0; i < num; i++)
-     *(items[i].atom) = atoms[i];
+     *(atom_items[i].atom) = atoms[i];
 }
 
 /**

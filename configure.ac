@@ -2,11 +2,11 @@
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
 m4_define([v_maj], [1])
 m4_define([v_min], [2])
-m4_define([v_mic], [0])
+m4_define([v_mic], [99])
 m4_define([v_rev], m4_esyscmd([(svnversion "${SVN_REPO_PATH:-.}" | grep -v '\(export\|Unversioned directory\)' || echo 0) | awk -F : '{printf("%s\n", $1);}' | tr -d ' :MSP\n' | sed 's/Unversioneddirectory/0/' | tr -d '\n']))
 m4_if(v_rev, [0], [m4_define([v_rev], m4_esyscmd([git log 2> /dev/null | (grep -m1 git-svn-id || echo 0) | sed -e 's/.*@\([0-9]*\).*/\1/' | tr -d '\n']))])
 ##--   When released, remove the dnl on the below line
-m4_undefine([v_rev])
+dnl m4_undefine([v_rev])
 ##--   When doing snapshots - change soname. remove dnl on below line
 dnl m4_define([relname], [ver-pre-svn-07])
 dnl m4_define([v_rel], [-release relname])
@@ -18,7 +18,7 @@ m4_define([lt_age], v_min)
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
 
-AC_INIT([ecore], [v_ver]-beta, [enlightenment-devel@lists.sourceforge.net])
+AC_INIT([ecore], [v_ver], [enlightenment-devel@lists.sourceforge.net])
 AC_PREREQ([2.52])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_MACRO_DIR([m4])
@@ -58,9 +58,7 @@ AC_SUBST(release_info)
 VMAJ=v_maj
 AC_SUBST(VMAJ)
 
-m4_ifdef([AM_GNU_GETTEXT_VERSION], [
-AM_GNU_GETTEXT_VERSION([0.17])
-])
+AM_GNU_GETTEXT_VERSION(0.17)
 
 m4_ifdef([AM_GNU_GETTEXT], [
 AM_GNU_GETTEXT([external])
@@ -181,6 +179,7 @@ want_ecore_evas_wayland_egl="no"
 # ecore_imf modules
 want_ecore_imf_xim="no"
 want_ecore_imf_scim="no"
+want_ecore_imf_ibus="no"
 
 case "$host_os" in
    mingw32ce*)
@@ -245,6 +244,7 @@ case "$host_os" in
       want_ecore_evas_wayland_egl="yes"
       want_ecore_imf_xim="yes"
       want_ecore_imf_scim="yes"
+      want_ecore_imf_ibus="yes"
       ;;
 esac
 
@@ -273,6 +273,7 @@ requirements_ecore_win32=""
 requirements_ecore_wince=""
 requirements_ecore_imf_xim=""
 requirements_ecore_imf_scim=""
+requirements_ecore_imf_ibus=""
 requirements_ecore_wayland=""
 
 ### Additional options to configure
@@ -372,7 +373,10 @@ m4_ifndef([am__fastdepOBJC], [
 ])
 
 AC_PROG_CXX
-AC_PROG_CC
+AC_PROG_CC_C99
+if test "x${ac_cv_prog_cc_c99}" = "xno" ; then
+   AC_MSG_ERROR([ecore requires a c99-capable compiler])
+fi
 
 have_gnu_objc=${ac_cv_objc_compiler_gnu}
 
@@ -1244,7 +1248,7 @@ AC_CHECK_HEADERS([net/if.h], [], [],
 # include <sys/socket.h>
 #endif
 ])
-AC_CHECK_HEADERS([sys/un.h arpa/inet.h arpa/nameser.h netinet/tcp.h netinet/in.h ws2tcpip.h netdb.h])
+AC_CHECK_HEADERS([sys/un.h arpa/inet.h arpa/nameser.h netinet/tcp.h netinet/in.h ws2tcpip.h netdb.h errno.h])
 
 if test "x${ac_cv_header_netdb_h}" = "xyes" ; then
    have_addrinfo="yes"
@@ -1490,6 +1494,7 @@ if test "x${have_ecore_con}" = "xyes" ; then
    if test "x${have_ipv6}" = "xyes" ; then
       AC_DEFINE(HAVE_IPV6, 1, [Define if IPV6 is supported])
    fi
+   AM_CONDITIONAL([HAVE_IPV6], [test "x${have_ipv6}" = "xyes"])
 
    ECORE_CHECK_CURL([${want_curl}],
       [
@@ -1526,6 +1531,8 @@ if test "x${have_ecore_con}" = "xyes" ; then
       [have_cares="no"])
 
 fi
+
+EFL_CHECK_COMPILER_FLAGS([ECORE_CON], [-Wno-override-init -Wno-initializer-overrides])
 
 AM_CONDITIONAL([HAVE_CARES], [test "x${have_cares}" = "xyes"])
 
@@ -1619,6 +1626,23 @@ fi
 
 ECORE_CHECK_MODULE([imf-scim], [${want_ecore_imf}], [Imf_SCIM], [${ecore_imf_scim_deps}],
    [requirements_ecore_imf_scim="ecore-imf >= 1.2.0 ecore-x >= 1.2.0 ecore-input >= 1.2.0 ${requirements_ecore_imf_scim}"])
+
+# ecore_imf_ibus
+PKG_CHECK_MODULES([IBUS], [ibus-1.0 >= 1.3.99], [have_ibus="yes"], [have_ibus="no"])
+
+AM_CONDITIONAL(BUILD_ECORE_IMF_IBUS, false)
+ecore_imf_ibus_deps="no"
+echo "have_ecore_x_xlib: ${have_ecore_x_xlib}"
+if test    "x${have_ecore_imf}" = "xyes" \
+        -a "x${have_glib}" =  "xyes" \
+        -a "x${have_ibus}" =  "xyes" \
+        -a "x${have_ecore_input}" = "xyes" ; then
+   ecore_imf_ibus_deps="yes"
+   AC_DEFINE(BUILD_ECORE_IMF_IBUS, 1, [Ecore Imf IBUS Support])
+fi
+
+ECORE_CHECK_MODULE([imf-ibus], [${want_ecore_imf}], [Imf_IBUS], [${ecore_imf_ibus_deps}],
+   [requirements_ecore_imf_ibus="ecore-imf >= 1.2.0 ecore-x >= 1.2.0 ecore-input >= 1.2.0 ${requirements_ecore_imf_ibus}"])
 
 ## Graphic systems
 
@@ -1917,7 +1941,7 @@ ECORE_EVAS_CHECK_MODULE([psl1ght],
 ecore_wayland_deps="no"
 have_wayland="no"
 if test "x${want_ecore_wayland}" = "xyes" ; then
-  PKG_CHECK_MODULES([WAYLAND], [wayland-client xkbcommon], [have_wayland="yes"], [have_wayland="no"])
+  PKG_CHECK_MODULES([WAYLAND], [wayland-client wayland-cursor xkbcommon], [have_wayland="yes"], [have_wayland="no"])
 fi
 if test "x${have_ecore_input}" = "xyes" -a "x${have_wayland}" = "xyes" ; then
   ecore_wayland_deps="yes"
@@ -1976,6 +2000,7 @@ AC_SUBST(requirements_ecore_win32)
 AC_SUBST(requirements_ecore_wince)
 AC_SUBST(requirements_ecore_imf_xim)
 AC_SUBST(requirements_ecore_imf_scim)
+AC_SUBST(requirements_ecore_imf_ibus)
 AC_SUBST(requirements_ecore_wayland)
 
 AC_CONFIG_FILES([
@@ -2033,6 +2058,7 @@ src/modules/Makefile
 src/modules/immodules/Makefile
 src/modules/immodules/xim/Makefile
 src/modules/immodules/scim/Makefile
+src/modules/immodules/ibus/Makefile
 ecore.spec
 $po_makefile_in
 ])
@@ -2069,7 +2095,13 @@ fi
 if test "x$want_ecore_con_local_sockets" = "xyes" ; then
   echo "      Abstract Sockets.........: $want_ecore_con_abstract_sockets"
 fi
-  echo "    c-ares.....................: $have_cares"
+if test "x$have_cares" = "xyes" ; then
+  echo "    Resolver...................: c-ares"
+elif test "x$have_ipv6" = "xyes" ; then
+  echo "    Resolver...................: dns.c"
+else
+  echo "    Resolver...................: fork"
+fi
 fi
 echo "  Ecore_Ipc....................: $have_ecore_ipc"
 if test "x$have_ecore_ipc" = "xyes" ; then
@@ -2092,6 +2124,7 @@ fi
 echo "  Ecore_IMF....................: $have_ecore_imf"
 echo "    XIM........................: $have_ecore_imf_xim"
 echo "    SCIM.......................: $have_ecore_imf_scim"
+echo "    IBUS.......................: $have_ecore_imf_ibus"
 echo "  Ecore_IMF_Evas...............: $have_ecore_imf_evas"
 echo "  Ecore_Input..................: $have_ecore_input"
 echo "  Ecore_Input_Evas.............: $have_ecore_input_evas"
@@ -2189,6 +2222,8 @@ echo
 echo "  Tests................: ${enable_tests}"
 echo "  Maximum log level....: ${with_max_log_level}"
 echo "Documentation..........: ${build_doc}"
+echo "Examples...............: ${enable_build_examples}"
+echo "Examples installed.....: ${enable_install_examples}"
 echo
 echo "Compilation............: make (or gmake)"
 echo "  CPPFLAGS.............: $CPPFLAGS"

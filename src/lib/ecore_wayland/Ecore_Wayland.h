@@ -1,8 +1,16 @@
 #ifndef _ECORE_WAYLAND_H_
 # define _ECORE_WAYLAND_H_
 
+/*
+ * Wayland supoprt is considered experimental as wayland itself is still
+ * unstable and liable to change core protocol. If you use this api, it is
+ * possible it will break in future, until this notice is removed.
+ */
+
 # include <Eina.h>
 # include <wayland-client.h>
+# include <wayland-cursor.h>
+# include <xkbcommon/xkbcommon.h>
 
 # ifdef EAPI
 #  undef EAPI
@@ -43,6 +51,7 @@ typedef struct _Ecore_Wl_Event_Interfaces_Bound Ecore_Wl_Event_Interfaces_Bound;
 
 enum _Ecore_Wl_Window_Type
 {
+   ECORE_WL_WINDOW_TYPE_NONE,
    ECORE_WL_WINDOW_TYPE_TOPLEVEL,
    ECORE_WL_WINDOW_TYPE_FULLSCREEN,
    ECORE_WL_WINDOW_TYPE_MAXIMIZED,
@@ -78,7 +87,12 @@ struct _Ecore_Wl_Display
    struct wl_list inputs;
    struct wl_list outputs;
 
-   struct xkb_desc *xkb;
+   struct
+     {
+        struct xkb_context *context;
+     } xkb;
+
+   struct wl_cursor_theme *cursor_theme;
 
    Ecore_Wl_Output *output;
    Ecore_Wl_Input *input;
@@ -102,7 +116,13 @@ struct _Ecore_Wl_Output
 struct _Ecore_Wl_Input
 {
    Ecore_Wl_Display *display;
-   struct wl_input_device *input_device;
+   struct wl_seat *seat;
+   struct wl_pointer *pointer;
+   struct wl_keyboard *keyboard;
+   struct wl_touch *touch;
+
+   struct wl_surface *cursor_surface;
+
    struct wl_data_device *data_device;
 
    Ecore_Wl_Window *pointer_focus;
@@ -121,6 +141,15 @@ struct _Ecore_Wl_Input
 
    Ecore_Wl_Dnd_Source *drag_source;
    Ecore_Wl_Dnd_Source *selection_source;
+
+   struct
+     {
+        struct xkb_keymap *keymap;
+        struct xkb_state *state;
+        xkb_mod_mask_t control_mask;
+        xkb_mod_mask_t alt_mask;
+        xkb_mod_mask_t shift_mask;
+     } xkb;
 };
 
 struct _Ecore_Wl_Window
@@ -203,7 +232,6 @@ struct _Ecore_Wl_Event_Window_Configure
    unsigned int win;
    unsigned int event_win;
    int x, y, w, h;
-   unsigned int timestamp;
 };
 
 struct _Ecore_Wl_Event_Dnd_Enter
@@ -282,9 +310,13 @@ EAPI void ecore_wl_screen_size_get(int *w, int *h);
 EAPI void ecore_wl_pointer_xy_get(int *x, int *y);
 EAPI int ecore_wl_dpi_get(void);
 EAPI void ecore_wl_display_iterate(void);
+EAPI struct wl_cursor *ecore_wl_cursor_get(const char *cursor_name);
 
 EAPI void ecore_wl_input_grab(Ecore_Wl_Input *input, Ecore_Wl_Window *win, unsigned int button);
 EAPI void ecore_wl_input_ungrab(Ecore_Wl_Input *input);
+EAPI void ecore_wl_input_pointer_set(Ecore_Wl_Input *input, struct wl_surface *surface, int hot_x, int hot_y);
+EAPI void ecore_wl_input_cursor_from_name_set(Ecore_Wl_Input *input, const char *cursor_name);
+EAPI void ecore_wl_input_cursor_default_restore(Ecore_Wl_Input *input);
 
 EAPI struct wl_list ecore_wl_outputs_get(void);
 
@@ -306,7 +338,9 @@ EAPI struct wl_surface *ecore_wl_window_surface_get(Ecore_Wl_Window *win);
 EAPI struct wl_shell_surface *ecore_wl_window_shell_surface_get(Ecore_Wl_Window *win);
 EAPI Ecore_Wl_Window *ecore_wl_window_find(unsigned int id);
 EAPI void ecore_wl_window_type_set(Ecore_Wl_Window *win, Ecore_Wl_Window_Type type);
-EAPI void ecore_wl_window_pointer_set(Ecore_Wl_Window *win, struct wl_buffer *buffer, int hot_x, int hot_y, unsigned int timestamp);
+EAPI void ecore_wl_window_pointer_set(Ecore_Wl_Window *win, struct wl_surface *surface, int hot_x, int hot_y);
+EAPI void ecore_wl_window_cursor_from_name_set(Ecore_Wl_Window *win, const char *cursor_name);
+EAPI void ecore_wl_window_cursor_default_restore(Ecore_Wl_Window *win);
 EAPI void ecore_wl_window_parent_set(Ecore_Wl_Window *win, Ecore_Wl_Window *parent);
 
 #endif

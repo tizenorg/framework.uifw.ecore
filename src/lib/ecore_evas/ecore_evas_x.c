@@ -2074,11 +2074,15 @@ _ecore_evas_x_alpha_set(Ecore_Evas *ee, int alpha)
              ecore_x_icccm_title_set(ee->prop.window, ee->prop.title);
              ecore_x_netwm_name_set(ee->prop.window, ee->prop.title);
           }
+        if (ee->prop.name)
+          ecore_x_icccm_name_class_set(ee->prop.window,
+                                       ee->prop.name, ee->prop.clas);
         _ecore_evas_x_hints_update(ee);
         _ecore_evas_x_group_leader_update(ee);
         ecore_x_window_defaults_set(ee->prop.window);
         _ecore_evas_x_protocols_set(ee);
         _ecore_evas_x_sync_set(ee);
+        _ecore_evas_x_size_pos_hints_update(ee);
 #endif /* BUILD_ECORE_EVAS_SOFTWARE_X11 */
         if ((id = getenv("DESKTOP_STARTUP_ID")))
           {
@@ -2190,11 +2194,15 @@ _ecore_evas_x_alpha_set(Ecore_Evas *ee, int alpha)
              ecore_x_icccm_title_set(ee->prop.window, ee->prop.title);
              ecore_x_netwm_name_set(ee->prop.window, ee->prop.title);
           }
+        if (ee->prop.name)
+          ecore_x_icccm_name_class_set(ee->prop.window,
+                                       ee->prop.name, ee->prop.clas);
         _ecore_evas_x_hints_update(ee);
         _ecore_evas_x_group_leader_update(ee);
         ecore_x_window_defaults_set(ee->prop.window);
         _ecore_evas_x_protocols_set(ee);
         _ecore_evas_x_sync_set(ee);
+        _ecore_evas_x_size_pos_hints_update(ee);
 #endif /* BUILD_ECORE_EVAS_OPENGL_X11 */
         if ((id = getenv("DESKTOP_STARTUP_ID")))
           {
@@ -2269,11 +2277,15 @@ _ecore_evas_x_alpha_set(Ecore_Evas *ee, int alpha)
              ecore_x_icccm_title_set(ee->prop.window, ee->prop.title);
              ecore_x_netwm_name_set(ee->prop.window, ee->prop.title);
           }
+        if (ee->prop.name)
+          ecore_x_icccm_name_class_set(ee->prop.window,
+                                       ee->prop.name, ee->prop.clas);
         _ecore_evas_x_hints_update(ee);
         _ecore_evas_x_group_leader_update(ee);
         ecore_x_window_defaults_set(ee->prop.window);
         _ecore_evas_x_protocols_set(ee);
         _ecore_evas_x_sync_set(ee);
+        _ecore_evas_x_size_pos_hints_update(ee);
 #endif /* BUILD_ECORE_EVAS_SOFTWARE_16_X11 */
         if ((id = getenv("DESKTOP_STARTUP_ID")))
           {
@@ -2348,11 +2360,15 @@ _ecore_evas_x_alpha_set(Ecore_Evas *ee, int alpha)
              ecore_x_icccm_title_set(ee->prop.window, ee->prop.title);
              ecore_x_netwm_name_set(ee->prop.window, ee->prop.title);
           }
+        if (ee->prop.name)
+          ecore_x_icccm_name_class_set(ee->prop.window,
+                                       ee->prop.name, ee->prop.clas);
         _ecore_evas_x_hints_update(ee);
         _ecore_evas_x_group_leader_update(ee);
         ecore_x_window_defaults_set(ee->prop.window);
         _ecore_evas_x_protocols_set(ee);
         _ecore_evas_x_sync_set(ee);
+        _ecore_evas_x_size_pos_hints_update(ee);
 
         if ((id = getenv("DESKTOP_STARTUP_ID")))
           {
@@ -3307,7 +3323,9 @@ ecore_evas_software_x11_new(const char *disp_name __UNUSED__, Ecore_X_Window par
 
 /**
  * @brief Get the window from Ecore_Evas using software x11.
- * @note If ecore is not compiled with support to x11 then nothing is done and 0 is returned.
+ * @note If ecore is not compiled with support for x11 or if @p ee was not
+ * created with ecore_evas_software_x11_new() then nothing is done and
+ * 0 is returned.
  * @param ee The Ecore_Evas from which to get the window.
  * @return The window of type Ecore_X_Window.
  */
@@ -3315,6 +3333,7 @@ ecore_evas_software_x11_new(const char *disp_name __UNUSED__, Ecore_X_Window par
 EAPI Ecore_X_Window
 ecore_evas_software_x11_window_get(const Ecore_Evas *ee)
 {
+   if (!(!strcmp(ee->driver, "software_x11"))) return 0;
    return (Ecore_X_Window) ecore_evas_window_get(ee);
 }
 #else
@@ -3560,7 +3579,9 @@ ecore_evas_gl_x11_options_new(const char *disp_name __UNUSED__, Ecore_X_Window p
 
 /**
  * @brief Get the window from Ecore_Evas using opengl x11.
- * @note If ecore is not compiled with support to x11 then nothing is done and 0 is returned.
+ * @note If ecore is not compiled with support for x11 or if @p ee was not
+ * created with ecore_evas_gl_x11_new() then nothing is done and
+ * 0 is returned.
  * @param ee The Ecore_Evas from which to get the window.
  * @return The window of type Ecore_X_Window of Ecore_Evas.
  */
@@ -3568,6 +3589,7 @@ ecore_evas_gl_x11_options_new(const char *disp_name __UNUSED__, Ecore_X_Window p
 EAPI Ecore_X_Window
 ecore_evas_gl_x11_window_get(const Ecore_Evas *ee)
 {
+   if (!(!strcmp(ee->driver, "opengl_x11"))) return 0;
    return (Ecore_X_Window) ecore_evas_window_get(ee);
 }
 #else
@@ -3865,7 +3887,9 @@ ecore_evas_software_x11_16_new(const char *disp_name __UNUSED__, Ecore_X_Window 
 
 /**
  * @brief Get the window from Ecore_Evas using software 16 x11.
- * @note If ecore is not compiled with support to x11 then nothing is done and 0 is returned.
+ * @note If ecore is not compiled with support for x11 or if @p ee was not
+ * created with ecore_evas_software_x11_16_new() then nothing is done and
+ * 0 is returned.
  * @param ee The Ecore_Evas from which to get the window.
  * @return The window of type Ecore_X_Window of Ecore_Evas.
  */
@@ -3873,6 +3897,7 @@ ecore_evas_software_x11_16_new(const char *disp_name __UNUSED__, Ecore_X_Window 
 EAPI Ecore_X_Window
 ecore_evas_software_x11_16_window_get(const Ecore_Evas *ee)
 {
+   if (!(!strcmp(ee->driver, "software_16_x11"))) return 0;
    return (Ecore_X_Window) ecore_evas_window_get(ee);
 }
 #else
@@ -4194,7 +4219,9 @@ ecore_evas_software_x11_8_new(const char *disp_name, Ecore_X_Window parent,
 
 /**
  * @brief Get window from Ecore_Evas using software 8 x11.
- * @note If ecore is not compiled with support to x11 then nothing is done and 0 is returned.
+ * @note If ecore is not compiled with support for x11 or if @p ee was not
+ * created with ecore_evas_software_x11_8_new() then nothing is done and
+ * 0 is returned.
  * @param ee The Ecore_Evas from which to get the window.
  * @return The window of type Ecore_X_Window of Ecore_Evas.
  */
@@ -4202,6 +4229,7 @@ EAPI Ecore_X_Window
 ecore_evas_software_x11_8_window_get(const Ecore_Evas *ee)
 {
 #if defined (BUILD_ECORE_EVAS_SOFTWARE_8_X11)
+   if (!(!strcmp(ee->driver, "software_8_x11"))) return 0;
    return (Ecore_X_Window) ecore_evas_window_get(ee);
 #else
    return 0;
@@ -4211,7 +4239,9 @@ ecore_evas_software_x11_8_window_get(const Ecore_Evas *ee)
 
 /**
  * @brief Get subwindow from Ecore_Evas using software 8 x11.
- * @note If ecore is not compiled with support to x11 then nothing is done and 0 is returned.
+ * @note If ecore is not compiled with support for x11 or if @p ee was not
+ * created with ecore_evas_software_x11_8_new() then nothing is done and
+ * 0 is returned.
  * @param ee The Ecore_Evas from which to get the subwindow.
  * @return The window of type Ecore_X_Window of Ecore_Evas.
  */
@@ -4219,6 +4249,7 @@ EAPI Ecore_X_Window
 ecore_evas_software_x11_8_subwindow_get(const Ecore_Evas *ee)
 {
 #if defined (BUILD_ECORE_EVAS_SOFTWARE_8_X11)
+   if (!(!strcmp(ee->driver, "software_8_x11"))) return 0;
    return (Ecore_X_Window) ecore_evas_window_get(ee);
 #else
    return 0;
