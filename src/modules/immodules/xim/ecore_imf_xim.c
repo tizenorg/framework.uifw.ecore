@@ -10,7 +10,6 @@
 #include <X11/Xlib.h>
 #include <X11/Xlocale.h>
 #include <X11/Xutil.h>
-#include <X11/keysym.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,9 +26,13 @@ static Eina_List *open_ims = NULL;
 #define FEEDBACK_MASK (XIMReverse | XIMUnderline | XIMHighlight)
 
 typedef struct _XIM_Im_Info XIM_Im_Info;
+
+typedef struct _Ecore_IMF_Context_Data Ecore_IMF_Context_Data;
+
 struct _XIM_Im_Info
 {
    Ecore_X_Window win;
+   Ecore_IMF_Context_Data *user;
    char          *locale;
    XIM            im;
    Eina_List     *ics;
@@ -39,7 +42,6 @@ struct _XIM_Im_Info
    Eina_Bool      supports_cursor : 1;
 };
 
-typedef struct _Ecore_IMF_Context_Data Ecore_IMF_Context_Data;
 struct _Ecore_IMF_Context_Data
 {
    Ecore_X_Window win;
@@ -56,6 +58,8 @@ struct _Ecore_IMF_Context_Data
    Eina_Bool      in_toplevel;
    XIMFeedback   *feedbacks;
 
+   XIMCallback    destroy_cb;
+   
    XIMCallback    preedit_start_cb;
    XIMCallback    preedit_done_cb;
    XIMCallback    preedit_draw_cb;
@@ -74,7 +78,6 @@ static void          add_feedback_attr(Eina_List **attrs,
                                        int end_pos);
 
 static void          reinitialize_ic(Ecore_IMF_Context *ctx);
-static void          reinitialize_all_ics(XIM_Im_Info *info);
 static void          set_ic_client_window(Ecore_IMF_Context *ctx,
                                           Ecore_X_Window window);
 static int           preedit_start_callback(XIC xic,
@@ -561,19 +564,23 @@ _ecore_x_event_reverse_modifiers(unsigned int state)
 
    /**< "Control" is pressed */
    if (state & ECORE_IMF_KEYBOARD_MODIFIER_CTRL)
-     modifiers |= ControlMask;
+     modifiers |= ECORE_X_MODIFIER_CTRL;
 
    /**< "Alt" is pressed */
    if (state & ECORE_IMF_KEYBOARD_MODIFIER_ALT)
-     modifiers |= Mod1Mask;
+     modifiers |= ECORE_X_MODIFIER_ALT;
 
    /**< "Shift" is pressed */
    if (state & ECORE_IMF_KEYBOARD_MODIFIER_SHIFT)
-     modifiers |= ShiftMask;
+     modifiers |= ECORE_X_MODIFIER_SHIFT;
 
-   /**< "Win" (between "Ctrl" and "A */
+   /**< "Win" (between "Ctrl" and "Alt") is pressed */
    if (state & ECORE_IMF_KEYBOARD_MODIFIER_WIN)
-     modifiers |= Mod5Mask;
+     modifiers |= ECORE_X_MODIFIER_WIN;
+
+   /**< "AltGr" is pressed */
+   if (state & ECORE_IMF_KEYBOARD_MODIFIER_ALTGR)
+     modifiers |= ECORE_X_MODIFIER_ALTGR;
 
    return modifiers;
 }
@@ -585,15 +592,13 @@ _ecore_x_event_reverse_locks(unsigned int state)
 
    /**< "Num" lock is active */
    if (state & ECORE_IMF_KEYBOARD_LOCK_NUM)
-     locks |= Mod3Mask;
+     locks |= ECORE_X_LOCK_NUM;
 
    if (state & ECORE_IMF_KEYBOARD_LOCK_CAPS)
-     locks |= LockMask;
+     locks |= ECORE_X_LOCK_CAPS;
 
-#if 0 /* FIXME: add mask. */
    if (state & ECORE_IMF_KEYBOARD_LOCK_SCROLL)
-     ;
-#endif
+     locks |= ECORE_X_LOCK_SCROLL;
 
    return locks;
 }
@@ -694,14 +699,14 @@ _ecore_imf_context_xim_filter_event(Ecore_IMF_Context *ctx,
 
 #ifdef X_HAVE_UTF8_STRING
                   val = Xutf8LookupString(ic,
-                                          (XKeyEvent *)&xev,
+                                          &xev,
                                           tmp,
                                           val,
                                           &sym,
                                           &mbstatus);
 #else /* ifdef X_HAVE_UTF8_STRING */
                   val = XmbLookupString(ic,
-                                        (XKeyEvent *)&xev,
+                                        &xev,
                                         tmp,
                                         val,
                                         &sym,
@@ -1335,16 +1340,6 @@ reinitialize_ic(Ecore_IMF_Context *ctx)
 }
 
 static void
-reinitialize_all_ics(XIM_Im_Info *info)
-{
-   Eina_List *tmp_list;
-   Ecore_IMF_Context *ctx;
-
-   EINA_LIST_FOREACH (info->ics, tmp_list, ctx)
-     reinitialize_ic(ctx);
-}
-
-static void
 set_ic_client_window(Ecore_IMF_Context *ctx,
                      Ecore_X_Window window)
 {
@@ -1364,6 +1359,8 @@ set_ic_client_window(Ecore_IMF_Context *ctx,
         XIM_Im_Info *info;
         info = imf_context_data->im_info;
         info->ics = eina_list_remove(info->ics, imf_context_data);
+        if (imf_context_data->im_info)
+          imf_context_data->im_info->user = NULL;
         imf_context_data->im_info = NULL;
      }
 
@@ -1377,6 +1374,8 @@ set_ic_client_window(Ecore_IMF_Context *ctx,
         imf_context_data->im_info->ics =
           eina_list_prepend(imf_context_data->im_info->ics,
                             imf_context_data);
+        if (imf_context_data->im_info)
+          imf_context_data->im_info->user = imf_context_data;
      }
 }
 
@@ -1555,9 +1554,10 @@ xim_destroy_callback(XIM xim __UNUSED__,
                      XPointer call_data __UNUSED__)
 {
    XIM_Im_Info *info = (XIM_Im_Info *)client_data;
-   info->im = NULL;
 
-   reinitialize_all_ics(info);
+   if (info->user) info->user->ic = NULL;
+   info->im = NULL;
+//   reinitialize_ic(ctx);
    xim_info_try_im(info);
 
    return;

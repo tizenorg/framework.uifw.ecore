@@ -57,6 +57,7 @@ extern "C" {
 #define ECORE_EVENT_LOCK_NUM            0x0100
 #define ECORE_EVENT_LOCK_CAPS           0x0200
 #define ECORE_EVENT_LOCK_SHIFT          0x0300
+#define ECORE_EVENT_MODIFIER_ALTGR      0x0400 /**< @since 1.3 */
 
    typedef uintptr_t                        Ecore_Window;
    typedef struct _Ecore_Event_Key          Ecore_Event_Key;
@@ -75,6 +76,7 @@ extern "C" {
         ECORE_WIN,
         ECORE_SCROLL,
         ECORE_CAPS,
+        ECORE_MODE, /**< @since 1.3 */
         ECORE_LAST
      } Ecore_Event_Modifier;
 
@@ -89,6 +91,13 @@ extern "C" {
         ECORE_IN,
         ECORE_OUT
      } Ecore_Event_IO;
+
+   typedef enum _Ecore_Compose_State
+     {   
+        ECORE_COMPOSE_NONE,
+        ECORE_COMPOSE_MIDDLE,
+        ECORE_COMPOSE_DONE
+     } Ecore_Compose_State;
 
    struct _Ecore_Event_Key
      {
@@ -213,6 +222,11 @@ extern "C" {
    EAPI unsigned int         ecore_event_modifier_mask(Ecore_Event_Modifier modifier);
    EAPI Ecore_Event_Modifier ecore_event_update_modifier(const char *key, Ecore_Event_Modifiers *modifiers, int inc);
 
+   /**
+    * @since 1.3
+    */
+   EAPI Ecore_Compose_State  ecore_compose_get(const Eina_List *seq, char **seqstr_ret);
+   
 #ifdef __cplusplus
 }
 #endif
