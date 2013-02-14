@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif /* ifdef HAVE_CONFIG_H */
+
 #include "Ecore.h"
 #include "ecore_x_private.h"
 #include "Ecore_X.h"
@@ -21,10 +25,18 @@
  * @ingroup Ecore_X_Pixmap_Group
  */
 EAPI Ecore_X_Pixmap
-ecore_x_pixmap_new(Ecore_X_Window win, int w, int h, int dep)
+ecore_x_pixmap_new(Ecore_X_Window win,
+                   int w,
+                   int h,
+                   int dep)
 {
-   if (win == 0) win = DefaultRootWindow(_ecore_x_disp);
-   if (dep == 0) dep = DefaultDepth(_ecore_x_disp, DefaultScreen(_ecore_x_disp));
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (win == 0)
+     win = DefaultRootWindow(_ecore_x_disp);
+
+   if (dep == 0)
+     dep = DefaultDepth(_ecore_x_disp, DefaultScreen(_ecore_x_disp));
+
    return XCreatePixmap(_ecore_x_disp, win, w, h, dep);
 }
 
@@ -38,8 +50,9 @@ ecore_x_pixmap_new(Ecore_X_Window win, int w, int h, int dep)
  * @ingroup Ecore_X_Pixmap_Group
  */
 EAPI void
-ecore_x_pixmap_del(Ecore_X_Pixmap pmap)
+ecore_x_pixmap_free(Ecore_X_Pixmap pmap)
 {
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
    XFreePixmap(_ecore_x_disp, pmap);
 }
 
@@ -58,10 +71,17 @@ ecore_x_pixmap_del(Ecore_X_Pixmap pmap)
  * @ingroup Ecore_X_Pixmap_Group
  */
 EAPI void
-ecore_x_pixmap_paste(Ecore_X_Pixmap pmap, Ecore_X_Drawable dest, 
-		     Ecore_X_GC gc, int sx, int sy, 
-		     int w, int h, int dx, int dy)
+ecore_x_pixmap_paste(Ecore_X_Pixmap pmap,
+                     Ecore_X_Drawable dest,
+                     Ecore_X_GC gc,
+                     int sx,
+                     int sy,
+                     int w,
+                     int h,
+                     int dx,
+                     int dy)
 {
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
    XCopyArea(_ecore_x_disp, pmap, dest, gc, sx, sy, w, h, dx, dy);
 }
 
@@ -75,10 +95,15 @@ ecore_x_pixmap_paste(Ecore_X_Pixmap pmap, Ecore_X_Drawable dest,
  * @ingroup Ecore_X_Pixmap_Group
  */
 EAPI void
-ecore_x_pixmap_geometry_get(Ecore_X_Pixmap pmap, int *x, int *y, int *w, int *h)
+ecore_x_pixmap_geometry_get(Ecore_X_Pixmap pmap,
+                            int *x,
+                            int *y,
+                            int *w,
+                            int *h)
 {
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
    if (pmap)
-      ecore_x_drawable_geometry_get(pmap, x, y, w, h);
+     ecore_x_drawable_geometry_get(pmap, x, y, w, h);
 }
 
 /**
@@ -90,6 +115,7 @@ ecore_x_pixmap_geometry_get(Ecore_X_Pixmap pmap, int *x, int *y, int *w, int *h)
 EAPI int
 ecore_x_pixmap_depth_get(Ecore_X_Pixmap pmap)
 {
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
    return ecore_x_drawable_depth_get(pmap);
 }
 

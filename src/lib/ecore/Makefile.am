@@ -1,38 +1,69 @@
 MAINTAINERCLEANFILES = Makefile.in
 
-AM_CFLAGS = @WIN32_CFLAGS@
+AM_CPPFLAGS = @GLIB_CFLAGS@ @EVIL_CFLAGS@ @EINA_CFLAGS@ @WIN32_CPPFLAGS@ @EFL_ECORE_BUILD@
+AM_CFLAGS = @WIN32_CFLAGS@ @EFL_PTHREAD_CFLAGS@
 
 lib_LTLIBRARIES = libecore.la
-include_HEADERS = \
+includes_HEADERS = \
 Ecore.h \
-Ecore_Data.h \
-Ecore_Str.h
+Ecore_Getopt.h
+includesdir = $(includedir)/ecore-@VMAJ@
 
 libecore_la_SOURCES = \
 ecore.c \
-ecore_app.c \
+ecore_alloc.c \
 ecore_anim.c \
+ecore_app.c \
 ecore_events.c \
-ecore_exe.c \
-ecore_hash.c \
+ecore_getopt.c \
 ecore_idle_enterer.c \
 ecore_idle_exiter.c \
 ecore_idler.c \
-ecore_list.c \
+ecore_job.c \
 ecore_main.c \
-ecore_path.c \
-ecore_plugin.c \
-ecore_sheap.c \
-ecore_signal.c \
-ecore_str.c \
-ecore_strbuf.c \
-ecore_strings.c \
+ecore_pipe.c \
+ecore_poll.c \
 ecore_time.c \
 ecore_timer.c \
-ecore_tree.c \
-ecore_value.c \
-ecore_poll.c \
-ecore_private.h
+ecore_thread.c \
+ecore_glib.c \
+ecore_throttle.c
 
-libecore_la_LIBADD = @dlopen_libs@ @EVIL_LIBS@ @WIN32_LIBS@ -lm
-libecore_la_LDFLAGS = @lt_no_undefined@ @lt_enable_auto_import@ -version-info @version_info@
+if ECORE_HAVE_WIN32
+
+libecore_la_SOURCES += ecore_exe_win32.c
+
+else
+
+if ECORE_HAVE_WINCE
+
+libecore_la_SOURCES += ecore_exe_wince.c
+
+else
+
+if ECORE_HAVE_PS3
+
+libecore_la_SOURCES += ecore_exe_ps3.c
+
+else
+
+if ECORE_HAVE_EXOTIC
+
+libecore_la_SOURCES +=
+
+else
+
+libecore_la_SOURCES += ecore_signal.c ecore_exe.c
+
+endif
+
+endif
+
+endif
+
+endif
+
+libecore_la_LIBADD = @dlopen_libs@ @EINA_LIBS@ @EVIL_LIBS@ @GLIB_LIBS@ @WIN32_LIBS@ @LTLIBINTL@ @EFL_PTHREAD_LIBS@ @rt_libs@ -lm
+libecore_la_LDFLAGS = -no-undefined @lt_enable_auto_import@ -version-info @version_info@ @release_info@ @EFL_PTHREAD_LIBS@
+
+EXTRA_DIST = ecore_private.h

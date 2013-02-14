@@ -3,26 +3,41 @@
 include /usr/share/cdbs/1/class/autotools.mk
 include /usr/share/cdbs/1/rules/debhelper.mk
 
-#DEB_INSTALL_MANPAGES_libecore-doc := $(DEB_SRCDIR)/doc/man/man3/*.3
-DEB_INSTALL_MANPAGES_libecore-bin := debian/ecore_config.1
+DEB_CONFIGURE_SCRIPT := ./autogen.sh
+#DEB_INSTALL_MANPAGES_libecore-bin := debian/ecore_config.1
 DEB_DH_STRIP_ARGS := --dbg-package=libecore-dbg
-DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb --disable-ecore-directfb \
-	--disable-ecore-evas-dfb --enable-ecore-evas-fb --disable-rpath \
-	--enable-openssl
-DEB_MAKE_CLEAN_TARGET := clean
+DEB_CONFIGURE_EXTRA_FLAGS := --enable-ecore-fb \
+        --enable-dependency-tracking \
+	--disable-ecore-directfb \
+	--enable-ecore-evas-fb \
+	--disable-rpath \
+	--disable-openssl \
+	--disable-gnutls \
+	--disable-tslib \
+	--disable-doc \
+	--enable-simple-x11 \
+	--enable-ecore-evas-opengl-x11 \
+	--disable-ecore-evas-xrender-x11 \
+	--enable-curl \
+	--disable-openssl \
+	--enable-glib-integration-always \
+	--enable-ecore-x-gesture \
+	--disable-xim \
+	--disable-ecore-imf-xim \
+	--disable-ecore-imf-scim
+DEB_MAKE_EXTRA_ARGS := V=0
 
-build/libecore-doc::
-	cd $(DEB_SRCDIR) && doxygen
+DEB_MAKE_CLEAN_TARGET := distclean
+CFLAGS += -fvisibility=hidden -fPIC
+LDFLAGS += -fvisibility=hidden -Wl,--hash-style=both -Wl,--as-needed
 
-install/libecore-doc::
-	mkdir -p debian/libecore-doc/usr/share/doc/libecore-doc/
-	cp -R $(DEB_SRCDIR)/doc/html debian/libecore-doc/usr/share/doc/libecore-doc/
-	cd $(DEB_SRCDIR)/doc/man/man3 && ls -1 | grep -vi ecore | xargs rm
+#build/libecore-doc::
+#	cd $(DEB_SRCDIR)/doc && make doc
+
+#install/libecore-doc::
+#	mkdir -p debian/libecore-doc/usr/share/doc/libecore-doc
+#	cp -R $(DEB_SRCDIR)/doc/html debian/libecore-doc/usr/share/doc/libecore-doc/
 
 clean::
-	rm -rf $(DEB_SRCDIR)/doc/html $(DEB_SRCDIR)/doc/latex $(DEB_SRCDIR)/doc/man
-	mkdir -p $(DEB_SRCDIR)/doc/html
-	cp $(DEB_SRCDIR)/doc/img/*.png $(DEB_SRCDIR)/doc/html/
-	cp $(DEB_SRCDIR)/doc/img/*.gif $(DEB_SRCDIR)/doc/html/
-	./autogen.sh --prefix=/usr $(DEB_CONFIGURE_EXTRA_FLAGS) 
-
+	[ ! -f Makefile ] || make distclean
+	rm -f ecore-*.tar.bz2 ecore-*.tar.bz2.cdbs-config_list

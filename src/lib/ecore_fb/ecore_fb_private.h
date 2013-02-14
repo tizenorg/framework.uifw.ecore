@@ -1,11 +1,13 @@
 #ifndef _ECORE_FB_PRIVATE_H
 #define _ECORE_FB_PRIVATE_H
 
-#include "ecore_private.h"
 #include "Ecore.h"
-#include "Ecore_Data.h"
+#include "ecore_private.h"
+#include "Ecore_Input.h"
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <termios.h>
 #include <sys/types.h>
@@ -19,8 +21,8 @@
  #define kernel_ulong_t unsigned long 
  #define BITS_PER_LONG 32
  #include <linux/input.h>
- #undef kernel_ulong_t <-added
- #undef BITS_PER_LONG <-added
+ #undef kernel_ulong_t
+ #undef BITS_PER_LONG
 #else
  #include <linux/input.h>
 #endif
@@ -29,43 +31,53 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include <Ecore_Fb.h>
+
 /* ecore_fb_li.c */
 struct _Ecore_Fb_Input_Device
 {
-	int fd;
-	Ecore_Fd_Handler *handler;
-	int listen;
-	struct {
-		Ecore_Fb_Input_Device_Cap cap;
-		char *name;
-		char *dev;
-	} info;
-	struct
-	{
-		/* common mouse */
-		int x,y;
-		int w,h;
-		
-		double last;
-		double prev;
-		double threshold;
-		/* absolute axis */
-		int min_w, min_h;
-		double rel_w, rel_h;
-
-	} mouse;
-	struct
-	{
-		int shift;
-		int ctrl;
-		int alt;
-		int lock;
-	} keyboard;
+        int fd;
+        Ecore_Fd_Handler *handler;
+        int listen;
+        struct {
+                Ecore_Fb_Input_Device_Cap cap;
+                char *name;
+                char *dev;
+        } info;
+        struct
+        {
+                /* common mouse */
+                int x,y;
+                int w,h;
+                
+                double last;
+                double prev;
+                double threshold;
+                Eina_Bool did_double;
+                Eina_Bool did_triple;
+                /* absolute axis */
+                int min_w, min_h;
+                double rel_w, rel_h;
+                int event;
+                int prev_button;
+                int last_button;
+        } mouse;
+        struct
+        {
+                int shift;
+                int ctrl;
+                int alt;
+                int lock;
+        } keyboard;
+        void *window;
 };
 
 /* ecore_fb_ts.c */
 EAPI int    ecore_fb_ts_init(void);
 EAPI void   ecore_fb_ts_shutdown(void);
+EAPI void   ecore_fb_ts_events_window_set(void *window);
+EAPI void  *ecore_fb_ts_events_window_get(void);
+EAPI void   ecore_fb_ts_event_window_set(void *window);
 
 /* ecore_fb_vt.c */
 int  ecore_fb_vt_init(void);

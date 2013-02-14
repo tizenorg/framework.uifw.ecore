@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 /* by Azundris, with thanks to Corey Donohoe <atmos@atmos.org> */
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,15 +14,14 @@
 #include <ctype.h>
 
 #include <Ecore.h>
+#include "ecore_private.h"
 #include <Ecore_Ipc.h>
 
-#include "ecore_private.h"
 #include "ecore_config_ipc.h"
 #include "ecore_config_util.h"
 #include "ecore_config_private.h"
 
 #include "Ecore_Config.h"
-#include "config.h"
 
 
 /*****************************************************************************/
@@ -42,7 +45,7 @@ _ecore_config_ipc_ecore_string_get(char **m, char **r)
    *r = q;
    q += l;
    *m = q;
-   E(1, "IPC/eCore: got string-%d \"%s\"\n", l, *r);
+   WRN("IPC/eCore: got string-%d \"%s\"", l, *r);
    return ECORE_CONFIG_ERR_SUCC;
 }
 
@@ -54,7 +57,7 @@ _ecore_config_ipc_global_prop_list(Ecore_Config_Server * srv __UNUSED__, long se
    int                    key_count, x;
    estring               *s;
    int                    f;
-   char                   buf[PATH_MAX], *p; 	
+   char                   buf[PATH_MAX], *p;
    // char		*data;   		UNUSED
    Ecore_Config_Type      type;
 
@@ -118,7 +121,7 @@ _ecore_config_ipc_global_prop_list(Ecore_Config_Server * srv __UNUSED__, long se
 	  }
 	free(keys);
      }
-   
+
    return estring_disown(s);
 }
 
@@ -132,7 +135,7 @@ _ecore_config_ipc_ecore_send(Ecore_Ipc_Event_Client_Data * e, int code,
    int                 len = reply ? strlen(reply) + 1 : 0;
 
    our_ref++;
-   E(1, "IPC/eCore: replying [0,0] %d IRT %d => %d {\"%s\":%d}\n", our_ref,
+   WRN("IPC/eCore: replying [0,0] %d IRT %d => %d {\"%s\":%d}", our_ref,
      e->ref, code, reply ? reply : "", len);
    return ecore_ipc_client_send(e->client, 0, 0, our_ref, e->ref, code, reply,
 				len);
@@ -151,10 +154,9 @@ _ecore_config_ipc_ecore_handle_request(Ecore_Ipc_Server * server,
 
    srv = _ecore_config_server_convert(server);
    serial = e->minor;
-   ret = ECORE_CONFIG_ERR_FAIL;
    r = NULL;
    m = (char *)e->data;
-   E(1, "IPC/eCore: client sent: [%d,%d] #%d (%d) @ %p\n", e->major, e->minor,
+   INF("IPC/eCore: client sent: [%d,%d] #%d (%d) @ %p", e->major, e->minor,
      e->ref, e->size, server);
 
    switch (e->major)
@@ -229,7 +231,7 @@ _ecore_config_ipc_ecore_handle_request(Ecore_Ipc_Server * server,
 
 /*****************************************************************************/
 
-static int
+static Eina_Bool
 _ecore_config_ipc_client_add(void *data, int type __UNUSED__, void *event)
 {
    Ecore_Ipc_Server  **server;
@@ -239,13 +241,13 @@ _ecore_config_ipc_client_add(void *data, int type __UNUSED__, void *event)
    e = (Ecore_Ipc_Event_Client_Data *) event;
 
    if (*server != ecore_ipc_client_server_get(e->client))
-      return 1;
+      return EINA_TRUE;
 
-   E(1, "IPC/eCore: Client connected. @ %p\n", server);
-   return 1;
+   INF("IPC/eCore: Client connected. @ %p", server);
+   return EINA_TRUE;
 }
 
-static int
+static Eina_Bool
 _ecore_config_ipc_client_del(void *data, int type __UNUSED__, void *event)
 {
    Ecore_Ipc_Server  **server;
@@ -255,13 +257,13 @@ _ecore_config_ipc_client_del(void *data, int type __UNUSED__, void *event)
    e = (Ecore_Ipc_Event_Client_Data *) event;
 
    if (*server != ecore_ipc_client_server_get(e->client))
-      return 1;
+      return EINA_TRUE;
 
-   E(1, "IPC/eCore: Client disconnected. @ %p\n", server);
-   return 1;
+   INF("IPC/eCore: Client disconnected. @ %p", server);
+   return EINA_TRUE;
 }
 
-static int
+static Eina_Bool
 _ecore_config_ipc_client_sent(void *data, int type __UNUSED__, void *event)
 {
    Ecore_Ipc_Server  **server;
@@ -271,10 +273,10 @@ _ecore_config_ipc_client_sent(void *data, int type __UNUSED__, void *event)
    e = (Ecore_Ipc_Event_Client_Data *) event;
 
    if (*server != ecore_ipc_client_server_get(e->client))
-      return 1;
+      return EINA_TRUE;
 
    _ecore_config_ipc_ecore_handle_request(*server, e);
-   return 1;
+   return EINA_TRUE;
 }
 
 /*****************************************************************************/
@@ -311,7 +313,7 @@ _ecore_config_ipc_ecore_init(const char *pipe_name, void **data)
 
 	     if (!stat(socket, &st))
 	       {
-		  E(0, "IPC/eCore: pipe \"%s\" already exists!?\n", socket);
+		  INF("IPC/eCore: pipe \"%s\" already exists!?", socket);
 /*      if(unlink(buf))
   	E(0,"IPC/eCore: could not remove pipe \"%s\": %d\n",buf,errno); }}*/
 		  port++;
@@ -330,9 +332,9 @@ _ecore_config_ipc_ecore_init(const char *pipe_name, void **data)
    ecore_event_handler_add(ECORE_IPC_EVENT_CLIENT_DATA,
 			   _ecore_config_ipc_client_sent, server);
 
-   if (server)
+   if (*server)
      {
-	E(1, "IPC/eCore: Server is listening on %s.\n", pipe_name);
+	INF("IPC/eCore: Server is listening on %s.", pipe_name);
      }
 
    return ECORE_CONFIG_ERR_SUCC;
@@ -357,6 +359,7 @@ _ecore_config_ipc_ecore_exit(void **data)
      }
 
    ecore_ipc_shutdown();
+   ecore_shutdown();
 
    return ret;
 }

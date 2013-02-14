@@ -1,10 +1,27 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifndef __ECORE_WINCE_PRIVATE_H__
 #define __ECORE_WINCE_PRIVATE_H__
 
+
+/* logging messages macros */
+extern int _ecore_wince_log_dom_global;
+
+#ifdef ECORE_WINCE_DEFAULT_LOG_COLOR
+#undef ECORE_WINCE_DEFAULT_LOG_COLOR
+#endif
+#define ECORE_WINCE_DEFAULT_LOG_COLOR EINA_COLOR_LIGHTBLUE
+
+#ifdef ERR
+# undef ERR
+#endif
+#define ERR(...) EINA_LOG_DOM_ERR(_ecore_wince_log_dom_global , __VA_ARGS__)
+#ifdef DBG
+# undef DBG
+#endif
+#define DBG(...) EINA_LOG_DOM_DBG(_ecore_wince_log_dom_global , __VA_ARGS__)
+#ifdef INF
+# undef INF
+#endif
+#define INF(...) EINA_LOG_DOM_INFO(_ecore_wince_log_dom_global , __VA_ARGS__)
 
 #define ECORE_WINCE_WINDOW_CLASS L"Ecore_WinCE_Window_Class"
 
@@ -24,30 +41,32 @@ struct _Ecore_WinCE_Callback_Data
 };
 
 
-typedef int (*ecore_wince_suspend) (int);
-typedef int (*ecore_wince_resume)  (int);
+typedef int (*ecore_wince_suspend_cb) (int);
+typedef int (*ecore_wince_resume_cb)  (int);
 
 
 struct _Ecore_WinCE_Window
 {
-   HWND                window;
+   HWND                   window;
 
-   int                 backend;
-   ecore_wince_suspend suspend;
-   ecore_wince_resume  resume;
+   int                    backend;
+   ecore_wince_suspend_cb suspend_cb;
+   ecore_wince_resume_cb  resume_cb;
 
-   unsigned int        pointer_is_in : 1;
+   RECT                   rect;           /* used to go fullscreen to normal */
+
+   unsigned int           pointer_is_in : 1;
+   unsigned int           fullscreen    : 1;
 };
 
+extern HINSTANCE           _ecore_wince_instance;
 extern double              _ecore_wince_double_click_time;
-extern double              _ecore_wince_event_last_time;
+extern long                _ecore_wince_event_last_time;
 extern Ecore_WinCE_Window *_ecore_wince_event_last_window;
 
-extern HINSTANCE           _ecore_wince_instance;
 
-
-void  _ecore_wince_event_handle_key_press(Ecore_WinCE_Callback_Data *msg);
-void  _ecore_wince_event_handle_key_release(Ecore_WinCE_Callback_Data *msg);
+void  _ecore_wince_event_handle_key_press(Ecore_WinCE_Callback_Data *msg, int is_keystroke);
+void  _ecore_wince_event_handle_key_release(Ecore_WinCE_Callback_Data *msg, int is_keystroke);
 void  _ecore_wince_event_handle_button_press(Ecore_WinCE_Callback_Data *msg, int button);
 void  _ecore_wince_event_handle_button_release(Ecore_WinCE_Callback_Data *msg, int button);
 void  _ecore_wince_event_handle_motion_notify(Ecore_WinCE_Callback_Data *msg);

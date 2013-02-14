@@ -7,31 +7,28 @@ AM_CPPFLAGS = \
 -I$(top_srcdir)/src/lib/ecore \
 -I$(top_srcdir)/src/lib/ecore_con \
 -I$(top_srcdir)/src/lib/ecore_ipc \
-@SSL_CFLAGS@
-
-if BUILD_ECORE_IPC
+@EFL_ECORE_IPC_BUILD@ \
+@SSL_CFLAGS@ \
+@EVIL_CFLAGS@ \
+@EINA_CFLAGS@ \
+@WIN32_CPPFLAGS@
 
 lib_LTLIBRARIES = libecore_ipc.la
-include_HEADERS = \
-Ecore_Ipc.h
+includes_HEADERS = Ecore_Ipc.h
+includesdir = $(includedir)/ecore-@VMAJ@
 
 libecore_ipc_la_SOURCES = \
-ecore_ipc.c \
-ecore_ipc_private.h
+ecore_ipc.c
 
+libecore_ipc_la_CFLAGS = @WIN32_CFLAGS@
 libecore_ipc_la_LIBADD = \
 $(top_builddir)/src/lib/ecore/libecore.la \
 $(top_builddir)/src/lib/ecore_con/libecore_con.la \
-@SSL_LIBS@
+@SSL_LIBS@ \
+@EINA_LIBS@ \
+@EVIL_LIBS@ \
+@WIN32_LIBS@
 
-libecore_ipc_la_LDFLAGS = -version-info @version_info@
+libecore_ipc_la_LDFLAGS = -no-undefined -version-info @version_info@ @release_info@
 
-libecore_ipc_la_DEPENDENCIES = \
-$(top_builddir)/src/lib/ecore/libecore.la \
-$(top_builddir)/src/lib/ecore_con/libecore_con.la
-
-endif
-
-EXTRA_DIST = \
-ecore_ipc.c \
-ecore_ipc_private.h
+EXTRA_DIST = ecore_ipc_private.h

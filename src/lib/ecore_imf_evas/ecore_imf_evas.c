@@ -1,25 +1,28 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
 
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
 
+#include <Ecore.h>
+#include "ecore_private.h"
 #include "Ecore_IMF_Evas.h"
 
 /**
  * @defgroup Ecore_IMF_Evas_Group Ecore Input Method Context Evas Helper Functions
  *
  * Helper functions to make it easy to use Evas with Ecore_IMF.
+ * Converts each event from Evas to the corresponding event of Ecore_IMF.
+ *
+ * An example of usage of these functions can be found at:
+ * @li @ref ecore_imf_example_c
  */
 
-static char *_ecore_imf_evas_event_empty = "";
+static const char *_ecore_imf_evas_event_empty = "";
 
 /* Converts the Evas modifiers to Ecore_IMF keyboard modifiers */
 static void
 _ecore_imf_evas_event_modifiers_wrap(Evas_Modifier *evas_modifiers,
-				     Ecore_IMF_Keyboard_Modifiers *imf_keyboard_modifiers)
+                                     Ecore_IMF_Keyboard_Modifiers *imf_keyboard_modifiers)
 {
    if (!evas_modifiers || !imf_keyboard_modifiers)
      return;
@@ -33,12 +36,14 @@ _ecore_imf_evas_event_modifiers_wrap(Evas_Modifier *evas_modifiers,
      *imf_keyboard_modifiers |= ECORE_IMF_KEYBOARD_MODIFIER_SHIFT;
    if (evas_key_modifier_is_set(evas_modifiers, "Super") || evas_key_modifier_is_set(evas_modifiers, "Hyper"))
      *imf_keyboard_modifiers |= ECORE_IMF_KEYBOARD_MODIFIER_WIN;
+   if (evas_key_modifier_is_set(evas_modifiers, "AltGr"))
+     *imf_keyboard_modifiers |= ECORE_IMF_KEYBOARD_MODIFIER_ALTGR;
 }
 
 /* Converts the Evas locks to Ecore_IMF keyboard locks */
 static void
 _ecore_imf_evas_event_locks_wrap(Evas_Lock *evas_locks,
-				 Ecore_IMF_Keyboard_Locks *imf_keyboard_locks)
+                                 Ecore_IMF_Keyboard_Locks *imf_keyboard_locks)
 {
    if (!evas_locks || !imf_keyboard_locks)
      return;
@@ -55,7 +60,7 @@ _ecore_imf_evas_event_locks_wrap(Evas_Lock *evas_locks,
 /* Converts the Evas mouse flags to Ecore_IMF mouse flags */
 static void
 _ecore_imf_evas_event_mouse_flags_wrap(Evas_Button_Flags evas_flags,
-				       Ecore_IMF_Mouse_Flags *imf_flags)
+                                       Ecore_IMF_Mouse_Flags *imf_flags)
 {
    if (!imf_flags)
      return;
@@ -76,7 +81,7 @@ _ecore_imf_evas_event_mouse_flags_wrap(Evas_Button_Flags evas_flags,
  */
 EAPI void
 ecore_imf_evas_event_mouse_in_wrap(Evas_Event_Mouse_In *evas_event,
-				   Ecore_IMF_Event_Mouse_In *imf_event)
+                                   Ecore_IMF_Event_Mouse_In *imf_event)
 {
    if (!evas_event || !imf_event)
      return;
@@ -100,7 +105,7 @@ ecore_imf_evas_event_mouse_in_wrap(Evas_Event_Mouse_In *evas_event,
  */
 EAPI void
 ecore_imf_evas_event_mouse_out_wrap(Evas_Event_Mouse_Out *evas_event,
-				    Ecore_IMF_Event_Mouse_Out *imf_event)
+                                    Ecore_IMF_Event_Mouse_Out *imf_event)
 {
    if (!evas_event || !imf_event)
      return;
@@ -124,7 +129,7 @@ ecore_imf_evas_event_mouse_out_wrap(Evas_Event_Mouse_Out *evas_event,
  */
 EAPI void
 ecore_imf_evas_event_mouse_move_wrap(Evas_Event_Mouse_Move *evas_event,
-				     Ecore_IMF_Event_Mouse_Move *imf_event)
+                                     Ecore_IMF_Event_Mouse_Move *imf_event)
 {
    if (!evas_event || !imf_event)
      return;
@@ -152,7 +157,7 @@ ecore_imf_evas_event_mouse_move_wrap(Evas_Event_Mouse_Move *evas_event,
  */
 EAPI void
 ecore_imf_evas_event_mouse_down_wrap(Evas_Event_Mouse_Down *evas_event,
-				     Ecore_IMF_Event_Mouse_Down *imf_event)
+                                     Ecore_IMF_Event_Mouse_Down *imf_event)
 {
    if (!evas_event || !imf_event)
       return;
@@ -177,7 +182,7 @@ ecore_imf_evas_event_mouse_down_wrap(Evas_Event_Mouse_Down *evas_event,
  */
 EAPI void
 ecore_imf_evas_event_mouse_up_wrap(Evas_Event_Mouse_Up *evas_event,
-				   Ecore_IMF_Event_Mouse_Up *imf_event)
+                                   Ecore_IMF_Event_Mouse_Up *imf_event)
 {
    if (!evas_event || !imf_event)
      return;
@@ -202,7 +207,7 @@ ecore_imf_evas_event_mouse_up_wrap(Evas_Event_Mouse_Up *evas_event,
  */
 EAPI void
 ecore_imf_evas_event_mouse_wheel_wrap(Evas_Event_Mouse_Wheel *evas_event,
-				      Ecore_IMF_Event_Mouse_Wheel *imf_event)
+                                      Ecore_IMF_Event_Mouse_Wheel *imf_event)
 {
    if (!evas_event || !imf_event)
      return;
@@ -225,10 +230,32 @@ ecore_imf_evas_event_mouse_wheel_wrap(Evas_Event_Mouse_Wheel *evas_event,
  * @param evas_event The received Evas event.
  * @param imf_event The location to store the converted Ecore_IMF event.
  * @ingroup Ecore_IMF_Evas_Group
+ *
+ * Example
+ * @code
+ * static void
+ * _key_down_cb(void *data, Evas *e, Evas_Object *obj, void *event_info)
+ * {
+ *    Evas_Event_Key_Down *ev = event_info;
+ *    if (!ev->keyname) return;
+ *
+ *    if (imf_context)
+ *      {
+ *         Ecore_IMF_Event_Key_Down ecore_ev;
+ *         ecore_imf_evas_event_key_down_wrap(ev, &ecore_ev);
+ *         if (ecore_imf_context_filter_event(imf_context,
+ *                                            ECORE_IMF_EVENT_KEY_DOWN,
+ *                                            (Ecore_IMF_Event *)&ecore_ev))
+ *           return;
+ *      }
+ * }
+ *
+ * evas_object_event_callback_add(obj, EVAS_CALLBACK_KEY_DOWN, _key_down_cb, data);
+ * @endcode
  */
 EAPI void
 ecore_imf_evas_event_key_down_wrap(Evas_Event_Key_Down *evas_event,
-				   Ecore_IMF_Event_Key_Down *imf_event)
+                                   Ecore_IMF_Event_Key_Down *imf_event)
 {
    if (!evas_event || !imf_event)
      return;
@@ -248,11 +275,45 @@ ecore_imf_evas_event_key_down_wrap(Evas_Event_Key_Down *evas_event,
  * @param evas_event The received Evas event.
  * @param imf_event The location to store the converted Ecore_IMF event.
  * @ingroup Ecore_IMF_Evas_Group
+ *
+ * Example
+ * @code
+ * static void
+ * _key_up_cb(void *data, Evas *e, Evas_Object *obj, void *event_info)
+ * {
+ *    Evas_Event_Key_Up *ev = event_info;
+ *    if (!ev->keyname) return;
+ *
+ *    if (imf_context)
+ *      {
+ *         Ecore_IMF_Event_Key_Up ecore_ev;
+ *         ecore_imf_evas_event_key_up_wrap(ev, &ecore_ev);
+ *         if (ecore_imf_context_filter_event(imf_context,
+ *                                            ECORE_IMF_EVENT_KEY_UP,
+ *                                            (Ecore_IMF_Event *)&ecore_ev))
+ *           return;
+ *      }
+ * }
+ *
+ * evas_object_event_callback_add(obj, EVAS_CALLBACK_KEY_UP, _key_up_cb, data);
+ * @endcode
  */
 EAPI void
 ecore_imf_evas_event_key_up_wrap(Evas_Event_Key_Up *evas_event,
-				 Ecore_IMF_Event_Key_Up *imf_event)
+                                 Ecore_IMF_Event_Key_Up *imf_event)
 {
+   if (!evas_event)
+     {
+        EINA_LOG_ERR("Evas event is missing");
+        return;
+     }
+
+   if (!imf_event)
+     {
+        EINA_LOG_ERR("Imf event is missing");
+        return;
+     }
+
    imf_event->keyname = evas_event->keyname ? evas_event->keyname : _ecore_imf_evas_event_empty;
    imf_event->key = evas_event->key ? evas_event->key : _ecore_imf_evas_event_empty;
    imf_event->string = evas_event->string ? evas_event->string : _ecore_imf_evas_event_empty;

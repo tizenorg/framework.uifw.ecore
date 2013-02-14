@@ -1,83 +1,79 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #include "ecore_xcb_private.h"
+# ifdef ECORE_XCB_DAMAGE
+#  include <xcb/damage.h>
+# endif
 
+/* local variables */
+static Eina_Bool _damage_avail = EINA_FALSE;
+
+/* external variables */
+int _ecore_xcb_event_damage = -1;
+
+void
+_ecore_xcb_damage_init(void)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+#ifdef ECORE_XCB_DAMAGE
+   xcb_prefetch_extension_data(_ecore_xcb_conn, &xcb_damage_id);
+#endif
+}
+
+void
+_ecore_xcb_damage_finalize(void)
+{
+#ifdef ECORE_XCB_DAMAGE
+   const xcb_query_extension_reply_t *ext_reply;
+#endif
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+#ifdef ECORE_XCB_DAMAGE
+   ext_reply = xcb_get_extension_data(_ecore_xcb_conn, &xcb_damage_id);
+   if ((ext_reply) && (ext_reply->present))
+     {
+        xcb_damage_query_version_cookie_t cookie;
+        xcb_damage_query_version_reply_t *reply;
+
+        cookie =
+          xcb_damage_query_version_unchecked(_ecore_xcb_conn,
+                                             XCB_DAMAGE_MAJOR_VERSION,
+                                             XCB_DAMAGE_MINOR_VERSION);
+        reply = xcb_damage_query_version_reply(_ecore_xcb_conn, cookie, NULL);
+        if (reply)
+          {
+             _damage_avail = EINA_TRUE;
+             free(reply);
+          }
+
+        if (_damage_avail)
+          _ecore_xcb_event_damage = ext_reply->first_event;
+     }
+#endif
+}
 
 /**
  * @defgroup Ecore_X_Damage_Group X Damage Extension Functions
  *
- * Functions related to the X Damage extension.
+ * Functions related to the X Damage Extension.
  */
 
-
-#ifdef ECORE_XCB_DAMAGE
-static uint8_t _damage_available = 0;
-static xcb_damage_query_version_cookie_t _ecore_xcb_damage_init_cookie;
-#endif /* ECORE_XCB_DAMAGE */
-
-
-/* To avoid round trips, the initialization is separated in 2
-   functions: _ecore_xcb_damage_init and
-   _ecore_xcb_damage_init_finalize. The first one gets the cookies and
-   the second one gets the replies. */
-
-void
-_ecore_x_damage_init(const xcb_query_extension_reply_t *reply)
-{
-#ifdef ECORE_XCB_DAMAGE
-   if (reply && (reply->present))
-      _ecore_xcb_damage_init_cookie = xcb_damage_query_version_unchecked(_ecore_xcb_conn, 1, 1);
-#endif /* ECORE_XCB_DAMAGE */
-}
-
-void
-_ecore_x_damage_init_finalize(void)
-{
-#ifdef ECORE_XCB_DAMAGE
-   xcb_damage_query_version_reply_t *reply;
-
-   reply = xcb_damage_query_version_reply(_ecore_xcb_conn,
-                                          _ecore_xcb_damage_init_cookie,
-                                          NULL);
-   if (reply)
-     {
-        if (reply->major_version >= 1)
-          _damage_available = 1;
-        free(reply);
-     }
-#endif /* ECORE_XCB_DAMAGE */
-}
-
-
-/**
- * Return whether the Damage Extension is available.
- * @return 1 if the Damage Extension is available, 0 if not.
- *
- * Return 1 if the X server supports the Damage Extension version 1.0,
- * 0 otherwise.
- * @ingroup Ecore_X_Damage_Group
- */
-EAPI int
+EAPI Eina_Bool
 ecore_x_damage_query(void)
 {
-#ifdef ECORE_XCB_DAMAGE
-   return _damage_available;
-#else
-   return 0;
-#endif /* ECORE_XCB_DAMAGE */
+   return _damage_avail;
 }
 
-
 /**
- * Creates a damage object.
- * @param drawable The drawable to monotor.
- * @param level    The level of the damage report.
- * @return         The damage object.
+ * Create a damage object
  *
- * Creates a damage object to monitor changes to @p drawable, with the
- * level @p level.
+ * @param drawable The drawable to monitor
+ * @param level The level of the damage report
+ * @return The damage object
+ *
+ * Creates a damage object to monitor changes to @p drawable,
+ * with the level @p level.
+ *
  * @ingroup Ecore_X_Damage_Group
  */
 EAPI Ecore_X_Damage
@@ -86,45 +82,59 @@ ecore_x_damage_new(Ecore_X_Drawable            drawable,
 {
    Ecore_X_Damage damage = 0;
 
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   if (!_damage_avail) return 0;
+
 #ifdef ECORE_XCB_DAMAGE
    damage = xcb_generate_id(_ecore_xcb_conn);
    xcb_damage_create(_ecore_xcb_conn, damage, drawable, level);
-#endif /* ECORE_XCB_DAMAGE */
+//   ecore_x_flush();
+#endif
 
    return damage;
 }
 
-
 /**
- * Destroys a damage object.
- * @param damage The damage object to destroy.
+ * Destroy a damage object
  *
- * Destroys the damage object @p damage.
+ * @param damage The damage object to destroy
+ *
+ * Destroys the damage object @p damage
+ *
  * @ingroup Ecore_X_Damage_Group
  */
 EAPI void
-ecore_x_damage_del(Ecore_X_Damage damage)
+ecore_x_damage_free(Ecore_X_Damage damage)
 {
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   if (!_damage_avail) return;
+
 #ifdef ECORE_XCB_DAMAGE
    xcb_damage_destroy(_ecore_xcb_conn, damage);
-#endif /* ECORE_XCB_DAMAGE */
+//   ecore_x_flush();
+#endif
 }
 
-
 /**
- * Synchronously modifies the region.
- * @param damage The damage object to destroy.
- * @param repair The repair region.
- * @param parts  The parts region.
+ * Synchronously modifies the region
+ *
+ * @param damage The damage object to destroy
+ * @param repair The repair region
+ * @param parts The parts region
  *
  * Synchronously modifies the regions in the following manner:
  * If @p repair is @c XCB_NONE:
  *   1) parts = damage
- *   2) damage = <empty>
+ *   2) damage = \<empty\>
  * Otherwise:
  *   1) parts = damage INTERSECT repair
  *   2) damage = damage - parts
  *   3) Generate DamageNotify for remaining damage areas
+ *
  * @ingroup Ecore_X_Damage_Group
  */
 EAPI void
@@ -132,7 +142,14 @@ ecore_x_damage_subtract(Ecore_X_Damage damage,
                         Ecore_X_Region repair,
                         Ecore_X_Region parts)
 {
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   if (!_damage_avail) return;
+
 #ifdef ECORE_XCB_DAMAGE
    xcb_damage_subtract(_ecore_xcb_conn, damage, repair, parts);
-#endif /* ECORE_XCB_DAMAGE */
+//   ecore_x_flush();
+#endif
 }
+
