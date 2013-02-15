@@ -1,99 +1,97 @@
-dnl use: ECORE_CHECK_MODULE(Foo, default-enabled[, dependancy[, ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]]])
+dnl use: ECORE_CHECK_MODULE(Foo, default-enabled, description[, dependency[, ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]]])
 AC_DEFUN([ECORE_CHECK_MODULE],
 [
-pushdef([UP], translit([$1], [a-z], [A-Z]))dnl
-pushdef([DOWN], translit([$1], [A-Z], [a-z]))dnl
+m4_pushdef([UP], m4_translit([[$1]], [-a-z], [_A-Z]))dnl
+m4_pushdef([DOWN], m4_translit([[$1]], [-A-Z], [_a-z]))dnl
 
-have_ecore_[]DOWN="no"
-ecore_[]DOWN[]_cflags=""
-ecore_[]DOWN[]_libs=""
+have_ecore_[]m4_defn([DOWN])=no
+ecore_[]m4_defn([DOWN])[]_cflags=
+ecore_[]m4_defn([DOWN])[]_libs=
+want_module=$2
 
-ifelse("x$2", "xno",
-[
-  AC_ARG_ENABLE(ecore-[]DOWN,
-    AC_HELP_STRING(
-      [--enable-ecore-[]DOWN],
-      [enable the ecore_[]DOWN module. [[default=disabled]]]
-    ),
-    [ want_ecore_[]DOWN=$enableval ],
-    [ want_ecore_[]DOWN=no ])
-],
-[
-  AC_ARG_ENABLE(ecore-[]DOWN,
-    AC_HELP_STRING(
-      [--disable-ecore-[]DOWN],
-      [disable the ecore_[]DOWN module. [[default=enabled]]]
-    ),
-    [ want_ecore_[]DOWN=$enableval ],
-    [ want_ecore_[]DOWN=yes ])
+AC_ARG_ENABLE(ecore-$1,
+   [AC_HELP_STRING(
+       [--enable-ecore-$1],
+       [enable the ecore_]m4_defn([DOWN])[ module])],
+   [
+    if test "x${enableval}" = "xyes" ; then
+       want_module="yes"
+    else
+       want_module="no"
+    fi
+   ],
+   [])
+
+AC_MSG_CHECKING([whether Ecore_$3 module is to be built])
+
+if test "x${want_module}" = "xyes" ; then
+   if test "x$4" = "x" || test "x$4" = "xyes" ; then
+      AC_DEFINE([BUILD_ECORE_]m4_defn([UP]), [1], [Build Ecore_$3 Module])
+      have_ecore_[]m4_defn([DOWN])="yes"
+      ecore_[]m4_defn([DOWN])[]_libs="-lecore_[]m4_defn([DOWN])"
+      AC_MSG_RESULT([yes])
+   else
+      AC_MSG_RESULT([no (dependency failed)])
+   fi
+else
+   AC_MSG_RESULT([no])
+fi
+
+AM_CONDITIONAL([BUILD_ECORE_]UP, [test "x$have_ecore_]DOWN[" = "xyes"])
+
+AS_IF([test "x$have_ecore_[]m4_defn([DOWN])" = "xyes"], [$5], [$6])
+
+AC_SUBST(ecore_[]m4_defn([DOWN])[]_cflags)
+AC_SUBST(ecore_[]m4_defn([DOWN])[]_libs)
+
+m4_popdef([UP])
+m4_popdef([DOWN])
 ])
 
-AC_MSG_CHECKING(whether ecore_[]DOWN module is to be built)
+dnl use: ECORE_EVAS_CHECK_MODULE_FULL(foo-bar, evas-module, want, description, backend[, ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
+AC_DEFUN([ECORE_EVAS_CHECK_MODULE_FULL],
+[
+m4_pushdef([UP], m4_translit([[$1]], [-a-z], [_A-Z]))dnl
+m4_pushdef([DOWN], m4_translit([[$1]], [-A-Z], [_a-z]))dnl
 
-if test "x$want_ecore_[]DOWN" = "xyes" ; then
-  if test "x$3" = "x" -o "x$3" = "xyes" ; then
-    AC_DEFINE(BUILD_ECORE_[]UP, 1, [Build Ecore_$1 Module])
-    have_ecore_[]DOWN="yes"
-    ecore_[]DOWN[]_libs="-lecore_[]DOWN"
-    AC_MSG_RESULT([yes])
-  else
-    AC_MSG_RESULT([no (dependancy failed)])
-  fi
-else
-  AC_MSG_RESULT([no])
+have_ecore_evas_[]m4_defn([DOWN])="no"
+want_module="$3"
+
+AC_ARG_ENABLE(ecore-evas-$1,
+   [AC_HELP_STRING(
+       [--enable-ecore-evas-$1],
+       [enable $4 support in the ecore_evas module.])],
+   [
+    if test "x${enableval}" = "xyes" ; then
+       want_module="yes"
+    else
+       want_module="no"
+    fi
+   ],
+   [])
+
+AC_MSG_CHECKING([whether ecore_evas $4 support is to be built])
+AC_MSG_RESULT([${want_module}])
+
+if test "x$5" = "xyes" && \
+   test "x$have_ecore_evas" = "xyes" && \
+   test "x$want_module" = "xyes" ; then
+   PKG_CHECK_EXISTS([evas-$2],
+      [
+       AC_DEFINE([BUILD_ECORE_EVAS_]m4_defn([UP]), [1], [Support for $4 Engine in Ecore_Evas])
+       have_ecore_evas_[]m4_defn([DOWN])="yes"
+      ])
 fi
 
-AM_CONDITIONAL(BUILD_ECORE_[]UP, test "x$have_ecore_[]DOWN" = "xyes")
+AC_MSG_CHECKING([whether ecore_evas $4 support is built])
+AC_MSG_RESULT([$have_ecore_evas_]m4_defn([DOWN]))
 
-if test "x$have_ecore_[]DOWN" = "xyes" ; then
-  ifelse([$4], , :, [$4])
-else
-  ifelse([$5], , :, [$5])
-fi
+AS_IF([test "x$have_ecore_evas_[]m4_defn([DOWN])" = "xyes"], [$6], [$7])
 
-AC_SUBST(ecore_[]DOWN[]_cflags)
-AC_SUBST(ecore_[]DOWN[]_libs)
-
-popdef([UP])
-popdef([DOWN])
+m4_popdef([UP])
+m4_popdef([DOWN])
 ])
 
 dnl use: ECORE_EVAS_CHECK_MODULE(foo-bar, want, description, backend[, ACTION-IF-FOUND[, ACTION-IF-NOT-FOUND]])
 AC_DEFUN([ECORE_EVAS_CHECK_MODULE],
-[
-pushdef([UP], translit([$1], [-a-z], [_A-Z]))dnl
-pushdef([DOWN], translit([$1], [-A-Z], [_a-z]))dnl
-
-have_ecore_evas_[]DOWN="no"
-want_module="$2"
-
-AC_ARG_ENABLE(ecore-$1,
-  AC_HELP_STRING(
-    [--enable-ecore-evas-$1],
-    [enable $3 support in the ecore_evas module.]
-  ),
-  [ want_module=$enableval ]
-)
-AC_MSG_CHECKING(whether ecore_evas $3 support is to be built)
-AC_MSG_RESULT($want_module)
-
-if test "x$4" = "xyes" -a \
-        "x$have_ecore_evas" = "xyes" -a \
-        "x$want_module" = "xyes" ; then
-  PKG_CHECK_MODULES(EVAS_[]UP, evas-$1,
-    [
-     AC_DEFINE(BUILD_ECORE_EVAS_[]UP, 1, [Support for $3 Engine in Ecore_Evas])
-     have_ecore_evas_[]DOWN="yes";
-    ]
-  )
-fi
-
-if test "x$have_ecore_evas_[]DOWN" = "xyes" ; then
-  ifelse([$5], , :, [$5])
-else
-  ifelse([$6], , :, [$6])
-fi
-
-popdef([UP])
-popdef([DOWN])
-])
+[ECORE_EVAS_CHECK_MODULE_FULL([$1], [$1], [$2], [$3], [$4], [$5], [$6])])

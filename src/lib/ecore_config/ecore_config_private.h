@@ -1,15 +1,40 @@
 #ifndef _ECORE_CONFIG_PRIVATE_H
 # define _ECORE_CONFIG_PRIVATE_H
+#ifdef ECORE_CONFIG_DEFAULT_LOG_COLOR
+# undef ECORE_CONFIG_DEFAULT_LOG_COLOR
+#endif
+#define ECORE_CONFIG_DEFAULT_LOG_COLOR EINA_COLOR_BLUE
+ /* eina_log related things */
+ 
+extern int _ecore_config_log_dom;
+#ifdef ERR
+# undef ERR
+#endif
+#define ERR(...) EINA_LOG_DOM_ERR(_ecore_config_log_dom, __VA_ARGS__)
 
+#ifdef DBG
+# undef DBG
+#endif
+#define DBG(...) EINA_LOG_DOM_DBG(_ecore_config_log_dom, __VA_ARGS__)
+
+#ifdef INF
+# undef INF
+#endif
+#define INF(...) EINA_LOG_DOM_INFO(_ecore_config_log_dom, __VA_ARGS__)
+
+#ifdef WRN
+# undef WRN
+#endif
+#define WRN(...) EINA_LOG_DOM_WARN(_ecore_config_log_dom, __VA_ARGS__)
+
+#ifdef CRIT
+# undef CRIT
+#endif
+#define CRIT(...) EINA_LOG_DOM_CRIT(_ecore_config_log_dom, __VA_ARGS__)
+ 
 /* debug */
 extern int               DEBUG;
-#ifdef __sgi
-# define D
-# define E
-#else
-# define D(fmt,args...) do { if(DEBUG>=0) fprintf(stderr,fmt,## args); } while(0);
-# define E(lvl,args...) do { if(DEBUG>=(lvl)) fprintf(stderr,## args); } while(0)
-#endif
+ 
 
 typedef struct _Ecore_Config_DB_File Ecore_Config_DB_File;
 
@@ -39,6 +64,7 @@ int                   _ecore_config_ipc_ecore_init(const char *pipe_name, void *
 int                   _ecore_config_ipc_ecore_exit(void **data);
 int                   _ecore_config_ipc_ecore_poll(void **data);
 
+#include "Ecore.h"
 #include "ecore_private.h"
 
 #endif

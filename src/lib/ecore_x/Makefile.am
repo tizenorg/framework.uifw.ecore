@@ -1,7 +1,5 @@
 MAINTAINERCLEANFILES = Makefile.in
 
-if BUILD_ECORE_X
-
 SUBDIRS = xlib xcb
 
 if BUILD_ECORE_X_XCB
@@ -12,25 +10,21 @@ endif
 
 AM_CPPFLAGS = \
 -I$(top_srcdir)/src/lib/ecore \
--I$(top_srcdir)/src/lib/ecore_txt \
 -I$(top_builddir)/src/lib/ecore \
--I$(top_builddir)/src/lib/ecore_txt
+@EINA_CFLAGS@
 
 lib_LTLIBRARIES = libecore_x.la
 
 libecore_x_la_SOURCES =
 
-libecore_x_la_LIBADD = $(DEP)
-
-libecore_x_la_LDFLAGS = -version-info @version_info@
-
+libecore_x_la_LIBADD = $(DEP) @EINA_LIBS@
+libecore_x_la_LDFLAGS = -version-info @version_info@ @release_info@
 libecore_x_la_DEPENDENCIES = $(DEP)
 
-include_HEADERS = \
+includes_HEADERS = \
 Ecore_X.h \
 Ecore_X_Atoms.h \
 Ecore_X_Cursor.h
-
-endif
+includesdir = $(includedir)/ecore-@VMAJ@
 
 EXTRA_DIST = ecore_x_atoms_decl.h

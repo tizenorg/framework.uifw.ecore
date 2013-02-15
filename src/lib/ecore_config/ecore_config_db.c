@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -9,10 +13,11 @@
 #include <unistd.h>
 #include <locale.h>
 
+#include <Eet.h>
+
 #include "Ecore_Config.h"
 #include "ecore_config_private.h"
 #include "ecore_config_util.h"
-#include <Eet.h>
 
 struct _Ecore_Config_DB_File
 {
@@ -24,7 +29,7 @@ _ecore_config_db_open_read(const char *file)
 {
    Eet_File *ef;
    Ecore_Config_DB_File *db;
-   
+
    eet_init();
    db = malloc(sizeof(Ecore_Config_DB_File));
    if (!db) return NULL;
@@ -43,7 +48,7 @@ _ecore_config_db_open_write(const char *file)
 {
    Eet_File *ef;
    Ecore_Config_DB_File *db;
-   
+
    eet_init();
    db = malloc(sizeof(Ecore_Config_DB_File));
    if (!db) return NULL;
@@ -71,7 +76,7 @@ _ecore_config_db_keys_get(Ecore_Config_DB_File *db, int *num_ret)
    char **keys;
    int key_count;
    int i;
-   
+
    keys = eet_list(db->ef, (char*)"*", &key_count);
    if (!keys)
      {
@@ -89,7 +94,7 @@ _ecore_config_db_key_type_get(Ecore_Config_DB_File *db, const char *key)
 {
    char *data;
    int size;
-   
+
    data = eet_read(db->ef, (char*)key, &size);
    if (data)
      {
@@ -113,9 +118,8 @@ _ecore_config_db_read(Ecore_Config_DB_File *db, const char *key)
 {
    char *data, *value;
    int size;
-   Ecore_Config_Prop *prop;
    Ecore_Config_Type type;
-   
+
    data = eet_read(db->ef, (char*)key, &size);
    if (data)
      {
@@ -139,12 +143,11 @@ _ecore_config_db_read(Ecore_Config_DB_File *db, const char *key)
 	     free(data);
 	     return 0;
 	  }
-   
+
 	type = data[0];
 	value = data + l + 1;
-	prop = ecore_config_get(key);
-	
-	switch (type) 
+
+	switch (type)
 	  {
 	     case ECORE_CONFIG_INT:
 	     case ECORE_CONFIG_BLN:
@@ -163,7 +166,7 @@ _ecore_config_db_read(Ecore_Config_DB_File *db, const char *key)
 		  prev_locale = setlocale(LC_NUMERIC, "C");
 		  tmp = atof(value);
 		  if (prev_locale) setlocale(LC_NUMERIC, prev_locale);
-	       
+
 		  ecore_config_typed_set(key, (void *)&tmp, type);
 		  break;
 	       }
@@ -175,10 +178,10 @@ _ecore_config_db_read(Ecore_Config_DB_File *db, const char *key)
 	       ecore_config_typed_set(key, (void *)value, type);
 	       break;
 	     case ECORE_CONFIG_SCT:
-	       printf("loading struct %s\n", key);
+	       INF("loading struct %s", key);
 	       break;
 	     default:
-	       E(0, "Type %d not handled\n", type);
+	       WRN("Type %d not handled", type);
 	  }
 	free(data);
 	return 1;
@@ -192,13 +195,13 @@ _ecore_config_db_key_data_get(Ecore_Config_DB_File *db, const char *key, int *si
 {
    char *data;
    int size;
-   
+
    data = eet_read(db->ef, (char*)key, &size);
    if (data)
      {
 	int l;
 	char *dat;
-	
+
 	if (size <= 2)
 	  {
 	     free(data);
@@ -232,10 +235,10 @@ _ecore_config_db_write(Ecore_Config_DB_File *db, Ecore_Config_Prop *e)
    char *val = NULL;
    char *r = NULL;
    int num;
-   
+
    prev_locale = setlocale(LC_NUMERIC, "C");
 
-   switch (e->type) 
+   switch (e->type)
      {
 	case ECORE_CONFIG_INT:
 	   esprintf(&val, "%i", _ecore_config_int_get(e));
@@ -246,7 +249,7 @@ _ecore_config_db_write(Ecore_Config_DB_File *db, Ecore_Config_Prop *e)
 	case ECORE_CONFIG_FLT:
 	   esprintf(&val, "%16.16f", _ecore_config_float_get(e));
 	   break;
-	case ECORE_CONFIG_STR: 
+	case ECORE_CONFIG_STR:
 	   val = _ecore_config_string_get(e);
 	   break;
 	case ECORE_CONFIG_THM:
@@ -256,14 +259,14 @@ _ecore_config_db_write(Ecore_Config_DB_File *db, Ecore_Config_Prop *e)
 	   val = _ecore_config_argbstr_get(e);
 	   break;
 	default:
-	   E(0, "Type %d not handled\n", e->type);
+	   WRN("Type %d not handled", e->type);
      }
 
    if (prev_locale)
      {
 	setlocale(LC_NUMERIC, prev_locale);
      }
-   
+
    if(val)
      {
 	num = esprintf(&r, "%c%c%s%c", (char) e->type, 0, val, 0);
@@ -280,7 +283,7 @@ _ecore_config_db_key_data_set(Ecore_Config_DB_File *db, const char *key, void *d
 {
    char *buf;
    int num;
-   
+
    num = 1 + 1 + data_size + 1;
    buf = malloc(num);
    if (!buf) return;

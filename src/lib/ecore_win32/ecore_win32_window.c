@@ -1,7 +1,3 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
@@ -13,11 +9,18 @@
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
 
+#include <Eina.h>
+
 #include "Ecore_Win32.h"
 #include "ecore_win32_private.h"
 
+/*============================================================================*
+ *                                  Local                                     *
+ *============================================================================*/
 
-/***** Private declarations *****/
+/**
+ * @cond LOCAL
+ */
 
 
 typedef enum _Ecore_Win32_Window_Z_Order Ecore_Win32_Window_Z_Order;
@@ -29,59 +32,232 @@ enum _Ecore_Win32_Window_Z_Order
   ECORE_WIN32_WINDOW_Z_ORDER_TOPMOST
 };
 
-static Ecore_Win32_Window *ecore_win32_window_internal_new(Ecore_Win32_Window *parent,
-                                                           int                 x,
-                                                           int                 y,
-                                                           int                 width,
-                                                           int                 height,
-                                                           DWORD               style);
+static Ecore_Win32_Window *
+ecore_win32_window_internal_new(Ecore_Win32_Window *parent,
+                                int                 x,
+                                int                 y,
+                                int                 width,
+                                int                 height,
+                                DWORD               style)
+{
+   RECT                rect;
+   Ecore_Win32_Window *w;
+   int                 minimal_width;
+   int                 minimal_height;
+
+   w = (Ecore_Win32_Window *)calloc(1, sizeof(Ecore_Win32_Window));
+   if (!w)
+     {
+        ERR("malloc() failed");
+        return NULL;
+     }
+
+   rect.left = 0;
+   rect.top = 0;
+   rect.right = width;
+   rect.bottom = height;
+   if (!AdjustWindowRectEx(&rect, style, FALSE, 0))
+     {
+        ERR("AdjustWindowRect() failed");
+        free(w);
+        return NULL;
+     }
+
+   minimal_width = GetSystemMetrics(SM_CXMIN);
+   minimal_height = GetSystemMetrics(SM_CYMIN);
+/*    if (((rect.right - rect.left) < minimal_width) || */
+/*        ((rect.bottom - rect.top) < minimal_height)) */
+/*      { */
+/*         fprintf (stderr, "[Ecore] [Win32] ERROR !!\n"); */
+/*         fprintf (stderr, "                Wrong size %ld\n", rect.right - rect.left); */
+/*         free(w); */
+/*         return NULL; */
+/*      } */
+   if ((rect.right - rect.left) < minimal_width)
+     {
+       rect.right = rect.left + minimal_width;
+     }
+
+   w->window = CreateWindowEx(0,
+                              ECORE_WIN32_WINDOW_CLASS, "",
+                              style,
+                              x, y,
+                              rect.right - rect.left,
+                              rect.bottom - rect.top,
+                              parent ? parent->window : NULL,
+                              NULL, _ecore_win32_instance, NULL);
+   if (!w->window)
+     {
+        ERR("CreateWindowEx() failed");
+        free(w);
+        return NULL;
+     }
+
+   SetLastError(0);
+   if (!SetWindowLongPtr(w->window, GWLP_USERDATA, (LONG_PTR)w) &&
+       (GetLastError() != 0))
+     {
+        ERR("SetWindowLongPtr() failed");
+        DestroyWindow(w->window);
+        free(w);
+        return NULL;
+     }
+
+   w->min_width   = 0;
+   w->min_height  = 0;
+   w->max_width   = 32767;
+   w->max_height  = 32767;
+   w->base_width  = -1;
+   w->base_height = -1;
+   w->step_width  = 1;
+   w->step_height = 1;
+
+   w->state.iconified         = 0;
+   w->state.modal             = 0;
+   w->state.sticky            = 0;
+   w->state.maximized_vert    = 0;
+   w->state.maximized_horz    = 0;
+   w->state.shaded            = 0;
+   w->state.hidden            = 0;
+   w->state.fullscreen        = 0;
+   w->state.above             = 0;
+   w->state.below             = 0;
+   w->state.demands_attention = 0;
+
+   w->type.desktop = 0;
+   w->type.dock    = 0;
+   w->type.toolbar = 0;
+   w->type.menu    = 0;
+   w->type.utility = 0;
+   w->type.splash  = 0;
+   w->type.dialog  = 0;
+   w->type.normal  = 0;
+
+   w->pointer_is_in = 0;
+   w->borderless    = 0;
+   w->iconified     = 0;
+   w->fullscreen    = 0;
+
+   return w;
+}
+
+/**
+ * @endcond
+ */
 
 
-/***** API *****/
+/*============================================================================*
+ *                                 Global                                     *
+ *============================================================================*/
 
-Ecore_Win32_Window *
+/*============================================================================*
+ *                                   API                                      *
+ *============================================================================*/
+
+/**
+ * @addtogroup Ecore_Win32_Group Ecore_Win32 library
+ *
+ * @{
+ */
+
+/**
+ * @brief Creates a new window.
+ *
+ * @param parent The parent window.
+ * @param x The x coordinate of the top-left corner of the window.
+ * @param y The y coordinate of the top-left corner of the window.
+ * @param width The width of the window.
+ * @param height The height of hte window.
+ * @return A newly allocated window.
+ *
+ * This function creates a new window which parent is @p parent. @p width and
+ * @p height are the size of the window content (the client part),
+ * without the border and title bar. @p x and @p y are the system
+ * coordinates of the top left cerner of the window (that is, of the
+ * title bar). This function returns a newly created window on
+ * success, and @c NULL on failure.
+ */
+EAPI Ecore_Win32_Window *
 ecore_win32_window_new(Ecore_Win32_Window *parent,
                        int                 x,
                        int                 y,
                        int                 width,
                        int                 height)
 {
+   INF("creating window with border");
+
    return ecore_win32_window_internal_new(parent,
                                           x, y,
                                           width, height,
                                           WS_OVERLAPPEDWINDOW | WS_SIZEBOX);
 }
 
-/* simulate X11 override windows */
-Ecore_Win32_Window *
+/**
+ * @brief Creates a new borderless window.
+ *
+ * @param parent The parent window.
+ * @param x The x coordinate of the top-left corner of the window.
+ * @param y The y coordinate of the top-left corner of the window.
+ * @param width The width of the window.
+ * @param height The height of hte window.
+ * @return A newly allocated window.
+ *
+ * This function is the same than ecore_win32_window_override_new()
+ * but the returned window is borderless.
+ */
+EAPI Ecore_Win32_Window *
 ecore_win32_window_override_new(Ecore_Win32_Window *parent,
                                 int                 x,
                                 int                 y,
                                 int                 width,
                                 int                 height)
 {
+   INF("creating window without border");
+
    return ecore_win32_window_internal_new(parent,
                                           x, y,
                                           width, height,
-                                          WS_POPUP);
+                                          WS_POPUP & ~(WS_CAPTION | WS_THICKFRAME));
 }
 
-void
-ecore_win32_window_del(Ecore_Win32_Window *window)
+/**
+ * @brief Free the given window.
+ *
+ * @param window The window to free.
+ *
+ * This function frees @p window. If @p window is @c NULL, this
+ * function does nothing.
+ */
+EAPI void
+ecore_win32_window_free(Ecore_Win32_Window *window)
 {
    if (!window) return;
 
-   DestroyWindow(((struct _Ecore_Win32_Window *)window)->window);
+   INF("destroying window");
+
+   if (window->shape.mask)
+      free(window->shape.mask);
+
+   DestroyWindow(window->window);
    free(window);
-   printf ("ecore_win32_window_del\n");
 }
 
-void *
+/**
+ * @brief Return the window HANDLE associated to the given window.
+ *
+ * @param window The window to retrieve the HANDLE from.
+ *
+ * This function returns the window HANDLE associated to @p window. If
+ * @p window is @c NULL, this function returns @c NULL.
+ *
+ * @note The returned value is of type HWND.
+ */
+EAPI void *
 ecore_win32_window_hwnd_get(Ecore_Win32_Window *window)
 {
    if (!window) return NULL;
 
-   return ((struct _Ecore_Win32_Window *)window)->window;
+   return window->window;
 }
 
 /*
@@ -112,118 +288,193 @@ ecore_win32_window_configure(Ecore_Win32_Window        *window,
     default:
       return;
     }
-  SetWindowPos((struct _Ecore_Win32_Window *)window->window, w, x, y, width, height, ???);
+  SetWindowPos((Ecore_Win32_Window *)window->window, w, x, y, width, height, ???);
 }
 */
 
-void
+/**
+ * @brief Move the given window to a given position.
+ *
+ * @param window The window to move.
+ * @param x The x coordinate of the destination position.
+ * @param y The y coordinate of the destination position.
+ *
+ * This function move @p window to the new position of coordinates @p x
+ * and @p y. If @p window is @c NULL, or if it is fullscreen, or on
+ * error, this function does nothing.
+ */
+EAPI void
 ecore_win32_window_move(Ecore_Win32_Window *window,
                         int                 x,
                         int                 y)
 {
    RECT rect;
-   HWND w;
 
+   /* FIXME: on fullscreen, should not move it */
    if (!window) return;
 
-   printf ("ecore_win32_window_move %p : %d %d\n", window, x, y);
-   w = ((struct _Ecore_Win32_Window *)window)->window;
-   if (!GetWindowRect(w, &rect))
-     return;
+   INF("moving window (%dx%d)", x, y);
 
-   MoveWindow(w, x, y,
-              rect.right - rect.left,
-              rect.bottom - rect.top,
-              TRUE);
+   if (!GetWindowRect(window->window, &rect))
+     {
+        ERR("GetWindowRect() failed");
+        return;
+     }
+
+   if (!MoveWindow(window->window, x, y,
+                   rect.right - rect.left,
+                   rect.bottom - rect.top,
+                   TRUE))
+     {
+        ERR("MoveWindow() failed");
+     }
 }
 
-void
+/**
+ * @brief Resize the given window to a given size.
+ *
+ * @param window The window to resize.
+ * @param width The new width.
+ * @param height The new height.
+ *
+ * This function resize @p window to the new @p width and @p height.
+ * If @p window is @c NULL, or if it is fullscreen, or on error, this
+ * function does nothing.
+ */
+EAPI void
 ecore_win32_window_resize(Ecore_Win32_Window *window,
                           int                 width,
                           int                 height)
 {
-   RECT                        rect;
-   struct _Ecore_Win32_Window *w;
-   DWORD                       style;
-   int                         x;
-   int                         y;
+   RECT                rect;
+   DWORD               style;
+   int                 x;
+   int                 y;
+   int                 minimal_width;
+   int                 minimal_height;
 
+   /* FIXME: on fullscreen, should not resize it */
    if (!window) return;
 
-   w = (struct _Ecore_Win32_Window *)window;
-   if (!GetWindowRect(w->window, &rect)) return;
+   INF("resizing window (%dx%d)", width, height);
 
-   printf ("ecore_win32_window_resize 0 : %p (%d %d) (%d %d) (%d %d)\n",
-           w,
-           w->min_width,
-           w->min_height,
-           w->max_width,
-           w->max_height,
-           width,
-           height);
+   minimal_width = MAX(GetSystemMetrics(SM_CXMIN), (int)window->min_width);
+   minimal_height = MAX(GetSystemMetrics(SM_CYMIN), (int)window->min_height);
+
+   if (!GetWindowRect(window->window, &rect))
+     {
+        ERR("GetWindowRect() failed");
+        return;
+     }
 
    x = rect.left;
    y = rect.top;
    rect.left = 0;
    rect.top = 0;
-/*    if (width < w->min_width) width = w->min_width; */
-/*    if (width > w->max_width) width = w->max_width; */
-/*    printf ("ecore_win32_window_resize 1 : %d %d %d\n", w->min_height, w->max_height, height); */
-/*    if (height < w->min_height) height = w->min_height; */
-/*    printf ("ecore_win32_window_resize 2 : %d %d\n", w->max_height, height); */
-/*    if (height > w->max_height) height = w->max_height; */
-/*    printf ("ecore_win32_window_resize 3 : %d %d\n", w->max_height, height); */
+   if (width < minimal_width) width = minimal_width;
+   if (width > (int)window->max_width) width = window->max_width;
+   if (height < minimal_height) height = minimal_height;
+   if (height > (int)window->max_height) height = window->max_height;
    rect.right = width;
    rect.bottom = height;
-   style = GetWindowLong(w->window, GWL_STYLE);
+   if (!(style = GetWindowLong(window->window, GWL_STYLE)))
+     {
+        ERR("GetWindowLong() failed");
+        return;
+     }
    if (!AdjustWindowRect(&rect, style, FALSE))
-     return;
+     {
+        ERR("AdjustWindowRect() failed");
+        return;
+     }
 
-   if (!MoveWindow(w->window, x, y,
+   if (!MoveWindow(window->window, x, y,
                    rect.right - rect.left,
                    rect.bottom - rect.top,
-                   FALSE))
+                   TRUE))
      {
-       printf (" MEEERDE !!!\n");
+        ERR("MoveWindow() failed");
      }
-   printf ("ecore_win32_window_resize 4 : %d %d\n", width, height);
 }
 
-void
+/**
+ * @brief Move and resize the given window to a given position and size.
+ *
+ * @param window The window to move and resize.
+ * @param x The x coordinate of the destination position.
+ * @param y The x coordinate of the destination position.
+ * @param width The new width.
+ * @param height The new height.
+ *
+ * This function resize @p window to the new position of coordinates @p x
+ * and @p y and the new @p width and @p height. If @p window is @c NULL,
+ * or if it is fullscreen, or on error, this function does nothing.
+ */
+EAPI void
 ecore_win32_window_move_resize(Ecore_Win32_Window *window,
                                int                 x,
                                int                 y,
                                int                 width,
                                int                 height)
 {
-   RECT                        rect;
-   struct _Ecore_Win32_Window *w;
-   DWORD                       style;
+   RECT                rect;
+   DWORD               style;
+   int                 minimal_width;
+   int                 minimal_height;
 
+   /* FIXME: on fullscreen, should not move/resize it */
    if (!window) return;
 
-   printf ("ecore_win32_window_move_resize 0 : %p  %d %d\n", window, width, height);
-   w = ((struct _Ecore_Win32_Window *)window);
+   INF("moving and resizing window (%dx%d %dx%d)", x, y, width, height);
+
+   minimal_width = MAX(GetSystemMetrics(SM_CXMIN), (int)window->min_width);
+   minimal_height = MAX(GetSystemMetrics(SM_CYMIN), (int)window->min_height);
+
    rect.left = 0;
    rect.top = 0;
-   if ((unsigned int)width < w->min_width) width = w->min_width;
-   if ((unsigned int)width > w->max_width) width = w->max_width;
-   if ((unsigned int)height < w->min_height) height = w->min_height;
-   if ((unsigned int)height > w->max_height) height = w->max_height;
-   printf ("ecore_win32_window_move_resize 1 : %d %d\n", width, height);
+   if (width < minimal_width) width = minimal_width;
+   if (width > (int)window->max_width) width = window->max_width;
+   if (height < minimal_height) height = minimal_height;
+   if (height > (int)window->max_height) height = window->max_height;
    rect.right = width;
    rect.bottom = height;
-   style = GetWindowLong(w->window, GWL_STYLE);
-   if (!AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW | WS_SIZEBOX, FALSE))
-     return;
+   if (!(style = GetWindowLong(window->window, GWL_STYLE)))
+     {
+        ERR("GetWindowLong() failed");
+        return;
+     }
+   if (!AdjustWindowRect(&rect, style, FALSE))
+     {
+        ERR("AdjustWindowRect() failed");
+        return;
+     }
 
-   MoveWindow(w->window, x, y,
-              rect.right - rect.left,
-              rect.bottom - rect.top,
-              TRUE);
+   if (!MoveWindow(window->window, x, y,
+                   rect.right - rect.left,
+                   rect.bottom - rect.top,
+                   TRUE))
+     {
+        ERR("MoveWindow() failed");
+     }
 }
 
-void
+/**
+ * @brief Get the geometry of the given window.
+ *
+ * @param window The window to retrieve the geometry from.
+ * @param x The x coordinate of the position.
+ * @param y The x coordinate of the position.
+ * @param width The width.
+ * @param height The height.
+ *
+ * This function retrieves the position and size of @p window. @p x,
+ * @p y, @p width and @p height can be buffers that will be filled with
+ * the corresponding values. If one of them is @c NULL, nothing will
+ * be done for that parameter. If @p window is @c NULL, and if the
+ * buffers are not @c NULL, they will be filled with respectively 0,
+ * 0, the size of the screen and the height of the screen.
+ */
+EAPI void
 ecore_win32_window_geometry_get(Ecore_Win32_Window *window,
                                 int                *x,
                                 int                *y,
@@ -234,7 +485,8 @@ ecore_win32_window_geometry_get(Ecore_Win32_Window *window,
    int  w;
    int  h;
 
-   printf ("ecore_win32_window_geometry_get %p\n", window);
+   INF("getting window geometry");
+
    if (!window)
      {
         if (x) *x = 0;
@@ -245,9 +497,10 @@ ecore_win32_window_geometry_get(Ecore_Win32_Window *window,
         return;
      }
 
-   if (!GetClientRect(((struct _Ecore_Win32_Window *)window)->window,
-                      &rect))
+   if (!GetClientRect(window->window, &rect))
      {
+        ERR("GetClientRect() failed");
+
         if (x) *x = 0;
         if (y) *y = 0;
         if (width) *width = 0;
@@ -259,9 +512,10 @@ ecore_win32_window_geometry_get(Ecore_Win32_Window *window,
    w = rect.right - rect.left;
    h = rect.bottom - rect.top;
 
-   if (!GetWindowRect(((struct _Ecore_Win32_Window *)window)->window,
-                      &rect))
+   if (!GetWindowRect(window->window, &rect))
      {
+        ERR("GetWindowRect() failed");
+
         if (x) *x = 0;
         if (y) *y = 0;
         if (width) *width = 0;
@@ -276,14 +530,29 @@ ecore_win32_window_geometry_get(Ecore_Win32_Window *window,
    if (height) *height = h;
 }
 
-void
+/**
+ * @brief Get the size of the given window.
+ *
+ * @param window The window to retrieve the size from.
+ * @param width The width.
+ * @param height The height.
+ *
+ * This function retrieves the size of @p window. @p width and
+ * @p height can be buffers that will be filled with the corresponding
+ * values. If one of them is @c NULL, nothing will be done for that
+ * parameter. If @p window is @c NULL, and if the buffers are not
+ * @c NULL, they will be filled with respectively the size of the screen
+ * and the height of the screen.
+ */
+EAPI void
 ecore_win32_window_size_get(Ecore_Win32_Window *window,
                             int                *width,
                             int                *height)
 {
    RECT rect;
 
-   printf ("ecore_win32_window_size_get %p\n", window);
+   INF("getting window size");
+
    if (!window)
      {
         if (width) *width = GetSystemMetrics(SM_CXSCREEN);
@@ -292,9 +561,10 @@ ecore_win32_window_size_get(Ecore_Win32_Window *window,
         return;
      }
 
-   if (!GetClientRect(((struct _Ecore_Win32_Window *)window)->window,
-                      &rect))
+   if (!GetClientRect(window->window, &rect))
      {
+        ERR("GetClientRect() failed");
+
         if (width) *width = 0;
         if (height) *height = 0;
      }
@@ -303,171 +573,288 @@ ecore_win32_window_size_get(Ecore_Win32_Window *window,
    if (height) *height = rect.bottom - rect.top;
 }
 
-void
+/**
+ * @brief Set the minimum size of the given window.
+ *
+ * @param window The window.
+ * @param min_width The minimal width.
+ * @param min_height The minimal height.
+ *
+ * This function sets the minimum size of @p window to @p min_width
+ * and *p min_height. If @p window is @c NULL, this functions does
+ * nothing.
+ */
+EAPI void
 ecore_win32_window_size_min_set(Ecore_Win32_Window *window,
                                 unsigned int        min_width,
                                 unsigned int        min_height)
 {
-   struct _Ecore_Win32_Window *w;
-
    if (!window) return;
 
    printf ("ecore_win32_window_size_min_set : %p  %d %d\n", window, min_width, min_height);
-   w = (struct _Ecore_Win32_Window *)window;
-   w->min_width = min_width;
-   w->min_height = min_height;
+   window->min_width = min_width;
+   window->min_height = min_height;
 }
 
-void
+/**
+ * @brief Get the minimum size of the given window.
+ *
+ * @param window The window.
+ * @param min_width The minimal width.
+ * @param min_height The minimal height.
+ *
+ * This function fills the minimum size of @p window in the buffers
+ * @p min_width and *p min_height. They both can be @c NULL. If
+ * @p window is @c NULL, this functions does nothing.
+ */
+EAPI void
 ecore_win32_window_size_min_get(Ecore_Win32_Window *window,
                                 unsigned int       *min_width,
                                 unsigned int       *min_height)
 {
-   struct _Ecore_Win32_Window *w;
-
    if (!window) return;
 
-   w = (struct _Ecore_Win32_Window *)window;
-   printf ("ecore_win32_window_size_min_get : %p  %d %d\n", window, w->min_width, w->min_height);
-   if (min_width) *min_width = w->min_width;
-   if (min_height) *min_height = w->min_height;
+   printf ("ecore_win32_window_size_min_get : %p  %d %d\n", window, window->min_width, window->min_height);
+   if (min_width) *min_width = window->min_width;
+   if (min_height) *min_height = window->min_height;
 }
 
-void
+/**
+ * @brief Set the maximum size of the given window.
+ *
+ * @param window The window.
+ * @param max_width The maximal width.
+ * @param max_height The maximal height.
+ *
+ * This function sets the maximum size of @p window to @p max_width
+ * and *p max_height. If @p window is @c NULL, this functions does
+ * nothing.
+ */
+EAPI void
 ecore_win32_window_size_max_set(Ecore_Win32_Window *window,
                                 unsigned int        max_width,
                                 unsigned int        max_height)
 {
-   struct _Ecore_Win32_Window *w;
-
    if (!window) return;
 
    printf ("ecore_win32_window_size_max_set : %p  %d %d\n", window, max_width, max_height);
-   w = (struct _Ecore_Win32_Window *)window;
-   w->max_width = max_width;
-   w->max_height = max_height;
+   window->max_width = max_width;
+   window->max_height = max_height;
 }
 
-void
+/**
+ * @brief Get the maximum size of the given window.
+ *
+ * @param window The window.
+ * @param max_width The maximal width.
+ * @param max_height The maximal height.
+ *
+ * This function fills the maximum size of @p window in the buffers
+ * @p max_width and *p max_height. They both can be @c NULL. If
+ * @p window is @c NULL, this functions does nothing.
+ */
+EAPI void
 ecore_win32_window_size_max_get(Ecore_Win32_Window *window,
                                 unsigned int       *max_width,
                                 unsigned int       *max_height)
 {
-   struct _Ecore_Win32_Window *w;
-
    if (!window) return;
 
-   w = (struct _Ecore_Win32_Window *)window;
-   printf ("ecore_win32_window_size_max_get : %p  %d %d\n", window, w->max_width, w->max_height);
-   if (max_width) *max_width = w->max_width;
-   if (max_height) *max_height = w->max_height;
+   printf ("ecore_win32_window_size_max_get : %p  %d %d\n", window, window->max_width, window->max_height);
+   if (max_width) *max_width = window->max_width;
+   if (max_height) *max_height = window->max_height;
 }
 
-void
+/**
+ * @brief Set the base size of the given window.
+ *
+ * @param window The window.
+ * @param base_width The base width.
+ * @param base_height The base height.
+ *
+ * This function sets the base size of @p window to @p base_width
+ * and *p base_height. If @p window is @c NULL, this functions does
+ * nothing.
+ */
+EAPI void
 ecore_win32_window_size_base_set(Ecore_Win32_Window *window,
                                  unsigned int        base_width,
                                  unsigned int        base_height)
 {
-   struct _Ecore_Win32_Window *w;
-
    printf ("ecore_win32_window_size_base_set : %p  %d %d\n", window, base_width, base_height);
    if (!window) return;
 
-   w = (struct _Ecore_Win32_Window *)window;
-   w->base_width = base_width;
-   w->base_height = base_height;
+   window->base_width = base_width;
+   window->base_height = base_height;
 }
 
-void
+/**
+ * @brief Get the base size of the given window.
+ *
+ * @param window The window.
+ * @param base_width The base width.
+ * @param base_height The bas height.
+ *
+ * This function fills the base size of @p window in the buffers
+ * @p base_width and *p base_height. They both can be @c NULL. If
+ * @p window is @c NULL, this functions does nothing.
+ */
+EAPI void
 ecore_win32_window_size_base_get(Ecore_Win32_Window *window,
                                  unsigned int       *base_width,
                                  unsigned int       *base_height)
 {
-   struct _Ecore_Win32_Window *w;
-
    if (!window) return;
 
-   w = (struct _Ecore_Win32_Window *)window;
-   printf ("ecore_win32_window_size_base_get : %p  %d %d\n", window, w->base_width, w->base_height);
-   if (base_width) *base_width = w->base_width;
-   if (base_height) *base_height = w->base_height;
+   printf ("ecore_win32_window_size_base_get : %p  %d %d\n", window, window->base_width, window->base_height);
+   if (base_width) *base_width = window->base_width;
+   if (base_height) *base_height = window->base_height;
 }
 
-void
+/**
+ * @brief Set the step size of the given window.
+ *
+ * @param window The window.
+ * @param step_width The step width.
+ * @param step_height The step height.
+ *
+ * This function sets the step size of @p window to @p step_width
+ * and *p step_height. If @p window is @c NULL, this functions does
+ * nothing.
+ */
+EAPI void
 ecore_win32_window_size_step_set(Ecore_Win32_Window *window,
                                  unsigned int        step_width,
                                  unsigned int        step_height)
 {
-   struct _Ecore_Win32_Window *w;
-
    printf ("ecore_win32_window_size_step_set : %p  %d %d\n", window, step_width, step_height);
    if (!window) return;
 
-   w = (struct _Ecore_Win32_Window *)window;
-   w->step_width = step_width;
-   w->step_height = step_height;
+   window->step_width = step_width;
+   window->step_height = step_height;
 }
 
-void
+/**
+ * @brief Get the step size of the given window.
+ *
+ * @param window The window.
+ * @param step_width The step width.
+ * @param step_height The bas height.
+ *
+ * This function fills the step size of @p window in the buffers
+ * @p step_width and *p step_height. They both can be @c NULL. If
+ * @p window is @c NULL, this functions does nothing.
+ */
+EAPI void
 ecore_win32_window_size_step_get(Ecore_Win32_Window *window,
                                  unsigned int       *step_width,
                                  unsigned int       *step_height)
 {
-   struct _Ecore_Win32_Window *w;
-
    if (!window) return;
 
-   w = (struct _Ecore_Win32_Window *)window;
-   printf ("ecore_win32_window_size_step_get : %p  %d %d\n", window, w->step_width, w->step_height);
-   if (step_width) *step_width = w->step_width;
-   if (step_height) *step_height = w->step_height;
+   printf ("ecore_win32_window_size_step_get : %p  %d %d\n", window, window->step_width, window->step_height);
+   if (step_width) *step_width = window->step_width;
+   if (step_height) *step_height = window->step_height;
 }
 
-/* TODO: ecore_win32_window_shaped_set */
-
-void
+/**
+ * @brief Show the given window.
+ *
+ * @param window The window to show.
+ *
+ * This function shows @p window. If @p window is @c NULL, or on
+ * error, this function does nothing.
+ */
+EAPI void
 ecore_win32_window_show(Ecore_Win32_Window *window)
 {
    if (!window) return;
 
-   printf (" ** ecore_win32_window_show  %p\n", window);
-   ShowWindow(((struct _Ecore_Win32_Window *)window)->window, SW_SHOWNORMAL);
-   UpdateWindow(((struct _Ecore_Win32_Window *)window)->window);
+   INF("showing window");
+
+   ShowWindow(window->window, SW_SHOWNORMAL);
+   if (!UpdateWindow(window->window))
+     {
+        ERR("UpdateWindow() failed");
+     }
 }
 
 /* FIXME: seems to block the taskbar */
-void
+/**
+ * @brief Hide the given window.
+ *
+ * @param window The window to show.
+ *
+ * This function hides @p window. If @p window is @c NULL, or on
+ * error, this function does nothing.
+ */
+EAPI void
 ecore_win32_window_hide(Ecore_Win32_Window *window)
 {
    if (!window) return;
 
-   printf (" ** ecore_win32_window_hide  %p\n", window);
-   ShowWindow(((struct _Ecore_Win32_Window *)window)->window, SW_HIDE);
+   INF("hiding window");
+
+   ShowWindow(window->window, SW_HIDE);
 }
 
-void
+/**
+ * @brief Place the given window at the top of the Z order.
+ *
+ * @param window The window to place at the top.
+ *
+ * This function places @p window at the top of the Z order. If
+ * @p window is @c NULL, this function does nothing.
+ */
+EAPI void
 ecore_win32_window_raise(Ecore_Win32_Window *window)
 {
    if (!window) return;
 
-   printf (" ** ecore_win32_window_raise  %p\n", window);
-   SetWindowPos(((struct _Ecore_Win32_Window *)window)->window,
-                HWND_TOP, 0, 0, 0, 0,
-                SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+   INF("raising window");
+
+   if (!SetWindowPos(window->window,
+                     HWND_TOP, 0, 0, 0, 0,
+                     SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE))
+     {
+        ERR("SetWindowPos() failed");
+     }
 }
 
-void
+/**
+ * @brief Place the given window at the bottom of the Z order.
+ *
+ * @param window The window to place at the bottom.
+ *
+ * This function places @p window at the bottom of the Z order. If
+ * @p window is @c NULL, this function does nothing.
+ */
+EAPI void
 ecore_win32_window_lower(Ecore_Win32_Window *window)
 {
    if (!window) return;
 
-   printf (" ** ecore_win32_window_lower  %p\n", window);
-   SetWindowPos(((struct _Ecore_Win32_Window *)window)->window,
-                HWND_BOTTOM, 0, 0, 0, 0,
-                SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
+   INF("lowering window");
+
+   if (!SetWindowPos(window->window,
+                     HWND_BOTTOM, 0, 0, 0, 0,
+                     SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE))
+     {
+        ERR("SetWindowPos() failed");
+     }
 }
 
-void
+/**
+ * @brief Set the title of the given window.
+ *
+ * @param window The window to set the title.
+ * @param title The new title.
+ *
+ * This function sets the title of @p window to @p title. If @p window
+ * is @c NULL, or if @p title is @c NULL or empty, or on error, this
+ * function does nothing.
+ */
+EAPI void
 ecore_win32_window_title_set(Ecore_Win32_Window *window,
                              const char         *title)
 {
@@ -475,184 +862,354 @@ ecore_win32_window_title_set(Ecore_Win32_Window *window,
 
    if (!title || !title[0]) return;
 
-   SetWindowText(((struct _Ecore_Win32_Window *)window)->window, title);
+   INF("setting window title");
+
+   if (!SetWindowText(window->window, title))
+     {
+        ERR("SetWindowText() failed");
+     }
 }
 
-void
-ecore_win32_window_focus_set(Ecore_Win32_Window *window)
+/**
+ * @brief Set the focus to the given window.
+ *
+ * @param window The window to give focus to.
+ *
+ * This function gives the focus to @p window. If @p window is
+ * @c NULL, this function does nothing.
+ */
+EAPI void
+ecore_win32_window_focus(Ecore_Win32_Window *window)
 {
    if (!window) return;
 
-   SetFocus(((struct _Ecore_Win32_Window *)window)->window);
+   INF("focusing window");
+
+   if (!SetFocus(window->window))
+     {
+        ERR("SetFocus() failed");
+     }
 }
 
-void
+/**
+ * @brief Get the current focused window.
+ *
+ * @return The window that has focus.
+ *
+ * This function returns the window that has focus. If the calling
+ * thread's message queue does not have an associated window with the
+ * keyboard focus, the return value is @c NULL.
+ *
+ * @note Even if the returned value is @c NULL, another thread's queue
+ * may be associated with a window that has the keyboard focus.
+ *
+ * @note The returned value is of type HWND.
+ */
+EAPI void *
+ecore_win32_window_focus_get(void)
+{
+   HWND focused;
+
+   INF("getting focused window");
+
+   focused = GetFocus();
+   if (!focused)
+     {
+        ERR("GetFocus() failed");
+        return NULL;
+     }
+
+   return focused;
+}
+
+/**
+ * @brief Iconify or restore the given window.
+ *
+ * @param window The window.
+ * @param on @c EINA_TRUE to iconify the window, @c EINA_FALSE to restore it.
+ *
+ * This function iconify or restore @p window. If @p on is set to @c EINA_TRUE,
+ * the window will be iconified, if it is set to @c EINA_FALSE, it will be
+ * restored. If @p window is @c NULL or if the state does not change (like
+ * iconifying the window while it is already iconified), this function does
+ * nothing.
+ */
+EAPI void
 ecore_win32_window_iconified_set(Ecore_Win32_Window *window,
-                                 int                 on)
+                                 Eina_Bool           on)
 {
-   struct _Ecore_Win32_Window *ew;
-
    if (!window) return;
 
-   ew = (struct _Ecore_Win32_Window *)window;
-   if (((ew->iconified) && (on)) ||
-       ((!ew->iconified) && (!on)))
+   if (((window->iconified) && (on)) ||
+       ((!window->iconified) && (!on)))
      return;
 
-   if (on)
-     {
-        ShowWindow(ew->window,
-                   SW_MINIMIZE);
-     }
-   else
-     {
-        ShowWindow(ew->window,
-                   SW_RESTORE);
-     }
-   ew->iconified = on;
+   INF("iconifying window: %s", on ? "yes" : "no");
+
+   ShowWindow(window->window, on ? SW_MINIMIZE : SW_RESTORE);
+   window->iconified = on;
 }
 
-void
+/**
+ * @brief Remove or restore the border of the given window.
+ *
+ * @param window The window.
+ * @param on @c EINA_TRUE to remove the border, @c EINA_FALSE to restore it.
+ *
+ * This function remove or restore the border of @p window. If @p on is set to
+ * @c EINA_TRUE, the window will have no border, if it is set to @c EINA_FALSE,
+ * it will have a border. If @p window is @c NULL or if the state does not
+ * change (like setting to borderless while the window has no border), this
+ * function does nothing.
+ */
+EAPI void
 ecore_win32_window_borderless_set(Ecore_Win32_Window *window,
-                                  int                 on)
+                                  Eina_Bool           on)
 {
-   RECT                        rect;
-   DWORD                       style;
-   struct _Ecore_Win32_Window *ew;
-   HWND                        w;
+   RECT                rect;
+   DWORD               style;
 
    if (!window) return;
 
-   printf (" ** ecore_win32_window_borderless_set  %p  %d\n", window, on);
-   ew = (struct _Ecore_Win32_Window *)window;
-   if (((ew->borderless) && (on)) ||
-       ((!ew->borderless) && (!on)))
+   if (((window->borderless) && (on)) ||
+       ((!window->borderless) && (!on)))
      return;
 
-   w = ew->window;
+   INF("setting window without border: %s", on ? "yes" : "no");
 
-   style = GetWindowLong(w, GWL_STYLE);
+   style = GetWindowLong(window->window, GWL_STYLE);
    if (on)
      {
-        if (!GetClientRect(w, &rect)) return;
-        SetWindowLong(w, GWL_STYLE, style & ~WS_CAPTION);
+        if (!GetClientRect(window->window, &rect))
+          {
+             ERR("GetClientRect() failed");
+             return;
+          }
+        SetLastError(0);
+        if (!SetWindowLongPtr(window->window, GWL_STYLE, style & ~(WS_CAPTION | WS_THICKFRAME)) &&
+            (GetLastError() != 0))
+          {
+             ERR("SetWindowLongPtr() failed");
+             return;
+          }
      }
    else
      {
-        if (!GetWindowRect(w, &rect)) return;
-        style |= WS_CAPTION;
-        AdjustWindowRect (&rect, style, FALSE);
-        SetWindowLong(w, GWL_STYLE, style);
+        if (!GetWindowRect(window->window, &rect))
+          {
+             ERR("GetWindowRect() failed");
+             return;
+          }
+        style |= WS_CAPTION | WS_THICKFRAME;
+        if (!AdjustWindowRect (&rect, style, FALSE))
+          {
+             ERR("AdjustWindowRect() failed");
+             return;
+          }
+        SetLastError(0);
+        if (!SetWindowLongPtr(window->window, GWL_STYLE, style) &&
+            (GetLastError() != 0))
+          {
+             ERR("SetWindowLongPtr() failed");
+             return;
+          }
      }
-   SetWindowPos(w, HWND_TOPMOST,
-                rect.left, rect.top,
-                rect.right - rect.left, rect.bottom - rect.top,
-                SWP_NOMOVE | SWP_FRAMECHANGED);
-   ew->borderless = on;
+   if (!SetWindowPos(window->window, HWND_TOPMOST,
+                     rect.left, rect.top,
+                     rect.right - rect.left, rect.bottom - rect.top,
+                     SWP_NOMOVE | SWP_FRAMECHANGED))
+     {
+        ERR("SetWindowPos() failed");
+        return;
+     }
+
+   window->borderless = on;
 }
 
-void
+/**
+ * @brief Set the given window to fullscreen.
+ *
+ * @param window The window.
+ * @param on @c EINA_TRUE for fullscreen mode, @c EINA_FALSE for windowed mode.
+ *
+ * This function set @p window to fullscreen or windowed mode. If @p on is set
+ * to @c EINA_TRUE, the window will be fullscreen, if it is set to
+ * @c EINA_FALSE, it will be windowed. If @p window is @c NULL or if the state
+ * does not change (like setting to fullscreen while the window is already
+ * fullscreen), this function does nothing.
+ */
+EAPI void
 ecore_win32_window_fullscreen_set(Ecore_Win32_Window *window,
-                                  int                 on)
+                                  Eina_Bool           on)
 {
-   struct _Ecore_Win32_Window *ew;
-   HWND                        w;
-   int                         width;
-   int                         height;
-
    if (!window) return;
 
-   ew = (struct _Ecore_Win32_Window *)window;
-   if (((ew->fullscreen) && (on)) ||
-       ((!ew->fullscreen) && (!on)))
+   if (((window->fullscreen) && (on)) ||
+       ((!window->fullscreen) && (!on)))
      return;
 
-   ew->fullscreen = on;
-   w = ew->window;
+   INF("setting fullscreen: %s", on ? "yes" : "no");
+
+   window->fullscreen = !!on;
 
    if (on)
      {
-        if (!GetWindowRect(w, &ew->rect)) return;
-        ew->style = GetWindowLong(w, GWL_STYLE);
-        width = GetSystemMetrics (SM_CXSCREEN);
-        height = GetSystemMetrics (SM_CYSCREEN);
-        if (!SetWindowLong(w, GWL_STYLE,
-                           (ew->style & ~WS_OVERLAPPEDWINDOW) | WS_POPUP))
-          return;
-        SetWindowPos(w, HWND_TOP, 0, 0, width, height,
-                     SWP_NOCOPYBITS | SWP_SHOWWINDOW);
+        DWORD style;
+
+        if (!GetWindowRect(window->window, &window->rect))
+          {
+             ERR("GetWindowRect() failed");
+             return;
+          }
+        if (!(window->style = GetWindowLong(window->window, GWL_STYLE)))
+          {
+             ERR("GetWindowLong() failed");
+             return;
+          }
+        style = window->style & ~WS_OVERLAPPEDWINDOW & ~WS_SIZEBOX;
+        style |= WS_VISIBLE | WS_POPUP;
+        SetLastError(0);
+        if (!SetWindowLongPtr(window->window, GWL_STYLE, style) &&
+            (GetLastError() != 0))
+          {
+             ERR("SetWindowLongPtr() failed");
+             return;
+          }
+        SetLastError(0);
+        if (!SetWindowLongPtr(window->window, GWL_EXSTYLE, WS_EX_TOPMOST) &&
+            (GetLastError() != 0))
+          {
+             ERR("SetWindowLongPtr() failed");
+             return;
+          }
+        if (!SetWindowPos(window->window, HWND_TOPMOST, 0, 0,
+                          GetSystemMetrics (SM_CXSCREEN),
+                          GetSystemMetrics (SM_CYSCREEN),
+                          SWP_NOCOPYBITS | SWP_SHOWWINDOW))
+          {
+             ERR("SetWindowPos() failed");
+             return;
+          }
      }
    else
      {
-        if (!SetWindowLong(w, GWL_STYLE, ew->style))
-          return;
-        SetWindowPos(w, HWND_NOTOPMOST,
-                     ew->rect.left,
-                     ew->rect.top,
-                     ew->rect.right - ew->rect.left,
-                     ew->rect.bottom - ew->rect.top,
-                     SWP_NOCOPYBITS | SWP_SHOWWINDOW);
+        SetLastError(0);
+        if (!SetWindowLongPtr(window->window, GWL_STYLE, window->style) &&
+            (GetLastError() != 0))
+          {
+             ERR("SetWindowLongPtr() failed");
+             return;
+          }
+        SetLastError(0);
+        if (!SetWindowLongPtr(window->window, GWL_EXSTYLE, 0) &&
+            (GetLastError() != 0))
+          {
+             ERR("SetWindowLongPtr() failed");
+             return;
+          }
+        if (!SetWindowPos(window->window, HWND_NOTOPMOST,
+                          window->rect.left,
+                          window->rect.top,
+                          window->rect.right - window->rect.left,
+                          window->rect.bottom - window->rect.top,
+                          SWP_NOCOPYBITS | SWP_SHOWWINDOW))
+          {
+             ERR("SetWindowPos() failed");
+             return;
+          }
      }
 }
 
-void
+/**
+ * @brief Set the given cursor to the given window.
+ *
+ * @param window The window to modify the cursor.
+ * @param cursor The new cursor.
+ *
+ * This function sets @p cursor to @p window. @p cursor must have been
+ * obtained by ecore_win32_cursor_new() or
+ * ecore_win32_cursor_shaped_new(). If @p window or @p cursor is
+ * @c NULL, the function does nothing.
+ */
+EAPI void
 ecore_win32_window_cursor_set(Ecore_Win32_Window *window,
                               Ecore_Win32_Cursor *cursor)
 {
-   SetClassLong(((struct _Ecore_Win32_Window *)window)->window,
-                GCL_HCURSOR, (LONG)cursor);
+   INF("setting cursor");
+
+   if (!window || !cursor)
+     return;
+
+   if (!SetClassLongPtr(window->window,
+                        GCLP_HCURSOR, (LONG_PTR)cursor))
+     {
+        ERR("SetClassLong() failed");
+     }
 }
 
-void
+/**
+ * @brief Set the state of the given window.
+ *
+ * @param window The window to modify the state.
+ * @param state An array of the new states.
+ * @param num The number of states in the array.
+ *
+ * This function set the state of @p window. @p state is an array of
+ * states of size @p num. If @p window or @p state are @c NULL, or if
+ * @p num is less or equal than 0, the function does nothing.
+ */
+EAPI void
 ecore_win32_window_state_set(Ecore_Win32_Window       *window,
                              Ecore_Win32_Window_State *state,
                              unsigned int              num)
 {
    unsigned int i;
 
-   if (!num)
+   if (!window || !state || (num <= 0))
      return;
+
+   INF("setting cursor state");
 
    for (i = 0; i < num; i++)
      {
         switch (state[i])
           {
           case ECORE_WIN32_WINDOW_STATE_ICONIFIED:
-            ((struct _Ecore_Win32_Window *)window)->state.iconified = 1;
+            window->state.iconified = 1;
             break;
           case ECORE_WIN32_WINDOW_STATE_MODAL:
-            ((struct _Ecore_Win32_Window *)window)->state.modal = 1;
+            window->state.modal = 1;
             break;
           case ECORE_WIN32_WINDOW_STATE_STICKY:
-            ((struct _Ecore_Win32_Window *)window)->state.sticky = 1;
+            window->state.sticky = 1;
             break;
           case ECORE_WIN32_WINDOW_STATE_MAXIMIZED_VERT:
-            ((struct _Ecore_Win32_Window *)window)->state.maximized_vert = 1;
+            window->state.maximized_vert = 1;
             break;
           case ECORE_WIN32_WINDOW_STATE_MAXIMIZED_HORZ:
-            ((struct _Ecore_Win32_Window *)window)->state.maximized_horz = 1;
+            window->state.maximized_horz = 1;
             break;
           case ECORE_WIN32_WINDOW_STATE_MAXIMIZED:
-            ((struct _Ecore_Win32_Window *)window)->state.maximized_horz = 1;
-            ((struct _Ecore_Win32_Window *)window)->state.maximized_vert = 1;
+            window->state.maximized_horz = 1;
+            window->state.maximized_vert = 1;
             break;
           case ECORE_WIN32_WINDOW_STATE_SHADED:
-            ((struct _Ecore_Win32_Window *)window)->state.shaded = 1;
+            window->state.shaded = 1;
             break;
           case ECORE_WIN32_WINDOW_STATE_HIDDEN:
-            ((struct _Ecore_Win32_Window *)window)->state.hidden = 1;
+            window->state.hidden = 1;
             break;
           case ECORE_WIN32_WINDOW_STATE_FULLSCREEN:
-            ((struct _Ecore_Win32_Window *)window)->state.fullscreen = 1;
+            window->state.fullscreen = 1;
             break;
           case ECORE_WIN32_WINDOW_STATE_ABOVE:
-            ((struct _Ecore_Win32_Window *)window)->state.above = 1;
+            window->state.above = 1;
             break;
           case ECORE_WIN32_WINDOW_STATE_BELOW:
-            ((struct _Ecore_Win32_Window *)window)->state.below = 1;
+            window->state.below = 1;
             break;
           case ECORE_WIN32_WINDOW_STATE_DEMANDS_ATTENTION:
-            ((struct _Ecore_Win32_Window *)window)->state.demands_attention = 1;
+            window->state.demands_attention = 1;
             break;
           case ECORE_WIN32_WINDOW_STATE_UNKNOWN:
             /* nothing to be done */
@@ -661,262 +1218,201 @@ ecore_win32_window_state_set(Ecore_Win32_Window       *window,
      }
 }
 
-void
+/**
+ * @brief Apply the modification of the state to the given window.
+ *
+ * @param window The window.
+ * @param state The state to apply changes.
+ * @param set The value of the state change.
+ *
+ * This function applies the modification of the state @p state of
+ * @p window. @p set is used only for
+ * #ECORE_WIN32_WINDOW_STATE_ICONIFIED and
+ * #ECORE_WIN32_WINDOW_STATE_FULLSCREEN. If @p window is @c NULL, the
+ * function does nothing.
+ */
+EAPI void
 ecore_win32_window_state_request_send(Ecore_Win32_Window      *window,
                                       Ecore_Win32_Window_State state,
                                       unsigned int             set)
 {
-  if (!window)
-    return;
+   if (!window) return;
+
+   INF("sending cursor state");
 
    switch (state)
      {
-     case ECORE_WIN32_WINDOW_STATE_ICONIFIED:
-       if (((struct _Ecore_Win32_Window *)window)->state.iconified)
-         ecore_win32_window_iconified_set(window, set);
-       break;
-     case ECORE_WIN32_WINDOW_STATE_MODAL:
-       ((struct _Ecore_Win32_Window *)window)->state.modal = 1;
-       break;
-     case ECORE_WIN32_WINDOW_STATE_STICKY:
-       ((struct _Ecore_Win32_Window *)window)->state.sticky = 1;
-       break;
-     case ECORE_WIN32_WINDOW_STATE_MAXIMIZED_VERT:
-       if (((struct _Ecore_Win32_Window *)window)->state.maximized_vert)
-         {
-            RECT rect;
-            int  y;
-            int  height;
+      case ECORE_WIN32_WINDOW_STATE_ICONIFIED:
+         if (window->state.iconified)
+           ecore_win32_window_iconified_set(window, set);
+         break;
+      case ECORE_WIN32_WINDOW_STATE_MODAL:
+         window->state.modal = 1;
+         break;
+      case ECORE_WIN32_WINDOW_STATE_STICKY:
+         window->state.sticky = 1;
+         break;
+      case ECORE_WIN32_WINDOW_STATE_MAXIMIZED_VERT:
+         if (window->state.maximized_vert)
+           {
+              RECT rect;
+              int  y;
+              int  height;
 
-            if (!SystemParametersInfo(SPI_GETWORKAREA, 0,
-                                      &rect, 0))
-              break;
-            y = rect.top;
-            height = rect.bottom - rect.top;
+              if (!SystemParametersInfo(SPI_GETWORKAREA, 0,
+                                        &rect, 0))
+                {
+                   ERR("SystemParametersInfo() failed");
+                   break;
+                }
+              y = rect.top;
+              height = rect.bottom - rect.top;
 
-            if (!GetClientRect(((struct _Ecore_Win32_Window *)window)->window,
-                               &rect))
-              break;
+              if (!GetClientRect(window->window, &rect))
+                {
+                   ERR("GetClientRect() failed");
+                   break;
+                }
 
-            MoveWindow(window, rect.left, y,
-                       rect.right - rect.left,
-                       height,
-                       TRUE);
-         }
-       break;
-     case ECORE_WIN32_WINDOW_STATE_MAXIMIZED_HORZ:
-       if (((struct _Ecore_Win32_Window *)window)->state.maximized_horz)
-         {
-            RECT rect;
+              if (!MoveWindow(window->window, rect.left, y,
+                              rect.right - rect.left,
+                              height,
+                              TRUE))
+                {
+                   ERR("MoveWindow() failed");
+                }
+           }
+         break;
+      case ECORE_WIN32_WINDOW_STATE_MAXIMIZED_HORZ:
+         if (window->state.maximized_horz)
+           {
+              RECT rect;
 
-            if (!GetClientRect(((struct _Ecore_Win32_Window *)window)->window,
-                               &rect))
-              break;
+              if (!GetClientRect(window->window, &rect))
+                {
+                   ERR("GetClientRect() failed");
+                   break;
+                }
 
-            MoveWindow(window, 0, rect.top,
-                       GetSystemMetrics(SM_CXSCREEN),
-                       rect.bottom - rect.top,
-                       TRUE);
-         }
-       break;
-     case ECORE_WIN32_WINDOW_STATE_MAXIMIZED:
-       if (((struct _Ecore_Win32_Window *)window)->state.maximized_vert &&
-           ((struct _Ecore_Win32_Window *)window)->state.maximized_horz)
-         {
-            RECT rect;
+              if (!MoveWindow(window->window, 0, rect.top,
+                              GetSystemMetrics(SM_CXSCREEN),
+                              rect.bottom - rect.top,
+                              TRUE))
+                {
+                   ERR("MoveWindow() failed");
+                }
+           }
+         break;
+      case ECORE_WIN32_WINDOW_STATE_MAXIMIZED:
+         if (window->state.maximized_vert && window->state.maximized_horz)
+           {
+              RECT rect;
 
-            if (!SystemParametersInfo(SPI_GETWORKAREA, 0,
-                                      &rect, 0))
-              break;
+              if (!SystemParametersInfo(SPI_GETWORKAREA, 0,
+                                        &rect, 0))
+                {
+                   ERR("SystemParametersInfo() failed");
+                   break;
+                }
 
-            MoveWindow(window, 0, 0,
-                       GetSystemMetrics(SM_CXSCREEN),
-                       rect.bottom - rect.top,
-                       TRUE);
-         }
-       break;
-     case ECORE_WIN32_WINDOW_STATE_SHADED:
-       ((struct _Ecore_Win32_Window *)window)->state.shaded = 1;
-       break;
-     case ECORE_WIN32_WINDOW_STATE_HIDDEN:
-       ((struct _Ecore_Win32_Window *)window)->state.hidden = 1;
-       break;
-     case ECORE_WIN32_WINDOW_STATE_FULLSCREEN:
-       if (((struct _Ecore_Win32_Window *)window)->state.fullscreen)
-         ecore_win32_window_fullscreen_set(window, set);
-       break;
-     case ECORE_WIN32_WINDOW_STATE_ABOVE:
-       if (((struct _Ecore_Win32_Window *)window)->state.above)
-         SetWindowPos(((struct _Ecore_Win32_Window *)window)->window,
-                      HWND_TOP,
-                      0, 0,
-                      0, 0,
-                      SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-       break;
-     case ECORE_WIN32_WINDOW_STATE_BELOW:
-       if (((struct _Ecore_Win32_Window *)window)->state.below)
-         SetWindowPos(((struct _Ecore_Win32_Window *)window)->window,
-                      HWND_BOTTOM,
-                      0, 0,
-                      0, 0,
-                      SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
-       break;
-     case ECORE_WIN32_WINDOW_STATE_DEMANDS_ATTENTION:
-       ((struct _Ecore_Win32_Window *)window)->state.demands_attention = 1;
-       break;
-     case ECORE_WIN32_WINDOW_STATE_UNKNOWN:
-       /* nothing to be done */
-       break;
+              if (!MoveWindow(window->window, 0, 0,
+                              GetSystemMetrics(SM_CXSCREEN),
+                              rect.bottom - rect.top,
+                              TRUE))
+                {
+                   ERR("MoveWindow() failed");
+                }
+           }
+         break;
+      case ECORE_WIN32_WINDOW_STATE_SHADED:
+         window->state.shaded = 1;
+         break;
+      case ECORE_WIN32_WINDOW_STATE_HIDDEN:
+         window->state.hidden = 1;
+         break;
+      case ECORE_WIN32_WINDOW_STATE_FULLSCREEN:
+         if (window->state.fullscreen)
+           ecore_win32_window_fullscreen_set(window, set);
+         break;
+      case ECORE_WIN32_WINDOW_STATE_ABOVE:
+         if (window->state.above)
+           if (!SetWindowPos(window->window, HWND_TOP,
+                             0, 0,
+                             0, 0,
+                             SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW))
+             {
+                ERR("SetWindowPos() failed");
+             }
+         break;
+      case ECORE_WIN32_WINDOW_STATE_BELOW:
+         if (window->state.below)
+           if (!SetWindowPos(window->window, HWND_BOTTOM,
+                             0, 0,
+                             0, 0,
+                             SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW))
+             {
+                ERR("SetWindowPos() failed");
+             }
+         break;
+      case ECORE_WIN32_WINDOW_STATE_DEMANDS_ATTENTION:
+         window->state.demands_attention = 1;
+         break;
+      case ECORE_WIN32_WINDOW_STATE_UNKNOWN:
+         /* nothing to be done */
+         break;
      }
 }
 
-void
+/**
+ * @brief Set the type of the given window.
+ *
+ * @param window The window to modify the type.
+ * @param type The nwindow types.
+ *
+ * This function set the type of @p window to @p type. If
+ * @p window is @c NULL, the function does nothing.
+ */
+EAPI void
 ecore_win32_window_type_set(Ecore_Win32_Window      *window,
                             Ecore_Win32_Window_Type  type)
 {
+   if (!window)
+     return;
+
+   INF("setting window type");
+
    switch (type)
      {
      case ECORE_WIN32_WINDOW_TYPE_DESKTOP:
-       ((struct _Ecore_Win32_Window *)window)->type.desktop = 1;
+       window->type.desktop = 1;
        break;
      case ECORE_WIN32_WINDOW_TYPE_DOCK:
-       ((struct _Ecore_Win32_Window *)window)->type.dock = 1;
+       window->type.dock = 1;
        break;
      case ECORE_WIN32_WINDOW_TYPE_TOOLBAR:
-       ((struct _Ecore_Win32_Window *)window)->type.toolbar = 1;
+       window->type.toolbar = 1;
        break;
      case ECORE_WIN32_WINDOW_TYPE_MENU:
-       ((struct _Ecore_Win32_Window *)window)->type.menu = 1;
+       window->type.menu = 1;
        break;
      case ECORE_WIN32_WINDOW_TYPE_UTILITY:
-       ((struct _Ecore_Win32_Window *)window)->type.utility = 1;
+       window->type.utility = 1;
        break;
      case ECORE_WIN32_WINDOW_TYPE_SPLASH:
-       ((struct _Ecore_Win32_Window *)window)->type.splash = 1;
+       window->type.splash = 1;
        break;
      case ECORE_WIN32_WINDOW_TYPE_DIALOG:
-       ((struct _Ecore_Win32_Window *)window)->type.dialog = 1;
+       window->type.dialog = 1;
        break;
      case ECORE_WIN32_WINDOW_TYPE_NORMAL:
-       ((struct _Ecore_Win32_Window *)window)->type.normal = 1;
+       window->type.normal = 1;
        break;
      case ECORE_WIN32_WINDOW_TYPE_UNKNOWN:
-       ((struct _Ecore_Win32_Window *)window)->type.normal = 1;
+       window->type.normal = 1;
        break;
      }
 }
 
-
-/***** Private functions definitions *****/
-
-static Ecore_Win32_Window *
-ecore_win32_window_internal_new(Ecore_Win32_Window *parent,
-                                int                 x,
-                                int                 y,
-                                int                 width,
-                                int                 height,
-                                DWORD               style)
-{
-   RECT                        rect;
-   struct _Ecore_Win32_Window *w;
-   int                         minimal_width;
-   int                         minimal_height;
-
-   w = (struct _Ecore_Win32_Window *)calloc(1, sizeof(struct _Ecore_Win32_Window));
-   if (!w)
-     return NULL;
-
-   printf (" *** ecore_win32_window_new : %p  %d %d %d\n",
-           w,
-           width, height, GetSystemMetrics(SM_CXMIN));
-   rect.left = 0;
-   rect.top = 0;
-   rect.right = width;
-   rect.bottom = height;
-   if (!AdjustWindowRect(&rect, style, FALSE))
-     {
-        free(w);
-        return NULL;
-     }
-   printf (" * ecore : new debut : %ld %d %d\n",
-           rect.right - rect.left, GetSystemMetrics(SM_CXMIN), GetSystemMetrics(SM_CYMIN));
-
-   minimal_width = GetSystemMetrics(SM_CXMIN);
-   minimal_height = GetSystemMetrics(SM_CYMIN);
-/*    if (((rect.right - rect.left) < minimal_width) || */
-/*        ((rect.bottom - rect.top) < minimal_height)) */
-/*      { */
-/*         fprintf (stderr, "[Ecore] [Win32] ERROR !!\n"); */
-/*         fprintf (stderr, "                Wrong size %ld\n", rect.right - rect.left); */
-/*         free(w); */
-/*         return NULL; */
-/*      } */
-   if ((rect.right - rect.left) < minimal_width)
-     {
-       rect.right = rect.left + minimal_width;
-     }
-
-   w->window = CreateWindow(ECORE_WIN32_WINDOW_CLASS, "",
-                            style,
-                            x, y,
-                            rect.right - rect.left,
-                            rect.bottom - rect.top,
-                            parent ? ((struct _Ecore_Win32_Window *)parent)->window : NULL,
-                            NULL, _ecore_win32_instance, NULL);
-   if (!w->window)
-     {
-        free(w);
-        return NULL;
-     }
-
-   SetLastError(0);
-   if (!SetWindowLong(w->window, GWL_USERDATA, (LONG)w) && (GetLastError() != 0))
-     {
-        DestroyWindow(w->window);
-        free(w);
-        return NULL;
-     }
-
-   w->min_width   = 0;
-   w->min_height  = 0;
-   w->max_width   = 32767;
-   w->max_height  = 32767;
-   w->base_width  = -1;
-   w->base_height = -1;
-   w->step_width  = -1;
-   w->step_height = -1;
-
-   w->state.iconified         = 0;
-   w->state.modal             = 0;
-   w->state.sticky            = 0;
-   w->state.maximized_vert    = 0;
-   w->state.maximized_horz    = 0;
-   w->state.shaded            = 0;
-   w->state.hidden            = 0;
-   w->state.fullscreen        = 0;
-   w->state.above             = 0;
-   w->state.below             = 0;
-   w->state.demands_attention = 0;
-
-   w->type.desktop = 0;
-   w->type.dock    = 0;
-   w->type.toolbar = 0;
-   w->type.menu    = 0;
-   w->type.utility = 0;
-   w->type.splash  = 0;
-   w->type.dialog  = 0;
-   w->type.normal  = 0;
-
-   w->pointer_is_in = 0;
-   w->borderless    = 0;
-   w->iconified     = 0;
-   w->fullscreen    = 0;
-
-   printf (" *** ecore_win32_window_new fin : (%d %d) (%d %d)\n",
-           w->min_width,
-           w->min_height,
-           w->max_width,
-           w->max_height);
-
-   return w;
-}
+/**
+ * @}
+ */

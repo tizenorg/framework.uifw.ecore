@@ -1,272 +1,516 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
-
 #include "ecore_xcb_private.h"
-#include "Ecore_X_Atoms.h"
+#include <xcb/xcb_icccm.h>
 
+EAPI int
+ecore_x_window_prop_card32_get(Ecore_X_Window win,
+                               Ecore_X_Atom   atom,
+                               unsigned int  *val,
+                               unsigned int   len)
+{
+   xcb_get_property_cookie_t cookie;
+   xcb_get_property_reply_t *reply;
+   int num = 0;
 
-/*
- * Set CARD32 (array) property
- */
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   cookie = xcb_get_property_unchecked(_ecore_xcb_conn, 0, win, atom,
+                                       ECORE_X_ATOM_CARDINAL, 0, 0x7fffffff);
+   reply = xcb_get_property_reply(_ecore_xcb_conn, cookie, NULL);
+   if (!reply) return -1;
+
+   if ((reply->type != ECORE_X_ATOM_CARDINAL) || (reply->format != 32))
+     num = -1;
+   else if (reply->value_len == 0)
+     num = 0;
+   else
+     {
+        if (reply->value_len < len)
+          len = reply->value_len;
+
+        if (val)
+          {
+             unsigned int i = 0;
+             unsigned char *v;
+
+             v = xcb_get_property_value(reply);
+             for (i = 0; i < len; i++)
+               val[i] = ((uint32_t *)v)[i];
+             num = len;
+          }
+     }
+
+   if (reply) free(reply);
+   return num;
+}
+
 EAPI void
 ecore_x_window_prop_card32_set(Ecore_X_Window win,
                                Ecore_X_Atom   atom,
-			       unsigned int  *val,
+                               unsigned int  *val,
                                unsigned int   num)
 {
-   xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win,
-                       atom, ECORE_X_ATOM_CARDINAL, 32, num, (const void *)val);
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+#if SIZEOF_INT == SIZEOF_LONG
+   xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, atom,
+                       ECORE_X_ATOM_CARDINAL, 32, num, (unsigned char *)val);
+//   ecore_x_flush();
+#else
+   long *v2;
+   unsigned int i;
+
+   v2 = malloc(num * sizeof(long));
+   if (!v2) return;
+   for (i = 0; i < num; i++)
+     v2[i] = val[i];
+
+   xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, atom,
+                       ECORE_X_ATOM_CARDINAL, 32, num, (unsigned char *)v2);
+   free(v2);
+//   ecore_x_flush();
+#endif
 }
 
-/**
- * Sends the GetProperty request.
- * @param window Window whose properties are requested.
- * @param atom   The atom.
- */
-EAPI void
-ecore_x_window_prop_card32_get_prefetch(Ecore_X_Window window,
-                                        Ecore_X_Atom atom)
-{
-   xcb_get_property_cookie_t cookie;
-
-   cookie = xcb_get_property_unchecked(_ecore_xcb_conn, 0,
-                                       window,
-                                       atom,
-                                       ECORE_X_ATOM_CARDINAL,
-                                       0, 0x7fffffff);
-   _ecore_xcb_cookie_cache(cookie.sequence);
-}
-
-
-/**
- * Gets the reply of the GetProperty request sent by ecore_x_window_prop_card32_get_prefetch().
- */
-EAPI void
-ecore_x_window_prop_card32_get_fetch(void)
+EAPI int
+ecore_x_window_prop_card32_list_get(Ecore_X_Window win,
+                                    Ecore_X_Atom   atom,
+                                    unsigned int **list)
 {
    xcb_get_property_cookie_t cookie;
    xcb_get_property_reply_t *reply;
+   int num = -1;
 
-   cookie.sequence = _ecore_xcb_cookie_get();
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   if (list) *list = NULL;
+
+   cookie = xcb_get_property_unchecked(_ecore_xcb_conn, 0, win, atom,
+                                       XCB_ATOM_CARDINAL, 0, 0x7fffffff);
    reply = xcb_get_property_reply(_ecore_xcb_conn, cookie, NULL);
-   _ecore_xcb_reply_cache(reply);
-}
+   if (!reply) return -1;
 
-/*
- * Get CARD32 (array) property
- *
- * At most len items are returned in val.
- * If the property was successfully fetched the number of items stored in
- * val is returned, otherwise -1 is returned.
- * Note: Return value 0 means that the property exists but has no elements.
- */
-EAPI int
-ecore_x_window_prop_card32_get(Ecore_X_Window win __UNUSED__,
-                               Ecore_X_Atom   atom __UNUSED__,
-			       unsigned int  *val,
-                               unsigned int   len)
-{
-   xcb_get_property_reply_t *reply;
-
-   reply = _ecore_xcb_reply_get();
-   if (!reply ||
-       (reply->type != ECORE_X_ATOM_CARDINAL) ||
-       (reply->format != 32))
-      return -1;
-
-   if (reply->value_len < len)
-     len = xcb_get_property_value_length(reply);
-
-   if (val)
-      memcpy(val, xcb_get_property_value(reply), len);
-
-   return (int)len;
-}
-
-/*
- * Get CARD32 (array) property of any length
- *
- * If the property was successfully fetched the number of items stored in
- * val is returned, otherwise -1 is returned.
- * Note: Return value 0 means that the property exists but has no elements.
- */
-EAPI int
-ecore_x_window_prop_card32_list_get(Ecore_X_Window win __UNUSED__,
-                                    Ecore_X_Atom   atom __UNUSED__,
-				    unsigned int **plist)
-{
-   xcb_get_property_reply_t *reply;
-   int                       num = -1;
-
-   if (plist)
-      *plist = NULL;
-
-   reply = _ecore_xcb_reply_get();
-   if (!reply)
-      return -1;
-
-   if ((reply->type == XCB_NONE) ||
-       (reply->value_len == 0))
-      num = 0;
-   else if ((reply->type == ECORE_X_ATOM_CARDINAL) &&
-            (reply->format == 32))
+   if ((reply->type != XCB_ATOM_CARDINAL) || (reply->format != 32))
+     num = -1;
+   else if ((reply->value_len == 0) || (!xcb_get_property_value(reply)))
+     num = 0;
+   else
      {
-       uint32_t *val;
+        num = reply->value_len;
+        if (list)
+          {
+             unsigned int *val;
+             void *data;
+             int i = 0;
 
-       num = xcb_get_property_value_length(reply);
-       if (plist)
-         {
-            val = (uint32_t *)malloc (num);
-            if (!val)
-               goto error;
-
-            memcpy(val, xcb_get_property_value(reply), num);
-            *plist = val;
-         }
+             val = malloc(num * sizeof(unsigned int));
+             if (!val)
+               {
+                  free(reply);
+                  return -1;
+               }
+             data = xcb_get_property_value(reply);
+             for (i = 0; i < num; i++)
+               val[i] = ((uint32_t *)data)[i];
+             *list = val;
+          }
      }
 
- error:
-
+   free(reply);
    return num;
 }
 
-/*
- * Set X ID (array) property
- */
+EAPI int
+ecore_x_window_prop_atom_get(Ecore_X_Window win,
+                             Ecore_X_Atom   atom,
+                             Ecore_X_Atom  *list,
+                             unsigned int   len)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   return ecore_x_window_prop_xid_get(win, atom, ECORE_X_ATOM_ATOM, list, len);
+}
+
+EAPI void
+ecore_x_window_prop_atom_set(Ecore_X_Window win,
+                             Ecore_X_Atom   atom,
+                             Ecore_X_Atom  *list,
+                             unsigned int   num)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   /* xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, atom,  */
+   /*                     ECORE_X_ATOM_ATOM, 32, num, list); */
+   ecore_x_window_prop_xid_set(win, atom, ECORE_X_ATOM_ATOM, list, num);
+}
+
 EAPI void
 ecore_x_window_prop_xid_set(Ecore_X_Window win,
                             Ecore_X_Atom   atom,
-			    Ecore_X_Atom   type,
+                            Ecore_X_Atom   type,
                             Ecore_X_ID    *xids,
-			    unsigned int   num)
+                            unsigned int   num)
 {
-   xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win,
-                       atom, type, 32, num, xids);
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+#if SIZEOF_INT == SIZEOF_LONG
+   xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, atom,
+                       type, 32, num, (unsigned char *)xids);
+//   ecore_x_flush();
+#else
+   long *v2;
+   unsigned int i;
+
+   v2 = malloc(num * sizeof(long));
+   if (!v2) return;
+   for (i = 0; i < num; i++)
+     v2[i] = xids[i];
+
+   xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, atom,
+                       type, 32, num, (unsigned char *)v2);
+   free(v2);
+//   ecore_x_flush();
+#endif
 }
 
-/**
- * Sends the GetProperty request.
- * @param window Window whose properties are requested.
- * @param atom   The atom.
- * @param type   The atom type.
- */
-EAPI void
-ecore_x_window_prop_xid_get_prefetch(Ecore_X_Window window,
-                                     Ecore_X_Atom   atom,
-                                     Ecore_X_Atom   type)
+EAPI int
+ecore_x_window_prop_xid_get(Ecore_X_Window win,
+                            Ecore_X_Atom   atom,
+                            Ecore_X_Atom   type,
+                            Ecore_X_ID    *xids,
+                            unsigned int   len)
 {
    xcb_get_property_cookie_t cookie;
+   xcb_get_property_reply_t *reply;
+   int num = 0;
 
-   cookie = xcb_get_property_unchecked(_ecore_xcb_conn, 0,
-                                       window,
-                                       atom,
-                                       type,
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   num = len;
+   cookie = xcb_get_property_unchecked(_ecore_xcb_conn, 0, win, atom, type,
                                        0, 0x7fffffff);
-   _ecore_xcb_cookie_cache(cookie.sequence);
+   reply = xcb_get_property_reply(_ecore_xcb_conn, cookie, NULL);
+   if (!reply) return -1;
+
+   if ((reply->type != type) || (reply->format != 32))
+     num = -1;
+   else if (reply->value_len == 0)
+     num = 0;
+   else
+     {
+        unsigned int i = 0;
+        unsigned char *v;
+
+        if (reply->value_len < len)
+          len = reply->value_len;
+
+        v = xcb_get_property_value(reply);
+        for (i = 0; i < len; i++)
+          xids[i] = ((uint32_t *)v)[i];
+
+        num = len;
+     }
+
+   if (reply) free(reply);
+   return num;
 }
 
-
-/**
- * Gets the reply of the GetProperty request sent by ecore_x_window_prop_xid_get_prefetch().
- */
 EAPI void
-ecore_x_window_prop_xid_get_fetch(void)
+ecore_x_window_prop_string_set(Ecore_X_Window win,
+                               Ecore_X_Atom   type,
+                               const char    *str)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win, type,
+                       ECORE_X_ATOM_UTF8_STRING, 8, strlen(str), str);
+//   ecore_x_flush();
+}
+
+EAPI char *
+ecore_x_window_prop_string_get(Ecore_X_Window win,
+                               Ecore_X_Atom   type)
 {
    xcb_get_property_cookie_t cookie;
    xcb_get_property_reply_t *reply;
+   char *str = NULL;
+   int len = 0;
 
-   cookie.sequence = _ecore_xcb_cookie_get();
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   cookie =
+     xcb_get_property_unchecked(_ecore_xcb_conn, 0,
+                                win ? win : ((xcb_screen_t *)_ecore_xcb_screen)->root,
+                                type, XCB_GET_PROPERTY_TYPE_ANY, 0, 1000000L);
    reply = xcb_get_property_reply(_ecore_xcb_conn, cookie, NULL);
-   _ecore_xcb_reply_cache(reply);
-}
+   if (!reply) return NULL;
 
-/*
- * Get X ID (array) property
- *
- * At most len items are returned in val.
- * If the property was successfully fetched the number of items stored in
- * val is returned, otherwise -1 is returned.
- * Note: Return value 0 means that the property exists but has no elements.
- */
-EAPI int
-ecore_x_window_prop_xid_get(Ecore_X_Window win __UNUSED__,
-                            Ecore_X_Atom   atom __UNUSED__,
-			    Ecore_X_Atom   type __UNUSED__,
-                            Ecore_X_ID    *xids,
-			    unsigned int   len)
-{
-   xcb_get_property_reply_t *reply;
-   int                       num = len;
+   len = ((reply->value_len * reply->format) / 8);
+   str = (char *)malloc((len + 1) * sizeof(char));
+   memcpy(str, xcb_get_property_value(reply), len);
+   str[len] = '\0';
 
-   reply = _ecore_xcb_reply_get();
-   if (!reply)
-      return -1;
-
-   if (reply->type == XCB_NONE)
-      num = 0;
-   else if (reply->format == 32)
+   if (reply->type != ECORE_X_ATOM_UTF8_STRING)
      {
-        if (reply->value_len < len)
-          num = xcb_get_property_value_length(reply);
+        Ecore_Xcb_Textproperty prop;
+        int count = 0;
+        char **list = NULL;
+        Eina_Bool ret = EINA_FALSE;
 
-        if (xids)
-           memcpy(xids, xcb_get_property_value(reply), num);
+        prop.value = strdup(str);
+        prop.nitems = len;
+        prop.encoding = reply->type;
+
+#ifdef HAVE_ICONV
+        ret = _ecore_xcb_utf8_textproperty_to_textlist(&prop, &list, &count);
+#else
+        ret = _ecore_xcb_mb_textproperty_to_textlist(&prop, &list, &count);
+#endif
+        if (ret)
+          {
+             if (count > 0)
+               str = strdup(list[0]);
+             else
+               str = strdup((char *)prop.value);
+
+             if (list) free(list);
+          }
+        else
+          str = strdup((char *)prop.value);
      }
 
+   free(reply);
+   return str;
+}
+
+EAPI int
+ecore_x_window_prop_window_get(Ecore_X_Window  win,
+                               Ecore_X_Atom    atom,
+                               Ecore_X_Window *list,
+                               unsigned int    len)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   return ecore_x_window_prop_xid_get(win, atom, ECORE_X_ATOM_WINDOW, list, len);
+}
+
+EAPI void
+ecore_x_window_prop_window_set(Ecore_X_Window  win,
+                               Ecore_X_Atom    atom,
+                               Ecore_X_Window *list,
+                               unsigned int    num)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   ecore_x_window_prop_xid_set(win, atom, ECORE_X_ATOM_WINDOW, list, num);
+}
+
+EAPI int
+ecore_x_window_prop_window_list_get(Ecore_X_Window   win,
+                                    Ecore_X_Atom     atom,
+                                    Ecore_X_Window **plst)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   return ecore_x_window_prop_xid_list_get(win, atom, ECORE_X_ATOM_WINDOW, plst);
+}
+
+EAPI Ecore_X_Atom
+ecore_x_window_prop_any_type(void)
+{
+   return XCB_ATOM_ANY;
+}
+
+EAPI void
+ecore_x_window_prop_property_del(Ecore_X_Window win,
+                                 Ecore_X_Atom   property)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   xcb_delete_property(_ecore_xcb_conn, win, property);
+}
+
+EAPI void
+ecore_x_window_prop_property_set(Ecore_X_Window win,
+                                 Ecore_X_Atom   property,
+                                 Ecore_X_Atom   type,
+                                 int            size,
+                                 void          *data,
+                                 int            num)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   if (win == 0)
+     win = ((xcb_screen_t *)_ecore_xcb_screen)->root;
+
+   if (size != 32)
+     {
+        xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win,
+                            property, type, size, num, (unsigned char *)data);
+//        ecore_x_flush();
+     }
+   else
+     {
+        uint32_t *dat;
+        int i = 0, *ptr;
+
+        dat = malloc(sizeof(uint32_t) * num);
+        if (dat)
+          {
+             for (ptr = (int *)data, i = 0; i < num; i++)
+               dat[i] = ptr[i];
+             xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win,
+                                 property, type, size, num,
+                                 (unsigned char *)dat);
+             free(dat);
+//             ecore_x_flush();
+          }
+     }
+}
+
+EAPI int
+ecore_x_window_prop_property_get(Ecore_X_Window  win,
+                                 Ecore_X_Atom    property,
+                                 Ecore_X_Atom    type,
+                                 int             size,
+                                 unsigned char **data,
+                                 int            *num)
+{
+   xcb_get_property_cookie_t cookie;
+   xcb_get_property_reply_t *reply;
+   int format = 0;
+   unsigned int i = 0;
+   void *value;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   if (num) *num = 0;
+
+   if (data)
+     *data = NULL;
+   else
+     return 0;
+
+   if (win == 0)
+     win = ((xcb_screen_t *)_ecore_xcb_screen)->root;
+
+   cookie =
+     xcb_get_property_unchecked(_ecore_xcb_conn, 0, win,
+                                property, type, 0, UINT_MAX);
+   reply = xcb_get_property_reply(_ecore_xcb_conn, cookie, NULL);
+   if (!reply) return 0;
+   if ((reply->format != size) || (reply->value_len == 0))
+     {
+        free(reply);
+        return 0;
+     }
+
+   if (!(*data = malloc(reply->value_len * reply->format / 8)))
+     {
+        free(reply);
+        return 0;
+     }
+
+   value = xcb_get_property_value(reply);
+   switch (reply->format)
+     {
+      case 8:
+        for (i = 0; i < reply->value_len; i++)
+          (*data)[i] = ((unsigned char *)value)[i];
+        break;
+
+      case 16:
+        for (i = 0; i < reply->value_len; i++)
+          ((unsigned short *)*data)[i] = ((unsigned short *)value)[i];
+        break;
+
+      case 32:
+        for (i = 0; i < reply->value_len; i++)
+          ((unsigned int *)*data)[i] = ((uint32_t *)value)[i];
+        break;
+     }
+
+   if (num) *num = reply->value_len;
+   format = reply->format;
+   free(reply);
+   return format;
+}
+
+EAPI int
+ecore_x_window_prop_atom_list_get(Ecore_X_Window win,
+                                  Ecore_X_Atom   atom,
+                                  Ecore_X_Atom **list)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   return ecore_x_window_prop_xid_list_get(win, atom, ECORE_X_ATOM_ATOM, list);
+}
+
+EAPI void
+ecore_x_window_prop_atom_list_change(Ecore_X_Window win,
+                                     Ecore_X_Atom   atom,
+                                     Ecore_X_Atom   item,
+                                     int            op)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   ecore_x_window_prop_xid_list_change(win, atom, ECORE_X_ATOM_ATOM, item, op);
+}
+
+EAPI int
+ecore_x_window_prop_xid_list_get(Ecore_X_Window win,
+                                 Ecore_X_Atom   atom,
+                                 Ecore_X_Atom   type,
+                                 Ecore_X_ID   **xids)
+{
+   xcb_get_property_cookie_t cookie;
+   xcb_get_property_reply_t *reply;
+   int num = -1;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   if (xids) *xids = NULL;
+
+   cookie = xcb_get_property_unchecked(_ecore_xcb_conn, 0, win, atom, type,
+                                       0, 0x7fffffff);
+   reply = xcb_get_property_reply(_ecore_xcb_conn, cookie, NULL);
+   if (!reply) return -1;
+
+   if ((reply->type != type) || (reply->format != 32))
+     num = -1;
+   else if ((reply->value_len == 0) || (!xcb_get_property_value(reply)))
+     num = 0;
+   else
+     {
+        Ecore_X_Atom *alst;
+        void *val;
+
+        num = xcb_get_property_value_length(reply);
+        val = xcb_get_property_value(reply);
+        alst = malloc(num * sizeof(Ecore_X_ID));
+        if (alst)
+          {
+             int i = 0;
+
+             for (i = 0; i < num; i++)
+               alst[i] = ((uint32_t *)val)[i];
+             *xids = alst;
+          }
+     }
+
+   free(reply);
    return num;
 }
 
-/*
- * Get X ID (array) property
- *
- * If the property was successfully fetched the number of items stored in
- * val is returned, otherwise -1 is returned.
- * The returned array must be freed with free().
- * Note: Return value 0 means that the property exists but has no elements.
- */
-EAPI int
-ecore_x_window_prop_xid_list_get(Ecore_X_Window win __UNUSED__,
-                                 Ecore_X_Atom   atom __UNUSED__,
-				 Ecore_X_Atom   type __UNUSED__,
-                                 Ecore_X_ID   **pxids)
-{
-   xcb_get_property_reply_t *reply;
-   int                       num = -1;
-
-   if (pxids)
-      *pxids = NULL;
-
-   reply = _ecore_xcb_reply_get();
-   if (!reply)
-      return -1;
-
-   if ((reply->type == XCB_NONE) ||
-       (reply->value_len == 0))
-      num = 0;
-   else if ((reply->type == ECORE_X_ATOM_CARDINAL) &&
-            (reply->format == 32))
-     {
-       uint32_t *val;
-
-       num = xcb_get_property_value_length(reply);
-       if (pxids)
-         {
-            val = (uint32_t *)malloc (num);
-            if (!val)
-               return -1;
-
-            memcpy(val, xcb_get_property_value(reply), num);
-            *pxids = val;
-         }
-     }
-
-   return num;
-}
-
-/*
- * Remove/add/toggle X ID list item.
- */
 EAPI void
 ecore_x_window_prop_xid_list_change(Ecore_X_Window win,
                                     Ecore_X_Atom   atom,
@@ -275,597 +519,202 @@ ecore_x_window_prop_xid_list_change(Ecore_X_Window win,
                                     int            op)
 {
    Ecore_X_ID *lst;
-   int         i;
-   int         num;
+   int i = 0, num = 0;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
    num = ecore_x_window_prop_xid_list_get(win, atom, type, &lst);
-   if (num < 0)
-      return;			/* Error - assuming invalid window */
+   if (num < 0) return;
 
-   /* Is it there? */
    for (i = 0; i < num; i++)
      {
-	if (lst[i] == item)
-	   break;
+        if (lst[i] == item) break;
      }
 
    if (i < num)
      {
-	/* Was in list */
-	if (op == ECORE_X_PROP_LIST_ADD)
-	   goto done;
-	/* Remove it */
-	num--;
-	for (; i < num; i++)
-	   lst[i] = lst[i + 1];
+        if (op == ECORE_X_PROP_LIST_ADD)
+          goto done;
+        num--;
+        for (; i < num; i++)
+          lst[i] = lst[i + 1];
      }
    else
      {
-	/* Was not in list */
-	if (op == ECORE_X_PROP_LIST_REMOVE)
-	   goto done;
-	/* Add it */
-	num++;
-	lst = realloc(lst, num * sizeof(Ecore_X_ID));
-	lst[i] = item;
+        if (op == ECORE_X_PROP_LIST_REMOVE)
+          goto done;
+        num++;
+        lst = realloc(lst, num * sizeof(Ecore_X_ID));
+        lst[i] = item;
      }
-
    ecore_x_window_prop_xid_set(win, atom, type, lst, num);
 
- done:
-   if (lst)
-      free(lst);
+done:
+   if (lst) free(lst);
 }
 
-/*
- * Set Atom (array) property
- */
-EAPI void
-ecore_x_window_prop_atom_set(Ecore_X_Window win,
-                             Ecore_X_Atom   atom,
-                             Ecore_X_Atom  *list,
-                             unsigned int   num)
+EAPI Eina_Bool
+ecore_x_window_prop_protocol_isset(Ecore_X_Window      win,
+                                   Ecore_X_WM_Protocol protocol)
 {
-   ecore_x_window_prop_xid_set(win, atom, ECORE_X_ATOM_ATOM, list, num);
-}
-
-/**
- * Sends the GetProperty request.
- * @param window Window whose properties are requested.
- * @param atom   Property atom.
- */
-EAPI void
-ecore_x_window_prop_atom_get_prefetch(Ecore_X_Window window,
-                                      Ecore_X_Atom   atom)
-{
+   Eina_Bool ret = EINA_FALSE;
+   Ecore_X_Atom proto;
+#ifdef OLD_XCB_VERSION
+   xcb_get_wm_protocols_reply_t protos;
+#else
+   xcb_icccm_get_wm_protocols_reply_t protos;
+#endif
    xcb_get_property_cookie_t cookie;
+   uint8_t reply;
+   uint32_t count = 0, i = 0;
 
-   cookie = xcb_get_property_unchecked(_ecore_xcb_conn, 0,
-                                       window,
-                                       atom,
-                                       ECORE_X_ATOM_ATOM,
-                                       0, 0x7fffffff);
-   _ecore_xcb_cookie_cache(cookie.sequence);
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   if (protocol >= ECORE_X_WM_PROTOCOL_NUM) return EINA_FALSE;
+
+   proto = _ecore_xcb_atoms_wm_protocol[protocol];
+#ifdef OLD_XCB_VERSION
+   cookie = xcb_get_wm_protocols_unchecked(_ecore_xcb_conn, win,
+                                           ECORE_X_ATOM_WM_PROTOCOLS);
+   reply = xcb_get_wm_protocols_reply(_ecore_xcb_conn, cookie, &protos, NULL);
+#else
+   cookie = xcb_icccm_get_wm_protocols_unchecked(_ecore_xcb_conn, win,
+                                                 ECORE_X_ATOM_WM_PROTOCOLS);
+   reply = xcb_icccm_get_wm_protocols_reply(_ecore_xcb_conn, cookie,
+                                            &protos, NULL);
+#endif
+   if (!reply) return EINA_FALSE;
+
+   count = protos.atoms_len;
+   for (i = 0; i < count; i++)
+     {
+        if (protos.atoms[i] == proto)
+          {
+             ret = EINA_TRUE;
+             break;
+          }
+     }
+
+#ifdef OLD_XCB_VERSION
+   xcb_get_wm_protocols_reply_wipe(&protos);
+#else
+   xcb_icccm_get_wm_protocols_reply_wipe(&protos);
+#endif
+   return ret;
 }
 
-
-/**
- * Gets the reply of the GetProperty request sent by ecore_x_window_prop_atom_get_prefetch().
- */
-EAPI void
-ecore_x_window_prop_atom_get_fetch(void)
+EAPI Ecore_X_WM_Protocol *
+ecore_x_window_prop_protocol_list_get(Ecore_X_Window win,
+                                      int           *num_ret)
 {
+#ifdef OLD_XCB_VERSION
+   xcb_get_wm_protocols_reply_t protos;
+#else
+   xcb_icccm_get_wm_protocols_reply_t protos;
+#endif
    xcb_get_property_cookie_t cookie;
-   xcb_get_property_reply_t *reply;
+   uint8_t reply;
+   uint32_t count = 0, i = 0;
+   Ecore_X_WM_Protocol *prot_ret = NULL;
 
-   cookie.sequence = _ecore_xcb_cookie_get();
-   reply = xcb_get_property_reply(_ecore_xcb_conn, cookie, NULL);
-   _ecore_xcb_reply_cache(reply);
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
+
+   if (!num_ret) return NULL;
+
+   *num_ret = 0;
+
+#ifdef OLD_XCB_VERSION
+   cookie = xcb_get_wm_protocols_unchecked(_ecore_xcb_conn, win,
+                                           ECORE_X_ATOM_WM_PROTOCOLS);
+   reply = xcb_get_wm_protocols_reply(_ecore_xcb_conn, cookie, &protos, NULL);
+#else
+   cookie = xcb_icccm_get_wm_protocols_unchecked(_ecore_xcb_conn, win,
+                                                 ECORE_X_ATOM_WM_PROTOCOLS);
+   reply = xcb_icccm_get_wm_protocols_reply(_ecore_xcb_conn, cookie,
+                                            &protos, NULL);
+#endif
+   if (!reply) return NULL;
+
+   count = protos.atoms_len;
+   if (count <= 0)
+     {
+#ifdef OLD_XCB_VERSION
+        xcb_get_wm_protocols_reply_wipe(&protos);
+#else
+        xcb_icccm_get_wm_protocols_reply_wipe(&protos);
+#endif
+        return NULL;
+     }
+
+   prot_ret = calloc(1, count * sizeof(Ecore_X_WM_Protocol));
+   if (!prot_ret)
+     {
+#ifdef OLD_XCB_VERSION
+        xcb_get_wm_protocols_reply_wipe(&protos);
+#else
+        xcb_icccm_get_wm_protocols_reply_wipe(&protos);
+#endif
+        return NULL;
+     }
+
+   for (i = 0; i < count; i++)
+     {
+        Ecore_X_WM_Protocol j;
+
+        prot_ret[i] = -1;
+        for (j = 0; j < ECORE_X_WM_PROTOCOL_NUM; j++)
+          {
+             if (_ecore_xcb_atoms_wm_protocol[j] == protos.atoms[i])
+               prot_ret[i] = j;
+          }
+     }
+
+   if (num_ret) *num_ret = count;
+
+#ifdef OLD_XCB_VERSION
+   xcb_get_wm_protocols_reply_wipe(&protos);
+#else
+   xcb_icccm_get_wm_protocols_reply_wipe(&protos);
+#endif
+   return prot_ret;
 }
 
-/*
- * Get Atom (array) property
- *
- * At most len items are returned in val.
- * If the property was successfully fetched the number of items stored in
- * val is returned, otherwise -1 is returned.
- * Note: Return value 0 means that the property exists but has no elements.
- */
-EAPI int
-ecore_x_window_prop_atom_get(Ecore_X_Window win,
-                             Ecore_X_Atom   atom,
-                             Ecore_X_Atom  *list,
-                             unsigned int len)
-{
-   return ecore_x_window_prop_xid_get(win, atom, ECORE_X_ATOM_ATOM, list, len);
-}
-
-/*
- * Get Atom (array) property
- *
- * If the property was successfully fetched the number of items stored in
- * val is returned, otherwise -1 is returned.
- * The returned array must be freed with free().
- * Note: Return value 0 means that the property exists but has no elements.
- */
-EAPI int
-ecore_x_window_prop_atom_list_get(Ecore_X_Window win,
-                                  Ecore_X_Atom   atom,
-                                  Ecore_X_Atom **plist)
-{
-   return ecore_x_window_prop_xid_list_get(win, atom, ECORE_X_ATOM_ATOM, plist);
-}
-
-/*
- * Remove/add/toggle atom list item.
- */
-EAPI void
-ecore_x_window_prop_atom_list_change(Ecore_X_Window win,
-                                     Ecore_X_Atom   atom,
-                                     Ecore_X_Atom   item,
-                                     int            op)
-{
-   ecore_x_window_prop_xid_list_change(win, atom, ECORE_X_ATOM_ATOM, item, op);
-}
-
-/*
- * Set Window (array) property
- */
-EAPI void
-ecore_x_window_prop_window_set(Ecore_X_Window  win,
-                               Ecore_X_Atom    atom,
-                               Ecore_X_Window *list,
-                               unsigned int    num)
-{
-   ecore_x_window_prop_xid_set(win, atom, ECORE_X_ATOM_WINDOW, list, num);
-}
-
-/**
- * Sends the GetProperty request.
- * @param window Window whose properties are requested.
- * @param atom   The atom.
- */
-EAPI void
-ecore_x_window_prop_window_get_prefetch(Ecore_X_Window window,
-                                        Ecore_X_Atom   atom)
-{
-   xcb_get_property_cookie_t cookie;
-
-   cookie = xcb_get_property_unchecked(_ecore_xcb_conn, 0,
-                                       window,
-                                       atom,
-                                       ECORE_X_ATOM_WINDOW,
-                                       0, 0x7fffffff);
-   _ecore_xcb_cookie_cache(cookie.sequence);
-}
-
-
-/**
- * Gets the reply of the GetProperty request sent by ecore_x_window_prop_window_get_prefetch().
- */
-EAPI void
-ecore_x_window_prop_window_get_fetch(void)
-{
-   xcb_get_property_cookie_t cookie;
-   xcb_get_property_reply_t *reply;
-
-   cookie.sequence = _ecore_xcb_cookie_get();
-   reply = xcb_get_property_reply(_ecore_xcb_conn, cookie, NULL);
-   _ecore_xcb_reply_cache(reply);
-}
-
-/*
- * Get Window (array) property
- *
- * At most len items are returned in val.
- * If the property was successfully fetched the number of items stored in
- * val is returned, otherwise -1 is returned.
- * Note: Return value 0 means that the property exists but has no elements.
- */
-EAPI int
-ecore_x_window_prop_window_get(Ecore_X_Window  win,
-                               Ecore_X_Atom    atom,
-                               Ecore_X_Window *list,
-                               unsigned int    len)
-{
-   return ecore_x_window_prop_xid_get(win, atom, ECORE_X_ATOM_WINDOW, list, len);
-}
-
-/*
- * Get Window (array) property
- *
- * If the property was successfully fetched the number of items stored in
- * val is returned, otherwise -1 is returned.
- * The returned array must be freed with free().
- * Note: Return value 0 means that the property exists but has no elements.
- */
-EAPI int
-ecore_x_window_prop_window_list_get(Ecore_X_Window   win,
-                                    Ecore_X_Atom     atom,
-                                    Ecore_X_Window **plist)
-{
-   return ecore_x_window_prop_xid_list_get(win, atom, ECORE_X_ATOM_WINDOW, plist);
-}
-
-/**
- * To be documented.
- *
- * FIXME: To be fixed.
- */
-EAPI Ecore_X_Atom
-ecore_x_window_prop_any_type(void)
-{
-   return XCB_GET_PROPERTY_TYPE_ANY;
-}
-
-/**
- * To be documented.
- * @param window   The window.
- * @param property The property atom.
- * @param type     The type atom.
- * @param size     The size.
- * @param data     The data.
- * @param number   The size of the data.
- *
- * FIXME: To be fixed.
- */
-EAPI void
-ecore_x_window_prop_property_set(Ecore_X_Window window,
-                                 Ecore_X_Atom   property,
-                                 Ecore_X_Atom   type,
-                                 int            size,
-                                 void          *data,
-                                 int            number)
-{
-   if (window == 0) window = ((xcb_screen_t *)_ecore_xcb_screen)->root;
-   xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, window,
-                       property, type,
-                       size, number, data);
-}
-
-/**
- * Sends the GetProperty request.
- * @param window   Window whose properties are requested.
- * @param property Property atom.
- * @param type     Type atom.
- */
-EAPI void
-ecore_x_window_prop_property_get_prefetch(Ecore_X_Window window,
-                                          Ecore_X_Atom   property,
-                                          Ecore_X_Atom   type)
-{
-   xcb_get_property_cookie_t cookie;
-
-   cookie = xcb_get_property_unchecked(_ecore_xcb_conn, 0,
-                                       window ? window : ((xcb_screen_t *)_ecore_xcb_screen)->root,
-                                       property, type, 0, LONG_MAX);
-   _ecore_xcb_cookie_cache(cookie.sequence);
-}
-
-
-/**
- * Gets the reply of the GetProperty request sent by ecore_x_window_prop_property_get_prefetch().
- */
-EAPI void
-ecore_x_window_prop_property_get_fetch(void)
-{
-   xcb_get_property_cookie_t cookie;
-   xcb_get_property_reply_t *reply;
-
-   cookie.sequence = _ecore_xcb_cookie_get();
-   reply = xcb_get_property_reply(_ecore_xcb_conn, cookie, NULL);
-   _ecore_xcb_reply_cache(reply);
-}
-
-/**
- * To be documented.
- * @param window   The window (Unused).
- * @param property The property atom (Unused).
- * @param type     The type atom (Unused).
- * @param size     The size (Unused).
- * @param data     The returned data.
- * @param num      The size of the data.
- * @return         1 on success, 0 otherwise.
- *
- * FIXME: To be fixed.
- */
-EAPI int
-ecore_x_window_prop_property_get(Ecore_X_Window  window __UNUSED__,
-                                 Ecore_X_Atom    property __UNUSED__,
-                                 Ecore_X_Atom    type __UNUSED__,
-                                 int             size __UNUSED__,
-                                 unsigned char **data,
-                                 int            *num)
-{
-   xcb_get_property_reply_t *reply;
-
-   /* make sure these are initialized */
-   if (num) *num = 0L;
-
-   if (data)
-     *data = NULL;
-   else /* we can't store the retrieved data, so just return */
-     return 0;
-
-   reply = _ecore_xcb_reply_get();
-   if (!reply)
-     return 0;
-
-   if ((reply->format != size) ||
-       (reply->value_len == 0))
-      return 0;
-
-   *data = malloc(reply->value_len);
-   if (!*data)
-      return 0;
-
-   memcpy(*data, xcb_get_property_value(reply), 
-          xcb_get_property_value_length(reply));
-
-   if (num)
-      *num = reply->value_len;
-
-   return reply->format;
-}
-
-EAPI void
-ecore_x_window_prop_property_del(Ecore_X_Window window,
-                                 Ecore_X_Atom   property)
-{
-   xcb_delete_property(_ecore_xcb_conn, window, property);
-}
-
-/**
- * Sends the ListProperties request.
- * @param window Window whose properties are requested.
- */
-EAPI void
-ecore_x_window_prop_list_prefetch(Ecore_X_Window window)
-{
-   xcb_list_properties_cookie_t cookie;
-
-   cookie = xcb_list_properties_unchecked(_ecore_xcb_conn, window);
-   _ecore_xcb_cookie_cache(cookie.sequence);
-}
-
-
-/**
- * Gets the reply of the ListProperties request sent by ecore_x_window_prop_list_prefetch().
- */
-EAPI void
-ecore_x_window_prop_list_fetch(void)
-{
-   xcb_list_properties_cookie_t cookie;
-   xcb_list_properties_reply_t *reply;
-
-   cookie.sequence = _ecore_xcb_cookie_get();
-   reply = xcb_list_properties_reply(_ecore_xcb_conn, cookie, NULL);
-   _ecore_xcb_reply_cache(reply);
-}
-
-
-/**
- * To be documented.
- * @param window  The window (Unused).
- * @param num_ret The number of atoms.
- * @return        The returned atoms.
- *
- * FIXME: To be fixed.
- */
 EAPI Ecore_X_Atom *
-ecore_x_window_prop_list(Ecore_X_Window window __UNUSED__,
-                         int           *num_ret)
+ecore_x_window_prop_list(Ecore_X_Window win,
+                         int           *num)
 {
+   xcb_list_properties_cookie_t cookie;
    xcb_list_properties_reply_t *reply;
-   Ecore_X_Atom                *atoms;
+   xcb_atom_t *atm;
+   Ecore_X_Atom *atoms;
+   int i = 0;
 
-   if (num_ret) *num_ret = 0;
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   CHECK_XCB_CONN;
 
-   reply = _ecore_xcb_reply_get();
-   if (!reply)
-      return NULL;
+   if (num) *num = 0;
+
+   cookie = xcb_list_properties_unchecked(_ecore_xcb_conn, win);
+   reply = xcb_list_properties_reply(_ecore_xcb_conn, cookie, NULL);
+   if (!reply) return NULL;
 
    atoms = (Ecore_X_Atom *)malloc(reply->atoms_len * sizeof(Ecore_X_Atom));
    if (!atoms)
-      return NULL;
-   memcpy(atoms,
-          xcb_list_properties_atoms(reply),
-          reply->atoms_len * sizeof(Ecore_X_Atom));
-   if(num_ret)
-     *num_ret = reply->atoms_len;
+     {
+        free(reply);
+        return NULL;
+     }
+
+   atm = xcb_list_properties_atoms(reply);
+   for (i = 0; i < reply->atoms_len; i++)
+     atoms[i] = atm[i];
+
+   if (num) *num = reply->atoms_len;
+   free(reply);
 
    return atoms;
 }
 
-/**
- * Set a window string property.
- * @param win The window
- * @param type The property
- * @param str The string
- *
- * Set a window string property
- */
-EAPI void
-ecore_x_window_prop_string_set(Ecore_X_Window win,
-                               Ecore_X_Atom   type,
-                               const char    *str)
-{
-   if (win == 0) win = ((xcb_screen_t *)_ecore_xcb_screen)->root;
-   xcb_change_property(_ecore_xcb_conn, XCB_PROP_MODE_REPLACE, win,
-                     type, ECORE_X_ATOM_UTF8_STRING,
-                     8, strlen(str), str);
-}
-
-/**
- * Sends the GetProperty request.
- * @param window Window whose properties are requested.
- * @param type   The atom.
- */
-EAPI void
-ecore_x_window_prop_string_get_prefetch(Ecore_X_Window window,
-                                        Ecore_X_Atom   type)
-{
-   xcb_get_property_cookie_t cookie;
-
-   cookie = xcb_get_property_unchecked(_ecore_xcb_conn, 0,
-                                       window ? window : ((xcb_screen_t *)_ecore_xcb_screen)->root,
-                                       type, XCB_GET_PROPERTY_TYPE_ANY, 0L, 1000000L);
-   _ecore_xcb_cookie_cache(cookie.sequence);
-}
-
-
-/**
- * Gets the reply of the GetProperty request sent by ecore_x_window_prop_string_get_prefetch().
- */
-EAPI void
-ecore_x_window_prop_string_get_fetch(void)
-{
-   xcb_get_property_cookie_t cookie;
-   xcb_get_property_reply_t *reply;
-
-   cookie.sequence = _ecore_xcb_cookie_get();
-   reply = xcb_get_property_reply(_ecore_xcb_conn, cookie, NULL);
-   _ecore_xcb_reply_cache(reply);
-}
-
-/**
- * Get a window string property.
- * @param window The window
- * @param type The property
- *
- * Return window string property of a window. String must be free'd when done.
- *
- * To use this function, you must call before, and in order,
- * ecore_x_window_prop_string_get_prefetch(), which sends the GetProperty request,
- * then ecore_x_window_prop_string_get_fetch(), which gets the reply.
- */
-EAPI char *
-ecore_x_window_prop_string_get(Ecore_X_Window window __UNUSED__,
-                               Ecore_X_Atom   type __UNUSED__)
-{
-   xcb_get_property_reply_t *reply;
-   char                     *str = NULL;
-
-   reply = _ecore_xcb_reply_get();
-   if (!reply)
-     return NULL;
-
-   if (reply->type == ECORE_X_ATOM_UTF8_STRING)
-     {
-        int length;
-
-        length = reply->value_len;
-        str = (char *)malloc(length + 1);
-        memcpy(str,
-               xcb_get_property_value(reply),
-               length);
-        str[length] = '\0';
-     }
-   else
-     {
-       /* FIXME: to be done... */
-
-/* #ifdef X_HAVE_UTF8_STRING */
-/*         s = Xutf8TextPropertyToTextList(_ecore_xcb_conn, &xtp, */
-/*                                         &list, &items); */
-/* #else */
-/*         s = XmbTextPropertyToTextList(_ecore_xcb_conn, &xtp, */
-/*                                       &list, &items); */
-/* #endif */
-/*         if ((s == XLocaleNotSupported) || */
-/*             (s == XNoMemory) || (s == XConverterNotFound)) */
-/*           { */
-/*              str = strdup((char *)xtp.value); */
-/*           } */
-/*         else if ((s >= Success) && (items > 0)) */
-/*           { */
-/*              str = strdup(list[0]); */
-/*           } */
-/*         if (list) */
-/*            XFreeStringList(list); */
-     }
-
-   return str;
-}
-
-/* FIXME : round trips because of GetWMProtocols */
-/*         should we rewrite its code ? */
-EAPI int
-ecore_x_window_prop_protocol_isset(Ecore_X_Window      window,
-                                   Ecore_X_WM_Protocol protocol)
-{
-   Ecore_X_Atom *protos;
-   Ecore_X_Atom  proto;
-   uint32_t      protos_count;
-   uint32_t      i;
-   uint8_t       ret = 0;
-
-   /* check for invalid values */
-   if (protocol >= ECORE_X_WM_PROTOCOL_NUM)
-	return ret;
-
-   proto = _ecore_xcb_atoms_wm_protocols[protocol];
-
-   if (!xcb_get_wm_protocols(_ecore_xcb_conn, window, &protos_count, &protos))
-	return ret;
-
-   for (i = 0; i < protos_count; i++)
-	if (protos[i] == proto)
-	  {
-	     ret = 1;
-	     break;
-	  }
-
-   free(protos);
-
-   return ret;
-}
-
-/**
- * To be documented.
- * @param window  The window.
- * @param num_ret The number of WM protocols.
- * @return        The returned WM protocols.
- *
- * FIXME: To be fixed.
- */
-
-/* FIXME : round trips because of get_wm_protocols */
-/*         should we rewrite its code ? */
-
-EAPI Ecore_X_WM_Protocol *
-ecore_x_window_prop_protocol_list_get(Ecore_X_Window window,
-                                      int           *num_ret)
-{
-   Ecore_X_WM_Protocol *prot_ret = NULL;
-   Ecore_X_Atom        *protos;
-   uint32_t             protos_count;
-   uint32_t             i;
-
-   if (!xcb_get_wm_protocols(_ecore_xcb_conn, window, &protos_count, &protos))
-     return NULL;
-
-   if ((!protos) || (protos_count <= 0)) return NULL;
-
-   prot_ret = calloc(1, protos_count * sizeof(Ecore_X_WM_Protocol));
-   if (!prot_ret)
-     {
-	free(protos);
-	return NULL;
-     }
-   for (i = 0; i < protos_count; i++)
-     {
-	Ecore_X_WM_Protocol j;
-
-	prot_ret[i] = -1;
-	for (j = 0; j < ECORE_X_WM_PROTOCOL_NUM; j++)
-	  {
-	     if (_ecore_xcb_atoms_wm_protocols[j] == protos[i])
-	       prot_ret[i] = j;
-	  }
-     }
-   free(protos);
-   *num_ret = protos_count;
-
-   return prot_ret;
-}

@@ -1,75 +1,99 @@
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include "Ecore_Fb.h"
 #include "ecore_fb_private.h"
 
 static void _ecore_fb_size_get(int *w, int *h);
 
-EAPI int ECORE_FB_EVENT_KEY_DOWN = 0;
-EAPI int ECORE_FB_EVENT_KEY_UP = 0;
-EAPI int ECORE_FB_EVENT_MOUSE_BUTTON_DOWN = 0;
-EAPI int ECORE_FB_EVENT_MOUSE_BUTTON_UP = 0;
-EAPI int ECORE_FB_EVENT_MOUSE_MOVE = 0;
-EAPI int ECORE_FB_EVENT_MOUSE_WHEEL = 0;
-
 static int _ecore_fb_init_count = 0;
 static int _ecore_fb_console_w = 0;
 static int _ecore_fb_console_h = 0;
 
-static double _ecore_fb_double_click_time = 0.25;
-
-
 /**
- * @defgroup Ecore_FB_Library_Group Framebuffer Library Functions
+ * @addtogroup Ecore_FB_Group Ecore_FB - Frame buffer convenience functions.
  *
- * Functions used to set up and shut down the Ecore_Framebuffer functions.
+ * @{
  */
 
+static sighandler_t oldhand = NULL;
+
+static void
+nosigint(int val __UNUSED__)
+{
+}
+
 /**
- * Sets up the Ecore_Fb library.
- * @param   name device target name
- * @return  @c 0 on failure.  Otherwise, the number of times the library has
- *          been initialised without being shut down.
- * @ingroup Ecore_FB_Library_Group
+ * @brief Initialize the Ecore_Fb library.
+ *
+ * @param name Device target name.
+ * @return 1 or greater on success, 0 on error.
+ *
+ * This function sets up all the Ecore_Fb library. It returns 0 on
+ * failure, otherwise it returns the number of times it has already
+ * been called.
+ *
+ * When Ecore_Fb is not used anymore, call ecore_fb_shutdown() to shut down
+ * the Ecore_Fb library.
  */
 EAPI int
 ecore_fb_init(const char *name __UNUSED__)
 {
-	if(!_ecore_fb_init_count)
-	{
-		if(!ecore_fb_vt_init()) return 0;
-		ECORE_FB_EVENT_KEY_DOWN          = ecore_event_type_new();
-		ECORE_FB_EVENT_KEY_UP            = ecore_event_type_new();
-		ECORE_FB_EVENT_MOUSE_BUTTON_DOWN = ecore_event_type_new();
-		ECORE_FB_EVENT_MOUSE_BUTTON_UP   = ecore_event_type_new();
-		ECORE_FB_EVENT_MOUSE_MOVE        = ecore_event_type_new();
-		ECORE_FB_EVENT_MOUSE_WHEEL       = ecore_event_type_new();
-		_ecore_fb_size_get(&_ecore_fb_console_w, &_ecore_fb_console_h);
-	}
-	return ++_ecore_fb_init_count;
+   if (++_ecore_fb_init_count != 1)
+      return _ecore_fb_init_count;
+
+   if (!ecore_fb_vt_init())
+      return --_ecore_fb_init_count;
+
+   if (!oldhand)
+     {
+        oldhand = signal(SIGINT, nosigint);
+     }
+   
+   _ecore_fb_size_get(&_ecore_fb_console_w, &_ecore_fb_console_h);
+
+   return _ecore_fb_init_count;
 }
 
 /**
- * Shuts down the Ecore_Fb library. 
- * @return  @c The number of times the system has been initialised without
- *             being shut down.
- * @ingroup Ecore_FB_Library_Group
+ * @brief Shut down the Ecore_Fb library.
+ *
+ * @return 0 when the library is completely shut down, 1 or
+ * greater otherwise.
+ *
+ * This function shuts down the Ecore_Fb library. It returns 0 when it has
+ * been called the same number of times than ecore_fb_init().
  */
 EAPI int
 ecore_fb_shutdown(void)
-{    
-	_ecore_fb_init_count--;
-	if(!_ecore_fb_init_count)
-	{
-		ecore_fb_vt_shutdown();
-		return 0;
-	}
-	return _ecore_fb_init_count;
+{
+   if (--_ecore_fb_init_count != 0)
+      return _ecore_fb_init_count;
+
+   if (oldhand)
+     {
+        signal(SIGINT, oldhand);
+        oldhand = NULL;
+     }
+   
+   ecore_fb_vt_shutdown();
+
+   return _ecore_fb_init_count;
 }
 
 
 /**
- * Retrieves the width and height of the current frame buffer in pixels.
+ * @brief Retrieve the width and height of the current frame buffer in
+ * pixels.
+ *
  * @param w Pointer to an integer in which to store the width.
  * @param h Pointer to an interge in which to store the height.
+ *
+ * This function retrieves the size of the current frame buffer in
+ * pixels. @p w and @p h can be buffers that will be filled with the
+ * corresponding values. If one of them is @c NULL, nothing will be
+ * done for that parameter.
  */
 EAPI void
 ecore_fb_size_get(int *w, int *h)
@@ -83,21 +107,23 @@ _ecore_fb_size_get(int *w, int *h)
 {
    struct fb_var_screeninfo fb_var;
    int fb;
-   
+
    fb = open("/dev/fb0", O_RDWR);
    if (fb < 0)
-     {
-	if (w) *w = 0;
-	if (h) *h = 0;
-	return;
-     }
+      goto exit;
+
    if (ioctl(fb, FBIOGET_VSCREENINFO, &fb_var) == -1)
-     {
-	if (w) *w = 0;
-	if (h) *h = 0;
-	return;
-     }
+      goto err_ioctl;
+
+   *w = fb_var.xres;
+   *h = fb_var.yres;
+
+err_ioctl:
    close(fb);
-   if (w) *w = fb_var.xres;
-   if (h) *h = fb_var.yres;
+exit:
+   return;
 }
+
+/**
+ * @}
+ */

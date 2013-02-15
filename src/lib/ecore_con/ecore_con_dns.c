@@ -1,210 +1,344 @@
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 /*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
+ * This version of ecore_con_info uses dns.c to provide asynchronous dns lookup.
+ *
+ * dns.c is written by William Ahern:
+ * http://25thandclement.com/~william/projects/dns.c.html
  */
-/* 
- * Simple dns lookup
- *
- * http://www.faqs.org/rfcs/rfc1035.html
- * man resolv.conf
- *
- * And a sneakpeek at ares, ftp://athena-dist.mit.edu/pub/ATHENA/ares/
- */
-/*
- * TODO
- * * Check env LOCALDOMAIN to override search
- * * Check env RES_OPTIONS to override options
- *
- * * Read /etc/host.conf
- * * host.conf env
- *   RESOLV_HOST_CONF, RESOLV_SERV_ORDER
- * * Check /etc/hosts
- *
- * * Caching
- *   We should store all names returned when CNAME, might have different ttl.
- *   Check against search and hostname when querying cache?
- * * Remember all querys and delete them on shutdown
- *
- * * Need more buffer overflow checks.
- */
-#include "ecore_private.h"
+
+#include <string.h>
+#include <sys/types.h>
+
+#ifdef HAVE_ERRNO_H
+# include <errno.h> /* for EAGAIN */
+#endif
+
+#ifdef HAVE_NETINET_IN_H
+# include <netinet/in.h>
+#endif
+
+#ifdef HAVE_ARPA_INET_H
+# include <arpa/inet.h>
+#endif
+
+#ifdef HAVE_ERRNO_H
+# include <errno.h>
+#endif
+
+#include "dns.h"
+
 #include "Ecore.h"
+#include "Ecore_Con.h"
 #include "ecore_con_private.h"
 
-#include <ctype.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <arpa/nameser.h>
-#include <netdb.h>
+typedef struct dns_addrinfo dns_addrinfo;
+typedef struct dns_resolv_conf dns_resolv_conf;
+typedef struct dns_resolver dns_resolver;
+typedef struct dns_hosts       dns_hosts;
 
-typedef struct _CB_Data CB_Data;
+typedef struct _Ecore_Con_DNS Ecore_Con_DNS;
 
-struct _CB_Data
+struct _Ecore_Con_DNS
 {
-   Ecore_List2 __list_data;
-   void (*cb_done) (void *data, struct hostent *hostent);
-   void *data;
+   Ecore_Con_Server *svr;
+   Ecore_Con_Info_Cb done_cb;
+   void             *data;
+   dns_addrinfo     *ai;
+   dns_resolver     *resolv;
+   struct addrinfo   hints;
    Ecore_Fd_Handler *fdh;
-   pid_t pid;
-   Ecore_Event_Handler *handler;
-   int fd2;
+   Ecore_Timer      *timer;
 };
 
-static void _ecore_con_dns_readdata(CB_Data *cbdata);
-static void _ecore_con_dns_slave_free(CB_Data *cbdata);
-static int _ecore_con_dns_data_handler(void *data, Ecore_Fd_Handler *fd_handler);
-static int _ecore_con_dns_exit_handler(void *data, int type __UNUSED__, void *event);
-
-static int dns_init = 0;
-static Ecore_List2 *dns_slaves = NULL;
-  
-int
-ecore_con_dns_init(void)
-{
-   dns_init++;
-   return dns_init;
-}
-
-int
-ecore_con_dns_shutdown(void)
-{
-   dns_init--;
-   if (dns_init == 0)
-     {
-	while (dns_slaves) _ecore_con_dns_slave_free((CB_Data *)dns_slaves);
-     }
-   return dns_init;
-}
-
-int
-ecore_con_dns_lookup(const char *name,
-		     void (*done_cb) (void *data, struct hostent *hostent),
-		     void *data)
-{
-   CB_Data *cbdata;
-   int fd[2];
-   
-   if (pipe(fd) < 0) return 0;
-   cbdata = calloc(1, sizeof(CB_Data));
-   if (!cbdata)
-     {
-	close(fd[0]);
-	close(fd[1]);
-	return 0;
-     }
-   cbdata->cb_done = done_cb;
-   cbdata->data = data;
-   cbdata->fd2 = fd[1];
-   if (!(cbdata->fdh = ecore_main_fd_handler_add(fd[0], ECORE_FD_READ, 
-						 _ecore_con_dns_data_handler,
-						 cbdata,
-						 NULL, NULL)))
-     {
-	free(cbdata);
-	close(fd[0]);
-	close(fd[1]);
-	return 0;
-     }
-			     
-   if ((cbdata->pid = fork()) == 0)
-     {
-	struct hostent *he;
-	
-	/* CHILD */
-	he = gethostbyname(name);
-	if (he)
-	  {
-	     struct in_addr addr;
-	     
-	     memcpy((struct in_addr *)&addr, he->h_addr,
-		    sizeof(struct in_addr));
-	     write(fd[1], &(addr.s_addr), sizeof(in_addr_t));
-	  }
-	close(fd[1]);
-# ifdef __USE_ISOC99
-	_Exit(0);
-# else	
-	_exit(0);
-# endif	
-     }
-   /* PARENT */
-   cbdata->handler = ecore_event_handler_add(ECORE_EXE_EVENT_DEL, _ecore_con_dns_exit_handler, cbdata);
-   if (!cbdata->handler)
-     {
-	ecore_main_fd_handler_del(cbdata->fdh);
-	free(cbdata);
-	close(fd[0]);
-	close(fd[1]);
-	return 0;
-     }
-   dns_slaves = _ecore_list2_append(dns_slaves, cbdata);
-   return 1;
-}
+static int _ecore_con_dns_init = 0;
+static dns_resolv_conf *resconf = NULL;
+static dns_hosts *hosts = NULL;
 
 static void
-_ecore_con_dns_readdata(CB_Data *cbdata)
+_ecore_con_dns_free(Ecore_Con_DNS *dns)
 {
-   struct hostent he;
-   struct in_addr addr;
-   char *addr2;
-   ssize_t size;
+   if (dns->svr->infos) dns->svr->infos = eina_list_remove(dns->svr->infos, dns);
+   if (dns->timer) ecore_timer_del(dns->timer);
+   if (dns->fdh) ecore_main_fd_handler_del(dns->fdh);
+   dns_res_close(dns_res_mortal(dns->resolv));
+   free(dns);
+}
 
-   size = read(ecore_main_fd_handler_fd_get(cbdata->fdh), &(addr.s_addr),
-	       sizeof(in_addr_t));
-   if (size == sizeof(in_addr_t))
+static Eina_Bool
+_dns_addrinfo_get(Ecore_Con_DNS *dns, const char *addr, int port)
+{
+   int error = 0;
+   char service[NI_MAXSERV];
+
+   snprintf(service, sizeof(service), "%d", port);
+   dns->ai = dns_ai_open(addr, service, DNS_T_A, (const struct addrinfo *)&dns->hints, dns->resolv, &error);
+   return error;
+}
+
+static int
+_ecore_con_dns_check(Ecore_Con_DNS *dns)
+{
+   struct addrinfo *ent = NULL;
+   int error = 0;
+ 
+   error = dns_ai_nextent(&ent, dns->ai);
+
+   switch (error)
      {
-	addr2 = (char *)&addr;
-	he.h_addrtype = AF_INET;
-	he.h_length = sizeof(in_addr_t);
-	he.h_addr_list = &addr2;
-	cbdata->cb_done(cbdata->data, &he);
+      case 0:
+        break;
+      case EAGAIN:
+        return 1;
+      default:
+        ERR("resolve failed: %s", dns_strerror(error));
+        goto error;
+     }
+
+   {
+      Ecore_Con_Info result = {0, .ip = {0}, .service = {0}};
+#if 0
+      char pretty[512];
+      dns_ai_print(pretty, sizeof(pretty), ent, dns->ai);
+      printf("%s\n", pretty);
+#endif
+      result.size = 0;
+      dns_inet_ntop(dns_sa_family(ent->ai_addr), dns_sa_addr(dns_sa_family(ent->ai_addr), ent->ai_addr), result.ip, sizeof(result.ip));
+      snprintf(result.service, sizeof(result.service), "%u", ntohs(*dns_sa_port(dns_sa_family(ent->ai_addr), ent->ai_addr)));
+      memcpy(&result.info, ent, sizeof(result.info));
+      if (dns->fdh) ecore_main_fd_handler_del(dns->fdh);
+      dns->fdh = NULL;
+      dns->done_cb(dns->data, &result);
+      free(ent);
+      _ecore_con_dns_free(dns);
+   }
+
+   return 0;
+error:
+   dns->done_cb(dns->data, NULL);
+   _ecore_con_dns_free(dns);
+   return -1;
+}
+
+static Eina_Bool
+_dns_fd_cb(Ecore_Con_DNS *dns, Ecore_Fd_Handler *fdh __UNUSED__)
+{
+   if (_ecore_con_dns_check(dns) != 1) return ECORE_CALLBACK_RENEW;
+   if (ecore_main_fd_handler_fd_get(dns->fdh) != dns_ai_pollfd(dns->ai))
+     {
+        ecore_main_fd_handler_del(dns->fdh);
+        dns->fdh = ecore_main_fd_handler_add(dns_ai_pollfd(dns->ai), dns_ai_events(dns->ai), (Ecore_Fd_Cb)_dns_fd_cb, dns, NULL, NULL);
      }
    else
-     cbdata->cb_done(cbdata->data, NULL);
-   cbdata->cb_done = NULL;
+     ecore_main_fd_handler_active_set(dns->fdh, dns_ai_events(dns->ai));
+   return ECORE_CALLBACK_RENEW;
 }
 
-static void
-_ecore_con_dns_slave_free(CB_Data *cbdata)
+static Eina_Bool
+_dns_timer_cb(Ecore_Con_DNS *dns)
 {
-   dns_slaves = _ecore_list2_remove(dns_slaves, cbdata);
-   close(ecore_main_fd_handler_fd_get(cbdata->fdh));
-   close(cbdata->fd2);
-   ecore_main_fd_handler_del(cbdata->fdh);
-   ecore_event_handler_del(cbdata->handler);
-   free(cbdata);
+   dns->done_cb(dns->data, NULL);
+   _ecore_con_dns_free(dns);
+   dns->timer = NULL;
+   return EINA_FALSE;
 }
 
-static int
-_ecore_con_dns_data_handler(void *data, Ecore_Fd_Handler *fd_handler)
+int
+ecore_con_info_init(void)
 {
-   CB_Data *cbdata;
+   int err;
+   if (_ecore_con_dns_init) return ++_ecore_con_dns_init;
 
-   cbdata = data;
-   if (cbdata->cb_done)
+   resconf = dns_resconf_local(&err);
+   if (!resconf)
      {
-	if (ecore_main_fd_handler_active_get(fd_handler, ECORE_FD_READ))
-	  _ecore_con_dns_readdata(cbdata);
-	else
-	  {
-	     cbdata->cb_done(cbdata->data, NULL);
-	     cbdata->cb_done = NULL;
-	  }
+        ERR("resconf_open: %s", dns_strerror(err));
+        return 0;
      }
-   _ecore_con_dns_slave_free(cbdata);
+   hosts = dns_hosts_local(&err);
+   if (!hosts)
+     {
+        ERR("hosts_open: %s", dns_strerror(err));
+        dns_resconf_close(resconf);
+        resconf = NULL;
+        return 0;
+     }
+   /* this is super slow don't do it */
+   //resconf->options.recurse = 1;
+   return ++_ecore_con_dns_init;
+}
+
+int
+ecore_con_info_shutdown(void)
+{
+   if (!_ecore_con_dns_init) return 0;
+   if (--_ecore_con_dns_init) return _ecore_con_dns_init;
+   dns_resconf_close(resconf);
+   resconf = NULL;
+   dns_hosts_close(hosts);
+   hosts = NULL;
    return 0;
 }
 
-static int
-_ecore_con_dns_exit_handler(void *data, int type __UNUSED__, void *event)
+void
+ecore_con_info_data_clear(void *info)
 {
-   CB_Data *cbdata;
-   Ecore_Exe_Event_Del *ev;
-   
-   ev = event;
-   cbdata = data;
-   if (cbdata->pid != ev->pid) return 1;
-   return 0;
-   _ecore_con_dns_slave_free(cbdata);
+   Ecore_Con_DNS *dns = info;
+   if (dns) dns->data = NULL;
+}
+
+int
+ecore_con_info_tcp_connect(Ecore_Con_Server *svr,
+                           Ecore_Con_Info_Cb done_cb,
+                           void *data)
+{
+   struct addrinfo hints;
+
+   memset(&hints, 0, sizeof(struct addrinfo));
+#ifdef HAVE_IPV6
+   hints.ai_family = AF_INET6;
+#else
+   hints.ai_family = AF_INET;
+#endif
+   hints.ai_socktype = SOCK_STREAM;
+   hints.ai_flags = AI_CANONNAME;
+   hints.ai_protocol = IPPROTO_TCP;
+
+   return ecore_con_info_get(svr, done_cb, data, &hints);
+}
+
+int
+ecore_con_info_tcp_listen(Ecore_Con_Server *svr,
+                          Ecore_Con_Info_Cb done_cb,
+                          void *data)
+{
+   struct addrinfo hints;
+
+   memset(&hints, 0, sizeof(struct addrinfo));
+#ifdef HAVE_IPV6
+   hints.ai_family = AF_INET6;
+#else
+   hints.ai_family = AF_INET;
+#endif
+   hints.ai_socktype = SOCK_STREAM;
+   hints.ai_flags = AI_PASSIVE;
+   hints.ai_protocol = IPPROTO_TCP;
+
+   return ecore_con_info_get(svr, done_cb, data, &hints);
+}
+
+int
+ecore_con_info_udp_connect(Ecore_Con_Server *svr,
+                           Ecore_Con_Info_Cb done_cb,
+                           void *data)
+{
+   struct addrinfo hints;
+
+   memset(&hints, 0, sizeof(struct addrinfo));
+#ifdef HAVE_IPV6
+   hints.ai_family = AF_INET6;
+#else
+   hints.ai_family = AF_INET;
+#endif
+   hints.ai_socktype = SOCK_DGRAM;
+   hints.ai_flags = AI_CANONNAME;
+   hints.ai_protocol = IPPROTO_UDP;
+
+   return ecore_con_info_get(svr, done_cb, data, &hints);
+}
+
+int
+ecore_con_info_udp_listen(Ecore_Con_Server *svr,
+                          Ecore_Con_Info_Cb done_cb,
+                          void *data)
+{
+   struct addrinfo hints;
+
+   memset(&hints, 0, sizeof(struct addrinfo));
+#ifdef HAVE_IPV6
+   hints.ai_family = AF_INET6;
+#else
+   hints.ai_family = AF_INET;
+#endif
+   hints.ai_socktype = SOCK_DGRAM;
+   hints.ai_flags = AI_PASSIVE;
+   hints.ai_protocol = IPPROTO_UDP;
+
+   return ecore_con_info_get(svr, done_cb, data, &hints);
+}
+
+int
+ecore_con_info_mcast_listen(Ecore_Con_Server *svr,
+                            Ecore_Con_Info_Cb done_cb,
+                            void *data)
+{
+   struct addrinfo hints;
+
+   memset(&hints, 0, sizeof(struct addrinfo));
+#ifdef HAVE_IPV6
+   hints.ai_family = AF_INET6;
+#else
+   hints.ai_family = AF_INET;
+#endif
+   hints.ai_socktype = SOCK_DGRAM;
+   hints.ai_protocol = IPPROTO_UDP;
+
+   return ecore_con_info_get(svr, done_cb, data, &hints);
+}
+
+EAPI int
+ecore_con_info_get(Ecore_Con_Server *svr,
+                   Ecore_Con_Info_Cb done_cb,
+                   void *data,
+                   struct addrinfo *hints)
+{
+   Ecore_Con_DNS *dns;
+   int error = 0;
+
+   dns = calloc(1, sizeof(Ecore_Con_DNS));
+   if (!dns) return 0;
+
+   dns->svr = svr;
+   dns->done_cb = done_cb;
+   dns->data = data;
+
+   if (hints)
+     memcpy(&dns->hints, hints, sizeof(struct addrinfo));
+
+   if (!(dns->resolv = dns_res_open(resconf, hosts, dns_hints_mortal(dns_hints_local(resconf, &error)), NULL, dns_opts(), &error)))
+     {
+        ERR("res_open: %s", dns_strerror(error));
+        goto reserr;
+
+     }
+
+   error = _dns_addrinfo_get(dns, svr->ecs ? svr->ecs->ip : svr->name, dns->svr->ecs ? dns->svr->ecs->port : dns->svr->port);
+   if (error && (error != EAGAIN))
+     {
+        ERR("resolver: %s", dns_strerror(error));
+        goto seterr;
+     }
+
+   switch (_ecore_con_dns_check(dns))
+     {
+      case 0:
+        break;
+      case 1:
+        dns->fdh = ecore_main_fd_handler_add(dns_ai_pollfd(dns->ai), dns_ai_events(dns->ai), (Ecore_Fd_Cb)_dns_fd_cb, dns, NULL, NULL);
+        svr->infos = eina_list_append(svr->infos, dns);
+        dns->timer = ecore_timer_add(5.0, (Ecore_Task_Cb)_dns_timer_cb, dns);
+        break;
+      default:
+        return 0;
+     }
+
+   return 1;
+seterr:
+   if (dns->resolv) dns_res_close(dns_res_mortal(dns->resolv));
+reserr:
+   free(dns);
    return 0;
 }
+

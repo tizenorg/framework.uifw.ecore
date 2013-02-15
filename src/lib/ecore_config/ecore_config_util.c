@@ -1,11 +1,17 @@
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 /* azundris */
 
 #include <sys/types.h>
 #include <stdlib.h>		/* malloc(), free() */
+#include <stdio.h>
 #include <string.h>		/* str...() */
 
 #include <stdarg.h>		/* varargs in sprintf/appendf */
 
+#include "Ecore.h"
 #include "ecore_private.h"
 
 #include "Ecore_Config.h"

@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -11,12 +15,11 @@
 #include <unistd.h>
 
 #include "Ecore_Config.h"
-#include "config.h"
 #include "ecore_config_private.h"
 #include "ecore_config_ipc.h"
 
 #include "ecore_config_util.h"
-
+int  _ecore_config_log_dom = -1;
 int                  DEBUG = 0;
 EAPI Ecore_Config_Server *__ecore_config_server_global = NULL;
 EAPI Ecore_Config_Server *__ecore_config_server_local = NULL;
@@ -53,8 +56,8 @@ ecore_config_dst(Ecore_Config_Prop * e)
    Ecore_Config_Listener_List *l;
 
    p = NULL;
-   c = e;
    t = __ecore_config_bundle_local;
+   c = t->data;
 
    if (!e || !e->key)
       return NULL;
@@ -202,7 +205,7 @@ _ecore_config_int_get(Ecore_Config_Prop *e)
 /**
  * Returns the specified property as a float.
  * @param   key The property key.
- * @return  The float value of the property.  The function returns 0.0 if the 
+ * @return  The float value of the property.  The function returns 0.0 if the
  *          property is not a float or is not set.
  * @ingroup Ecore_Config_Get_Group
  */
@@ -329,7 +332,7 @@ ecore_config_as_string_get(const char *key)
    val = NULL;
    r = NULL;
    if (!(e = ecore_config_get(key)))
-      E(0, "no such property, \"%s\"...\n", key);
+      ERR("no such property, \"%s\"...", key);
    else
      {
 	switch (e->type)
@@ -384,15 +387,13 @@ ecore_config_bound(Ecore_Config_Prop * e)
      {
 	if ((e->val < e->lo))
 	  {
-	     E(0,
-	       "ecore_config_bounds(\"%s\",%ld): value out of range; adjusted to %ld...\n",
+	    WRN("ecore_config_bounds(\"%s\",%ld): value out of range; adjusted to %ld...",
 	       e->key, e->val, e->lo);
 	     e->val = e->lo;
 	  }
 	else if ((e->val > e->hi))
 	  {
-	     E(0,
-	       "ecore_config_bounds(\"%s\",%ld): value out of range; adjusted to %ld...\n",
+	    WRN("ecore_config_bounds(\"%s\",%ld): value out of range; adjusted to %ld...",
 	       e->key, e->val, e->hi);
 	     e->val = e->hi;
 	  }
@@ -408,14 +409,12 @@ ecore_config_bound(Ecore_Config_Prop * e)
 	if (v != e->val)
 	  {
 	     if (e->type == ECORE_CONFIG_FLT)
-		E(0,
-		  "ecore_config_bound(\"%s\"): float value %f not a multiple of %f, adjusted to %f...\n",
+	       WRN("ecore_config_bound(\"%s\"): float value %f not a multiple of %f, adjusted to %f...",
 		  e->key, ((double)e->val) / ECORE_CONFIG_FLOAT_PRECISION,
 		  ((double)e->step) / ECORE_CONFIG_FLOAT_PRECISION,
 		  ((double)v) / ECORE_CONFIG_FLOAT_PRECISION);
 	     else
-		E(0,
-		  "ecore_config_bound(\"%s\"): integer value %ld not a multiple of %ld, adjusted to %ld...\n",
+	       WRN("ecore_config_bound(\"%s\"): integer value %ld not a multiple of %ld, adjusted to %ld...",
 		  e->key, e->val, e->step, v);
 	     ret = ECORE_CONFIG_ERR_SUCC;
 	     e->val = v;
@@ -442,7 +441,6 @@ ecore_config_type_guess(const char *key, const char *val)
 {
    Ecore_Config_Prop  *p;
    char               *l;
-   long                v;
 
    l = NULL;
 
@@ -453,7 +451,7 @@ ecore_config_type_guess(const char *key, const char *val)
       return ECORE_CONFIG_NIL;
    if (val[0] == '#')
       return ECORE_CONFIG_RGB;
-   v = strtol(val, &l, 10);
+   strtol(val, &l, 10);
    if (*l)
      {
 	float               f;
@@ -528,7 +526,7 @@ ecore_config_typed_add(const char *key, const void *val, int type)
 
    if (!(e = calloc(1, sizeof(Ecore_Config_Prop))))
      {
-	error = ECORE_CONFIG_ERR_OOM;
+	return ECORE_CONFIG_ERR_OOM;
      }
    else if (!(e->key = strdup(key)))
      {
@@ -671,9 +669,8 @@ ecore_config_typed_set(const char *key, const void *val, int type)
      }
    else
      {
-	E(0,
-	  "ecore_config_typed_set(\"%s\"): ecore_config_typed_val() failed: %d\n",
-	  key, ret);
+	ERR("ecore_config_typed_set(\"%s\"): ecore_config_typed_val() failed: %d",
+	    key, ret);
      }
 
    return ret;
@@ -1151,8 +1148,8 @@ ecore_config_theme_default(const char *key, const char *val)
 EAPI int
 ecore_config_struct_create(const char *key)
 {
-   printf("WARNING: you are using ecore_config structures. These are very young");
-   printf(" and not complete - you have been warned");
+   WRN("you are using ecore_config structures. These are very young");
+   WRN(" and not complete - you have been warned");
 
    return ecore_config_typed_default(key, NULL, ECORE_CONFIG_SCT);
 }
@@ -1160,13 +1157,13 @@ ecore_config_struct_create(const char *key)
 static int
 _ecore_config_struct_append(Ecore_Config_Prop *sct, Ecore_Config_Prop *add)
 {
-   Evas_List *l;
+   Eina_List *l;
 
    if (!sct || !add || sct->type != ECORE_CONFIG_SCT)
      return ECORE_CONFIG_ERR_IGNORED;
 
    l = sct->data;
-   sct->data = evas_list_append(l, add);
+   sct->data = eina_list_append(l, add);
    add->parent = sct;
 
    return ECORE_CONFIG_ERR_SUCC;
@@ -1188,7 +1185,7 @@ _ecore_config_struct_typed_add(const char *key, const char *name, const void *va
    ret = _ecore_config_struct_append(ecore_config_get(key),
                                      ecore_config_get(subkey));
    free(subkey);
-   return ret;   
+   return ret;
 }
 
 /**
@@ -1253,7 +1250,7 @@ ecore_config_struct_argb_add(const char *key, const char *name, int a, int r,
                              int g, int b)
 {
    long argb;
-  
+
    __ecore_argb_to_long(a, r, g, b, &argb);
    return _ecore_config_struct_typed_add(key, name, &argb, ECORE_CONFIG_RGB);
 }
@@ -1301,7 +1298,7 @@ EAPI int
 ecore_config_struct_get(const char *key, void *data)
 {
    Ecore_Config_Prop *e, *f;
-   Evas_List *l;
+   Eina_List *l;
    unsigned char *ptr;
    long argb;
 
@@ -1345,9 +1342,9 @@ ecore_config_struct_get(const char *key, void *data)
 	       ptr += sizeof(int);
 	     break;
 	     default:
-	       printf("ARGH - STRUCT coding not implemented yet\n");
+	       WRN("ARGH - STRUCT coding not implemented yet");
 	  }
-	l = evas_list_next(l);
+	l = eina_list_next(l);
      }
    return ECORE_CONFIG_ERR_SUCC;
 }
@@ -1385,13 +1382,13 @@ ecore_config_listen(const char *name, const char *key,
 
 	if (ret != ECORE_CONFIG_ERR_SUCC)
 	  {
-	     E(0, "ecore_config_listen: ecore_config_add(\"%s\") failed: %d\n",
-	       key, ret);
+	     ERR("ecore_config_listen: ecore_config_add(\"%s\") failed: %d",
+		 key, ret);
 	     return ret;
 	  }
 	if (!(e = ecore_config_get(key)))
 	  {
-	     E(0, "ecore_config_listen: list of properties corrupted!?\n");
+	     ERR("ecore_config_listen: list of properties corrupted!?");
 	     return ECORE_CONFIG_ERR_FAIL;
 	  }
      }
@@ -1399,8 +1396,7 @@ ecore_config_listen(const char *name, const char *key,
    for (l = e->listeners; l; l = l->next)
       if (!strcmp(l->name, name) || (l->listener == listener))
 	{
-	   E(1,
-	     "ecore_config_listen: %s is already listening for changes of %s...\n",
+	   ERR("ecore_config_listen: %s is already listening for changes of %s...",
 	     name, key);
 	   return ECORE_CONFIG_ERR_IGNORED;
 	}
@@ -1408,7 +1404,7 @@ ecore_config_listen(const char *name, const char *key,
    if (!(l = malloc(sizeof(Ecore_Config_Listener_List))))
       return ECORE_CONFIG_ERR_OOM;
 
-   E(1, "registering listener \"%s\" for \"%s\" (%d)...\n", name, key, e->type);
+   ERR("registering listener \"%s\" for \"%s\" (%d)...", name, key, e->type);
 
    memset(l, 0, sizeof(Ecore_Config_Listener_List));
 
@@ -1455,7 +1451,7 @@ ecore_config_deaf(const char *name, const char *key,
    for (p = NULL, l = e->listeners; l; p = l)
      {
 	Ecore_Config_Listener_List *nl;
-	
+
 	nl = l->next;
 	if ((name && !strcmp(l->name, name)) || (l->listener == listener))
 	  {
@@ -1632,7 +1628,6 @@ ecore_config_init_global(const char *name)
    char               *p;
    int global;
    char               *buf;
-   global = 0;
 
    if ((p = getenv("HOME")))
      {				/* debug-only ### FIXME */
@@ -1641,7 +1636,7 @@ ecore_config_init_global(const char *name)
 	snprintf(buf, PATH_MAX, "%s/.ecore/%s/.global", p, name);
 	global = creat(buf, S_IRWXU);
 
-	if (global)
+	if (global >= 0)
 	   close(global);
 
 	free(buf);
@@ -1675,6 +1670,13 @@ ecore_config_init(const char *name)
 {
    char                *path;
    Ecore_Config_Prop   *list;
+   _ecore_config_log_dom = eina_log_domain_register
+     ("ecore_config", ECORE_CONFIG_DEFAULT_LOG_COLOR);
+   if(_ecore_config_log_dom < 0)
+     {
+       EINA_LOG_ERR("Impossible to create a log domain for the Ecore config module.");
+       return -1;
+     }
    _ecore_config_system_init_no_load();
 
    __ecore_config_app_name = strdup(name);
@@ -1767,7 +1769,7 @@ _ecore_config_system_init_no_load(void)
 
    /* set up a simple default path */
    ecore_config_string_default("/e/themes/search_path", PACKAGE_DATA_DIR "../ewl/themes");
-   
+
    return ECORE_CONFIG_ERR_SUCC;
 }
 
@@ -1787,7 +1789,7 @@ _ecore_config_system_load(void)
 	  {
 	     snprintf(buf, PATH_MAX, "%s/.e/config.eet", p);
 	     if (ecore_config_file_load(buf) != 0) {
-		/* even if this file (system.eet) dosen't exist we can 
+		/* even if this file (system.eet) doesn't exist we can
 		 * continue without it as it isn't striclty necessary.
 		*/
 		ecore_config_file_load(PACKAGE_DATA_DIR "/system.eet");
@@ -1831,6 +1833,8 @@ ecore_config_system_shutdown(void)
    free(__ecore_config_bundle_local);
    free(__ecore_config_server_local);
    free(__ecore_config_server_global);
+   eina_log_domain_unregister(_ecore_config_log_dom);
+   _ecore_config_log_dom = -1;
    return ret;
 }
 
@@ -1857,7 +1861,7 @@ __ecore_argbstr_to_long(const char *argb, long *v)
 
    if(*l)
      {
-	E(0, "ecore_config_val: value \"%s\" not a valid hexadecimal RGB value?\n", argb);
+	ERR("ecore_config_val: value \"%s\" not a valid hexadecimal RGB value?", argb);
 	return NULL;
      }
 

@@ -10,7 +10,6 @@
 #include <getopt.h>
 #include <Eet.h>
 #include "Ecore_Config.h"
-#include "Ecore_Data.h"
 #include "ecore_config_private.h"
 
 // strcmp for paths - for sorting folders before files
@@ -37,8 +36,8 @@ pathcmp(const char *s1, const char *s2)
    // order folders before files
    s1d = strchr(s1, '/');
    s2d = strchr(s2, '/');
-   if (s1d != NULL && s2d == NULL) return -1;
-   if (s1d == NULL && s2d != NULL) return  1;
+   if (s1d && !s2d) return -1;
+   if (!s1d && s2d) return  1;
 
    return strcmp(s1, s2);
 }
@@ -48,7 +47,7 @@ del(const char *key)
 {
    Ecore_Config_Prop *e;
    e = ecore_config_get(key);
-   if(e == NULL) return -1;
+   if(!e) return -1;
 
    ecore_config_dst(e);
    return 0;
@@ -62,7 +61,7 @@ get(const char *key)
 
    if (!(e = ecore_config_get(key)))
      {
-	fprintf(stderr, "No such property\n");
+	EINA_LOG_ERR("No such property");
 	return -1;
      }
      
@@ -92,7 +91,7 @@ get(const char *key)
 	   temp = ecore_config_theme_get(key);
 	   break;
 	default:
-	   fprintf(stderr, "Property has unrecognized type");
+	   EINA_LOG_ERR("Property has unrecognized type");
 	   return -1;
      }
    if(temp)
@@ -106,19 +105,9 @@ get(const char *key)
 static int
 list(const char *file)
 {
-   char *key;
-
-   Eet_File *ef;
    Ecore_Config_Prop *e;
-   Ecore_Sheap *keys;
-
-   // Get number of keys and create heap for sort
-   ef = eet_open(file, EET_FILE_MODE_READ);
-   if (!ef) return -1;
-
-   keys = ecore_sheap_new(ECORE_COMPARE_CB(pathcmp), eet_num_entries(ef));
-
-   eet_close(ef);
+   Eina_List *keys = NULL;
+   char *key;
 
    e = __ecore_config_bundle_local->data;
 
@@ -126,17 +115,16 @@ list(const char *file)
      {
 	// don't show system settings
 	if( !(e->flags & ECORE_CONFIG_FLAG_SYSTEM) )
-	   ecore_sheap_insert(keys, e->key);
+	   keys = eina_list_append(keys, e->key);
      }
    while((e = e->next));
+   keys = eina_list_sort(keys, -1, EINA_COMPARE_CB(pathcmp));
 
-   while((key = ecore_sheap_extract(keys)))
+   EINA_LIST_FREE(keys, key)
      {
 	printf("%-28s\t", key);
 	get(key);
      }
-
-   ecore_sheap_destroy(keys);
 
    return 0;
 }
@@ -175,7 +163,7 @@ main(int argc, char * const argv[])
    float f;
    
    file = key = prog = NULL;
-
+   eina_init();
    prog = strdup(argv[0]);
 
    if(argc < 4)
@@ -270,12 +258,12 @@ main(int argc, char * const argv[])
    if(cmd == 's' && type == -1)
      usage_and_exit(prog, 2, "You need to specify a command!");
 
-   if(cmd != 'a' && key == NULL)
+   if(cmd != 'a' && !key)
      usage_and_exit(prog, 2, "You need to specify key!");
    
    if(ecore_config_init("econfig") != ECORE_CONFIG_ERR_SUCC)
      {
-	fprintf(stderr, "Couldn't init ecore_config!");
+       EINA_LOG_ERR("Couldn't init ecore_config!");
 	return 1;
      }
 
@@ -313,7 +301,7 @@ main(int argc, char * const argv[])
 	   if (list(file)) ret = 1;
 	   break;
 	default:
-	   printf("Unhandled command '%c'\n", cmd);
+	   EINA_LOG_ERR("Unhandled command '%c'", cmd);
      }
 
    ecore_config_shutdown();
@@ -323,7 +311,7 @@ main(int argc, char * const argv[])
 
    if(file)
      free(file);
-
+   eina_shutdown();
    return ret;
 }
 #else

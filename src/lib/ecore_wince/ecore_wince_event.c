@@ -1,565 +1,85 @@
-/*
- * vim:ts=8:sw=3:sts=8:noexpandtab:cino=>5n-3f0^-2{2
- */
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
 
 #include <stdlib.h>
-#include <stdio.h>   /* for printf */
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
 
-#include "Ecore.h"
+#include <Eina.h>
+#include <Ecore.h>
+#include <Ecore_Input.h>
+
 #include "Ecore_WinCE.h"
 #include "ecore_wince_private.h"
 
+/*============================================================================*
+ *                                  Local                                     *
+ *============================================================================*/
 
-/***** Private declarations *****/
+/**
+ * @cond LOCAL
+ */
 
-static Ecore_WinCE_Window *_ecore_wince_mouse_down_last_window = NULL;
-static Ecore_WinCE_Window *_ecore_wince_mouse_down_last_last_window = NULL;
-static double              _ecore_wince_mouse_down_last_time = 0;
-static double              _ecore_wince_mouse_down_last_last_time = 0;
-static int                 _ecore_wince_mouse_down_did_triple = 0;
-static int                 _ecore_wince_mouse_up_count = 0;
-
-
-static void _ecore_wince_event_free_key_down(void *data,
-                                             void *ev);
-
-static void _ecore_wince_event_free_key_up(void *data,
-                                           void *ev);
-
-static int  _ecore_wince_event_keystroke_get(int    key,
-                                             char **keyname,
-                                             char **keysymbol,
-                                             char **keycompose);
-
-static int  _ecore_wince_event_char_get(int    key,
-                                        char **keyname,
-                                        char **keysymbol,
-                                        char **keycompose);
-
-
-/***** Global functions *****/
-
-void
-_ecore_wince_event_handle_key_press(Ecore_WinCE_Callback_Data *msg)
+typedef enum
 {
-   Ecore_WinCE_Event_Key_Down *e;
-
-   e = (Ecore_WinCE_Event_Key_Down *)malloc(sizeof(Ecore_WinCE_Event_Key_Down));
-   if (!e) return;
-
-   if (!_ecore_wince_event_keystroke_get(LOWORD(msg->window_param),
-                                         &e->keyname,
-                                         &e->keysymbol,
-                                         &e->keycompose))
-     {
-        free(e);
-        return;
-     }
-
-   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-   if (!e->window)
-     {
-        free(e);
-        return;
-     }
-   e->time = (double)msg->time / 1000.0;
-
-   _ecore_wince_event_last_time = e->time;
-
-   ecore_event_add(ECORE_WINCE_EVENT_KEY_DOWN, e, _ecore_wince_event_free_key_down, NULL);
-}
-
-void
-_ecore_wince_event_handle_key_release(Ecore_WinCE_Callback_Data *msg)
-{
-   Ecore_WinCE_Event_Key_Up *e;
-
-   e = (Ecore_WinCE_Event_Key_Up *)calloc(1, sizeof(Ecore_WinCE_Event_Key_Up));
-   if (!e) return;
-
-   if (!_ecore_wince_event_keystroke_get(LOWORD(msg->window_param),
-                                         &e->keyname,
-                                         &e->keysymbol,
-                                         &e->keycompose))
-     {
-        free(e);
-        return;
-     }
-
-   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-   if (!e->window)
-     {
-        free(e);
-        return;
-     }
-   e->time = (double)msg->time / 1000.0;
-
-   _ecore_wince_event_last_time = e->time;
-
-   ecore_event_add(ECORE_WINCE_EVENT_KEY_UP, e, _ecore_wince_event_free_key_up, NULL);
-}
-
-void
-_ecore_wince_event_handle_button_press(Ecore_WinCE_Callback_Data *msg,
-                                       int                        button)
-{
-   Ecore_WinCE_Window *window;
-
-   window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-
-   {
-      Ecore_WinCE_Event_Mouse_Move *e;
-
-      e = (Ecore_WinCE_Event_Mouse_Move *)calloc(1, sizeof(Ecore_WinCE_Event_Mouse_Move));
-      if (!e) return;
-
-      e->window = window;
-      e->x = LOWORD(msg->data_param);
-      e->y = HIWORD(msg->data_param);
-      e->time = (double)msg->time / 1000.0;
-
-      _ecore_wince_event_last_time = e->time;
-      _ecore_wince_event_last_window = e->window;
-
-      ecore_event_add(ECORE_WINCE_EVENT_MOUSE_MOVE, e, NULL, NULL);
-   }
-
-   {
-      Ecore_WinCE_Event_Mouse_Button_Down *e;
-
-      if (_ecore_wince_mouse_down_did_triple)
-        {
-           _ecore_wince_mouse_down_last_window = NULL;
-           _ecore_wince_mouse_down_last_last_window = NULL;
-           _ecore_wince_mouse_down_last_time = 0.0;
-           _ecore_wince_mouse_down_last_last_time = 0.0;
-        }
-
-      e = (Ecore_WinCE_Event_Mouse_Button_Down *)calloc(1, sizeof(Ecore_WinCE_Event_Mouse_Button_Down));
-      if (!e) return;
-
-      e->window = window;
-      e->button = button;
-      e->x = LOWORD(msg->data_param);
-      e->y = HIWORD(msg->data_param);
-      e->time = (double)msg->time / 1000.0;
-
-      if (((e->time - _ecore_wince_mouse_down_last_time) <= _ecore_wince_double_click_time) &&
-          (e->window == _ecore_wince_mouse_down_last_window))
-        e->double_click = 1;
-
-      if (((e->time - _ecore_wince_mouse_down_last_last_time) <= (2.0 * _ecore_wince_double_click_time)) &&
-          (e->window == _ecore_wince_mouse_down_last_window) &&
-          (e->window == _ecore_wince_mouse_down_last_last_window))
-        {
-           e->triple_click = 1;
-           _ecore_wince_mouse_down_did_triple = 1;
-        }
-      else
-        _ecore_wince_mouse_down_did_triple = 0;
-
-      if (!e->double_click && !e->triple_click)
-        _ecore_wince_mouse_up_count = 0;
-
-      _ecore_wince_event_last_time = e->time;
-      _ecore_wince_event_last_window = e->window;
-
-      if (!_ecore_wince_mouse_down_did_triple)
-        {
-           _ecore_wince_mouse_down_last_last_window = _ecore_wince_mouse_down_last_window;
-           _ecore_wince_mouse_down_last_window = e->window;
-           _ecore_wince_mouse_down_last_last_time = _ecore_wince_mouse_down_last_time;
-           _ecore_wince_mouse_down_last_time = e->time;
-        }
-
-      ecore_event_add(ECORE_WINCE_EVENT_MOUSE_BUTTON_DOWN, e, NULL, NULL);
-   }
-   printf (" * ecore event button press\n");
-}
-
-void
-_ecore_wince_event_handle_button_release(Ecore_WinCE_Callback_Data *msg,
-                                         int                          button)
-{
-   Ecore_WinCE_Window *window;
-
-   window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-
-   {
-      Ecore_WinCE_Event_Mouse_Move *e;
-
-      e = (Ecore_WinCE_Event_Mouse_Move *)calloc(1, sizeof(Ecore_WinCE_Event_Mouse_Move));
-      if (!e) return;
-
-      e->window = window;
-      e->x = LOWORD(msg->data_param);
-      e->y = HIWORD(msg->data_param);
-      e->time = (double)msg->time / 1000.0;
-
-      _ecore_wince_event_last_time = e->time;
-      _ecore_wince_event_last_window = e->window;
-
-      ecore_event_add(ECORE_WINCE_EVENT_MOUSE_MOVE, e, NULL, NULL);
-   }
-
-   {
-      Ecore_WinCE_Event_Mouse_Button_Up *e;
-
-      e = (Ecore_WinCE_Event_Mouse_Button_Up *)calloc(1, sizeof(Ecore_WinCE_Event_Mouse_Button_Up));
-      if (!e) return;
-
-      e->window = window;
-      e->button = button;
-      e->x = LOWORD(msg->data_param);
-      e->y = HIWORD(msg->data_param);
-      e->time = (double)msg->time / 1000.0;
-
-      _ecore_wince_mouse_up_count++;
-
-      if ((_ecore_wince_mouse_up_count >= 2) &&
-          ((e->time - _ecore_wince_mouse_down_last_time) <= _ecore_wince_double_click_time) &&
-          (e->window == _ecore_wince_mouse_down_last_window))
-        e->double_click = 1;
-
-      if ((_ecore_wince_mouse_up_count >= 3) &&
-          ((e->time - _ecore_wince_mouse_down_last_last_time) <= (2.0 * _ecore_wince_double_click_time)) &&
-          (e->window == _ecore_wince_mouse_down_last_window) &&
-          (e->window == _ecore_wince_mouse_down_last_last_window))
-        e->triple_click = 1;
-
-      _ecore_wince_event_last_time = e->time;
-      _ecore_wince_event_last_window = e->window;
-
-      ecore_event_add(ECORE_WINCE_EVENT_MOUSE_BUTTON_UP, e, NULL, NULL);
-   }
-
-   printf (" * ecore event button release\n");
-}
-
-void
-_ecore_wince_event_handle_motion_notify(Ecore_WinCE_Callback_Data *msg)
-{
-   Ecore_WinCE_Event_Mouse_Move *e;
-
-   e = (Ecore_WinCE_Event_Mouse_Move *)calloc(1, sizeof(Ecore_WinCE_Event_Mouse_Move));
-   if (!e) return;
-
-   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-   e->x = LOWORD(msg->data_param);
-   e->y = HIWORD(msg->data_param);
-   e->time = (double)msg->time / 1000.0;
-
-   ecore_event_add(ECORE_WINCE_EVENT_MOUSE_MOVE, e, NULL, NULL);
-   printf (" * ecore event motion notify\n");
-}
-
-void
-_ecore_wince_event_handle_enter_notify(Ecore_WinCE_Callback_Data *msg)
-{
-   Ecore_WinCE_Window *window;
-
-   window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-   printf (" * ecore event enter notify 0\n");
-
-   {
-      Ecore_WinCE_Event_Mouse_Move *e;
-
-      e = (Ecore_WinCE_Event_Mouse_Move *)calloc(1, sizeof(Ecore_WinCE_Event_Mouse_Move));
-      if (!e) return;
-
-      e->window = window;
-      e->x = msg->x;
-      e->y = msg->y;
-      e->time = (double)msg->time / 1000.0;
-
-      _ecore_wince_event_last_time = e->time;
-      _ecore_wince_event_last_window = e->window;
-
-      ecore_event_add(ECORE_WINCE_EVENT_MOUSE_MOVE, e, NULL, NULL);
-   }
-
-   {
-      Ecore_WinCE_Event_Mouse_In *e;
-
-      e = (Ecore_WinCE_Event_Mouse_In *)calloc(1, sizeof(Ecore_WinCE_Event_Mouse_In));
-      if (!e) return;
-
-      e->window = window;
-      e->x = msg->x;
-      e->y = msg->y;
-      e->time = (double)msg->time / 1000.0;
-
-      _ecore_wince_event_last_time = e->time;
-
-      ecore_event_add(ECORE_WINCE_EVENT_MOUSE_IN, e, NULL, NULL);
-   }
-   printf (" * ecore event enter notify 1\n");
-}
-
-void
-_ecore_wince_event_handle_leave_notify(Ecore_WinCE_Callback_Data *msg)
-{
-   Ecore_WinCE_Window *window;
-
-   window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-
-   {
-      Ecore_WinCE_Event_Mouse_Move *e;
-
-      e = (Ecore_WinCE_Event_Mouse_Move *)calloc(1, sizeof(Ecore_WinCE_Event_Mouse_Move));
-      if (!e) return;
-
-      e->window = window;
-      e->x = msg->x;
-      e->y = msg->y;
-      e->time = (double)msg->time / 1000.0;
-
-      _ecore_wince_event_last_time = e->time;
-      _ecore_wince_event_last_window = e->window;
-
-      ecore_event_add(ECORE_WINCE_EVENT_MOUSE_MOVE, e, NULL, NULL);
-   }
-
-   {
-      Ecore_WinCE_Event_Mouse_Out *e;
-
-      e = (Ecore_WinCE_Event_Mouse_Out *)calloc(1, sizeof(Ecore_WinCE_Event_Mouse_Out));
-      if (!e) return;
-
-      e->window = window;
-      e->x = msg->x;
-      e->y = msg->y;
-      e->time = (double)msg->time / 1000.0;
-
-      _ecore_wince_event_last_time = e->time;
-
-      ecore_event_add(ECORE_WINCE_EVENT_MOUSE_OUT, e, NULL, NULL);
-   }
-   printf (" * ecore event leave notify\n");
-}
-
-void
-_ecore_wince_event_handle_focus_in(Ecore_WinCE_Callback_Data *msg)
-{
-   Ecore_WinCE_Event_Window_Focus_In *e;
-   struct _Ecore_WinCE_Window        *window;
-
-   e = (Ecore_WinCE_Event_Window_Focus_In *)calloc(1, sizeof(Ecore_WinCE_Event_Window_Focus_In));
-   if (!e) return;
-
-   window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-   if (!e->window)
-     {
-        free(e);
-        return;
-     }
-
-   if (window->resume)
-     window->resume(window->backend);
-
-   e->window = window;
-
-   e->time = _ecore_wince_event_last_time;
-   _ecore_wince_event_last_time = e->time;
-
-   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_FOCUS_IN, e, NULL, NULL);
-}
-
-void
-_ecore_wince_event_handle_focus_out(Ecore_WinCE_Callback_Data *msg)
-{
-   Ecore_WinCE_Event_Window_Focus_Out *e;
-   struct _Ecore_WinCE_Window         *window;
-
-   e = (Ecore_WinCE_Event_Window_Focus_Out *)calloc(1, sizeof(Ecore_WinCE_Event_Window_Focus_Out));
-   if (!e) return;
-
-   window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-   if (!e->window)
-     {
-        free(e);
-        return;
-     }
-   if (window->suspend)
-     window->suspend(window->backend);
-
-   e->window = window;
-
-   e->time = _ecore_wince_event_last_time;
-   _ecore_wince_event_last_time = e->time;
-
-   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_FOCUS_OUT, e, NULL, NULL);
-}
-
-void
-_ecore_wince_event_handle_expose(Ecore_WinCE_Callback_Data *msg)
-{
-   Ecore_WinCE_Event_Window_Damage *e;
-
-   e = (Ecore_WinCE_Event_Window_Damage *)calloc(1, sizeof(Ecore_WinCE_Event_Window_Damage));
-   if (!e) return;
-
-   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-   if (!e->window)
-     {
-        free(e);
-        return;
-     }
-
-   e->x = msg->update.left;
-   e->y = msg->update.top;
-   e->width = msg->update.right - msg->update.left;
-   e->height = msg->update.bottom - msg->update.top;
-   printf (" * ecore : event expose %d %d\n", e->width, e->height);
-
-   e->time = _ecore_wince_event_last_time;
-
-   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_DAMAGE, e, NULL, NULL);
-}
-
-void
-_ecore_wince_event_handle_create_notify(Ecore_WinCE_Callback_Data *msg)
-{
-   Ecore_WinCE_Event_Window_Create *e;
-
-   e = calloc(1, sizeof(Ecore_WinCE_Event_Window_Create));
-   if (!e) return;
-
-   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-   if (!e->window)
-     {
-        free(e);
-        return;
-     }
-
-   e->time = _ecore_wince_event_last_time;
-
-   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_CREATE, e, NULL, NULL);
-}
-
-void
-_ecore_wince_event_handle_destroy_notify(Ecore_WinCE_Callback_Data *msg)
-{
-   Ecore_WinCE_Event_Window_Destroy *e;
-
-   e = calloc(1, sizeof(Ecore_WinCE_Event_Window_Destroy));
-   if (!e) return;
-
-   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-   if (!e->window)
-     {
-        free(e);
-        return;
-     }
-
-   e->time = _ecore_wince_event_last_time;
-/*    if (e->window == _ecore_wince_event_last_window) _ecore_wince_event_last_window = NULL; */
-
-   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_DESTROY, e, NULL, NULL);
-}
-
-void
-_ecore_wince_event_handle_map_notify(Ecore_WinCE_Callback_Data *msg)
-{
-   Ecore_WinCE_Event_Window_Show *e;
-
-   e = calloc(1, sizeof(Ecore_WinCE_Event_Window_Show));
-   if (!e) return;
-
-   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-   if (!e->window)
-     {
-        free(e);
-        return;
-     }
-
-   e->time = _ecore_wince_event_last_time;
-
-   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_SHOW, e, NULL, NULL);
-}
-
-void
-_ecore_wince_event_handle_unmap_notify(Ecore_WinCE_Callback_Data *msg)
-{
-   Ecore_WinCE_Event_Window_Hide *e;
-
-   e = calloc(1, sizeof(Ecore_WinCE_Event_Window_Hide));
-   if (!e) return;
-
-   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-   if (!e->window)
-     {
-        free(e);
-        return;
-     }
-
-   e->time = _ecore_wince_event_last_time;
-
-   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_HIDE, e, NULL, NULL);
-}
-
-void
-_ecore_wince_event_handle_delete_request(Ecore_WinCE_Callback_Data *msg)
-{
-   Ecore_WinCE_Event_Window_Delete_Request *e;
-
-   e = calloc(1, sizeof(Ecore_WinCE_Event_Window_Delete_Request));
-   if (!e) return;
-
-   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
-   if (!e->window)
-     {
-        free(e);
-        return;
-     }
-
-   e->time = _ecore_wince_event_last_time;
-
-   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_DELETE_REQUEST, e, NULL, NULL);
-}
-
-
-/***** Private functions definitions *****/
+   ECORE_WINCE_KEY_MASK_LSHIFT = 1 << 0,
+   ECORE_WINCE_KEY_MASK_RSHIFT = 1 << 1,
+   ECORE_WINCE_KEY_MASK_LCONTROL = 1 << 2,
+   ECORE_WINCE_KEY_MASK_RCONTROL = 1 << 3,
+   ECORE_WINCE_KEY_MASK_LMENU = 1 << 4,
+   ECORE_WINCE_KEY_MASK_RMENU = 1 << 5
+} Ecore_Wince_Key_Mask;
+
+static Ecore_WinCE_Window  *_ecore_wince_mouse_down_last_window = NULL;
+static Ecore_WinCE_Window  *_ecore_wince_mouse_down_last_last_window = NULL;
+static long                 _ecore_wince_mouse_down_last_time = 0;
+static long                 _ecore_wince_mouse_down_last_last_time = 0;
+static int                  _ecore_wince_mouse_down_did_triple = 0;
+static int                  _ecore_wince_mouse_up_count = 0;
+static Ecore_Wince_Key_Mask _ecore_wince_key_mask = 0;
 
 static void
-_ecore_wince_event_free_key_down(void *data,
+_ecore_wince_event_free_key_down(void *data __UNUSED__,
                                  void *ev)
 {
-   Ecore_WinCE_Event_Key_Down *e;
+   Ecore_Event_Key *e;
 
    e = ev;
-   if (e->keyname) free(e->keyname);
-   if (e->keysymbol) free(e->keysymbol);
-   if (e->keycompose) free(e->keycompose);
+   if (e->keyname) free((char *)e->keyname);
+   if (e->key) free((char *)e->key);
+   if (e->string) free((char *)e->string);
    free(e);
 }
 
 static void
-_ecore_wince_event_free_key_up(void *data,
+_ecore_wince_event_free_key_up(void *data __UNUSED__,
                                void *ev)
 {
-   Ecore_WinCE_Event_Key_Up *e;
+   Ecore_Event_Key *e;
 
    e = ev;
-   if (e->keyname) free(e->keyname);
-   if (e->keysymbol) free(e->keysymbol);
-   if (e->keycompose) free(e->keycompose);
+   if (e->keyname) free((char *)e->keyname);
+   if (e->key) free((char *)e->key);
+   if (e->string) free((char *)e->string);
    free(e);
 }
 
 static int
-_ecore_wince_event_keystroke_get(int    key,
-                                 char **keyname,
-                                 char **keysymbol,
-                                 char **keycompose)
+_ecore_wince_event_keystroke_get(int       key,
+                                 Eina_Bool is_down,
+                                 char    **keyname,
+                                 char    **keysymbol,
+                                 char    **keycompose)
 {
   char *kn;
   char *ks;
   char *kc;
+  int previous_key_state;
+
+  previous_key_state = msg->data_param & 0x40000000;
 
   *keyname = NULL;
   *keysymbol = NULL;
@@ -569,54 +89,54 @@ _ecore_wince_event_keystroke_get(int    key,
      {
        /* Keystroke */
      case VK_PRIOR:
-       kn = "KP_Prior";
-       ks = "KP_Prior";
-       kc = "";
+       kn = "Prior";
+       ks = "Prior";
+       kc = "Prior";
        break;
      case VK_NEXT:
-       kn = "KP_Next";
-       ks = "KP_Next";
-       kc = "";
+       kn = "Next";
+       ks = "Next";
+       kc = "Next";
        break;
      case VK_END:
-       kn = "KP_End";
-       ks = "KP_End";
-       kc = "";
+       kn = "End";
+       ks = "End";
+       kc = "End";
        break;
      case VK_HOME:
-       kn = "KP_Home";
-       ks = "KP_Home";
-       kc = "";
+       kn = "Home";
+       ks = "Home";
+       kc = "Home";
        break;
      case VK_LEFT:
-       kn = "KP_Left";
-       ks = "KP_Left";
-       kc = "";
+       kn = "Left";
+       ks = "Left";
+       kc = "Left";
        break;
      case VK_UP:
-       kn = "KP_Up";
-       ks = "KP_Up";
-       kc = "";
+       kn = "Up";
+       ks = "Up";
+       kc = "Up";
        break;
      case VK_RIGHT:
-       kn = "KP_Right";
-       ks = "KP_Right";
-       kc = "";
+       kn = "Right";
+       ks = "Right";
+       kc = "Right";
        break;
      case VK_DOWN:
-       kn = "KP_Down";
-       ks = "KP_Down";
-       kc = "";
+       kn = "Down";
+       ks = "Down";
+       kc = "Down";
        break;
      case VK_INSERT:
-       kn = "KP_Insert";
-       ks = "KP_Insert";
-       kc = "";
+       kn = "Insert";
+       ks = "Insert";
+       kc = "Insert";
        break;
      case VK_DELETE:
-       kn = "KP_Delete";
-       ks = "KP_Delete";
-       kc = "";
+       kn = "Delete";
+       ks = "Delete";
+       kc = "Delete";
        break;
      case VK_F1:
        kn = "F1";
@@ -714,30 +234,221 @@ _ecore_wince_event_keystroke_get(int    key,
        kc = "";
        break;
      case VK_F20:
-       kn = "F20";
-       ks = "F20";
-       kc = "";
-       break;
+       /*
+       * VK_F20 indicates that an arrow key came from a rocker.
+       * This can safely be ignored.
+       */
+       return 0;
      case VK_F21:
-       kn = "F21";
-       ks = "F21";
-       kc = "";
-       break;
+       /*
+       * VK_F21 indicates that an arrow key came from a directional
+       * pad. This can safely be ignored.
+       */
+       return 0;
      case VK_F22:
        kn = "F22";
        ks = "F22";
        kc = "";
        break;
      case VK_F23:
-       kn = "F23";
-       ks = "F23";
-       kc = "";
-       break;
+       /*
+       * Sent with VK_RETURN when doing an action (usually the middle
+       * button on a directional pad. This can safely be ignored.
+       */
+       return 0;
      case VK_F24:
        kn = "F24";
        ks = "F24";
        kc = "";
        break;
+     case VK_APPS:
+       kn = "Application";
+       ks = "Application";
+       kc = "";
+       break;
+     case VK_SHIFT:
+       {
+          SHORT res;
+
+          if (is_down)
+            {
+               if (previous_key_state) return 0;
+               res = GetKeyState(VK_LSHIFT);
+               if (res & 0x8000)
+                 {
+                    _ecore_wince_key_mask |= ECORE_WINCE_KEY_MASK_LSHIFT;
+                    kn = "Shift_L";
+                    ks = "Shift_L";
+                    kc = "";
+                 }
+               res = GetKeyState(VK_RSHIFT);
+               if (res & 0x8000)
+                 {
+                    _ecore_wince_key_mask |= ECORE_WINCE_KEY_MASK_RSHIFT;
+                    kn = "Shift_R";
+                    ks = "Shift_R";
+                    kc = "";
+                 }
+            }
+          else /* is_up */
+            {
+               res = GetKeyState(VK_LSHIFT);
+               if (!(res & 0x8000) &&
+                   (_ecore_wince_key_mask & ECORE_WINCE_KEY_MASK_LSHIFT))
+                 {
+                    kn = "Shift_L";
+                    ks = "Shift_L";
+                    kc = "";
+                    _ecore_wince_key_mask &= ~ECORE_WINCE_KEY_MASK_LSHIFT;
+                 }
+               res = GetKeyState(VK_RSHIFT);
+               if (!(res & 0x8000) &&
+                   (_ecore_wince_key_mask & ECORE_WINCE_KEY_MASK_RSHIFT))
+                 {
+                    kn = "Shift_R";
+                    ks = "Shift_R";
+                    kc = "";
+                    _ecore_wince_key_mask &= ~ECORE_WINCE_KEY_MASK_RSHIFT;
+                 }
+            }
+          break;
+       }
+     case VK_CONTROL:
+       {
+          SHORT res;
+
+          if (is_down)
+            {
+               if (previous_key_state) return 0;
+               res = GetKeyState(VK_LCONTROL);
+               if (res & 0x8000)
+                 {
+                    _ecore_wince_key_mask |= ECORE_WINCE_KEY_MASK_LCONTROL;
+                    kn = "Control_L";
+                    ks = "Control_L";
+                    kc = "";
+                    break;
+                 }
+               res = GetKeyState(VK_RCONTROL);
+               if (res & 0x8000)
+                 {
+                    _ecore_wince_key_mask |= ECORE_WINCE_KEY_MASK_RCONTROL;
+                    kn = "Control_R";
+                    ks = "Control_R";
+                    kc = "";
+                    break;
+                 }
+            }
+          else /* is_up */
+            {
+               res = GetKeyState(VK_LCONTROL);
+               if (!(res & 0x8000) &&
+                   (_ecore_wince_key_mask & ECORE_WINCE_KEY_MASK_LCONTROL))
+                 {
+                    kn = "Control_L";
+                    ks = "Control_L";
+                    kc = "";
+                    _ecore_wince_key_mask &= ~ECORE_WINCE_KEY_MASK_LCONTROL;
+                    break;
+                 }
+               res = GetKeyState(VK_RCONTROL);
+               if (!(res & 0x8000) &&
+                   (_ecore_wince_key_mask & ECORE_WINCE_KEY_MASK_RCONTROL))
+                 {
+                    kn = "Control_R";
+                    ks = "Control_R";
+                    kc = "";
+                    _ecore_wince_key_mask &= ~ECORE_WINCE_KEY_MASK_RCONTROL;
+                    break;
+                 }
+            }
+          break;
+       }
+     case VK_MENU:
+       {
+          SHORT res;
+
+          if (is_down)
+            {
+               if (previous_key_state) return 0;
+               res = GetKeyState(VK_LMENU);
+               if (res & 0x8000)
+                 {
+                    _ecore_wince_key_mask |= ECORE_WINCE_KEY_MASK_LMENU;
+                    kn = "Alt_L";
+                    ks = "Alt_L";
+                    kc = "";
+                 }
+               res = GetKeyState(VK_RMENU);
+               if (res & 0x8000)
+                 {
+                    _ecore_wince_key_mask |= ECORE_WINCE_KEY_MASK_RMENU;
+                    kn = "Alt_R";
+                    ks = "Alt_R";
+                    kc = "";
+                 }
+            }
+          else /* is_up */
+            {
+               res = GetKeyState(VK_LMENU);
+               if (!(res & 0x8000) &&
+                   (_ecore_wince_key_mask & ECORE_WINCE_KEY_MASK_LMENU))
+                 {
+                    kn = "Alt_L";
+                    ks = "Alt_L";
+                    kc = "";
+                    _ecore_wince_key_mask &= ~ECORE_WINCE_KEY_MASK_LMENU;
+                 }
+               res = GetKeyState(VK_RMENU);
+               if (!(res & 0x8000) &&
+                   (_ecore_wince_key_mask & ECORE_WINCE_KEY_MASK_RMENU))
+                 {
+                    kn = "Alt_R";
+                    ks = "Alt_R";
+                    kc = "";
+                    _ecore_wince_key_mask &= ~ECORE_WINCE_KEY_MASK_RMENU;
+                 }
+            }
+          break;
+       }
+     case VK_LWIN:
+       {
+          if (is_down)
+            {
+               if (previous_key_state) return 0;
+               kn = "Super_L";
+               ks = "Super_L";
+               kc = "";
+               *modifiers |= ECORE_EVENT_MODIFIER_WIN;
+            }
+          else /* is_up */
+            {
+               kn = "Super_L";
+               ks = "Super_L";
+               kc = "";
+               *modifiers &= ~ECORE_EVENT_MODIFIER_WIN;
+            }
+          break;
+       }
+     case VK_RWIN:
+       {
+          if (is_down)
+            {
+               if (previous_key_state) return 0;
+               kn = "Super_R";
+               ks = "Super_R";
+               kc = "";
+               *modifiers |= ECORE_EVENT_MODIFIER_WIN;
+            }
+          else /* is_up */
+            {
+               kn = "Super_R";
+               ks = "Super_R";
+               kc = "";
+               *modifiers &= ~ECORE_EVENT_MODIFIER_WIN;
+            }
+          break;
+       }
      default:
        /* other non keystroke characters */
        return 0;
@@ -772,44 +483,54 @@ _ecore_wince_event_char_get(int    key,
 {
   char kn[32];
   char ks[32];
-  char *kc;
+  char kc[32];
 
   *keyname = NULL;
   *keysymbol = NULL;
   *keycompose = NULL;
 
+   /* check control charaters such as ^a(key:1), ^z(key:26) */
+   if ((key > 0) && (key < 27) &&
+       ((GetKeyState(VK_CONTROL) & 0x8000) ||
+        (GetKeyState(VK_CONTROL) & 0x8000))) key += 96;
+
    switch (key)
      {
      case VK_APP3:
      case VK_BACK:
-       strncpy(kn, "Backspace", 32);
-       strncpy(ks, "Backspace", 32);
-       kc = "";
+       strncpy(kn, "BackSpace", 32);
+       strncpy(ks, "BackSpace", 32);
+       strncpy(kc, "BackSpace", 32);
        break;
      case VK_APP4:
      case VK_TAB:
        strncpy(kn, "Tab", 32);
        strncpy(ks, "Tab", 32);
-       kc = "";
+       strncpy(kc, "Tab", 32);
        break;
      case VK_APP5:
      case 0x0a:
        /* Line feed (Shift + Enter) */
        strncpy(kn, "LineFeed", 32);
        strncpy(ks, "LineFeed", 32);
-       kc = "";
+       strncpy(kc, "LineFeed", 32);
        break;
      case VK_APP2:
      case VK_RETURN:
        strncpy(kn, "Return", 32);
        strncpy(ks, "Return", 32);
-       kc = "";
+       strncpy(kc, "Return", 32);
        break;
      case VK_APP1:
      case VK_ESCAPE:
        strncpy(kn, "Escape", 32);
        strncpy(ks, "Escape", 32);
-       kc = "";
+       strncpy(kc, "Escape", 32);
+       break;
+     case VK_SPACE:
+       strncpy(kn, "space", 32);
+       strncpy(ks, "space", 32);
+       strncpy(kc, " ", 32);
        break;
      default:
        /* displayable characters */
@@ -818,7 +539,8 @@ _ecore_wince_event_char_get(int    key,
        kn[1] = '\0';
        ks[0] = (TCHAR)key;
        ks[1] = '\0';
-       kc = "";
+       kc[0] = (TCHAR)key;
+       kc[1] = '\0';
        break;
      }
    *keyname = strdup(kn);
@@ -842,3 +564,560 @@ _ecore_wince_event_char_get(int    key,
 
    return 1;
 }
+
+/**
+ * @endcond
+ */
+
+
+/*============================================================================*
+ *                                 Global                                     *
+ *============================================================================*/
+
+void
+_ecore_wince_event_handle_key_press(Ecore_WinCE_Callback_Data *msg,
+                                    int                        is_keystroke)
+{
+   Ecore_Event_Key *e;
+
+   INF("key pressed");
+
+   e = (Ecore_Event_Key *)malloc(sizeof(Ecore_Event_Key));
+   if (!e) return;
+
+   if (is_keystroke)
+     {
+        if (!_ecore_wince_event_keystroke_get(LOWORD(msg->window_param),
+                                              EINA_TRUE,
+                                              (char **)&e->keyname,
+                                              (char **)&e->key,
+                                              (char **)&e->string))
+          {
+             free(e);
+             return;
+          }
+     }
+   else
+     {
+        if (!_ecore_wince_event_char_get(LOWORD(msg->window_param),
+                                         (char **)&e->keyname,
+                                         (char **)&e->key,
+                                         (char **)&e->string))
+          {
+             free(e);
+             return;
+          }
+     }
+
+   e->window = (Ecore_Window)GetWindowLong(msg->window, GWL_USERDATA);
+   e->event_window = e->window;
+   if (!e->window)
+     {
+        free(e);
+        return;
+     }
+   e->timestamp = msg->time;
+
+   _ecore_wince_event_last_time = e->timestamp;
+
+   ecore_event_add(ECORE_EVENT_KEY_DOWN, e, _ecore_wince_event_free_key_down, NULL);
+}
+
+void
+_ecore_wince_event_handle_key_release(Ecore_WinCE_Callback_Data *msg,
+                                      int                        is_keystroke)
+{
+   Ecore_Event_Key *e;
+
+   INF("key released");
+
+   e = (Ecore_Event_Key *)calloc(1, sizeof(Ecore_Event_Key));
+   if (!e) return;
+
+   if (is_keystroke)
+     {
+        if (!_ecore_wince_event_keystroke_get(LOWORD(msg->window_param),
+                                              EINA_FALSE,
+                                              (char **)&e->keyname,
+                                              (char **)&e->key,
+                                              (char **)&e->string))
+          {
+             free(e);
+             return;
+          }
+     }
+   else
+     {
+        if (!_ecore_wince_event_char_get(LOWORD(msg->window_param),
+                                         (char **)&e->keyname,
+                                         (char **)&e->key,
+                                         (char **)&e->string))
+          {
+             free(e);
+             return;
+          }
+     }
+
+   e->window = (Ecore_Window)GetWindowLong(msg->window, GWL_USERDATA);
+   e->event_window = e->window;
+   if (!e->window)
+     {
+        free(e);
+        return;
+     }
+   e->timestamp = msg->time;
+
+   _ecore_wince_event_last_time = e->timestamp;
+
+   ecore_event_add(ECORE_EVENT_KEY_UP, e, _ecore_wince_event_free_key_up, NULL);
+}
+
+void
+_ecore_wince_event_handle_button_press(Ecore_WinCE_Callback_Data *msg,
+                                       int                        button)
+{
+   Ecore_WinCE_Window *window;
+
+   INF("mouse button pressed");
+
+   window = (Ecore_WinCE_Window *)GetWindowLong(msg->window, GWL_USERDATA);
+
+   {
+      Ecore_Event_Mouse_Move *e;
+
+      e = (Ecore_Event_Mouse_Move *)calloc(1, sizeof(Ecore_Event_Mouse_Move));
+      if (!e) return;
+
+      e->window = (Ecore_Window)window;
+      e->event_window = e->window;
+      e->x = LOWORD(msg->data_param);
+      e->y = HIWORD(msg->data_param);
+      e->timestamp = msg->time;
+
+      _ecore_wince_event_last_time = e->timestamp;
+      _ecore_wince_event_last_window = (Ecore_WinCE_Window *)e->window;
+
+      ecore_event_add(ECORE_EVENT_MOUSE_MOVE, e, NULL, NULL);
+   }
+
+   {
+      Ecore_Event_Mouse_Button *e;
+
+      if (_ecore_wince_mouse_down_did_triple)
+        {
+           _ecore_wince_mouse_down_last_window = NULL;
+           _ecore_wince_mouse_down_last_last_window = NULL;
+           _ecore_wince_mouse_down_last_time = 0;
+           _ecore_wince_mouse_down_last_last_time = 0;
+        }
+
+      e = (Ecore_Event_Mouse_Button *)calloc(1, sizeof(Ecore_Event_Mouse_Button));
+      if (!e) return;
+
+      e->window = (Ecore_Window)window;
+      e->event_window = e->window;
+      e->buttons = button;
+      e->x = LOWORD(msg->data_param);
+      e->y = HIWORD(msg->data_param);
+      e->timestamp = msg->time;
+
+      if (((e->timestamp - _ecore_wince_mouse_down_last_time) <= (long)(1000 * _ecore_wince_double_click_time)) &&
+          (e->window == (Ecore_Window)_ecore_wince_mouse_down_last_window))
+        e->double_click = 1;
+
+      if (((e->timestamp - _ecore_wince_mouse_down_last_last_time) <= (long)(2 * 1000 * _ecore_wince_double_click_time)) &&
+          (e->window == (Ecore_Window)_ecore_wince_mouse_down_last_window) &&
+          (e->window == (Ecore_Window)_ecore_wince_mouse_down_last_last_window))
+        {
+           e->triple_click = 1;
+           _ecore_wince_mouse_down_did_triple = 1;
+        }
+      else
+        _ecore_wince_mouse_down_did_triple = 0;
+
+      if (!e->double_click && !e->triple_click)
+        _ecore_wince_mouse_up_count = 0;
+
+      _ecore_wince_event_last_time = e->timestamp;
+      _ecore_wince_event_last_window = (Ecore_WinCE_Window *)e->window;
+
+      if (!_ecore_wince_mouse_down_did_triple)
+        {
+           _ecore_wince_mouse_down_last_last_window = _ecore_wince_mouse_down_last_window;
+           _ecore_wince_mouse_down_last_window = (Ecore_WinCE_Window *)e->window;
+           _ecore_wince_mouse_down_last_last_time = _ecore_wince_mouse_down_last_time;
+           _ecore_wince_mouse_down_last_time = e->timestamp;
+        }
+
+      ecore_event_add(ECORE_EVENT_MOUSE_BUTTON_DOWN, e, NULL, NULL);
+   }
+}
+
+void
+_ecore_wince_event_handle_button_release(Ecore_WinCE_Callback_Data *msg,
+                                         int                        button)
+{
+   Ecore_WinCE_Window *window;
+
+   INF("mouse button released");
+
+   window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
+
+   {
+      Ecore_Event_Mouse_Move *e;
+
+      e = (Ecore_Event_Mouse_Move *)calloc(1, sizeof(Ecore_Event_Mouse_Move));
+      if (!e) return;
+
+      e->window = (Ecore_Window)window;
+      e->event_window = e->window;
+      e->x = LOWORD(msg->data_param);
+      e->y = HIWORD(msg->data_param);
+      e->timestamp = msg->time;
+
+      _ecore_wince_event_last_time = e->timestamp;
+      _ecore_wince_event_last_window = (Ecore_WinCE_Window *)e->window;
+
+      ecore_event_add(ECORE_EVENT_MOUSE_MOVE, e, NULL, NULL);
+   }
+
+   {
+      Ecore_Event_Mouse_Button *e;
+
+      e = (Ecore_Event_Mouse_Button *)calloc(1, sizeof(Ecore_Event_Mouse_Button));
+      if (!e) return;
+
+      e->window = (Ecore_Window)window;
+      e->event_window = e->window;
+      e->buttons = button;
+      e->x = LOWORD(msg->data_param);
+      e->y = HIWORD(msg->data_param);
+      e->timestamp = msg->time;
+
+      _ecore_wince_mouse_up_count++;
+
+      if ((_ecore_wince_mouse_up_count >= 2) &&
+          ((e->timestamp - _ecore_wince_mouse_down_last_time) <= (long)(1000 * _ecore_wince_double_click_time)) &&
+          (e->window == (Ecore_Window)_ecore_wince_mouse_down_last_window))
+        e->double_click = 1;
+
+      if ((_ecore_wince_mouse_up_count >= 3) &&
+          ((e->timestamp - _ecore_wince_mouse_down_last_last_time) <= (long)(2 * 1000 * _ecore_wince_double_click_time)) &&
+          (e->window == (Ecore_Window)_ecore_wince_mouse_down_last_window) &&
+          (e->window == (Ecore_Window)_ecore_wince_mouse_down_last_last_window))
+        e->triple_click = 1;
+
+      _ecore_wince_event_last_time = e->timestamp;
+      _ecore_wince_event_last_window = (Ecore_WinCE_Window *)e->window;
+
+      ecore_event_add(ECORE_EVENT_MOUSE_BUTTON_UP, e, NULL, NULL);
+   }
+}
+
+void
+_ecore_wince_event_handle_motion_notify(Ecore_WinCE_Callback_Data *msg)
+{
+   Ecore_Event_Mouse_Move *e;
+
+   INF("mouse moved");
+
+   e = (Ecore_Event_Mouse_Move *)calloc(1, sizeof(Ecore_Event_Mouse_Move));
+   if (!e) return;
+
+   e->window = (Ecore_Window)GetWindowLong(msg->window, GWL_USERDATA);
+   e->event_window = e->window;
+   e->x = LOWORD(msg->data_param);
+   e->y = HIWORD(msg->data_param);
+   e->timestamp = msg->time;
+
+   ecore_event_add(ECORE_EVENT_MOUSE_MOVE, e, NULL, NULL);
+}
+
+void
+_ecore_wince_event_handle_enter_notify(Ecore_WinCE_Callback_Data *msg)
+{
+   Ecore_WinCE_Window *window;
+
+   INF("mouse in");
+
+   window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
+
+   {
+      Ecore_Event_Mouse_Move *e;
+
+      e = (Ecore_Event_Mouse_Move *)calloc(1, sizeof(Ecore_Event_Mouse_Move));
+      if (!e) return;
+
+      e->window = (Ecore_Window)window;
+      e->event_window = e->window;
+      e->x = msg->x;
+      e->y = msg->y;
+      e->timestamp = msg->time;
+
+      _ecore_wince_event_last_time = e->timestamp;
+      _ecore_wince_event_last_window = (Ecore_WinCE_Window *)e->window;
+
+      ecore_event_add(ECORE_EVENT_MOUSE_MOVE, e, NULL, NULL);
+   }
+
+   {
+      Ecore_WinCE_Event_Mouse_In *e;
+
+      e = (Ecore_WinCE_Event_Mouse_In *)calloc(1, sizeof(Ecore_WinCE_Event_Mouse_In));
+      if (!e) return;
+
+      e->window = window;
+      e->x = msg->x;
+      e->y = msg->y;
+      e->time = msg->time;
+
+      _ecore_wince_event_last_time = e->time;
+
+      ecore_event_add(ECORE_WINCE_EVENT_MOUSE_IN, e, NULL, NULL);
+   }
+}
+
+void
+_ecore_wince_event_handle_leave_notify(Ecore_WinCE_Callback_Data *msg)
+{
+   Ecore_WinCE_Window *window;
+
+   INF("mouse out");
+
+   window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
+
+   {
+      Ecore_Event_Mouse_Move *e;
+
+      e = (Ecore_Event_Mouse_Move *)calloc(1, sizeof(Ecore_Event_Mouse_Move));
+      if (!e) return;
+
+      e->window = (Ecore_Window)window;
+      e->event_window = e->window;
+      e->x = msg->x;
+      e->y = msg->y;
+      e->timestamp = msg->time;
+
+      _ecore_wince_event_last_time = e->timestamp;
+      _ecore_wince_event_last_window = (Ecore_WinCE_Window *)e->window;
+
+      ecore_event_add(ECORE_EVENT_MOUSE_MOVE, e, NULL, NULL);
+   }
+
+   {
+      Ecore_WinCE_Event_Mouse_Out *e;
+
+      e = (Ecore_WinCE_Event_Mouse_Out *)calloc(1, sizeof(Ecore_WinCE_Event_Mouse_Out));
+      if (!e) return;
+
+      e->window = window;
+      e->x = msg->x;
+      e->y = msg->y;
+      e->time = msg->time;
+
+      _ecore_wince_event_last_time = e->time;
+
+      ecore_event_add(ECORE_WINCE_EVENT_MOUSE_OUT, e, NULL, NULL);
+   }
+}
+
+void
+_ecore_wince_event_handle_focus_in(Ecore_WinCE_Callback_Data *msg)
+{
+   Ecore_WinCE_Event_Window_Focus_In *e;
+   Ecore_WinCE_Window                *window;
+
+   INF("focus in");
+
+   e = (Ecore_WinCE_Event_Window_Focus_In *)calloc(1, sizeof(Ecore_WinCE_Event_Window_Focus_In));
+   if (!e) return;
+
+   window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
+   if (!e->window)
+     {
+        free(e);
+        return;
+     }
+
+   if (window->resume_cb)
+     window->resume_cb(window->backend);
+
+   e->window = window;
+
+   e->time = _ecore_wince_event_last_time;
+   _ecore_wince_event_last_time = e->time;
+
+   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_FOCUS_IN, e, NULL, NULL);
+}
+
+void
+_ecore_wince_event_handle_focus_out(Ecore_WinCE_Callback_Data *msg)
+{
+   Ecore_WinCE_Event_Window_Focus_Out *e;
+   Ecore_WinCE_Window                 *window;
+
+   INF("focus out");
+
+   e = (Ecore_WinCE_Event_Window_Focus_Out *)calloc(1, sizeof(Ecore_WinCE_Event_Window_Focus_Out));
+   if (!e) return;
+
+   window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
+   if (!e->window)
+     {
+        free(e);
+        return;
+     }
+   if (window->suspend_cb)
+     window->suspend_cb(window->backend);
+
+   e->window = window;
+
+   e->time = _ecore_wince_event_last_time;
+   _ecore_wince_event_last_time = e->time;
+
+   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_FOCUS_OUT, e, NULL, NULL);
+}
+
+void
+_ecore_wince_event_handle_expose(Ecore_WinCE_Callback_Data *msg)
+{
+   Ecore_WinCE_Event_Window_Damage *e;
+
+   INF("window expose");
+
+   e = (Ecore_WinCE_Event_Window_Damage *)calloc(1, sizeof(Ecore_WinCE_Event_Window_Damage));
+   if (!e) return;
+
+   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
+   if (!e->window)
+     {
+        free(e);
+        return;
+     }
+
+   e->x = msg->update.left;
+   e->y = msg->update.top;
+   e->width = msg->update.right - msg->update.left;
+   e->height = msg->update.bottom - msg->update.top;
+   INF("window expose size: %dx%d", e->width, e->height);
+
+   e->time = _ecore_wince_event_last_time;
+
+   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_DAMAGE, e, NULL, NULL);
+}
+
+void
+_ecore_wince_event_handle_create_notify(Ecore_WinCE_Callback_Data *msg)
+{
+   Ecore_WinCE_Event_Window_Create *e;
+
+   INF("window create notify");
+
+   e = calloc(1, sizeof(Ecore_WinCE_Event_Window_Create));
+   if (!e) return;
+
+   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
+   if (!e->window)
+     {
+        free(e);
+        return;
+     }
+
+   e->time = _ecore_wince_event_last_time;
+
+   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_CREATE, e, NULL, NULL);
+}
+
+void
+_ecore_wince_event_handle_destroy_notify(Ecore_WinCE_Callback_Data *msg)
+{
+   Ecore_WinCE_Event_Window_Destroy *e;
+
+   INF("window destroy notify");
+
+   e = calloc(1, sizeof(Ecore_WinCE_Event_Window_Destroy));
+   if (!e) return;
+
+   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
+   if (!e->window)
+     {
+        free(e);
+        return;
+     }
+
+   e->time = _ecore_wince_event_last_time;
+/*    if (e->window == _ecore_wince_event_last_window) _ecore_wince_event_last_window = NULL; */
+
+   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_DESTROY, e, NULL, NULL);
+}
+
+void
+_ecore_wince_event_handle_map_notify(Ecore_WinCE_Callback_Data *msg)
+{
+   Ecore_WinCE_Event_Window_Show *e;
+
+   INF("window map notify");
+
+   e = calloc(1, sizeof(Ecore_WinCE_Event_Window_Show));
+   if (!e) return;
+
+   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
+   if (!e->window)
+     {
+        free(e);
+        return;
+     }
+
+   e->time = _ecore_wince_event_last_time;
+
+   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_SHOW, e, NULL, NULL);
+}
+
+void
+_ecore_wince_event_handle_unmap_notify(Ecore_WinCE_Callback_Data *msg)
+{
+   Ecore_WinCE_Event_Window_Hide *e;
+
+   INF("window unmap notify");
+
+   e = calloc(1, sizeof(Ecore_WinCE_Event_Window_Hide));
+   if (!e) return;
+
+   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
+   if (!e->window)
+     {
+        free(e);
+        return;
+     }
+
+   e->time = _ecore_wince_event_last_time;
+
+   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_HIDE, e, NULL, NULL);
+}
+
+void
+_ecore_wince_event_handle_delete_request(Ecore_WinCE_Callback_Data *msg)
+{
+   Ecore_WinCE_Event_Window_Delete_Request *e;
+
+   INF("window delete request");
+
+   e = calloc(1, sizeof(Ecore_WinCE_Event_Window_Delete_Request));
+   if (!e) return;
+
+   e->window = (void *)GetWindowLong(msg->window, GWL_USERDATA);
+   if (!e->window)
+     {
+        free(e);
+        return;
+     }
+
+   e->time = _ecore_wince_event_last_time;
+
+   ecore_event_add(ECORE_WINCE_EVENT_WINDOW_DELETE_REQUEST, e, NULL, NULL);
+}
+
+/*============================================================================*
+ *                                   API                                      *
+ *============================================================================*/
+

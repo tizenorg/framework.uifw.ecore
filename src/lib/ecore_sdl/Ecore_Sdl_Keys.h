@@ -11,13 +11,15 @@ struct _ecore_sdl_keys_s
 static const struct _ecore_sdl_keys_s  keystable[] =
 {
    { SDLK_UNKNOWN,      "0x00",         "" },
-   { SDLK_FIRST,        "First",        "" },
+#ifndef BUILD_ECORE_EVAS_SDL_130
+   { SDLK_FIRST,        "First",        "First" },
+#endif
    { SDLK_BACKSPACE,    "BackSpace",    "\010" },
    { SDLK_TAB,          "Tab",          "\011" },
-   { SDLK_CLEAR,        "Clear",        "" },
+   { SDLK_CLEAR,        "Clear",        "Clear" },
    { SDLK_RETURN,       "Return",       "\015" },
-   { SDLK_PAUSE,        "Pause",        "" },
-   { SDLK_ESCAPE,       "Escape",       "" },
+   { SDLK_PAUSE,        "Pause",        "Pause" },
+   { SDLK_ESCAPE,       "Escape",       "\033" },
    { SDLK_SPACE,        "space",        " " },
    { SDLK_EXCLAIM,      "exclam",       "!" },
    { SDLK_QUOTEDBL,     "quotedbl",     "\"" },
@@ -27,7 +29,7 @@ static const struct _ecore_sdl_keys_s  keystable[] =
    { SDLK_QUOTE,        "apostrophe",   "'" },
    { SDLK_LEFTPAREN,    "parenleft",    "(" },
    { SDLK_RIGHTPAREN,   "parenright",   ")" },
-   { SDLK_ASTERISK,     "asterik",      "*" },
+   { SDLK_ASTERISK,     "asterisk",     "*" },
    { SDLK_PLUS,         "plus",         "+" },
    { SDLK_COMMA,        "comma",        "," },
    { SDLK_MINUS,        "minus",        "-" },
@@ -43,7 +45,7 @@ static const struct _ecore_sdl_keys_s  keystable[] =
    { SDLK_7,            "7",            "7" },
    { SDLK_8,            "8",            "8" },
    { SDLK_9,            "9",            "9" },
-   { SDLK_COLON,        "colon",        ";" },
+   { SDLK_COLON,        "colon",        ":" },
    { SDLK_SEMICOLON,    "semicolon",    ";" },
    { SDLK_LESS,         "less",         "<" },
    { SDLK_EQUALS,       "equal",        "=" },
@@ -87,6 +89,7 @@ static const struct _ecore_sdl_keys_s  keystable[] =
    { SDLK_DELETE,       "Delete",       "\177" },
    /* End of ASCII mapped keysyms */
 
+#ifndef BUILD_ECORE_EVAS_SDL_130
    /* International keyboard syms */
    { SDLK_WORLD_0,      "w0",           "" }, /* 0xA0 */
    { SDLK_WORLD_1,      "w1",           "" },
@@ -184,7 +187,7 @@ static const struct _ecore_sdl_keys_s  keystable[] =
    { SDLK_WORLD_93,     "w93",          "" },
    { SDLK_WORLD_94,     "w94",          "" },
    { SDLK_WORLD_95,     "w95",          "" },
-
+#endif
    /* Numeric keypad */
    { SDLK_KP0,          "KP0",          "0" },
    { SDLK_KP1,          "KP1",          "1" },
@@ -205,59 +208,59 @@ static const struct _ecore_sdl_keys_s  keystable[] =
    { SDLK_KP_EQUALS,    "KP_Equals",    "=" },
 
    /* Arrows + Home/End pad */
-   { SDLK_UP,           "Up",           "" },
-   { SDLK_DOWN,         "Down",         "" },
-   { SDLK_RIGHT,        "Right",        "" },
-   { SDLK_LEFT,         "Left",         "" },
-   { SDLK_INSERT,       "Insert",       "" },
-   { SDLK_HOME,         "Home",         "" },
-   { SDLK_END,          "End",          "" },
-   { SDLK_PAGEUP,       "Page_Up",      "" },
-   { SDLK_PAGEDOWN,     "Page_Down",    "" },
+   { SDLK_UP,           "Up",           "Up" },
+   { SDLK_DOWN,         "Down",         "Down" },
+   { SDLK_RIGHT,        "Right",        "Right" },
+   { SDLK_LEFT,         "Left",         "Left" },
+   { SDLK_INSERT,       "Insert",       "Insert" },
+   { SDLK_HOME,         "Home",         "Home" },
+   { SDLK_END,          "End",          "End" },
+   { SDLK_PAGEUP,       "Page_Up",      "Page_Up" },
+   { SDLK_PAGEDOWN,     "Page_Down",    "Page_Down" },
 
    /* Function keys */
-   { SDLK_F1,           "F1",           "" },
-   { SDLK_F2,           "F2",           "" },
-   { SDLK_F3,           "F3",           "" },
-   { SDLK_F4,           "F4",           "" },
-   { SDLK_F5,           "F5",           "" },
-   { SDLK_F6,           "F6",           "" },
-   { SDLK_F7,           "F7",           "" },
-   { SDLK_F8,           "F8",           "" },
-   { SDLK_F9,           "F9",           "" },
-   { SDLK_F10,          "F10",          "" },
-   { SDLK_F11,          "F11",          "" },
-   { SDLK_F12,          "F12",          "" },
-   { SDLK_F13,          "F13",          "" },
-   { SDLK_F14,          "F14",          "" },
-   { SDLK_F15,          "F15",          "" },
+   { SDLK_F1,           "F1",           "F1" },
+   { SDLK_F2,           "F2",           "F2" },
+   { SDLK_F3,           "F3",           "F3" },
+   { SDLK_F4,           "F4",           "F4" },
+   { SDLK_F5,           "F5",           "F5" },
+   { SDLK_F6,           "F6",           "F6" },
+   { SDLK_F7,           "F7",           "F7" },
+   { SDLK_F8,           "F8",           "F8" },
+   { SDLK_F9,           "F9",           "F9" },
+   { SDLK_F10,          "F10",          "F10" },
+   { SDLK_F11,          "F11",          "F11" },
+   { SDLK_F12,          "F12",          "F12" },
+   { SDLK_F13,          "F13",          "F13" },
+   { SDLK_F14,          "F14",          "F14" },
+   { SDLK_F15,          "F15",          "F15" },
 
    /* Key state modifier keys */
-   { SDLK_NUMLOCK,      "Num_Lock",     "" },
-   { SDLK_CAPSLOCK,     "Caps_Lock",    "" },
-   { SDLK_SCROLLOCK,    "Scroll_Lock",  "" },
-   { SDLK_RSHIFT,       "Shift_R",      "" },
-   { SDLK_LSHIFT,       "Shift_L",      "" },
-   { SDLK_RCTRL,        "Control_R",    "" },
-   { SDLK_LCTRL,        "Control_L",    "" },
-   { SDLK_RALT,         "Alt_R",        "" },
-   { SDLK_LALT,         "Alt_L",        "" },
-   { SDLK_RMETA,        "Meta_R",       "" },
-   { SDLK_LMETA,        "Meta_L",       "" },
-   { SDLK_LSUPER,       "Super_L",      "" },   /* Left "Windows" key */
-   { SDLK_RSUPER,       "Super_R",      "" },   /* Right "Windows" key */
-   { SDLK_MODE,         "Mode",         "" },   /* "Alt Gr" key */
-   { SDLK_COMPOSE,      "Compose",      "" },   /* Multi-key compose key */
+   { SDLK_NUMLOCK,      "Num_Lock",     "Num_Lock" },
+   { SDLK_CAPSLOCK,     "Caps_Lock",    "Caps_Lock" },
+   { SDLK_SCROLLOCK,    "Scroll_Lock",  "Scroll_Lock" },
+   { SDLK_RSHIFT,       "Shift_R",      "Shift_R" },
+   { SDLK_LSHIFT,       "Shift_L",      "Shift_L" },
+   { SDLK_RCTRL,        "Control_R",    "Control_R" },
+   { SDLK_LCTRL,        "Control_L",    "Control_L" },
+   { SDLK_RALT,         "Alt_R",        "Alt_R" },
+   { SDLK_LALT,         "Alt_L",        "Alt_L" },
+   { SDLK_RMETA,        "Meta_R",       "Meta_R" },
+   { SDLK_LMETA,        "Meta_L",       "Meta_L" },
+   { SDLK_LSUPER,       "Super_L",      "Super_L" },   /* Left "Windows" key */
+   { SDLK_RSUPER,       "Super_R",      "Super_R" },   /* Right "Windows" key */
+   { SDLK_MODE,         "Mode",         "Mode" },   /* "Alt Gr" key */
+   { SDLK_COMPOSE,      "Compose",      "Compose" },   /* Multi-key compose key */
 
    /* Miscellaneous function keys */
-   { SDLK_HELP,         "Help",         "" },
-   { SDLK_PRINT,        "Print",        "" },
-   { SDLK_SYSREQ,       "SysReq",       "" },
-   { SDLK_BREAK,        "Break",        "" },
-   { SDLK_MENU,         "Menu",         "" },
-   { SDLK_POWER,        "Power",        "" },   /* Power Macintosh power key */
-   { SDLK_EURO,         "Euro",         "" },   /* Some european keyboards */
-   { SDLK_UNDO,         "Undo",         "" }    /* Atari keyboard has Undo */
+   { SDLK_HELP,         "Help",         "Help" },
+   { SDLK_PRINT,        "Print",        "Print" },
+   { SDLK_SYSREQ,       "SysReq",       "SysReq" },
+   { SDLK_BREAK,        "Break",        "Break" },
+   { SDLK_MENU,         "Menu",         "Menu" },
+   { SDLK_POWER,        "Power",        "Power" },   /* Power Macintosh power key */
+   { SDLK_EURO,         "Euro",         "\200" },   /* Some european keyboards */
+   { SDLK_UNDO,         "Undo",         "Undo" }    /* Atari keyboard has Undo */
 };
 
 #endif  /* ECORE_SDL_KEYS_H__ */
