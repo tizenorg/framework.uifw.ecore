@@ -1,3 +1,7 @@
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
 /* ############## bad */
 #define HAVE_EVAS2
 
@@ -15,7 +19,6 @@
 #include "ecore_config_util.h"
 #include "ecore_config_ipc.h"
 
-#include "config.h"
 #include "ecore_config_private.h"
 
 static Ecore_Config_Server *__ecore_config_servers;
@@ -86,12 +89,9 @@ _ecore_config_ipc_prop_desc(Ecore_Config_Server * srv, const long serial,
 			    const char *key)
 {
 #ifdef HAVE_EVAS2
-   Ecore_Config_Bundle *theme;
    Ecore_Config_Prop  *e;
 
-   theme = ecore_config_bundle_by_serial_get(srv, serial);
    e = ecore_config_get(key);
-
    if (e)
      {
 	estring            *s = estring_new(512);
@@ -111,11 +111,8 @@ _ecore_config_ipc_prop_get(Ecore_Config_Server * srv, const long serial,
 {
 #ifdef HAVE_EVAS2
    char               *ret;
-   Ecore_Config_Bundle *theme;
 
-   ret = NULL;
-   theme = ecore_config_bundle_by_serial_get(srv, serial);
-   if ((ret = ecore_config_as_string_get( /*theme, */ key)))
+   if ((ret = ecore_config_as_string_get(key)))
       return ret;
 #endif
    return strdup("<undefined>");
@@ -131,8 +128,8 @@ _ecore_config_ipc_prop_set(Ecore_Config_Server * srv, const long serial,
 
    theme = ecore_config_bundle_by_serial_get(srv, serial);
    ret = ecore_config_set(key, (char *)val);
-   E(1, "ipc.prop.set(%s->%s,\"%s\") => %d\n", theme ? theme->identifier : "",
-     key, val, ret);
+   ERR("ipc.prop.set(%s->%s,\"%s\") => %d\n", theme ? theme->identifier : "",
+       key, val, ret);
    return ret;
 #else
    return ECORE_CONFIG_ERR_NOTSUPP;
@@ -208,7 +205,7 @@ _ecore_config_ipc_bundle_label_find(Ecore_Config_Server * srv,
    return ns ? ecore_config_bundle_serial_get(ns) : -1;
 }
 
-static int
+static Eina_Bool
 _ecore_config_ipc_poll(void *data __UNUSED__)
 {
    Ecore_Config_Server *s;
@@ -220,7 +217,7 @@ _ecore_config_ipc_poll(void *data __UNUSED__)
         s = s->next;
      }
 
-   return 1;
+   return EINA_TRUE;
 }
 
 int
@@ -254,15 +251,14 @@ _ecore_config_ipc_init(const char *pipe_name)
    ret_srv = NULL;
    list = NULL;
 
-   list = malloc(sizeof(Ecore_Config_Server));
-   memset(list, 0, sizeof(Ecore_Config_Server));
+   list = calloc(1, sizeof(Ecore_Config_Server));
    if ((ret = _ecore_config_ipc_ecore_init(pipe_name, &list->server)) != ECORE_CONFIG_ERR_SUCC)
      {
-	E(2, "_ecore_config_ipc_init: failed to register %s, code %d\n",
+	ERR("_ecore_config_ipc_init: failed to register %s, code %d",
 	  pipe_name, ret);
      }
 
-   E(2, "_ecore_config_ipc_init: registered \"%s\"...\n", pipe_name);
+   ERR("_ecore_config_ipc_init: registered \"%s\"...", pipe_name);
 
    list->name = strdup(pipe_name);
    list->next = __ecore_config_servers;
@@ -273,7 +269,7 @@ _ecore_config_ipc_init(const char *pipe_name)
 
    if (!ipc_timer)
      ipc_timer = ecore_timer_add(100, _ecore_config_ipc_poll, NULL);
-   
+
    return ret_srv;
 }
 /*****************************************************************************/
