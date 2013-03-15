@@ -6,6 +6,32 @@
 # include <config.h>
 #endif /* ifdef HAVE_CONFIG_H */
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include "Ecore.h"
 #include "ecore_x_private.h"
 #include "Ecore_X.h"
@@ -880,7 +906,7 @@ _ecore_x_e_clipboard_state_get(Ecore_X_Atom atom)
    if (atom == ECORE_X_ATOM_E_ILLUME_CLIPBOARD_OFF)
      return ECORE_X_ILLUME_CLIPBOARD_STATE_OFF;
 
-   return ECORE_X_ILLUME_INDICATOR_STATE_UNKNOWN;
+   return ECORE_X_ILLUME_CLIPBOARD_STATE_UNKNOWN;
 }
 
 EAPI void
@@ -1104,6 +1130,389 @@ ecore_x_e_comp_sync_draw_size_done_send(Ecore_X_Window root,
    xev.xclient.data.l[2] = w; // win width at draw time
    xev.xclient.data.l[3] = h; // win height at draw time
    xev.xclient.data.l[4] = 0; // later
+
+   XSendEvent(_ecore_x_disp, root, False,
+              SubstructureRedirectMask | SubstructureNotifyMask,
+              &xev);
+}
+
+EAPI void
+ecore_x_e_window_rotation_supported_set(Ecore_X_Window root,
+                                        Eina_Bool      enabled)
+{
+   Ecore_X_Window win;
+
+   if (!root)
+     root = DefaultRootWindow(_ecore_x_disp);
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (enabled)
+     {
+        win = ecore_x_window_new(root, 1, 2, 3, 4);
+        ecore_x_window_prop_xid_set(win, ECORE_X_ATOM_E_WINDOW_ROTATION_SUPPORTED,
+                                    ECORE_X_ATOM_WINDOW, &win, 1);
+        ecore_x_window_prop_xid_set(root, ECORE_X_ATOM_E_WINDOW_ROTATION_SUPPORTED,
+                                    ECORE_X_ATOM_WINDOW, &win, 1);
+     }
+   else
+     {
+        int ret;
+
+        ret =
+          ecore_x_window_prop_xid_get(root,
+                                      ECORE_X_ATOM_E_WINDOW_ROTATION_SUPPORTED,
+                                      ECORE_X_ATOM_WINDOW,
+                                      &win, 1);
+        if ((ret == 1) && (win))
+          {
+             ecore_x_window_prop_property_del(
+               root,
+               ECORE_X_ATOM_E_WINDOW_ROTATION_SUPPORTED);
+             ecore_x_window_free(win);
+          }
+     }
+}
+
+EAPI Eina_Bool
+ecore_x_e_window_rotation_supported_get(Ecore_X_Window root)
+{
+   Ecore_X_Window win, win2;
+   int ret;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!root)
+     root = DefaultRootWindow(_ecore_x_disp);
+
+   ret =
+     ecore_x_window_prop_xid_get(root,
+                                 ECORE_X_ATOM_E_WINDOW_ROTATION_SUPPORTED,
+                                 ECORE_X_ATOM_WINDOW,
+                                 &win, 1);
+   if ((ret == 1) && (win))
+     {
+        ret =
+          ecore_x_window_prop_xid_get(win,
+                                      ECORE_X_ATOM_E_WINDOW_ROTATION_SUPPORTED,
+                                      ECORE_X_ATOM_WINDOW,
+                                      &win2, 1);
+        if ((ret == 1) && (win2 == win))
+          return EINA_TRUE;
+     }
+
+   return EINA_FALSE;
+}
+
+EAPI void
+ecore_x_e_window_available_rotations_set(Ecore_X_Window win,
+                                         const int     *rots,
+                                         unsigned int   count)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   ecore_x_window_prop_card32_set(win,
+                                  ECORE_X_ATOM_E_WINDOW_ROTATION_AVAILABLE_LIST,
+                                  (unsigned int *)rots, count);
+}
+
+EAPI Eina_Bool
+ecore_x_e_window_available_rotations_get(Ecore_X_Window  win,
+                                         int           **rots,
+                                         unsigned int   *count)
+{
+   unsigned char *data;
+   int num;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   if (count) *count = 0;
+   if (rots) *rots = NULL;
+   if (!win) return EINA_FALSE;
+
+   if (!ecore_x_window_prop_property_get(win,
+                                         ECORE_X_ATOM_E_WINDOW_ROTATION_AVAILABLE_LIST,
+                                         XA_CARDINAL, 32, &data, &num))
+     return EINA_FALSE;
+
+   if (count) *count = num;
+
+   if (rots)
+     {
+        (*rots) = calloc(num, sizeof(int));
+        if (!(*rots))
+          {
+             if (count) *count = 0;
+             if (data) free(data);
+             return EINA_FALSE;
+          }
+
+        memcpy(*rots, (int *)data, sizeof(int) * num);
+     }
+
+   if (data) XFree(data);
+   return EINA_TRUE;
+}
+
+EAPI void
+ecore_x_e_window_preferred_rotation_set(Ecore_X_Window win,
+                                        int            rot)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   ecore_x_window_prop_property_set(win,
+                                    ECORE_X_ATOM_E_WINDOW_ROTATION_PREFERRED_MODE,
+                                    XA_CARDINAL, 32, (void *)&rot, 1);
+}
+
+EAPI Eina_Bool
+ecore_x_e_window_preferred_rotation_get(Ecore_X_Window win,
+                                        int           *rot)
+{
+   unsigned char *data = NULL;
+   int num;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!ecore_x_window_prop_property_get(win,
+                                         ECORE_X_ATOM_E_WINDOW_ROTATION_PREFERRED_MODE,
+                                         XA_CARDINAL, 32, &data, &num))
+     return EINA_FALSE;
+
+   if ((data) && (num == 1) && (rot))
+     {
+        *rot = (int)(*data);
+        if (data) XFree(data);
+        return EINA_TRUE;
+     }
+   if (data) XFree(data);
+   return EINA_FALSE;
+}
+
+EAPI void
+ecore_x_e_window_rotation_change_prepare_send(Ecore_X_Window win,
+                                              int            rot,
+                                              Eina_Bool      resize,
+                                              int            w,
+                                              int            h)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   ecore_x_client_message32_send
+     (win, ECORE_X_ATOM_E_WINDOW_ROTATION_CHANGE_PREPARE,
+     ECORE_X_EVENT_MASK_NONE,
+     win, rot, resize, w, h);
+}
+
+EAPI void
+ecore_x_e_window_rotation_change_prepare_done_send(Ecore_X_Window root,
+                                                   Ecore_X_Window win,
+                                                   int            rot)
+{
+   XEvent xev;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!root)
+     root = DefaultRootWindow(_ecore_x_disp);
+
+   xev.xclient.type = ClientMessage;
+   xev.xclient.display = _ecore_x_disp;
+   xev.xclient.window = win;
+   xev.xclient.message_type = ECORE_X_ATOM_E_WINDOW_ROTATION_CHANGE_PREPARE_DONE;
+   xev.xclient.format = 32;
+   xev.xclient.data.l[0] = win;
+   xev.xclient.data.l[1] = rot;
+   xev.xclient.data.l[2] = 0;
+   xev.xclient.data.l[3] = 0;
+   xev.xclient.data.l[4] = 0;
+
+   XSendEvent(_ecore_x_disp, root, False,
+              SubstructureRedirectMask | SubstructureNotifyMask,
+              &xev);
+}
+
+EAPI void
+ecore_x_e_window_rotation_change_request_send(Ecore_X_Window win,
+                                              int            rot)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   ecore_x_client_message32_send
+     (win, ECORE_X_ATOM_E_WINDOW_ROTATION_CHANGE_REQUEST,
+     ECORE_X_EVENT_MASK_NONE,
+     win, rot, 0, 0, 0);
+}
+
+EAPI void
+ecore_x_e_window_rotation_change_done_send(Ecore_X_Window root,
+                                           Ecore_X_Window win,
+                                           int            rot,
+                                           int            w,
+                                           int            h)
+{
+   XEvent xev;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!root)
+     root = DefaultRootWindow(_ecore_x_disp);
+
+   xev.xclient.type = ClientMessage;
+   xev.xclient.display = _ecore_x_disp;
+   xev.xclient.window = win;
+   xev.xclient.message_type = ECORE_X_ATOM_E_WINDOW_ROTATION_CHANGE_DONE;
+   xev.xclient.format = 32;
+   xev.xclient.data.l[0] = win;
+   xev.xclient.data.l[1] = rot;
+   xev.xclient.data.l[2] = w;
+   xev.xclient.data.l[3] = h;
+   xev.xclient.data.l[4] = 0;
+
+   XSendEvent(_ecore_x_disp, root, False,
+              SubstructureRedirectMask | SubstructureNotifyMask,
+              &xev);
+}
+
+EAPI void
+ecore_x_e_window_rotation_geometry_set(Ecore_X_Window win,
+                                       int rot,
+                                       int x,
+                                       int y,
+                                       int w,
+                                       int h)
+{
+   Ecore_X_Atom atom;
+   unsigned int geom[4];
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   geom[0] = x;
+   geom[1] = y;
+   geom[2] = w;
+   geom[3] = h;
+
+   switch (rot)
+     {
+      case   0: atom = ECORE_X_ATOM_E_WINDOW_ROTATION_0_GEOMETRY;   break;
+      case  90: atom = ECORE_X_ATOM_E_WINDOW_ROTATION_90_GEOMETRY;  break;
+      case 180: atom = ECORE_X_ATOM_E_WINDOW_ROTATION_180_GEOMETRY; break;
+      case 270: atom = ECORE_X_ATOM_E_WINDOW_ROTATION_270_GEOMETRY; break;
+      default:  atom = ECORE_X_ATOM_E_WINDOW_ROTATION_0_GEOMETRY;   break;
+     }
+
+   ecore_x_window_prop_card32_set(win, atom, geom, 4);
+}
+
+EAPI Eina_Bool
+ecore_x_e_window_rotation_geometry_get(Ecore_X_Window win,
+                                       int rot,
+                                       int *x,
+                                       int *y,
+                                       int *w,
+                                       int *h)
+{
+   int ret = 0;
+   Ecore_X_Atom atom;
+   unsigned int geom[4];
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   switch (rot)
+     {
+      case   0: atom = ECORE_X_ATOM_E_WINDOW_ROTATION_0_GEOMETRY;   break;
+      case  90: atom = ECORE_X_ATOM_E_WINDOW_ROTATION_90_GEOMETRY;  break;
+      case 180: atom = ECORE_X_ATOM_E_WINDOW_ROTATION_180_GEOMETRY; break;
+      case 270: atom = ECORE_X_ATOM_E_WINDOW_ROTATION_270_GEOMETRY; break;
+      default:  atom = ECORE_X_ATOM_E_WINDOW_ROTATION_0_GEOMETRY;   break;
+     }
+
+   ret = ecore_x_window_prop_card32_get(win, atom, geom, 4);
+
+   if (ret != 4)
+     return EINA_FALSE;
+
+   if (x) *x = geom[0];
+   if (y) *y = geom[1];
+   if (w) *w = geom[2];
+   if (h) *h = geom[3];
+
+   return EINA_TRUE;
+}
+
+EAPI void
+ecore_x_e_virtual_keyboard_control_window_set(Ecore_X_Window root,
+                                              Ecore_X_Window win,
+                                              unsigned int   zone,
+                                              Eina_Bool      set)
+{
+   XEvent xev;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!root)
+     root = DefaultRootWindow(_ecore_x_disp);
+
+   xev.xclient.type = ClientMessage;
+   xev.xclient.display = _ecore_x_disp;
+   xev.xclient.window = win;
+   xev.xclient.message_type = ECORE_X_ATOM_E_VIRTUAL_KEYBOARD_CONTROL_WINDOW;
+   xev.xclient.format = 32;
+   xev.xclient.data.l[0] = win;
+   xev.xclient.data.l[1] = zone;
+   xev.xclient.data.l[2] = set;
+   xev.xclient.data.l[3] = 0;
+   xev.xclient.data.l[4] = 0;
+
+   XSendEvent(_ecore_x_disp, root, False,
+              SubstructureRedirectMask | SubstructureNotifyMask,
+              &xev);
+}
+
+EAPI void
+ecore_x_e_virtual_keyboard_on_prepare_request_send(Ecore_X_Window win)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   ecore_x_client_message32_send
+     (win, ECORE_X_ATOM_E_VIRTUAL_KEYBOARD_ON_PREPARE_REQUEST,
+     ECORE_X_EVENT_MASK_NONE, win, 0, 0, 0, 0);
+}
+
+EAPI void
+ecore_x_e_virtual_keyboard_on_prepare_done_send(Ecore_X_Window root,
+                                                Ecore_X_Window win)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!root)
+     root = DefaultRootWindow(_ecore_x_disp);
+   ecore_x_client_message32_send
+     (root, ECORE_X_ATOM_E_VIRTUAL_KEYBOARD_ON_PREPARE_DONE,
+     ECORE_X_EVENT_MASK_WINDOW_CHILD_CONFIGURE | ECORE_X_EVENT_MASK_WINDOW_MANAGE,
+     win, 0, 0, 0, 0);
+}
+
+EAPI void
+ecore_x_e_virtual_keyboard_off_prepare_request_send(Ecore_X_Window win)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   ecore_x_client_message32_send
+     (win, ECORE_X_ATOM_E_VIRTUAL_KEYBOARD_OFF_PREPARE_REQUEST,
+     ECORE_X_EVENT_MASK_NONE,
+     win, 0, 0, 0, 0);
+}
+
+EAPI void
+ecore_x_e_virtual_keyboard_off_prepare_done_send(Ecore_X_Window root,
+                                                 Ecore_X_Window win)
+{
+   XEvent xev;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!root)
+     root = DefaultRootWindow(_ecore_x_disp);
+
+   xev.xclient.type = ClientMessage;
+   xev.xclient.display = _ecore_x_disp;
+   xev.xclient.window = win;
+   xev.xclient.message_type = ECORE_X_ATOM_E_VIRTUAL_KEYBOARD_OFF_PREPARE_DONE;
+   xev.xclient.format = 32;
+   xev.xclient.data.l[0] = win;
+   xev.xclient.data.l[1] = 0;
+   xev.xclient.data.l[2] = 0;
+   xev.xclient.data.l[3] = 0;
+   xev.xclient.data.l[4] = 0;
 
    XSendEvent(_ecore_x_disp, root, False,
               SubstructureRedirectMask | SubstructureNotifyMask,
@@ -1584,6 +1993,74 @@ ecore_x_e_illume_indicator_opacity_send(Ecore_X_Window win,
                                  ECORE_X_ATOM_E_ILLUME_INDICATOR_OPACITY_MODE,
                                  ECORE_X_EVENT_MASK_WINDOW_CONFIGURE,
                                  _ecore_x_e_indicator_opacity_atom_get(mode),
+                                 0, 0, 0, 0);
+}
+
+static Ecore_X_Atom
+_ecore_x_e_indicator_type_atom_get(Ecore_X_Illume_Indicator_Type_Mode mode)
+{
+   switch (mode)
+     {
+      case ECORE_X_ILLUME_INDICATOR_TYPE_1:
+        return ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_1;
+
+      case ECORE_X_ILLUME_INDICATOR_TYPE_2:
+        return ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_2;
+
+      default:
+        break;
+     }
+   return 0;
+}
+
+static Ecore_X_Illume_Indicator_Type_Mode
+_ecore_x_e_indicator_type_get(Ecore_X_Atom atom)
+{
+   if (atom == ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_1)
+     return ECORE_X_ILLUME_INDICATOR_TYPE_1;
+
+   if (atom == ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_2)
+     return ECORE_X_ILLUME_INDICATOR_TYPE_2;
+
+   return ECORE_X_ILLUME_INDICATOR_TYPE_UNKNOWN;
+}
+
+EAPI void
+ecore_x_e_illume_indicator_type_set(Ecore_X_Window win,
+                                     Ecore_X_Illume_Indicator_Type_Mode mode)
+{
+   Ecore_X_Atom atom = 0;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   atom = _ecore_x_e_indicator_type_atom_get(mode);
+   ecore_x_window_prop_atom_set(win,
+                                ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_MODE,
+                                &atom, 1);
+}
+
+EAPI Ecore_X_Illume_Indicator_Type_Mode
+ecore_x_e_illume_indicator_type_get(Ecore_X_Window win)
+{
+   Ecore_X_Atom atom = 0;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!ecore_x_window_prop_atom_get(win,
+                                     ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_MODE,
+                                     &atom, 1))
+     return ECORE_X_ILLUME_INDICATOR_TYPE_UNKNOWN;
+
+   return _ecore_x_e_indicator_type_get(atom);
+}
+
+EAPI void
+ecore_x_e_illume_indicator_type_send(Ecore_X_Window win,
+                                      Ecore_X_Illume_Indicator_Type_Mode mode)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   ecore_x_client_message32_send(win,
+                                 ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_MODE,
+                                 ECORE_X_EVENT_MASK_WINDOW_CONFIGURE,
+                                 _ecore_x_e_indicator_type_atom_get(mode),
                                  0, 0, 0, 0);
 }
 

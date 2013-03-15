@@ -2,6 +2,32 @@
 # include "config.h"
 #endif
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 //#define LOGFNS 1
 
 #ifdef LOGFNS
@@ -93,7 +119,9 @@ static Ecore_Evas_Engine_Func _ecore_wl_engine_func =
    NULL, // focus skip set
    _ecore_evas_wl_common_render,
    _ecore_evas_wl_common_screen_geometry_get,
-   _ecore_evas_wl_common_screen_dpi_get
+   _ecore_evas_wl_common_screen_dpi_get,
+   NULL,
+   NULL   // msg_send
 };
 
 /* external variables */

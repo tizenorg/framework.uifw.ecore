@@ -1,3 +1,33 @@
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include "ecore_xcb_private.h"
 
 /* local function prototypes */
@@ -863,7 +893,7 @@ _ecore_xcb_e_clipboard_state_get(Ecore_X_Atom atom)
    if (atom == ECORE_X_ATOM_E_ILLUME_CLIPBOARD_OFF)
      return ECORE_X_ILLUME_CLIPBOARD_STATE_OFF;
 
-   return ECORE_X_ILLUME_INDICATOR_STATE_UNKNOWN;
+   return ECORE_X_ILLUME_CLIPBOARD_STATE_UNKNOWN;
 }
 
 EAPI void
@@ -1516,6 +1546,74 @@ ecore_x_e_illume_indicator_opacity_send(Ecore_X_Window win,
                                  ECORE_X_ATOM_E_ILLUME_INDICATOR_OPACITY_MODE,
                                  ECORE_X_EVENT_MASK_WINDOW_CONFIGURE,
                                  _ecore_x_e_indicator_opacity_atom_get(mode),
+                                 0, 0, 0, 0);
+}
+
+static Ecore_X_Atom
+_ecore_x_e_indicator_type_atom_get(Ecore_X_Illume_Indicator_Type_Mode mode)
+{
+   switch (mode)
+     {
+      case ECORE_X_ILLUME_INDICATOR_TYPE_1:
+        return ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_1;
+
+      case ECORE_X_ILLUME_INDICATOR_TYPE_2:
+        return ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_2;
+
+      default:
+        break;
+     }
+   return 0;
+}
+
+static Ecore_X_Illume_Indicator_Type_Mode
+_ecore_x_e_indicator_type_get(Ecore_X_Atom atom)
+{
+   if (atom == ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_1)
+     return ECORE_X_ILLUME_INDICATOR_TYPE_1;
+
+   if (atom == ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_2)
+     return ECORE_X_ILLUME_INDICATOR_TYPE_2;
+
+   return ECORE_X_ILLUME_INDICATOR_TYPE_UNKNOWN;
+}
+
+EAPI void
+ecore_x_e_illume_indicator_type_set(Ecore_X_Window win,
+                                     Ecore_X_Illume_Indicator_Type_Mode mode)
+{
+   Ecore_X_Atom atom = 0;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   atom = _ecore_x_e_indicator_type_atom_get(mode);
+   ecore_x_window_prop_atom_set(win,
+                                ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_MODE,
+                                &atom, 1);
+}
+
+EAPI Ecore_X_Illume_Indicator_Type_Mode
+ecore_x_e_illume_indicator_type_get(Ecore_X_Window win)
+{
+   Ecore_X_Atom atom;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!ecore_x_window_prop_atom_get(win,
+                                     ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_MODE,
+                                     &atom, 1))
+     return ECORE_X_ILLUME_INDICATOR_TYPE_UNKNOWN;
+
+   return _ecore_x_e_indicator_type_get(atom);
+}
+
+EAPI void
+ecore_x_e_illume_indicator_type_send(Ecore_X_Window win,
+                                      Ecore_X_Illume_Indicator_Type_Mode mode)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   ecore_x_client_message32_send(win,
+                                 ECORE_X_ATOM_E_ILLUME_INDICATOR_TYPE_MODE,
+                                 ECORE_X_EVENT_MASK_WINDOW_CONFIGURE,
+                                 _ecore_x_e_indicator_type_atom_get(mode),
                                  0, 0, 0, 0);
 }
 

@@ -522,6 +522,8 @@ _ecore_x_event_handle_button_press(XEvent *xevent)
 {
    int i;
 
+   INF("ButtonEvent:press time=%u x=%d y=%d button=%d", (unsigned int)xevent->xbutton.time, (int)xevent->xbutton.x, (int)xevent->xbutton.y, xevent->xbutton.button);
+
    _ecore_x_last_event_mouse_move = 0;
    if ((xevent->xbutton.button > 3) && (xevent->xbutton.button < 8))
      {
@@ -672,6 +674,7 @@ void
 _ecore_x_event_handle_button_release(XEvent *xevent)
 {
    _ecore_x_last_event_mouse_move = 0;
+   INF("ButtonEvent:release time=%u x=%d y=%d button=%d", (unsigned int)xevent->xbutton.time, (int)xevent->xbutton.x, (int)xevent->xbutton.y, xevent->xbutton.button);
    /* filter out wheel buttons */
    if ((xevent->xbutton.button <= 3) || (xevent->xbutton.button > 7))
      {
@@ -1087,6 +1090,7 @@ _ecore_x_event_handle_unmap_notify(XEvent *xevent)
    e->win = xevent->xunmap.window;
    e->event_win = xevent->xunmap.event;
    e->time = _ecore_x_event_last_time;
+   e->send_event = xevent->xunmap.send_event;
    ecore_event_add(ECORE_X_EVENT_WINDOW_HIDE, e, NULL, NULL);
 }
 
@@ -1415,14 +1419,10 @@ _ecore_x_event_handle_selection_notify(XEvent *xevent)
           }
      }
    else
-     {
-        format = ecore_x_window_prop_property_get(xevent->xselection.requestor,
-                                                  xevent->xselection.property,
-                                                  AnyPropertyType, 8, &data,
-                                                  &num_ret);
-        if (!format)
-          return;
-     }
+     format = ecore_x_window_prop_property_get(xevent->xselection.requestor,
+                                               xevent->xselection.property,
+                                               AnyPropertyType, 8, &data,
+                                               &num_ret);
 
    e = calloc(1, sizeof(Ecore_X_Event_Selection_Notify));
    if (!e)

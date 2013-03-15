@@ -1,6 +1,9 @@
 Ecore 1.8.0
 
-Changes since Ecore 1.7.0:
+
+Ecore 1.7.99
+
+Changes since Ecore 1.7.98:
 --------------------------
 
 Additions:
@@ -35,10 +38,69 @@ Fixes:
      - ecore_x_randr to actually return crtcs properly.
      - ecore_x_randr to actually return crtcs possible outputs properly.
      - ecore_x_randr to actually return crtcs outputs properly.
+    * send ECORE_X_EVENT_SELECTION_NOTIFY even if there is no data.
 
 Improvements:
 
-Ecore 1.7.0
+
+Ecore 1.7.5
+
+Changes since Ecore 1.7.4:
+--------------------------
+
+Fixes:
+    * Fix ecore_con case where freeing server double-frees clients
+        
+Ecore 1.7.4
+
+Changes since Ecore 1.7.3:
+--------------------------
+
+Fixes:
+    * Fix XCB compile with screensaver support
+    * Fix build without IPv6.
+    * Fix possible memory corruption in xrandr EDID functions.
+    * Backport 81304, which fixes memory errors in ecore_evas_extn
+    * Fix big rendering/conversion problem in kvm/qemu 24bpp.
+
+Ecore 1.7.3
+
+Changes since Ecore 1.7.2:
+--------------------------
+
+Fixes:
+    * Fix small leak in Ecore Wayland.
+    * Fix Ecore_Evas_SDL resize bug.
+    * Fix Ecore_Evas_Extn build on Solaris 11.
+    * Fix Wayland support to latest API.
+    * Don't leak fd on exec.
+
+Ecore 1.7.2
+
+Changes since Ecore 1.7.1:
+--------------------------
+
+No Changes, just updating to keep in sync with last release.
+
+Changes since Ecore 1.7.0
+--------------------------
+
+Fixes:
+    * ecore_con_ssl: fix crash on failure with privkeys and certificate.
+    * ecore_con_ssl: fix ssl connections.
+    * ecore_con: fix race condition with event from disconnected clients.
+    * ecore_con_url: properly reschedule call to curl.
+    * ecore_evas: rotation handling on some driver implementations
+    * ecore_file: ecore_file_escape_name() escape taba nd newline right.
+    * ecore_x_image_is_argb32_get() returns correctly given endianness.
+    * ecore_x: fix ecore_x_randr.
+    * ecore_x: send ECORE_X_EVENT_SELECTION_NOTIFY even if there is no data.
+    * ecore_imf: ibus module potential segv fixed.
+    * ecore: ecore_thread_feedback() memory allocation and corruption fixed.
+    * ecore_wayland:
+     - Update to work with latest wayland (0.99) from git.
+     - Fix leak of struct wl_registry
+    * ecore_evas: fix Ecore_Evas_Extn build on Solaris 11.
 
 Changes since Ecore 1.2.0:
 --------------------------
@@ -75,6 +137,7 @@ Fixes:
 
     * ecore_x
      - Fix unitialized Ecore_X_Atom use.
+    * send ECORE_X_EVENT_SELECTION_NOTIFY even if there is no data.
 
 
 Ecore 1.2.0

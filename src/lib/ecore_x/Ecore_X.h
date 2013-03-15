@@ -542,6 +542,7 @@ struct _Ecore_X_Event_Window_Hide
    Ecore_X_Window win;
    Ecore_X_Window event_win;
    Ecore_X_Time   time;
+   Eina_Bool      send_event : 1;
 };
 
 struct _Ecore_X_Event_Window_Show
@@ -1233,6 +1234,13 @@ typedef enum _Ecore_X_Illume_Indicator_Opacity_Mode
    ECORE_X_ILLUME_INDICATOR_TRANSPARENT
 } Ecore_X_Illume_Indicator_Opacity_Mode;
 
+typedef enum _Ecore_X_Illume_Indicator_Type_Mode
+{
+   ECORE_X_ILLUME_INDICATOR_TYPE_UNKNOWN = 0,
+   ECORE_X_ILLUME_INDICATOR_TYPE_1,
+   ECORE_X_ILLUME_INDICATOR_TYPE_2
+} Ecore_X_Illume_Indicator_Type_Mode;
+
 typedef enum _Ecore_X_Illume_Window_State
 {
    ECORE_X_ILLUME_WINDOW_STATE_NORMAL = 0,
@@ -1686,6 +1694,24 @@ EAPI char                            *ecore_x_e_window_profile_get(Ecore_X_Windo
 EAPI void                             ecore_x_e_window_profile_set(Ecore_X_Window win, const char *profile);
 EAPI void                             ecore_x_e_window_profile_list_set(Ecore_X_Window  win, const char **profiles, unsigned int num_profiles);
 EAPI Eina_Bool                        ecore_x_e_window_profile_list_get(Ecore_X_Window win, const char ***profiles, int *ret_num);
+
+EAPI void                            ecore_x_e_window_rotation_supported_set(Ecore_X_Window root, Eina_Bool enabled);
+EAPI Eina_Bool                       ecore_x_e_window_rotation_supported_get(Ecore_X_Window root);
+EAPI void                            ecore_x_e_window_available_rotations_set(Ecore_X_Window win, const int *rots, unsigned int count);
+EAPI Eina_Bool                       ecore_x_e_window_available_rotations_get(Ecore_X_Window win, int **rots, unsigned int *count);
+EAPI void                            ecore_x_e_window_preferred_rotation_set(Ecore_X_Window win, const int rot);
+EAPI Eina_Bool                       ecore_x_e_window_preferred_rotation_get(Ecore_X_Window win, int *rot);
+EAPI void                            ecore_x_e_window_rotation_change_prepare_send(Ecore_X_Window win, int rot, Eina_Bool resize, int w, int h);
+EAPI void                            ecore_x_e_window_rotation_change_prepare_done_send(Ecore_X_Window root, Ecore_X_Window win, int rot);
+EAPI void                            ecore_x_e_window_rotation_change_request_send(Ecore_X_Window win, int rot);
+EAPI void                            ecore_x_e_window_rotation_change_done_send(Ecore_X_Window root, Ecore_X_Window win, int rot, int w, int h);
+EAPI void                            ecore_x_e_window_rotation_geometry_set(Ecore_X_Window win, int rot, int x, int y, int w, int h);
+EAPI Eina_Bool                       ecore_x_e_window_rotation_geometry_get(Ecore_X_Window win, int rot, int *x, int *y, int *w, int *h);
+EAPI void                            ecore_x_e_virtual_keyboard_control_window_set(Ecore_X_Window root, Ecore_X_Window win, unsigned int zone, Eina_Bool set);
+EAPI void                            ecore_x_e_virtual_keyboard_on_prepare_request_send(Ecore_X_Window win);
+EAPI void                            ecore_x_e_virtual_keyboard_on_prepare_done_send(Ecore_X_Window root, Ecore_X_Window win);
+EAPI void                            ecore_x_e_virtual_keyboard_off_prepare_request_send(Ecore_X_Window win);
+EAPI void                            ecore_x_e_virtual_keyboard_off_prepare_done_send(Ecore_X_Window root, Ecore_X_Window win);
 
 EAPI Ecore_X_Sync_Alarm              ecore_x_sync_alarm_new(Ecore_X_Sync_Counter counter);
 EAPI Eina_Bool                       ecore_x_sync_alarm_free(Ecore_X_Sync_Alarm alarm);
@@ -2385,10 +2411,12 @@ EAPI Ecore_X_Illume_Indicator_State        ecore_x_e_illume_indicator_state_get(
 EAPI void                                  ecore_x_e_illume_indicator_state_send(Ecore_X_Window win, Ecore_X_Illume_Indicator_State state);
 
 EAPI void                                  ecore_x_e_illume_indicator_opacity_set(Ecore_X_Window win, Ecore_X_Illume_Indicator_Opacity_Mode mode);
-
 EAPI Ecore_X_Illume_Indicator_Opacity_Mode ecore_x_e_illume_indicator_opacity_get(Ecore_X_Window win);
-
 EAPI void                                  ecore_x_e_illume_indicator_opacity_send(Ecore_X_Window win, Ecore_X_Illume_Indicator_Opacity_Mode mode);
+
+EAPI void                                  ecore_x_e_illume_indicator_type_set(Ecore_X_Window win, Ecore_X_Illume_Indicator_Type_Mode mode);
+EAPI Ecore_X_Illume_Indicator_Type_Mode    ecore_x_e_illume_indicator_type_get(Ecore_X_Window win);
+EAPI void                                  ecore_x_e_illume_indicator_type_send(Ecore_X_Window win, Ecore_X_Illume_Indicator_Type_Mode mode);
 
 EAPI void
 ecore_x_e_illume_window_state_set(Ecore_X_Window win,

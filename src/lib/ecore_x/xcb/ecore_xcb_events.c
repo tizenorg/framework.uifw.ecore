@@ -1035,6 +1035,8 @@ _ecore_xcb_event_handle_unmap_notify(xcb_generic_event_t *event)
    e->win = ev->window;
    e->event_win = ev->event;
    e->time = _ecore_xcb_event_last_time;
+   /* send_event is bit 7 (0x80) of response_type */
+   e->send_event = ((ev->response_type & 0x80) ? 1 : 0);
 
    ecore_event_add(ECORE_X_EVENT_WINDOW_HIDE, e, NULL, NULL);
 }
@@ -1356,13 +1358,9 @@ _ecore_xcb_event_handle_selection_notify(xcb_generic_event_t *event)
           }
      }
    else
-     {
-        format =
-          ecore_x_window_prop_property_get(ev->requestor, ev->property,
-                                           XCB_GET_PROPERTY_TYPE_ANY, 8,
-                                           &data, &num);
-        if (!format) return;
-     }
+     format = ecore_x_window_prop_property_get(ev->requestor, ev->property,
+                                               XCB_GET_PROPERTY_TYPE_ANY, 8,
+                                               &data, &num);
 
    e = calloc(1, sizeof(Ecore_X_Event_Selection_Notify));
    if (!e) return;

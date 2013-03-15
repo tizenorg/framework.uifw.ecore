@@ -55,6 +55,8 @@ SRCS = \
 	ecore_evas_basics_example.c \
 	ecore_evas_buffer_example_01.c \
 	ecore_evas_buffer_example_02.c \
+	ecore_evas_extn_socket_example.c \
+	ecore_evas_extn_plug_example.c \
         ecore_evas_ews_example.c \
         ecore_exe_example.c \
         ecore_exe_example_child.c
@@ -95,6 +97,8 @@ examples_PROGRAMS += \
 	ecore_evas_basics_example \
 	ecore_evas_buffer_example_01 \
 	ecore_evas_buffer_example_02 \
+	ecore_evas_extn_socket_example \
+	ecore_evas_extn_plug_example \
 	ecore_evas_ews_example \
 	ecore_client_bench \
         ecore_server_bench \
@@ -111,6 +115,8 @@ ecore_con_client_simple_example_LDADD = $(ECOREBASELDADD) $(top_builddir)/src/li
 ecore_evas_window_sizes_example_LDADD = $(ECOREBASELDADD) @EVAS_LIBS@ $(top_builddir)/src/lib/ecore_evas/libecore_evas.la
 ecore_evas_buffer_example_01_LDADD = $(ECOREBASELDADD) @EVAS_LIBS@ $(top_builddir)/src/lib/ecore_evas/libecore_evas.la
 ecore_evas_buffer_example_02_LDADD = $(ECOREBASELDADD) @EVAS_LIBS@ $(top_builddir)/src/lib/ecore_evas/libecore_evas.la
+ecore_evas_extn_socket_example_LDADD = $(ECOREBASELDADD) @EVAS_LIBS@ $(top_builddir)/src/lib/ecore_evas/libecore_evas.la
+ecore_evas_extn_plug_example_LDADD = $(ECOREBASELDADD) @EVAS_LIBS@ $(top_builddir)/src/lib/ecore_evas/libecore_evas.la
 ecore_client_bench_LDADD = $(ECOREBASELDADD) $(top_builddir)/src/lib/ecore_con/libecore_con.la
 ecore_server_bench_LDADD = $(ECOREBASELDADD) $(top_builddir)/src/lib/ecore_con/libecore_con.la
 

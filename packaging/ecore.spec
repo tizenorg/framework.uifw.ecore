@@ -1,7 +1,7 @@
 Name:       ecore
 Summary:    Enlightened Core X interface library
-Version:    1.7.1+svn.77580+build01r01
-Release:    1
+Version:    1.7.1+svn.77580+build07r01
+Release:    2
 Group:      System/Libraries
 License:    BSD
 URL:        http://www.enlightenment.org

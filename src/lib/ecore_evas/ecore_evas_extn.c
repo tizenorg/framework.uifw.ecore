@@ -2,6 +2,32 @@
 # include <config.h>
 #endif
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -176,7 +202,9 @@ enum // opcodes
    OP_EV_MULTI_MOVE,
    OP_EV_KEY_UP,
    OP_EV_KEY_DOWN,
-   OP_EV_HOLD
+   OP_EV_HOLD,
+   OP_MSG_PARENT,
+   OP_MSG
 };
 
 enum
@@ -418,7 +446,7 @@ _ecore_evas_socket_lock(Ecore_Evas *ee)
    if (extn->file.have_lock) return;
    extn->file.have_lock = EINA_TRUE;
    if (_ecore_evas_lock_other_have(ee)) return;
-   flock(extn->file.lockfd, LOCK_EX);
+   lockf(extn->file.lockfd, F_LOCK, 0);
    extn->file.have_real_lock = EINA_TRUE;
 }
 
@@ -433,7 +461,7 @@ _ecore_evas_socket_unlock(Ecore_Evas *ee)
    if (!extn->file.have_lock) return;
    extn->file.have_lock = EINA_FALSE;
    if (!extn->file.have_real_lock) return;
-   flock(extn->file.lockfd, LOCK_UN);
+   lockf(extn->file.lockfd, F_ULOCK, 0);
 }
 
 static void
@@ -454,7 +482,7 @@ static void
 _ecore_evas_extn_plug_image_obj_del(void *data, Evas *e __UNUSED__, Evas_Object *obj __UNUSED__, void *event_info __UNUSED__)
 {
    Ecore_Evas *ee = data;
-   if (ee) ecore_evas_free(ee);
+   ecore_evas_free(ee);
 }
 
 static void
@@ -505,6 +533,7 @@ _ecore_evas_extn_free(Ecore_Evas *ee)
    if (extn)
      {
         Ecore_Event_Handler *hdl;
+        Ipc_Data_Update *ipc;
 
         if (extn->file.have_lock)
           _ecore_evas_socket_unlock(ee);
@@ -532,6 +561,9 @@ _ecore_evas_extn_free(Ecore_Evas *ee)
              else
                shmfile_close(extn->file.shmfile);
           }
+
+        EINA_LIST_FREE(extn->file.updates, ipc)
+          free(ipc);
 
         EINA_LIST_FREE(extn->ipc.handlers, hdl)
           ecore_event_handler_del(hdl);
@@ -565,12 +597,13 @@ _ecore_evas_extn_free(Ecore_Evas *ee)
                                      EVAS_CALLBACK_CANVAS_OBJECT_RENDER_POST,
                                      _ecore_evas_extn_plug_targer_render_post,
                                      ee);
-        evas_object_del(ee->engine.buffer.image);
         ee2 = evas_object_data_get(ee->engine.buffer.image, "Ecore_Evas_Parent");
         if (ee2)
           {
              ee2->sub_ecore_evas = eina_list_remove(ee2->sub_ecore_evas, ee);
           }
+        evas_object_del(ee->engine.buffer.image);
+        ee->engine.buffer.image = NULL;
      }
    extn_ee_list = eina_list_remove(extn_ee_list, ee);
 }
@@ -673,6 +706,7 @@ _ecore_evas_extn_cb_mouse_in(void *data, Evas *e __UNUSED__, Evas_Object *obj __
    if (extn->ipc.server)
      {
         Ipc_Data_Ev_Mouse_In ipc;
+        memset(&ipc, 0, sizeof(ipc));
 
         ipc.timestamp = ev->timestamp;
         ipc.mask = _ecore_evas_modifiers_locks_mask_get(ee->evas);
@@ -693,6 +727,7 @@ _ecore_evas_extn_cb_mouse_out(void *data, Evas *e __UNUSED__, Evas_Object *obj _
    if (extn->ipc.server)
      {
         Ipc_Data_Ev_Mouse_Out ipc;
+        memset(&ipc, 0, sizeof(ipc));
 
         ipc.timestamp = ev->timestamp;
         ipc.mask = _ecore_evas_modifiers_locks_mask_get(ee->evas);
@@ -715,6 +750,7 @@ _ecore_evas_extn_cb_mouse_down(void *data, Evas *e __UNUSED__, Evas_Object *obj 
        /* We have send mouse move event before mouse down event */
        {
           Ipc_Data_Ev_Mouse_Move ipc_move;
+          memset(&ipc_move, 0, sizeof(ipc_move));
           Evas_Coord x, y;
 
           x = ev->canvas.x;
@@ -729,6 +765,7 @@ _ecore_evas_extn_cb_mouse_down(void *data, Evas *e __UNUSED__, Evas_Object *obj 
        }
        {
           Ipc_Data_Ev_Mouse_Down ipc;
+          memset(&ipc, 0, sizeof(ipc));
           ipc.b = ev->button;
           ipc.flags = ev->flags;
           ipc.timestamp = ev->timestamp;
@@ -751,6 +788,7 @@ _ecore_evas_extn_cb_mouse_up(void *data, Evas *e __UNUSED__, Evas_Object *obj __
    if (extn->ipc.server)
      {
         Ipc_Data_Ev_Mouse_Up ipc;
+        memset(&ipc, 0, sizeof(ipc));
 
         ipc.b = ev->button;
         ipc.flags = ev->flags;
@@ -773,6 +811,7 @@ _ecore_evas_extn_cb_mouse_move(void *data, Evas *e __UNUSED__, Evas_Object *obj 
    if (extn->ipc.server)
      {
         Ipc_Data_Ev_Mouse_Move ipc;
+        memset(&ipc, 0, sizeof(ipc));
         Evas_Coord x, y;
 
         x = ev->cur.canvas.x;
@@ -799,6 +838,7 @@ _ecore_evas_extn_cb_mouse_wheel(void *data, Evas *e __UNUSED__, Evas_Object *obj
    if (extn->ipc.server)
      {
         Ipc_Data_Ev_Mouse_Wheel ipc;
+        memset(&ipc, 0, sizeof(ipc));
 
         ipc.direction = ev->direction;
         ipc.z = ev->z;
@@ -821,6 +861,7 @@ _ecore_evas_extn_cb_multi_down(void *data, Evas *e __UNUSED__, Evas_Object *obj 
    if (extn->ipc.server)
      {
         Ipc_Data_Ev_Multi_Down ipc;
+        memset(&ipc, 0, sizeof(ipc));
         Evas_Coord x, y;
 
         ipc.d = ev->device;
@@ -857,6 +898,7 @@ _ecore_evas_extn_cb_multi_up(void *data, Evas *e __UNUSED__, Evas_Object *obj __
    if (extn->ipc.server)
      {
         Ipc_Data_Ev_Multi_Up ipc;
+        memset(&ipc, 0, sizeof(ipc));
         Evas_Coord x, y;
 
         ipc.d = ev->device;
@@ -892,6 +934,7 @@ _ecore_evas_extn_cb_multi_move(void *data, Evas *e __UNUSED__, Evas_Object *obj 
    if (extn->ipc.server)
      {
         Ipc_Data_Ev_Multi_Move ipc;
+        memset(&ipc, 0, sizeof(ipc));
         Evas_Coord x, y;
 
         ipc.d = ev->device;
@@ -912,15 +955,6 @@ _ecore_evas_extn_cb_multi_move(void *data, Evas *e __UNUSED__, Evas_Object *obj 
         ipc.event_flags = ev->event_flags;
         ecore_ipc_server_send(extn->ipc.server, MAJOR, OP_EV_MULTI_MOVE, 0, 0, 0, &ipc, sizeof(ipc));
      }
-}
-
-static void
-_ecore_evas_extn_cb_free(void *data, Evas *e __UNUSED__, Evas_Object *obj __UNUSED__, void *event_info __UNUSED__)
-{
-   Ecore_Evas *ee;
-
-   ee = data;
-   if (ee->driver) _ecore_evas_free(ee);
 }
 
 static void
@@ -1047,6 +1081,7 @@ _ecore_evas_extn_cb_hold(void *data, Evas *e __UNUSED__, Evas_Object *obj __UNUS
    if (extn->ipc.server)
      {
         Ipc_Data_Ev_Hold ipc;
+        memset(&ipc, 0, sizeof(ipc));
 
         ipc.hold = ev->hold;
         ipc.timestamp = ev->timestamp;
@@ -1111,6 +1146,20 @@ _ecore_evas_extn_cb_hide(void *data, Evas *e __UNUSED__, Evas_Object *obj __UNUS
    ecore_ipc_server_send(extn->ipc.server, MAJOR, OP_HIDE, 0, 0, 0, NULL, 0);
 }
 
+static void
+_ecore_evas_extn_plug_msg_parent_send(Ecore_Evas *ee, int msg_domain, int msg_id, void *data, int size)
+{
+   Extn *extn;
+
+   extn = ee->engine.buffer.data;
+   if (!extn) return;
+   if (!extn->ipc.server) return;
+
+   //ref = msg_domain
+   //ref_to = msg_id
+   ecore_ipc_server_send(extn->ipc.server, MAJOR, OP_MSG, msg_domain, msg_id, 0, data, size);
+}
+
 static const Ecore_Evas_Engine_Func _ecore_extn_plug_engine_func =
 {
    _ecore_evas_extn_free,
@@ -1169,7 +1218,9 @@ static const Ecore_Evas_Engine_Func _ecore_extn_plug_engine_func =
 
    NULL, // render
    NULL, // screen_geometry_get
-   NULL  // screen_dpi_get
+   NULL, // screen_dpi_get
+   _ecore_evas_extn_plug_msg_parent_send,
+   NULL   // msg_send
 };
 
 static Eina_Bool
@@ -1256,6 +1307,7 @@ _ipc_server_data(void *data, int type __UNUSED__, void *event)
                      evas_object_image_data_update_add(ee->engine.buffer.image,
                                                        ipc->x, ipc->y,
                                                        ipc->w, ipc->h);
+                   free(ipc);
                 }
            }
          break;
@@ -1336,6 +1388,18 @@ _ipc_server_data(void *data, int type __UNUSED__, void *event)
            {
               Ipc_Data_Resize *ipc = e->data;
               _ecore_evas_resize(ee, ipc->w, ipc->h);
+           }
+         break;
+      case OP_MSG_PARENT:
+         if ((e->data) && (e->size > 0))
+           {
+              //ref = msg_domain
+              //ref_to = msg_id
+              if (ee->func.fn_msg_handle)
+                {
+                   INF("Message handle: ref=%d to=%d size=%d", e->ref, e->ref_to, e->size);
+                   ee->func.fn_msg_handle(ee, e->ref, e->ref_to, e->data, e->size);
+                }
            }
          break;
       default:
@@ -1431,9 +1495,6 @@ ecore_evas_extn_plug_new(Ecore_Evas *ee_target)
    evas_object_event_callback_add(ee->engine.buffer.image,
                                   EVAS_CALLBACK_MULTI_MOVE,
                                   _ecore_evas_extn_cb_multi_move, ee);
-   evas_object_event_callback_add(ee->engine.buffer.image,
-                                  EVAS_CALLBACK_FREE,
-                                  _ecore_evas_extn_cb_free, ee);
    evas_object_event_callback_add(ee->engine.buffer.image,
                                   EVAS_CALLBACK_KEY_DOWN,
                                   _ecore_evas_extn_cb_key_down, ee);
@@ -1976,6 +2037,18 @@ _ipc_client_data(void *data, int type __UNUSED__, void *event)
               evas_event_default_flags_set(ee->evas, flags);
            }
          break;
+      case OP_MSG:
+         if ((e->data) && (e->size > 0))
+           {
+              //ref = msg_domain
+              //ref_to = msg_id
+              if (ee->func.fn_msg_parent_handle)
+                {
+                   INF("Message parent handle: ref=%d to=%d size=%d", e->ref, e->ref_to, e->size);
+                   ee->func.fn_msg_parent_handle(ee, e->ref, e->ref_to, e->data, e->size);
+                }
+           }
+         break;
       default:
          break;
      }
@@ -2012,6 +2085,24 @@ _ecore_evas_extn_socket_alpha_set(Ecore_Evas *ee, int alpha)
                                  ee->w, ee->h, ee->alpha,
                                  extn->file.shmfile->file,
                                  strlen(extn->file.shmfile->file) + 1);
+     }
+}
+
+static void
+_ecore_evas_extn_socket_msg_send(Ecore_Evas *ee, int msg_domain, int msg_id, void *data, int size)
+{
+   Extn *extn;
+   Eina_List *l;
+   Ecore_Ipc_Client *client;
+
+   extn = ee->engine.buffer.data;
+   if (extn)
+     {
+        EINA_LIST_FOREACH(extn->ipc.clients, l, client)
+           ecore_ipc_client_send(client, MAJOR, OP_MSG_PARENT,
+                                 msg_domain, msg_id, 0,
+                                 data,
+                                 size);
      }
 }
 
@@ -2075,6 +2166,8 @@ static const Ecore_Evas_Engine_Func _ecore_extn_socket_engine_func =
    _ecore_evas_extn_socket_render, // render
    NULL,  // screen_geometry_get
    NULL,  // screen_dpi_get
+   NULL,
+   _ecore_evas_extn_socket_msg_send
 };
 
 #endif

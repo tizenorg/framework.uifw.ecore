@@ -1,3 +1,33 @@
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include "ecore_xcb_private.h"
 //#include "Ecore_X_Atoms.h"
 
@@ -449,7 +479,7 @@ ecore_x_selection_convert(Ecore_X_Atom  selection,
 {
    Ecore_X_Selection_Intern *sel;
    Ecore_X_Selection_Converter *cnv;
-   void *data;
+   void *data = NULL;
    char *tgt_str;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
@@ -461,7 +491,7 @@ ecore_x_selection_convert(Ecore_X_Atom  selection,
      {
         if (cnv->target == target)
           {
-             int r = 0;
+             int r;
 
              r = cnv->convert(tgt_str, sel->data, sel->length, &data, size,
                               targtype, typesize);
@@ -475,6 +505,7 @@ ecore_x_selection_convert(Ecore_X_Atom  selection,
                return EINA_FALSE;
           }
      }
+   free(tgt_str);
 
    return EINA_FALSE;
 }
@@ -748,7 +779,7 @@ _ecore_xcb_selection_parser_text(const char *target __UNUSED__,
    sel = calloc(1, sizeof(Ecore_X_Selection_Data_Text));
    if (!sel) return NULL;
 
-   if (_data[size - 1])
+   if (_data && _data[size - 1])
      {
         size++;
         t = realloc(_data, size);
@@ -790,7 +821,7 @@ _ecore_xcb_selection_parser_files(const char *target,
 
    ECORE_XCB_SELECTION_DATA(sel)->free = _ecore_xcb_selection_data_files_free;
 
-   if (_data[size - 1])
+   if (_data && _data[size - 1])
      {
         size++;
         t = realloc(_data, size);

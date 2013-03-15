@@ -893,6 +893,7 @@ ecore_evas_ecore_evas_get(const Evas *e)
 EAPI void
 ecore_evas_free(Ecore_Evas *ee)
 {
+   if (!ee) return;
    if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
      {
         ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
@@ -1960,6 +1961,30 @@ ecore_evas_profile_get(const Ecore_Evas *ee)
    return ee->prop.profile;
 }
 
+EAPI Eina_Bool
+ecore_evas_wm_rotation_supported_get(const Ecore_Evas *ee)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_wm_rotation_supported_get");
+        return EINA_FALSE;
+     }
+   return ee->prop.wm_rot.supported;
+}
+
+EAPI int
+ecore_evas_wm_rotation_get(const Ecore_Evas *ee)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_wm_rotation_get");
+        return 0;
+     }
+   return ee->prop.wm_rot.angle;
+}
+
 EAPI void
 ecore_evas_fullscreen_set(Ecore_Evas *ee, Eina_Bool on)
 {
@@ -2279,6 +2304,60 @@ ecore_evas_manual_render(Ecore_Evas *ee)
      }
    if (ee->engine.func->fn_render)
      ee->engine.func->fn_render(ee);
+}
+
+EAPI void
+ecore_evas_msg_parent_send(Ecore_Evas *ee, int msg_domain, int msg_id, void *data, int size)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_msg_parent_send");
+        return;
+     }
+   DBG("Msg(to parent): ee=%p msg_domain=%d msg_id=%d size=%d", ee, msg_domain, msg_id, size);
+   IFC(ee, fn_msg_parent_send) (ee, msg_domain, msg_id, data, size);
+   IFE;
+}
+
+EAPI void
+ecore_evas_msg_send(Ecore_Evas *ee, int msg_domain, int msg_id, void *data, int size)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_msg_send");
+        return;
+     }
+   DBG("Msg: ee=%p msg_domain=%d msg_id=%d size=%d", ee, msg_domain, msg_id, size);
+   IFC(ee, fn_msg_send) (ee, msg_domain, msg_id, data, size);
+   IFE;
+}
+
+EAPI void
+ecore_evas_callback_msg_parent_handle_set(Ecore_Evas *ee, void (*func_parent_handle)(Ecore_Evas *ee, int msg_domain, int msg_id, void *data, int size))
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_msg_parent_handle");
+        return;
+     }
+   DBG("Msg Parent handle: ee=%p", ee);
+   ee->func.fn_msg_parent_handle = func_parent_handle;
+}
+
+EAPI void
+ecore_evas_callback_msg_handle_set(Ecore_Evas *ee, void (*func_handle)(Ecore_Evas *ee, int msg_domain, int msg_id, void *data, int size))
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_msg_handle");
+        return;
+     }
+   DBG("Msg handle: ee=%p", ee);
+   ee->func.fn_msg_handle = func_handle;
 }
 
 EAPI void
