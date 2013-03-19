@@ -682,8 +682,12 @@ EAPI void        ecore_evas_profiles_set(Ecore_Evas *ee, const char **profiles, 
  */
 EAPI const char *ecore_evas_profile_get(const Ecore_Evas *ee);
 
-EAPI Eina_Bool   ecore_evas_wm_rotation_supported_get(const Ecore_Evas *ee);
-EAPI int         ecore_evas_wm_rotation_get(const Ecore_Evas *ee);
+EAPI Eina_Bool        ecore_evas_wm_rotation_supported_get(const Ecore_Evas *ee);
+EAPI void             ecore_evas_wm_rotation_preferred_rotation_set(Ecore_Evas *ee, int rotation);
+EAPI int              ecore_evas_wm_rotation_preferred_rotation_get(const Ecore_Evas *ee);
+EAPI void             ecore_evas_wm_rotation_available_rotations_set(Ecore_Evas *ee, const int *rotations, unsigned int count);
+EAPI Eina_Bool        ecore_evas_wm_rotation_available_rotations_get(const Ecore_Evas *ee, int **rotations, unsigned int *count);
+
 /**
  * @brief Send message to parent ecore
  *

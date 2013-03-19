@@ -1973,16 +1973,83 @@ ecore_evas_wm_rotation_supported_get(const Ecore_Evas *ee)
    return ee->prop.wm_rot.supported;
 }
 
-EAPI int
-ecore_evas_wm_rotation_get(const Ecore_Evas *ee)
+EAPI void
+ecore_evas_wm_rotation_preferred_rotation_set(Ecore_Evas *ee, int rotation)
 {
    if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
      {
         ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
-                         "ecore_evas_wm_rotation_get");
+                         "ecore_evas_wm_rotation_preferred_rotation_set");
+        return;
+     }
+   if (rotation != -1)
+     {
+        if (ee->prop.wm_rot.available_rots)
+          {
+             Eina_Bool found = EINA_FALSE;
+             unsigned int i;
+             for (i = 0; i < ee->prop.wm_rot.count; i++)
+               {
+                  if (ee->prop.wm_rot.available_rots[i] == rotation)
+                    {
+                       found = EINA_TRUE;
+                       break;
+                    }
+               }
+             if (!found) return;
+          }
+     }
+   IFC(ee, fn_wm_rot_preferred_rotation_set) (ee, rotation);
+   IFE;
+}
+
+EAPI int
+ecore_evas_wm_rotation_preferred_rotation_get(const Ecore_Evas *ee)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_wm_rotation_preferred_rotation_get");
         return 0;
      }
-   return ee->prop.wm_rot.angle;
+   return ee->prop.wm_rot.rot;
+}
+
+EAPI void
+ecore_evas_wm_rotation_available_rotations_set(Ecore_Evas *ee, const int *rotations, unsigned int count)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_wm_rotation_available_rotations_set");
+        return;
+     }
+   IFC(ee, fn_wm_rot_available_rotations_set) (ee, rotations, count);
+   IFE;
+}
+
+EAPI Eina_Bool
+ecore_evas_wm_rotation_available_rotations_get(const Ecore_Evas *ee, int **rotations, unsigned int *count)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_wm_rotation_available_rotations_get");
+        return EINA_FALSE;
+     }
+   if ((!rotations) || (!count))
+     return EINA_FALSE;
+
+   if ((!ee->prop.wm_rot.available_rots) || (ee->prop.wm_rot.count == 0))
+     return EINA_FALSE;
+
+   *rotations = calloc(ee->prop.wm_rot.count, sizeof(int));
+   if (!*rotations) return EINA_FALSE;
+
+   memcpy(*rotations, ee->prop.wm_rot.available_rots, sizeof(int) * ee->prop.wm_rot.count);
+   *count = ee->prop.wm_rot.count;
+
+   return EINA_TRUE;
 }
 
 EAPI void
@@ -2613,6 +2680,8 @@ _ecore_evas_free(Ecore_Evas *ee)
    ee->prop.name = NULL;
    if (ee->prop.clas) free(ee->prop.clas);
    ee->prop.clas = NULL;
+   if (ee->prop.wm_rot.available_rots) free(ee->prop.wm_rot.available_rots);
+   ee->prop.wm_rot.available_rots = NULL;
    if (ee->prop.cursor.object) evas_object_del(ee->prop.cursor.object);
    ee->prop.cursor.object = NULL;
    if (ee->evas) evas_free(ee->evas);

@@ -450,7 +450,10 @@ static Ecore_Evas_Engine_Func _ecore_sdl_engine_func =
    NULL, // screen_geometry_get
    NULL, // screen_dpi_get
    NULL,
-   NULL   // msg_send
+   NULL, // msg_send
+
+   NULL, // wm_rot_preferred_rotation_set
+   NULL  // wm_rot_available_rotations_set
 };
 
 static Ecore_Evas*

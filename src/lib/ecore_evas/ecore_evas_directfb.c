@@ -500,7 +500,10 @@ static Ecore_Evas_Engine_Func _ecore_directfb_engine_func =
 
      NULL, // render
      NULL, // screen_geometry_get
-     NULL  // screen_dpi_get
+     NULL, // screen_dpi_get
+
+     NULL, // wm_rot_preferred_rotation_set
+     NULL  // wm_rot_available_rotations_set
 };
 #endif
 

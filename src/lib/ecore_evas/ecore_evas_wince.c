@@ -802,7 +802,10 @@ static Ecore_Evas_Engine_Func _ecore_wince_engine_func =
 
    NULL, // render
    NULL, // screen_geometry_get
-   _ecore_evas_wince_screen_dpi_get
+   _ecore_evas_wince_screen_dpi_get,
+
+   NULL, // wm_rot_preferred_rotation_set
+   NULL  // wm_rot_available_rotations_set
 };
 
 /* API */

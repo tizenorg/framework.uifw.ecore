@@ -832,15 +832,32 @@ _ecore_evas_x_event_client_message(void *data __UNUSED__, int type __UNUSED__, v
           return ECORE_CALLBACK_PASS_ON;
         if (ee->prop.wm_rot.supported)
           {
-             ee->prop.wm_rot.angle = (int)e->data.l[1];
-             ee->prop.wm_rot.win_resize = (int)e->data.l[2];
-             ee->prop.wm_rot.w = (int)e->data.l[3];
-             ee->prop.wm_rot.h = (int)e->data.l[4];
-             if (ee->prop.wm_rot.win_resize)
-               ee->engine.x.wm_rot.configure_coming = 1;
-             ee->engine.x.wm_rot.prepare = 1;
-             ee->engine.x.wm_rot.request = 0;
-             ee->engine.x.wm_rot.done = 0;
+             if (ee->prop.wm_rot.app_set)
+               {
+                  // v1
+                  ee->prop.wm_rot.angle = (int)e->data.l[1];
+                  ee->prop.wm_rot.win_resize = (int)e->data.l[2];
+                  ee->prop.wm_rot.w = (int)e->data.l[3];
+                  ee->prop.wm_rot.h = (int)e->data.l[4];
+                  if (ee->prop.wm_rot.win_resize)
+                    ee->engine.x.wm_rot.configure_coming = 1;
+                  ee->engine.x.wm_rot.prepare = 1;
+                  ee->engine.x.wm_rot.request = 0;
+                  ee->engine.x.wm_rot.done = 0;
+               }
+             else
+               {
+                  // v0
+                  ee->prop.wm_rot.angle = (int)e->data.l[1];
+                  ee->prop.wm_rot.win_resize = (int)e->data.l[2];
+                  ee->prop.wm_rot.w = (int)e->data.l[3];
+                  ee->prop.wm_rot.h = (int)e->data.l[4];
+                  if (ee->prop.wm_rot.win_resize)
+                    ee->engine.x.wm_rot.configure_coming = 1;
+                  ee->engine.x.wm_rot.prepare = 1;
+                  ee->engine.x.wm_rot.request = 0;
+                  ee->engine.x.wm_rot.done = 0;
+               }
           }
      }
    else if (e->message_type == ECORE_X_ATOM_E_WINDOW_ROTATION_CHANGE_REQUEST)
@@ -851,24 +868,44 @@ _ecore_evas_x_event_client_message(void *data __UNUSED__, int type __UNUSED__, v
           return ECORE_CALLBACK_PASS_ON;
         if (ee->prop.wm_rot.supported)
           {
-             ee->engine.x.wm_rot.prepare = 0;
-             ee->engine.x.wm_rot.request = 1;
-             ee->engine.x.wm_rot.done = 0;
-             if (ee->prop.wm_rot.win_resize)
+             if (ee->prop.wm_rot.app_set)
                {
-                  if ((ee->w == ee->prop.wm_rot.w) &&
-                      (ee->h == ee->prop.wm_rot.h))
+                  // v1
+                  ee->engine.x.wm_rot.prepare = 0;
+                  ee->engine.x.wm_rot.request = 1;
+                  ee->engine.x.wm_rot.done = 0;
+                  if (ee->prop.wm_rot.win_resize)
                     {
-                       ee->engine.x.wm_rot.configure_coming = 0;
+                       if ((ee->w == ee->prop.wm_rot.w) &&
+                           (ee->h == ee->prop.wm_rot.h))
+                         {
+                            ee->engine.x.wm_rot.configure_coming = 0;
+                         }
                     }
+                  if (!ee->engine.x.wm_rot.configure_coming)
+                    _ecore_evas_x_rotation_set(ee, ee->prop.wm_rot.angle, 1);
                }
-             if (!ee->engine.x.wm_rot.configure_coming)
+             else
                {
-                  if (ee->prop.wm_rot.angle == ee->rotation)
+                  ee->engine.x.wm_rot.prepare = 0;
+                  ee->engine.x.wm_rot.request = 1;
+                  ee->engine.x.wm_rot.done = 0;
+                  if (ee->prop.wm_rot.win_resize)
                     {
-                       if (ee->func.fn_state_change) ee->func.fn_state_change(ee);
-                       ee->engine.x.wm_rot.request = 0;
-                       ee->engine.x.wm_rot.done = 1;
+                       if ((ee->w == ee->prop.wm_rot.w) &&
+                           (ee->h == ee->prop.wm_rot.h))
+                         {
+                            ee->engine.x.wm_rot.configure_coming = 0;
+                         }
+                    }
+                  if (!ee->engine.x.wm_rot.configure_coming)
+                    {
+                       if (ee->prop.wm_rot.angle == ee->rotation)
+                         {
+                            if (ee->func.fn_state_change) ee->func.fn_state_change(ee);
+                            ee->engine.x.wm_rot.request = 0;
+                            ee->engine.x.wm_rot.done = 1;
+                         }
                     }
                }
           }
@@ -1819,16 +1856,35 @@ _ecore_evas_x_wm_rotation_check(Ecore_Evas *ee)
 {
    if (ee->prop.wm_rot.supported)
      {
-        if (ee->engine.x.wm_rot.request)
+        if (ee->prop.wm_rot.app_set)
           {
-             if (ee->prop.wm_rot.win_resize)
+             // v1
+             if (ee->engine.x.wm_rot.request)
                {
-                  if (!((ee->w == ee->prop.wm_rot.w) && (ee->h == ee->prop.wm_rot.h)))
+                  if (ee->prop.wm_rot.win_resize)
                     {
-                       return EINA_FALSE;
+                       if (!((ee->w == ee->prop.wm_rot.w) && (ee->h == ee->prop.wm_rot.h)))
+                         {
+                            return EINA_FALSE;
+                         }
+                       else
+                         ee->engine.x.wm_rot.configure_coming = 0;
                     }
-                  else
-                    ee->engine.x.wm_rot.configure_coming = 0;
+               }
+          }
+        else
+          {
+             if (ee->engine.x.wm_rot.request)
+               {
+                  if (ee->prop.wm_rot.win_resize)
+                    {
+                       if (!((ee->w == ee->prop.wm_rot.w) && (ee->h == ee->prop.wm_rot.h)))
+                         {
+                            return EINA_FALSE;
+                         }
+                       else
+                         ee->engine.x.wm_rot.configure_coming = 0;
+                    }
                }
           }
      }
@@ -1906,11 +1962,25 @@ _ecore_evas_x_rotation_set(Ecore_Evas *ee, int rotation, int resize)
      {
         if (ee->prop.wm_rot.supported)
           {
-             if (ee->engine.x.wm_rot.request)
+             // v1
+             if (ee->prop.wm_rot.app_set)
                {
-                  if (ee->func.fn_state_change) ee->func.fn_state_change(ee);
-                  ee->engine.x.wm_rot.request = 0;
-                  ee->engine.x.wm_rot.done = 1;
+                  if (ee->engine.x.wm_rot.request)
+                    {
+                       if (ee->func.fn_state_change) ee->func.fn_state_change(ee);
+                       ee->engine.x.wm_rot.request = 0;
+                       ee->engine.x.wm_rot.done = 1;
+                    }
+               }
+             // v0
+             else
+               {
+                  if (ee->engine.x.wm_rot.request)
+                    {
+                       if (ee->func.fn_state_change) ee->func.fn_state_change(ee);
+                       ee->engine.x.wm_rot.request = 0;
+                       ee->engine.x.wm_rot.done = 1;
+                    }
                }
           }
         int angles[2] = { rotation, rotation };
@@ -2877,6 +2947,54 @@ _ecore_evas_x_profiles_set(Ecore_Evas *ee, const char **plist, int n)
 }
 
 static void
+_ecore_evas_x_wm_rot_preferred_rotation_set(Ecore_Evas *ee, int rot)
+{
+   if (ee->prop.wm_rot.supported)
+     {
+        if (!ee->prop.wm_rot.app_set)
+          {
+             ecore_x_e_window_rotation_app_set(ee->prop.window, EINA_TRUE);
+             ee->prop.wm_rot.app_set = EINA_TRUE;
+          }
+        ecore_x_e_window_rotation_preferred_rotation_set(ee->prop.window, rot);
+        ee->prop.wm_rot.preferred_rot = rot;
+     }
+}
+
+static void
+_ecore_evas_x_wm_rot_available_rotations_set(Ecore_Evas *ee, const int *rots, unsigned int count)
+{
+   if (ee->prop.wm_rot.supported)
+     {
+        if (!ee->prop.wm_rot.app_set)
+          {
+             ecore_x_e_window_rotation_app_set(ee->prop.window, EINA_TRUE);
+             ee->prop.wm_rot.app_set = EINA_TRUE;
+          }
+
+        if (ee->prop.wm_rot.available_rots)
+          {
+             free(ee->prop.wm_rot.available_rots);
+             ee->prop.wm_rot.available_rots = NULL;
+          }
+
+        ee->prop.wm_rot.count = 0;
+
+        if (count > 0)
+          {
+             ee->prop.wm_rot.available_rots = calloc(count, sizeof(int));
+             if (!ee->prop.wm_rot.available_rots) return;
+
+             memcpy(ee->prop.wm_rot.available_rots, rots, sizeof(int) * count);
+          }
+
+        ee->prop.wm_rot.count = count;
+
+        ecore_x_e_window_rotation_available_rotations_set(ee->prop.window, rots, count);
+     }
+}
+
+static void
 _ecore_evas_x_avoid_damage_set(Ecore_Evas *ee, int on)
 {
    if (ee->prop.avoid_damage == on) return;
@@ -3201,7 +3319,10 @@ static Ecore_Evas_Engine_Func _ecore_x_engine_func =
      _ecore_evas_x_screen_geometry_get,
      _ecore_evas_x_screen_dpi_get,
      NULL,
-     NULL //fn_msg_send
+     NULL, //fn_msg_send
+
+     _ecore_evas_x_wm_rot_preferred_rotation_set,
+     _ecore_evas_x_wm_rot_available_rotations_set
 };
 #endif /* BUILD_ECORE_EVAS_X11 */
 

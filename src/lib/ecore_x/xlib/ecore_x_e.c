@@ -1203,83 +1203,130 @@ ecore_x_e_window_rotation_supported_get(Ecore_X_Window root)
 }
 
 EAPI void
-ecore_x_e_window_available_rotations_set(Ecore_X_Window win,
-                                         const int     *rots,
-                                         unsigned int   count)
+ecore_x_e_window_rotation_app_set(Ecore_X_Window win,
+                                  Eina_Bool      set)
 {
+   unsigned int val = 0;
+
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
+   if (set) val = 1;
+
    ecore_x_window_prop_card32_set(win,
-                                  ECORE_X_ATOM_E_WINDOW_ROTATION_AVAILABLE_LIST,
-                                  (unsigned int *)rots, count);
+                                  ECORE_X_ATOM_E_WINDOW_ROTATION_APP_SUPPORTED,
+                                  &val, 1);
 }
 
 EAPI Eina_Bool
-ecore_x_e_window_available_rotations_get(Ecore_X_Window  win,
-                                         int           **rots,
-                                         unsigned int   *count)
+ecore_x_e_window_rotation_app_get(Ecore_X_Window win)
 {
-   unsigned char *data;
-   int num;
+   unsigned int val = 0;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   if (!ecore_x_window_prop_card32_get(win,
+                                       ECORE_X_ATOM_E_WINDOW_ROTATION_APP_SUPPORTED,
+                                       &val, 1))
+     return EINA_FALSE;
+
+   return val ? EINA_TRUE : EINA_FALSE;
+}
+
+EAPI void
+ecore_x_e_window_rotation_preferred_rotation_set(Ecore_X_Window win,
+                                                 int            rot)
+{
+   unsigned int val = 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
-   if (count) *count = 0;
-   if (rots) *rots = NULL;
-   if (!win) return EINA_FALSE;
+   if (rot != -1)
+     {
+        val = (unsigned int)rot;
+        ecore_x_window_prop_card32_set(win,
+                                       ECORE_X_ATOM_E_WINDOW_ROTATION_PREFERRED_ROTATION,
+                                       &val, 1);
+     }
+   else
+     {
+        ecore_x_window_prop_property_del(win,
+                                         ECORE_X_ATOM_E_WINDOW_ROTATION_PREFERRED_ROTATION);
+     }
+}
+
+EAPI Eina_Bool
+ecore_x_e_window_rotation_preferred_rotation_get(Ecore_X_Window win,
+                                                 int           *rot)
+{
+   unsigned int val = 0;
+   int ret = 0;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   ret = ecore_x_window_prop_card32_get(win,
+                                        ECORE_X_ATOM_E_WINDOW_ROTATION_PREFERRED_ROTATION,
+                                        &val, 1);
+   if (ret == 1)
+     {
+        if (rot) *rot = (int)val;
+        return EINA_TRUE;
+     }
+   return EINA_FALSE;
+}
+
+EAPI void
+ecore_x_e_window_rotation_available_rotations_set(Ecore_X_Window win,
+                                                  const int     *rots,
+                                                  unsigned int   count)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   if (!win) return;
+
+   if ((rots) && (count > 0))
+     ecore_x_window_prop_card32_set(win,
+                                    ECORE_X_ATOM_E_WINDOW_ROTATION_AVAILABLE_LIST,
+                                    (unsigned int *)rots, count);
+   else
+     ecore_x_window_prop_property_del(win,
+                                      ECORE_X_ATOM_E_WINDOW_ROTATION_AVAILABLE_LIST);
+}
+
+EAPI Eina_Bool
+ecore_x_e_window_rotation_available_rotations_get(Ecore_X_Window  win,
+                                                  int           **rots,
+                                                  unsigned int   *count)
+{
+   unsigned char *data = NULL;
+   int num, i;
+   int *val = NULL;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   if ((!win) || (!rots) || (!count))
+     return EINA_FALSE;
+
+   *rots = NULL;
+   *count = 0;
 
    if (!ecore_x_window_prop_property_get(win,
                                          ECORE_X_ATOM_E_WINDOW_ROTATION_AVAILABLE_LIST,
                                          XA_CARDINAL, 32, &data, &num))
      return EINA_FALSE;
 
-   if (count) *count = num;
+   *count = num;
 
-   if (rots)
+   if ((num >= 1) && (data))
      {
-        (*rots) = calloc(num, sizeof(int));
-        if (!(*rots))
+        val = calloc(num, sizeof(int));
+        if (!val)
           {
-             if (count) *count = 0;
-             if (data) free(data);
+             if (data) XFree(data);
              return EINA_FALSE;
           }
-
-        memcpy(*rots, (int *)data, sizeof(int) * num);
-     }
-
-   if (data) XFree(data);
-   return EINA_TRUE;
-}
-
-EAPI void
-ecore_x_e_window_preferred_rotation_set(Ecore_X_Window win,
-                                        int            rot)
-{
-   LOGFN(__FILE__, __LINE__, __FUNCTION__);
-
-   ecore_x_window_prop_property_set(win,
-                                    ECORE_X_ATOM_E_WINDOW_ROTATION_PREFERRED_MODE,
-                                    XA_CARDINAL, 32, (void *)&rot, 1);
-}
-
-EAPI Eina_Bool
-ecore_x_e_window_preferred_rotation_get(Ecore_X_Window win,
-                                        int           *rot)
-{
-   unsigned char *data = NULL;
-   int num;
-
-   LOGFN(__FILE__, __LINE__, __FUNCTION__);
-   if (!ecore_x_window_prop_property_get(win,
-                                         ECORE_X_ATOM_E_WINDOW_ROTATION_PREFERRED_MODE,
-                                         XA_CARDINAL, 32, &data, &num))
-     return EINA_FALSE;
-
-   if ((data) && (num == 1) && (rot))
-     {
-        *rot = (int)(*data);
+        for (i = 0; i < num; i++)
+          val[i] = ((int *)data)[i];
         if (data) XFree(data);
+        *rots = val;
         return EINA_TRUE;
      }
    if (data) XFree(data);

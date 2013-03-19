@@ -121,7 +121,9 @@ static Ecore_Evas_Engine_Func _ecore_wl_engine_func =
    _ecore_evas_wl_common_screen_geometry_get,
    _ecore_evas_wl_common_screen_dpi_get,
    NULL,
-   NULL   // msg_send
+   NULL, // msg_send
+   NULL, // wm_rot_preferred_rotation_set
+   NULL  // wm_rot_available_rotations_set
 };
 
 /* external variables */

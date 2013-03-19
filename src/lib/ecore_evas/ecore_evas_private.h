@@ -193,6 +193,9 @@ struct _Ecore_Evas_Engine_Func
    void (*fn_screen_dpi_get) (const Ecore_Evas *ee, int *xdpi, int *ydpi);
    void (*fn_msg_parent_send) (Ecore_Evas *ee, int maj, int min, void *data, int size);
    void (*fn_msg_send) (Ecore_Evas *ee, int maj, int min, void *data, int size);
+
+   void (*fn_wm_rot_preferred_rotation_set) (Ecore_Evas *ee, int rot);
+   void (*fn_wm_rot_available_rotations_set) (Ecore_Evas *ee, const int *rots, unsigned int count);
 };
 
 struct _Ecore_Evas_Engine
@@ -346,9 +349,15 @@ struct _Ecore_Evas
       char           *profile;
       struct {
          Eina_Bool    supported;
-         int          angle;
-         Eina_Bool    win_resize;
-         int          w, h;
+         int          angle;         // v0
+         Eina_Bool    win_resize;    // v0
+         int          w, h;          // v0
+         // added for the window manager rotation protocol
+         Eina_Bool    app_set;       // v1: app wants to communicate with the window manager to rotate
+         int          rot;           // v1: decided rotation by the window manager
+         int          preferred_rot; // v1: app specified rotation
+         int         *available_rots;// v1: app specified available rotations
+         unsigned int count;         // v1: number of elements of available rotations
       } wm_rot;
       struct {
 	 int          w, h;
