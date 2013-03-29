@@ -1,0 +1,8 @@
+Change-Id: I4a5ee4c108b2c84e0a8ef73ae9088164b6d5ff63
+Code-Review+2: Myoungwoon Roy Kim <roytizen@tizen.org>
+Verified+1: Myoungwoon Roy Kim <roytizen@tizen.org>
+Submitted-by: Daniel Juyung Seo
+Submitted-at: Fri, 29 Mar 2013 20:49:55 +0900
+Reviewed-on: https://review.tizen.org/gerrit/3255
+Project: framework/uifw/ecore
+Branch: refs/heads/tizen_2.0
