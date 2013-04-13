@@ -2147,9 +2147,41 @@ ecore_x_e_illume_window_state_set(Ecore_X_Window win,
    Ecore_X_Atom atom = 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   /* Setting window mode requires window stack change and window geometry
+    * change. But now, the WM can't control these sequential operations
+    * using x property set API which whould be able to overwrite previous
+    * value before getting x property by the WM.
+    * So we changed this function to use x send message and x sync counter.
+    * When the WM receives this message, the WM increases x sync counter.
+    *
+    * TODO: We need to make a new protocol to set the window mode.
+    */
+#if 0
    atom = _ecore_x_e_illume_window_state_atom_get(state);
    ecore_x_window_prop_atom_set(win, ECORE_X_ATOM_E_ILLUME_WINDOW_STATE,
                                 &atom, 1);
+#else
+   Ecore_X_Illume_Window_State curr = ecore_x_e_illume_window_state_get(win);
+
+   if (state != curr)
+     {
+        Ecore_X_Sync_Counter counter = 0;
+        counter = ecore_x_sync_counter_new(0);
+        if (counter)
+          {
+             ecore_x_client_message32_send(win,
+                                           ECORE_X_ATOM_E_ILLUME_WINDOW_STATE,
+                                           ECORE_X_EVENT_MASK_WINDOW_CONFIGURE,
+                                           _ecore_x_e_illume_window_state_atom_get(state),
+                                           counter, 1, 0, 0);
+
+             ecore_x_sync_counter_val_wait(counter, 1);
+             ecore_x_sync();
+             ecore_x_sync_counter_free(counter);
+          }
+     }
+#endif
 }
 
 EAPI Ecore_X_Illume_Window_State
