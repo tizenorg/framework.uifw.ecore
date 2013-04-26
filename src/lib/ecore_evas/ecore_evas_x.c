@@ -1896,8 +1896,25 @@ _ecore_evas_x_rotation_set(Ecore_Evas *ee, int rotation, int resize)
 {
    Eina_Bool ch_prop = EINA_FALSE;
 
-   if (ee->rotation == rotation) return;
    if (!strcmp(ee->driver, "xrender_x11")) return;
+
+   /* send rotation done message to wm, even if window is already rotated.
+    * that's why wm must be wait for comming rotation done message
+    * after sending rotation request.
+    */
+   if (ee->rotation == rotation)
+     {
+        if (ee->engine.x.wm_rot.request)
+          {
+             ecore_x_e_window_rotation_change_done_send(ee->engine.x.win_root,
+                                                        ee->prop.window,
+                                                        ee->rotation,
+                                                        ee->w,
+                                                        ee->h);
+             ee->engine.x.wm_rot.request = 0;
+          }
+        return;
+     }
 
    if (ee->prop.wm_rot.supported)
      {
