@@ -839,6 +839,9 @@ _ecore_evas_x_event_client_message(void *data __UNUSED__, int type __UNUSED__, v
                   ee->prop.wm_rot.win_resize = (int)e->data.l[2];
                   ee->prop.wm_rot.w = (int)e->data.l[3];
                   ee->prop.wm_rot.h = (int)e->data.l[4];
+                  //change req value because wm change window size
+                  ee->req.w = ee->prop.wm_rot.w;
+                  ee->req.h = ee->prop.wm_rot.h;
                   if (ee->prop.wm_rot.win_resize)
                     ee->engine.x.wm_rot.configure_coming = 1;
                   ee->engine.x.wm_rot.prepare = 1;
