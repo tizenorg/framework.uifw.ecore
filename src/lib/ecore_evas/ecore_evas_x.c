@@ -737,7 +737,7 @@ _ecore_evas_x_event_property_change(void *data __UNUSED__, int type __UNUSED__, 
           }
         else if ((p) && (!ee->prop.profile))
           {
-             ee->prop.profile = strdup(p);
+             ee->prop.profile = eina_stringshare_add(p);
              state_change = 1;
           }
 
