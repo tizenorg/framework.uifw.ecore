@@ -88,13 +88,13 @@ _ecore_x_dnd_shutdown(void)
 }
 
 static Eina_Bool
-_ecore_x_dnd_converter_copy(char *target __UNUSED__,
+_ecore_x_dnd_converter_copy(char *target EINA_UNUSED,
                             void *data,
                             int size,
                             void **data_ret,
                             int *size_ret,
-                            Ecore_X_Atom *tprop __UNUSED__,
-                            int *count __UNUSED__)
+                            Ecore_X_Atom *tprop EINA_UNUSED,
+                            int *count EINA_UNUSED)
 {
    XTextProperty text_prop;
    char *mystr;
@@ -398,10 +398,13 @@ _ecore_x_dnd_target_get(void)
    return _target;
 }
 
-EAPI Eina_Bool
-ecore_x_dnd_begin(Ecore_X_Window source,
-                  unsigned char *data,
-                  int size)
+
+
+static Eina_Bool
+_ecore_x_dnd_begin(Ecore_X_Window source,
+                   Eina_Bool self,
+                   unsigned char *data,
+                   int size)
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    if (!ecore_x_dnd_version_get(source))
@@ -422,7 +425,7 @@ ecore_x_dnd_begin(Ecore_X_Window source,
    ecore_x_window_shadow_tree_flush();
 
    _source->win = source;
-   ecore_x_window_ignore_set(_source->win, 1);
+   if (!self) ecore_x_window_ignore_set(_source->win, 1);
    _source->state = ECORE_X_DND_SOURCE_DRAGGING;
    _source->time = _ecore_x_event_last_time;
    _source->prev.window = 0;
@@ -435,8 +438,8 @@ ecore_x_dnd_begin(Ecore_X_Window source,
    return EINA_TRUE;
 }
 
-EAPI Eina_Bool
-ecore_x_dnd_drop(void)
+static Eina_Bool
+_ecore_x_dnd_drop(Eina_Bool self)
 {
    XEvent xev;
    int status = EINA_FALSE;
@@ -475,11 +478,39 @@ ecore_x_dnd_drop(void)
         _source->state = ECORE_X_DND_SOURCE_IDLE;
      }
 
-   ecore_x_window_ignore_set(_source->win, 0);
+   if (!self) ecore_x_window_ignore_set(_source->win, 0);
 
    _source->prev.window = 0;
 
    return status;
+}
+
+EAPI Eina_Bool
+ecore_x_dnd_begin(Ecore_X_Window source,
+                  unsigned char *data,
+                  int size)
+{
+   return _ecore_x_dnd_begin(source, EINA_FALSE, data, size);
+}
+
+EAPI Eina_Bool
+ecore_x_dnd_drop(void)
+{
+   return _ecore_x_dnd_drop(EINA_FALSE);
+}
+
+EAPI Eina_Bool
+ecore_x_dnd_self_begin(Ecore_X_Window source,
+                       unsigned char *data,
+                       int size)
+{
+   return _ecore_x_dnd_begin(source, EINA_TRUE, data, size);
+}
+
+EAPI Eina_Bool
+ecore_x_dnd_self_drop(void)
+{
+   return _ecore_x_dnd_drop(EINA_TRUE);
 }
 
 EAPI void
@@ -604,7 +635,6 @@ _ecore_x_dnd_drag(Ecore_X_Window root,
 // that instead.
 //   win = ecore_x_window_at_xy_with_skip_get(x, y, skip, num);
    win = ecore_x_window_shadow_tree_at_xy_with_skip_get(root, x, y, skip, num);
-
 // NOTE: This now uses the shadow version to find parent windows
 //   while ((win) && !(ecore_x_dnd_version_get(win)))
 //     win = ecore_x_window_parent_get(win);
