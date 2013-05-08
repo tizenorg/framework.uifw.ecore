@@ -1320,16 +1320,16 @@ ecore_x_e_window_rotation_available_rotations_get(Ecore_X_Window  win,
         val = calloc(num, sizeof(int));
         if (!val)
           {
-             if (data) XFree(data);
+             if (data) free(data);
              return EINA_FALSE;
           }
         for (i = 0; i < num; i++)
           val[i] = ((int *)data)[i];
-        if (data) XFree(data);
+        if (data) free(data);
         *rots = val;
         return EINA_TRUE;
      }
-   if (data) XFree(data);
+   if (data) free(data);
    return EINA_FALSE;
 }
 
@@ -1644,7 +1644,7 @@ ecore_x_e_window_profile_list_get(Ecore_X_Window   win,
      }
 
    if (data)
-     XFree(data);
+     free(data);
 
    return EINA_TRUE;
 }
