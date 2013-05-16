@@ -150,6 +150,24 @@ _ecore_evas_x_wm_rotation_protocol_set(Ecore_Evas *ee)
      ee->prop.wm_rot.supported = 0;
 }
 
+static void
+_ecore_evas_x_deiconify(void *data)
+{
+   Ecore_Evas *ee = (Ecore_Evas *)data;
+
+   ee->engine.x.deiconify_job = NULL;
+
+   if (ecore_evas_manual_render_get(ee))
+     ecore_evas_manual_render(ee);
+
+   /* client sends immediately reply message using value 1 */
+   ecore_x_client_message32_send(ee->prop.window,
+                                 ECORE_X_ATOM_E_DEICONIFY_APPROVE,
+                                 ECORE_X_EVENT_MASK_WINDOW_CONFIGURE,
+                                 ee->prop.window, 1,
+                                 0, 0, 0);
+}
+
 # ifdef BUILD_ECORE_EVAS_OPENGL_X11
 static Ecore_X_Window
 _ecore_evas_x_gl_window_new(Ecore_Evas *ee, Ecore_X_Window parent, int x, int y, int w, int h, int override, int argb, const int *opt)
@@ -926,13 +944,11 @@ _ecore_evas_x_event_client_message(void *data __UNUSED__, int type __UNUSED__, v
         if (e->data.l[1] != 0) //wm sends request message using value 0
           return ECORE_CALLBACK_PASS_ON;
 
-        if (ecore_evas_manual_render_get(ee))
-          ecore_evas_manual_render(ee);
-        //client sends reply message using value 1
-        ecore_x_client_message32_send(e->win, ECORE_X_ATOM_E_DEICONIFY_APPROVE,
-                                      ECORE_X_EVENT_MASK_WINDOW_CONFIGURE,
-                                      e->win, 1,
-                                      0, 0, 0);
+        if (ee->engine.x.deiconify_job)
+          ecore_job_del(ee->engine.x.deiconify_job);
+
+        /* queue a deiconify job to give the chance to other jobs */
+        ee->engine.x.deiconify_job = ecore_job_add(_ecore_evas_x_deiconify, ee);
      }
    return ECORE_CALLBACK_PASS_ON;
 }
@@ -1542,6 +1558,11 @@ _ecore_evas_x_free(Ecore_Evas *ee)
 {
    _ecore_evas_x_group_leader_unset(ee);
    _ecore_evas_x_sync_set(ee);
+   if (ee->engine.x.deiconify_job)
+     {
+        ecore_job_del(ee->engine.x.deiconify_job);
+        ee->engine.x.deiconify_job = NULL;
+     }
    if (ee->engine.x.win_shaped_input)
      ecore_x_window_free(ee->engine.x.win_shaped_input);
    ecore_x_window_free(ee->prop.window);

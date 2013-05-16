@@ -247,6 +247,7 @@ struct _Ecore_Evas_Engine
 	   unsigned char below : 1;
       } state;
       Ecore_X_Window win_shaped_input;
+      Ecore_Job     *deiconify_job;
    } x;
 #endif
 #ifdef BUILD_ECORE_EVAS_FB
