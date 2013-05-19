@@ -2382,7 +2382,7 @@ ecore_evas_msg_parent_send(Ecore_Evas *ee, int msg_domain, int msg_id, void *dat
                          "ecore_evas_msg_parent_send");
         return;
      }
-   DBG("Msg(to parent): ee=%p msg_domain=%d msg_id=%d size=%d", ee, msg_domain, msg_id, size);
+   DBG("Msg(to parent): ee=%p msg_domain=%x msg_id=%x size=%d", ee, msg_domain, msg_id, size);
    IFC(ee, fn_msg_parent_send) (ee, msg_domain, msg_id, data, size);
    IFE;
 }
@@ -2396,7 +2396,7 @@ ecore_evas_msg_send(Ecore_Evas *ee, int msg_domain, int msg_id, void *data, int 
                          "ecore_evas_msg_send");
         return;
      }
-   DBG("Msg: ee=%p msg_domain=%d msg_id=%d size=%d", ee, msg_domain, msg_id, size);
+   DBG("Msg: ee=%p msg_domain=%x msg_id=%x size=%d", ee, msg_domain, msg_id, size);
    IFC(ee, fn_msg_send) (ee, msg_domain, msg_id, data, size);
    IFE;
 }

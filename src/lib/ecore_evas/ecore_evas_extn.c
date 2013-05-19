@@ -1400,7 +1400,7 @@ _ipc_server_data(void *data, int type __UNUSED__, void *event)
               //ref_to = msg_id
               if (ee->func.fn_msg_handle)
                 {
-                   INF("Message handle: ref=%d to=%d size=%d", e->ref, e->ref_to, e->size);
+                   INF("Msg(from parent): msg_domain=%x msg_id=%x size=%d", e->ref, e->ref_to, e->size);
                    ee->func.fn_msg_handle(ee, e->ref, e->ref_to, e->data, e->size);
                 }
            }
@@ -2047,7 +2047,7 @@ _ipc_client_data(void *data, int type __UNUSED__, void *event)
               //ref_to = msg_id
               if (ee->func.fn_msg_parent_handle)
                 {
-                   INF("Message parent handle: ref=%d to=%d size=%d", e->ref, e->ref_to, e->size);
+                   INF("Msg(from client): msg_domain=%x msg_id=%x size=%d", e->ref, e->ref_to, e->size);
                    ee->func.fn_msg_parent_handle(ee, e->ref, e->ref_to, e->data, e->size);
                 }
            }
