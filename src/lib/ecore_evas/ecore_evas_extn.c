@@ -1577,6 +1577,7 @@ ecore_evas_extn_plug_connect(Evas_Object *obj, const char *svcname, int svcnum, 
                                                extn->svc.num, ee);
    if (!extn->ipc.server)
      {
+        ERR("Extn plug failed to connect:ipctype=%d, svcname=%s, svcnum=%d, svcsys=%d", ipctype, svcname, svcnum, svcsys);
         ee->engine.buffer.data = NULL;
         eina_stringshare_del(extn->svc.name);
         free(extn);
@@ -1596,6 +1597,7 @@ ecore_evas_extn_plug_connect(Evas_Object *obj, const char *svcname, int svcnum, 
       (extn->ipc.handlers,
        ecore_event_handler_add(ECORE_IPC_EVENT_SERVER_DATA,
                                _ipc_server_data, ee));
+   INF("Extn plug connected: svcname=%s, svcnum=%d, svcsys=%d", svcname, svcnum, svcsys);
    return EINA_TRUE;
 #else
    return EINA_FALSE;
@@ -2311,6 +2313,7 @@ ecore_evas_extn_socket_listen(Ecore_Evas *ee, const char *svcname, int svcnum, E
                                                 extn->svc.num, ee);
         if (!extn->ipc.server)
           {
+             ERR("Extn socket failed to listen:ipctype=%d, svcname=%s, svcnum=%d, svcsys=%d", ipctype, svcname, svcnum, svcsys);
              if (extn->file.lockfd)
                {
                   close(extn->file.lockfd);
@@ -2336,6 +2339,7 @@ ecore_evas_extn_socket_listen(Ecore_Evas *ee, const char *svcname, int svcnum, E
             ecore_event_handler_add(ECORE_IPC_EVENT_CLIENT_DATA,
                                     _ipc_client_data, ee));
      }
+   INF("Extn socket listened: svcname=%s, svcnum=%d, svcsys=%d", svcname, svcnum, svcsys);
    return EINA_TRUE;
 #else
    return EINA_FALSE;
