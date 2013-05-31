@@ -1371,6 +1371,15 @@ ecore_x_window_sniff(Ecore_X_Window win)
 }
 
 EAPI void
+ecore_x_window_unsniff(Ecore_X_Window win)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   ///TODO:implement check previous masking
+   XSelectInput(_ecore_x_disp, win,
+                NoEventMask);
+}
+
+EAPI void
 ecore_x_window_client_sniff(Ecore_X_Window win)
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);

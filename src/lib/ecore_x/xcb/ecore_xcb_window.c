@@ -1080,6 +1080,16 @@ ecore_x_window_sniff(Ecore_X_Window win)
 }
 
 EAPI void
+ecore_x_window_unsniff(Ecore_X_Window win)
+{
+   uint32_t list;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+///TODO: implement xcb
+//   ecore_x_flush();
+}
+
+EAPI void
 ecore_x_window_client_sniff(Ecore_X_Window win)
 {
    uint32_t list;
