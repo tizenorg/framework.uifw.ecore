@@ -209,6 +209,7 @@ _dri_drm_link(void)
              SYM(drm_lib, drmClose);
              SYM(drm_lib, drmWaitVBlank);
              SYM(drm_lib, drmHandleEvent);
+             SYM(drm_lib, drmGetMagic);
              if (fail)
                {
                   dlclose(drm_lib);
@@ -252,7 +253,7 @@ _dri_drm_init(void)
      return 0;
    if (!sym_DRI2QueryVersion(_ecore_x_disp, &dri2_major, &dri2_minor))
      return 0;
-   if (dri2_major < 2)
+   if ((dri2_major<1) || ((dri2_major==1) && (dri2_minor< 2))) //if (dri_version < 1.2)
      return 0;
    if (!sym_DRI2Connect(_ecore_x_disp, dri_drm_vsync_root, &driver_name, &device_name))
      return 0;
