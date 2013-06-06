@@ -544,7 +544,11 @@ ecore_print_warning(const char *function __UNUSED__,
        "\tWith the parameter:\n\n"
        "\t%s\n\n"
        "\tbeing NULL. Please fix your program.", function, sparam);
-   if (getenv("ECORE_ERROR_ABORT")) abort();
+   if (getenv("ECORE_ERROR_ABORT"))
+     {
+        ERR("### EFL abort on errors ###\n");
+        abort();
+     }
 }
 
 EAPI void
@@ -569,7 +573,11 @@ _ecore_magic_fail(const void *d,
    ERR("*** NAUGHTY PROGRAMMER!!!\n"
        "*** SPANK SPANK SPANK!!!\n"
        "*** Now go fix your code. Tut tut tut!");
-   if (getenv("ECORE_ERROR_ABORT")) abort();
+   if (getenv("ECORE_ERROR_ABORT"))
+     {
+        ERR("### EFL abort on errors ###\n");
+        abort();
+     }
 }
 
 static const char *
