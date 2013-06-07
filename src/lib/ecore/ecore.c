@@ -96,6 +96,8 @@ static int _thread_id_update = 0;
 Eina_Lock _ecore_main_loop_lock;
 int _ecore_main_lock_count;
 
+extern _ecore_thread_count_real;
+
 /** OpenBSD does not define CODESET
  * FIXME ??
  */
@@ -257,10 +259,15 @@ ecore_shutdown(void)
     * It should be fine now as we do wait for thread to shutdown before
     * we try to destroy the pipe.
     */
-     p = _thread_call;
+     do
+       {
+         ecore_pipe_wait(_thread_call, 1, 0.1);
+         // 0.1 seconds waiting for up to this delay for pending
+         // threads to still join
+       }
+     while (_ecore_thread_count_real > 0);
+     ecore_pipe_del(_thread_call);
      _thread_call = NULL;
-     ecore_pipe_wait(p, 1, 0.1);
-     ecore_pipe_del(p);
      eina_lock_free(&_thread_safety);
      eina_condition_free(&_thread_cond);
      eina_lock_free(&_thread_mutex);

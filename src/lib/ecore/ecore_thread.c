@@ -244,6 +244,7 @@ static int _ecore_thread_count_max = 0;
 static void _ecore_thread_handler(void *data);
 
 static int _ecore_thread_count = 0;
+int _ecore_thread_count_real = 0;
 
 static Eina_List *_ecore_running_job = NULL;
 static Eina_List *_ecore_pending_job_threads = NULL;
@@ -310,6 +311,7 @@ static void
 _ecore_thread_join(PH(thread))
 {
    PHJ(thread);
+   _ecore_thread_count_real--;
 }
 
 static void
@@ -770,6 +772,7 @@ ecore_thread_run(Ecore_Thread_Cb func_blocking,
  retry:
    if (PHC(thread, _ecore_thread_worker, NULL) == 0)
      {
+        _ecore_thread_count_real++;
         _ecore_thread_count++;
 	LKU(_ecore_pending_job_threads_mutex);
         return (Ecore_Thread *)work;
@@ -973,7 +976,10 @@ ecore_thread_feedback_run(Ecore_Thread_Cb        func_heavy,
 
      retry_direct:
         if (PHC(t, _ecore_direct_worker, worker) == 0)
-          return (Ecore_Thread *)worker;
+          {
+             _ecore_thread_count_real++;
+             return (Ecore_Thread *)worker;
+          }
 	if (!tried)
 	  {
 	     _ecore_main_call_flush();
@@ -1010,6 +1016,7 @@ ecore_thread_feedback_run(Ecore_Thread_Cb        func_heavy,
  retry:
    if (PHC(thread, _ecore_thread_worker, NULL) == 0)
      {
+        _ecore_thread_count_real++;
         _ecore_thread_count++;
 	LKU(_ecore_pending_job_threads_mutex);
         return (Ecore_Thread *)worker;
