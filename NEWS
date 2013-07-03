@@ -12,6 +12,8 @@ Additions:
     * ecore_x:
      - ECORE_X_ATOM_E_ILLUME_ACCESS_ACTION_UP.
      - ECORE_X_ATOM_E_ILLUME_ACCESS_ACTION_DOWN.
+     - ECORE_X_ATOM_E_ILLUME_ACCESS_ACTION_ENABLE.
+     - ECORE_X_ATOM_E_ILLUME_ACCESS_ACTION_DISABLE.
      - ecore_x_input_raw_select.
      - +ecore_x_selection_converter_text.
      - ECORE_X_RAW_MOTION, ECORE_X_RAW_BUTTON_PRESS and ECORE_X_RAW_BUTTON_RELEASE.
