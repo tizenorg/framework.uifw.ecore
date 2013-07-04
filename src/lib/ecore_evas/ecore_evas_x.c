@@ -3405,7 +3405,7 @@ _ecore_evas_x_flush_post(void *data, Evas *e __UNUSED__, void *event_info __UNUS
    Ecore_Evas *ee = data;
 
    if ((!ee->no_comp_sync) && (_ecore_evas_app_comp_sync) &&
-       (!ee->gl_sync_draw_done)) // added by gl77.lee
+       (ee->gl_sync_draw_done != 1)) // added by gl77.lee
      {
         if (ee->engine.x.sync_counter)
           {
