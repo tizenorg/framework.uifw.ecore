@@ -2012,7 +2012,7 @@ ecore_evas_wm_rotation_preferred_rotation_get(const Ecore_Evas *ee)
                          "ecore_evas_wm_rotation_preferred_rotation_get");
         return 0;
      }
-   return ee->prop.wm_rot.rot;
+   return ee->prop.wm_rot.preferred_rot;
 }
 
 EAPI void
