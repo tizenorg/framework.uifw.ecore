@@ -479,9 +479,47 @@ _ecore_evas_extn_plug_targer_render_post(void *data, Evas *e __UNUSED__, void *e
 }
 
 static void
+_ecore_evas_extn_plug_image_obj_callbacks_unregister(Ecore_Evas *ee)
+{
+   Ecore_Evas *ee2;
+
+   evas_object_event_callback_del_full(ee->engine.buffer.image,
+           EVAS_CALLBACK_DEL,
+           _ecore_evas_extn_plug_image_obj_del,
+           ee);
+   /*///Jiyoun: This code will be modified after opensource fix lockup issue
+      evas_event_callback_del_full(evas_object_evas_get(ee->engine.buffer.image),
+      EVAS_CALLBACK_RENDER_PRE,
+      _ecore_evas_extn_plug_targer_render_pre,
+      ee);
+      evas_event_callback_del_full(evas_object_evas_get(ee->engine.buffer.image),
+      EVAS_CALLBACK_RENDER_POST,
+      _ecore_evas_extn_plug_targer_render_post,
+      ee);
+   */
+   evas_object_event_callback_del_full(ee->engine.buffer.image,
+           EVAS_CALLBACK_CANVAS_OBJECT_RENDER_PRE,
+           _ecore_evas_extn_plug_targer_render_pre,
+           ee);
+   evas_object_event_callback_del_full(ee->engine.buffer.image,
+           EVAS_CALLBACK_CANVAS_OBJECT_RENDER_POST,
+           _ecore_evas_extn_plug_targer_render_post,
+           ee);
+   ee2 = evas_object_data_get(ee->engine.buffer.image, "Ecore_Evas_Parent");
+   if (ee2)
+     {
+        ee2->sub_ecore_evas = eina_list_remove(ee2->sub_ecore_evas, ee);
+     }
+}
+
+static void
 _ecore_evas_extn_plug_image_obj_del(void *data, Evas *e __UNUSED__, Evas_Object *obj __UNUSED__, void *event_info __UNUSED__)
 {
    Ecore_Evas *ee = data;
+
+   _ecore_evas_extn_plug_image_obj_callbacks_unregister(ee);
+   ee->engine.buffer.image = NULL;
+
    ecore_evas_free(ee);
 }
 
@@ -573,35 +611,7 @@ _ecore_evas_extn_free(Ecore_Evas *ee)
      }
    if (ee->engine.buffer.image)
      {
-        Ecore_Evas *ee2;
-
-        evas_object_event_callback_del_full(ee->engine.buffer.image,
-                                            EVAS_CALLBACK_DEL,
-                                            _ecore_evas_extn_plug_image_obj_del,
-                                            ee);
-/*///Jiyoun: This code will be modified after opensource fix lockup issue
-        evas_event_callback_del_full(evas_object_evas_get(ee->engine.buffer.image),
-                                     EVAS_CALLBACK_RENDER_PRE,
-                                     _ecore_evas_extn_plug_targer_render_pre,
-                                     ee);
-        evas_event_callback_del_full(evas_object_evas_get(ee->engine.buffer.image),
-                                     EVAS_CALLBACK_RENDER_POST,
-                                     _ecore_evas_extn_plug_targer_render_post,
-                                     ee);
-*/
-        evas_object_event_callback_del_full(ee->engine.buffer.image,
-                                     EVAS_CALLBACK_CANVAS_OBJECT_RENDER_PRE,
-                                     _ecore_evas_extn_plug_targer_render_pre,
-                                     ee);
-        evas_object_event_callback_del_full(ee->engine.buffer.image,
-                                     EVAS_CALLBACK_CANVAS_OBJECT_RENDER_POST,
-                                     _ecore_evas_extn_plug_targer_render_post,
-                                     ee);
-        ee2 = evas_object_data_get(ee->engine.buffer.image, "Ecore_Evas_Parent");
-        if (ee2)
-          {
-             ee2->sub_ecore_evas = eina_list_remove(ee2->sub_ecore_evas, ee);
-          }
+        _ecore_evas_extn_plug_image_obj_callbacks_unregister(ee);
         evas_object_del(ee->engine.buffer.image);
         ee->engine.buffer.image = NULL;
      }
