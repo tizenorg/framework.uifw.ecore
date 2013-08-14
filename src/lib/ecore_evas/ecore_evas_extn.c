@@ -62,6 +62,8 @@ void *alloca (size_t);
 #define EVAS_CALLBACK_CANVAS_OBJECT_RENDER_PRE 100
 #define EVAS_CALLBACK_CANVAS_OBJECT_RENDER_POST 101
 
+static void _ecore_evas_extn_plug_image_obj_del(void *data, Evas *e, Evas_Object *obj, void *event_info);
+
 typedef struct _Shmfile Shmfile;
 
 struct _Shmfile
