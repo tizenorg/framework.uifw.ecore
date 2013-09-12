@@ -1574,6 +1574,24 @@ ecore_evas_extn_plug_connect(Evas_Object *obj, const char *svcname, int svcnum, 
         return EINA_FALSE;
      }
 
+   //check already connected extn
+   if (ee->engine.buffer.data)
+     {
+        Extn *extn = ee->engine.buffer.data;
+        if(strcmp(extn->svc.name, svcname) ||
+           (extn->svc.num != svcnum) ||
+           (extn->svc.sys != svcsys))
+          {
+             ERR("Extn plug already connected: svcname=%s, svcnum=%d, svcsys=%d", extn->svc.name, extn->svc.num, extn->svc.sys);
+             return EINA_FALSE;
+          }
+        else
+          {
+             INF("Extn plug connected: svcname=%s, svcnum=%d, svcsys=%d", svcname, svcnum, svcsys);
+             return EINA_TRUE;
+          }
+     }
+
    extn = calloc(1, sizeof(Extn));
    if (!extn) return EINA_FALSE;
 
