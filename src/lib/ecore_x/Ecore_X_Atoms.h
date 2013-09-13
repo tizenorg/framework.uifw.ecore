@@ -286,6 +286,7 @@ EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_COMP_PIXMAP;
 
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_VIDEO_PARENT;
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_VIDEO_POSITION;
+EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_INDICATOR_FLICK_DONE;
 
 /* currently elementary and E specific extension */
 EAPI extern Ecore_X_Atom ECORE_X_ATOM_E_PROFILE;
