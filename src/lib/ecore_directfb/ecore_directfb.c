@@ -168,6 +168,7 @@ _ecore_directfb_event_handle_key_down(DFBEvent *evt)
          if(!k)
            {
               ERR("Symbol %0X of class DFEC_INPUT not found.", evt->input.key_symbol);
+              free(e);
               return;
            }
 
@@ -185,6 +186,7 @@ _ecore_directfb_event_handle_key_down(DFBEvent *evt)
          if(!k)
            {
               ERR("Symbol %0X of class DFEC_WINDOW not found.", evt->window.key_symbol);
+              free(e);
               return;
            }
 
@@ -220,6 +222,7 @@ _ecore_directfb_event_handle_key_up(DFBEvent *evt)
          if(!k)
            {
               ERR("Symbol %0X of class DFEC_INPUT not found.", evt->input.key_symbol);
+	      free(e);
               return;
            }
 
@@ -237,6 +240,7 @@ _ecore_directfb_event_handle_key_up(DFBEvent *evt)
          if(!k)
            {
               ERR("Symbol %0X of class DFEC_WINDOW not found.", evt->window.key_symbol);
+              free(e);
               return;
            }
 
