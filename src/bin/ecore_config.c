@@ -311,6 +311,8 @@ main(int argc, char * const argv[])
 
    if(file)
      free(file);
+   if(prog)
+     free(prog);
    eina_shutdown();
    return ret;
 }
