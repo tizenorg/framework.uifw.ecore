@@ -1684,6 +1684,7 @@ _ecore_exe_data_generic_handler(void             *data,
        && (ecore_main_fd_handler_active_get(fd_handler, ECORE_FD_READ)))
    {
       unsigned char *inbuf;
+      unsigned char *temp;
       int inbuf_num;
 
       /* Get any left over data from last time. */
@@ -1723,7 +1724,13 @@ _ecore_exe_data_generic_handler(void             *data,
          }
          if (num > 0) /* data got read. */
          {
+            temp = inbuf;
             inbuf = realloc(inbuf, inbuf_num + num);
+	    if (inbuf == NULL)
+            {
+               free(temp);
+               return EINA_FALSE;
+	    }
             memcpy(inbuf + inbuf_num, buf, num);
             inbuf_num += num;
          }
