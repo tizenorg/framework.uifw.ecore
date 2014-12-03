@@ -592,7 +592,7 @@ ecore_con_socks_init(void)
         v5 = EINA_TRUE;
      }
    if ((!socks) || (!socks[0]) || (strlen(socks) > 512)) return;
-   strncpy(buf, socks, sizeof(buf));
+   memcpy(buf, socks, strlen(socks) + 1);
    h = strchr(buf, '@');
    /* username */
    if (h && (h - buf > 0)) *h++ = 0, u = buf;
