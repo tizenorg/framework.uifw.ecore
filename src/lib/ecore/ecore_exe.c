@@ -1724,6 +1724,11 @@ _ecore_exe_data_generic_handler(void             *data,
          if (num > 0) /* data got read. */
          {
             inbuf = realloc(inbuf, inbuf_num + num);
+	    if (inbuf == NULL)
+            {
+               free(inbuf);
+               return EINA_FALSE;
+	    }
             memcpy(inbuf + inbuf_num, buf, num);
             inbuf_num += num;
          }
