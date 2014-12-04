@@ -306,7 +306,7 @@ ecore_x_window_prop_xid_list_change(Ecore_X_Window win,
                                     Ecore_X_ID item,
                                     int op)
 {
-   Ecore_X_ID *lst;
+   Ecore_X_ID *lst, *tmp;
    int i, num;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
@@ -340,7 +340,13 @@ ecore_x_window_prop_xid_list_change(Ecore_X_Window win,
           goto done;  /* Add it */
 
         num++;
+        temp = lst;
         lst = realloc(lst, num * sizeof(Ecore_X_ID));
+        if (lst == NULL)
+          {
+             free(temp);
+             return;
+          }
         lst[i] = item;
      }
 
