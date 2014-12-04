@@ -1353,6 +1353,7 @@ ecore_x_window_ignore_set(Ecore_X_Window win,
                           int            ignore)
 {
    int i = 0, j = 0, count = 0;
+   static Ecore_X_Window *temp = NULL;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    CHECK_XCB_CONN;
@@ -1363,11 +1364,14 @@ ecore_x_window_ignore_set(Ecore_X_Window win,
           {
              for (i = 0; i < ignore_num; i++)
                if (win == ignore_list[i]) return;
-
+             temp = ignore_list;
              ignore_list =
                realloc(ignore_list, (ignore_num + 1) * sizeof(Ecore_X_Window));
-             if (!ignore_list) return;
-
+             if (!ignore_list) 
+             {
+                free(temp);
+                return;
+             }
              ignore_list[ignore_num++] = win;
           }
         else
@@ -1394,9 +1398,13 @@ ecore_x_window_ignore_set(Ecore_X_Window win,
              ignore_list = NULL;
              return;
           }
-
+        temp = ignore_list;
         ignore_list =
           realloc(ignore_list, ignore_num * sizeof(Ecore_X_Window));
+        if (!ignore_list)
+          {
+             free(temp); 
+          }
      }
 }
 
