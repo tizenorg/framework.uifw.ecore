@@ -1,9 +1,9 @@
 Name:       ecore
 Summary:    Enlightened Core X interface library
-Version:    1.7.1+svn.77580+build69b04
+Version:    1.7.1+svn.77580+build125
 Release:    2
 Group:      System/Libraries
-License:    BSD
+License:    BSD 2-Clause
 URL:        http://www.enlightenment.org
 Source0:    %{name}-%{version}.tar.gz
 Requires(post): /sbin/ldconfig
@@ -13,7 +13,9 @@ BuildRequires:  eina-devel
 BuildRequires:  eet-devel
 BuildRequires:  evas-devel
 BuildRequires:  glib2-devel
+BuildRequires:  libxcursor-devel
 BuildRequires:  libxrender-devel
+BuildRequires:  libxinerama-devel
 BuildRequires:  libxrandr-devel
 BuildRequires:  libxext-devel
 BuildRequires:  libxi-devel
@@ -163,8 +165,7 @@ Core abstraction layer for enlightenment (fb)
 export CFLAGS+=" -fvisibility=hidden -fPIC"
 export LDFLAGS+=" -fvisibility=hidden -Wl,--hash-style=both -Wl,--as-needed"
 
-
-cd %{_repository} && %autogen --disable-static \
+%autogen --disable-static \
 	--enable-ecore-fb \
 	--enable-dependency-tracking \
 	--disable-ecore-directfb \
@@ -175,15 +176,9 @@ cd %{_repository} && %autogen --disable-static \
 	--disable-tslib \
 	--enable-simple-x11 \
 	--enable-ecore-evas-opengl-x11 \
-	--disable-ecore-evas-xrender-x11 \
 	--enable-curl \
 	--enable-glib-integration-always \
 	--enable-ecore-x-gesture \
-    %if %{_repository} == "wearable"
-	--disable-ecore-x-cursor \
-	--disable-ecore-x-xinerama \
-	--disable-ecore-x-screensaver \
-	%endif
 	--disable-xim \
 	--disable-ecore-imf-xim \
 	--disable-ecore-imf-scim
@@ -192,7 +187,7 @@ make %{?jobs:-j%jobs}
 
 %install
 rm -rf %{buildroot}
-cd %{_repository} && %make_install
+%make_install
 mkdir -p %{buildroot}/usr/share/license
 cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}
 cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}-con
@@ -284,6 +279,7 @@ cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}-fb
 %files tools
 %defattr(-,root,root,-)
 #/usr/bin/ecore_test
+%{_bindir}/ecore_evas_convert
 
 %files con
 %defattr(-,root,root,-)
