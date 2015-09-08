@@ -2,6 +2,32 @@
 # include <config.h>
 #endif
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -318,11 +344,6 @@ on_error:
  * @{
  */
 
-/**
- * @example ecore_con_server_example.c
- * Shows how to write a simple server using the Ecore_Con library.
- */
-
 EAPI Ecore_Con_Server *
 ecore_con_server_add(Ecore_Con_Type compl_type,
                      const char    *name,
@@ -484,7 +505,14 @@ ecore_con_server_connect(Ecore_Con_Type compl_type,
 #ifdef _WIN32
      EINA_SAFETY_ON_FALSE_GOTO(ecore_con_local_connect(svr, _ecore_con_cl_handler), error);
 #else
-     EINA_SAFETY_ON_FALSE_GOTO(ecore_con_local_connect(svr, _ecore_con_cl_handler, svr), error);
+     //EINA_SAFETY_ON_FALSE_GOTO(ecore_con_local_connect(svr, _ecore_con_cl_handler, svr), error);
+     {
+        if (ecore_con_local_connect(svr, _ecore_con_cl_handler, svr) == 0)
+          {
+             WRN("ecore_con_local_connect(svr, _ecore_con_cl_handler, svr) is false");
+             goto error;
+          }
+     }
 #endif
 
    if ((type == ECORE_CON_REMOTE_TCP) ||
@@ -552,6 +580,7 @@ ecore_con_server_timeout_get(Ecore_Con_Server *svr)
 EAPI void *
 ecore_con_server_del(Ecore_Con_Server *svr)
 {
+   if (!svr) return NULL;
    if (!ECORE_MAGIC_CHECK(svr, ECORE_MAGIC_CON_SERVER))
      {
         ECORE_MAGIC_FAIL(svr, ECORE_MAGIC_CON_SERVER, "ecore_con_server_del");
@@ -677,7 +706,7 @@ ecore_con_server_send(Ecore_Con_Server *svr,
              int state = 1;
              if (setsockopt(svr->fd, IPPROTO_TCP, TCP_CORK, (char *)&state, sizeof(int)) < 0)
                /* realistically this isn't anything serious so we can just log and continue */
-               ERR("corking failed! %s", strerror(errno));
+            	 WRN("corking failed! %s", strerror(errno));
           }
 #endif
      }
@@ -750,11 +779,6 @@ ecore_con_server_flush(Ecore_Con_Server *svr)
  * @{
  */
 
-/**
- * @example ecore_con_client_example.c
- * Shows how to write a simple client that connects to the example server.
- */
-
 EAPI int
 ecore_con_client_send(Ecore_Con_Client *cl,
                       const void       *data,
@@ -783,12 +807,12 @@ ecore_con_client_send(Ecore_Con_Client *cl,
         cl->buf = eina_binbuf_new();
         EINA_SAFETY_ON_NULL_RETURN_VAL(cl->buf, 0);
 #ifdef TCP_CORK
-        if ((cl->fd >= 0) && ((cl->host_server->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_CORK))
+        if ((cl->fd >= 0) && (cl->host_server && (cl->host_server->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_CORK))
           {
              int state = 1;
              if (setsockopt(cl->fd, IPPROTO_TCP, TCP_CORK, (char *)&state, sizeof(int)) < 0)
                /* realistically this isn't anything serious so we can just log and continue */
-               ERR("corking failed! %s", strerror(errno));
+               WRN("corking failed! %s", strerror(errno));
           }
 #endif
      }
@@ -854,6 +878,7 @@ ecore_con_client_timeout_get(Ecore_Con_Client *cl)
 EAPI void *
 ecore_con_client_del(Ecore_Con_Client *cl)
 {
+   if (!cl) return NULL;
    if (!ECORE_MAGIC_CHECK(cl, ECORE_MAGIC_CON_CLIENT))
      {
         ECORE_MAGIC_FAIL(cl, ECORE_MAGIC_CON_CLIENT, "ecore_con_client_del");
@@ -953,6 +978,7 @@ ecore_con_server_fd_get(Ecore_Con_Server *svr)
         return -1;
      }
    if (svr->created) return -1;
+   if (svr->delete_me) return -1;
    return ecore_main_fd_handler_fd_get(svr->fd_handler);
 }
 
@@ -1068,7 +1094,7 @@ ecore_con_event_server_data(Ecore_Con_Server *svr, unsigned char *buf, int num, 
         e->data = malloc(num);
         if (!e->data)
           {
-             ERR("server data allocation failure !");
+             WRN("server data allocation failure !");
              _ecore_con_event_server_data_free(NULL, e);
              return;
           }
@@ -1155,7 +1181,7 @@ ecore_con_event_client_data(Ecore_Con_Client *cl, unsigned char *buf, int num, E
         e->data = malloc(num);
         if (!e->data)
           {
-             ERR("client data allocation failure !");
+             WRN("client data allocation failure !");
              _ecore_con_event_client_data_free(cl->host_server, e);
              return;
           }
@@ -1186,7 +1212,7 @@ _ecore_con_event_server_error(Ecore_Con_Server *svr, char *error, Eina_Bool dupl
 
    e->server = svr;
    e->error = duplicate ? strdup(error) : error;
-   ERR("%s", error);
+   WRN("%s", error);
    svr->event_count = eina_list_append(svr->event_count, e);
    ecore_event_add(ECORE_CON_EVENT_SERVER_ERROR, e, (Ecore_End_Cb)_ecore_con_event_server_error_free, NULL);
    _ecore_con_event_count++;
@@ -1202,7 +1228,8 @@ ecore_con_event_client_error(Ecore_Con_Client *cl, const char *error)
 
    e->client = cl;
    e->error = strdup(error);
-   ERR("%s", error);
+// givving errors like this is not a good thing - MAYBET his belongs in debug... but not err.
+//   ERR("%s", error);
    cl->event_count = eina_list_append(cl->event_count, e);
    cl->host_server->event_count = eina_list_append(cl->host_server->event_count, e);
    ecore_event_add(ECORE_CON_EVENT_CLIENT_ERROR, e, (Ecore_End_Cb)_ecore_con_event_client_error_free, cl->host_server);
@@ -1745,7 +1772,7 @@ svr_try_connect_plain(Ecore_Con_Server *svr)
      {
         /* we lost our server! */
         ecore_con_event_server_error(svr, strerror(so_err));
-        ERR("Connection lost: %s", strerror(so_err));
+        WRN("Connection lost: %s", strerror(so_err));
         _ecore_con_server_kill(svr);
         return ECORE_CON_DISCONNECTED;
      }
@@ -1882,6 +1909,15 @@ _ecore_con_svr_tcp_handler(void                        *data,
 error:
    if (cl->fd_handler) ecore_main_fd_handler_del(cl->fd_handler);
    if (cl->fd >= 0) close(cl->fd);
+   {
+      Ecore_Event *ev;
+
+      EINA_LIST_FREE(cl->event_count, ev)
+        {
+           svr->event_count = eina_list_remove(svr->event_count, ev);
+           ecore_event_del(ev);
+        }
+   }
    free(cl);
    if (clerr || errno) ecore_con_event_server_error(svr, clerr ?: strerror(errno));
    return ECORE_CALLBACK_RENEW;
@@ -1969,7 +2005,7 @@ _ecore_con_cl_handler(void             *data,
 #endif
         if (ecore_con_ssl_server_init(svr))
           {
-             ERR("ssl handshaking failed!");
+             WRN("ssl handshaking failed!");
              svr->handshaking = EINA_FALSE;
           }
         else if (!svr->ssl_state)
@@ -2011,7 +2047,7 @@ _ecore_con_cl_udp_handler(void             *data,
    want_write = ecore_main_fd_handler_active_get(fd_handler, ECORE_FD_WRITE);
 
    svr = data;
-   if (svr->delete_me || svr->delete_me || ((!want_read) && (!want_write)))
+   if (svr->delete_me || ((!want_read) && (!want_write)))
      return ECORE_CALLBACK_RENEW;
 
    if (want_write)
@@ -2052,7 +2088,6 @@ _ecore_con_svr_udp_handler(void             *data,
 
    if (ecore_main_fd_handler_active_get(fd_handler, ECORE_FD_WRITE))
      {
-        _ecore_con_client_flush(cl);
         return ECORE_CALLBACK_RENEW;
      }
 
@@ -2126,7 +2161,7 @@ _ecore_con_svr_cl_read(Ecore_Con_Client *cl)
         _ecore_con_cl_timer_update(cl);
      }
 
-   if (!(cl->host_server->type & ECORE_CON_SSL) || (!cl->upgrade))
+   if (!(cl->host_server->type & ECORE_CON_SSL) && (!cl->upgrade))
      {
         num = read(cl->fd, buf, sizeof(buf));
         /* 0 is not a valid return value for a tcp socket */
@@ -2163,7 +2198,7 @@ _ecore_con_svr_cl_handler(void             *data,
      {
         if (ecore_con_ssl_client_init(cl))
           {
-             ERR("ssl handshaking failed!");
+             WRN("ssl handshaking failed!");
              _ecore_con_client_kill(cl);
              return ECORE_CALLBACK_RENEW;
           }
@@ -2184,7 +2219,7 @@ _ecore_con_server_flush(Ecore_Con_Server *svr)
 {
    int count, num;
    size_t buf_len, buf_offset;
-   const void *buf;
+   const unsigned char *buf;
 
    DBG("(svr=%p,buf=%p)", svr, svr->buf);
 #ifdef _WIN32
@@ -2262,7 +2297,7 @@ _ecore_con_server_flush(Ecore_Con_Server *svr)
                   int state = 0;
                   if (setsockopt(svr->fd, IPPROTO_TCP, TCP_CORK, (char *)&state, sizeof(int)) < 0)
                     /* realistically this isn't anything serious so we can just log and continue */
-                    ERR("uncorking failed! %s", strerror(errno));
+                    WRN("uncorking failed! %s", strerror(errno));
                }
 #endif
           }
@@ -2302,7 +2337,7 @@ _ecore_con_client_flush(Ecore_Con_Client *cl)
         if (!cl->buf) return;
         num = eina_binbuf_length_get(cl->buf) - cl->buf_offset;
         if (num <= 0) return;
-        if (!(cl->host_server->type & ECORE_CON_SSL) || (!cl->upgrade))
+        if (!(cl->host_server->type & ECORE_CON_SSL) && (!cl->upgrade))
           count = write(cl->fd, eina_binbuf_string_get(cl->buf) + cl->buf_offset, num);
         else
           count = ecore_con_ssl_client_write(cl, eina_binbuf_string_get(cl->buf) + cl->buf_offset, num);
@@ -2332,7 +2367,7 @@ _ecore_con_client_flush(Ecore_Con_Client *cl)
              int state = 0;
              if (setsockopt(cl->fd, IPPROTO_TCP, TCP_CORK, (char *)&state, sizeof(int)) < 0)
                /* realistically this isn't anything serious so we can just log and continue */
-               ERR("uncorking failed! %s", strerror(errno));
+               WRN("uncorking failed! %s", strerror(errno));
           }
 #endif
         if (cl->fd_handler)
@@ -2351,15 +2386,23 @@ _ecore_con_event_client_add_free(Ecore_Con_Server *svr,
    e = ev;
    if (e->client)
      {
+        Eina_Bool svrfreed = EINA_FALSE;
+
         e->client->event_count = eina_list_remove(e->client->event_count, e);
         if (e->client->host_server)
           {
              e->client->host_server->event_count = eina_list_remove(e->client->host_server->event_count, ev);
              if ((!svr->event_count) && (svr->delete_me))
-               _ecore_con_server_free(svr);
+               {
+                  _ecore_con_server_free(svr);
+                  svrfreed = EINA_TRUE;
+               }
           }
-        if ((!e->client->event_count) && (e->client->delete_me))
-          ecore_con_client_del(e->client);
+        if (!svrfreed)
+          {
+             if ((!e->client->event_count) && (e->client->delete_me))
+               ecore_con_client_del(e->client);
+          }
      }
 
    ecore_con_event_client_add_free(e);
@@ -2377,15 +2420,23 @@ _ecore_con_event_client_del_free(Ecore_Con_Server *svr,
    e = ev;
    if (e->client)
      {
+        Eina_Bool svrfreed = EINA_FALSE;
+
         e->client->event_count = eina_list_remove(e->client->event_count, e);
         if (e->client->host_server)
           {
              e->client->host_server->event_count = eina_list_remove(e->client->host_server->event_count, ev);
              if ((!svr->event_count) && (svr->delete_me))
-               _ecore_con_server_free(svr);
+               {
+                  _ecore_con_server_free(svr);
+                  svrfreed = EINA_TRUE;
+               }
           }
-        if (!e->client->event_count)
-          _ecore_con_client_free(e->client);
+        if (!svrfreed)
+          {
+             if (!e->client->event_count)
+               _ecore_con_client_free(e->client);
+          }
      }
    ecore_con_event_client_del_free(e);
    _ecore_con_event_count--;
@@ -2399,18 +2450,26 @@ _ecore_con_event_client_write_free(Ecore_Con_Server *svr,
 {
    if (e->client)
      {
+        Eina_Bool svrfreed = EINA_FALSE;
+
         e->client->event_count = eina_list_remove(e->client->event_count, e);
         if (e->client->host_server)
           {
              e->client->host_server->event_count = eina_list_remove(e->client->host_server->event_count, e);
              if ((!svr->event_count) && (svr->delete_me))
-               _ecore_con_server_free(svr);
+               {
+                  _ecore_con_server_free(svr);
+                  svrfreed = EINA_TRUE;
+               }
           }
-        if (((!e->client->event_count) && (e->client->delete_me)) ||
-            ((e->client->host_server &&
-              ((e->client->host_server->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_UDP ||
-               (e->client->host_server->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_MCAST))))
-          ecore_con_client_del(e->client);
+        if (!svrfreed)
+          {
+             if (((!e->client->event_count) && (e->client->delete_me)) ||
+                 ((e->client->host_server &&
+                   ((e->client->host_server->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_UDP ||
+                       (e->client->host_server->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_MCAST))))
+               ecore_con_client_del(e->client);
+          }
      }
    ecore_con_event_client_write_free(e);
    _ecore_con_event_count--;
@@ -2427,18 +2486,26 @@ _ecore_con_event_client_data_free(Ecore_Con_Server *svr,
    e = ev;
    if (e->client)
      {
+        Eina_Bool svrfreed = EINA_FALSE;
+
         e->client->event_count = eina_list_remove(e->client->event_count, e);
         if (e->client->host_server)
           {
              e->client->host_server->event_count = eina_list_remove(e->client->host_server->event_count, ev);
           }
         if ((!svr->event_count) && (svr->delete_me))
-          _ecore_con_server_free(svr);
-        if (((!e->client->event_count) && (e->client->delete_me)) ||
-            ((e->client->host_server &&
-              ((e->client->host_server->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_UDP ||
-               (e->client->host_server->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_MCAST))))
-          ecore_con_client_del(e->client);
+          {
+             _ecore_con_server_free(svr);
+             svrfreed = EINA_TRUE;
+          }
+        if (!svrfreed)
+          {
+             if (((!e->client->event_count) && (e->client->delete_me)) ||
+                 ((e->client->host_server &&
+                   ((e->client->host_server->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_UDP ||
+                       (e->client->host_server->type & ECORE_CON_TYPE) == ECORE_CON_REMOTE_MCAST))))
+               ecore_con_client_del(e->client);
+          }
      }
    free(e->data);
    ecore_con_event_client_data_free(e);
@@ -2545,12 +2612,20 @@ _ecore_con_event_client_error_free(Ecore_Con_Server *svr, Ecore_Con_Event_Client
 {
    if (e->client)
      {
-        e->client->host_server->event_count = eina_list_remove(e->client->host_server->event_count, e);
-        if ((!e->client->event_count) && (e->client->delete_me))
-          _ecore_con_client_free(e->client);
-        if (e->client->host_server)
+        Eina_Bool svrfreed = EINA_FALSE;
+
+        if (eina_list_data_find(svr->clients, e->client))
           {
-             e->client->host_server->event_count = eina_list_remove(e->client->host_server->event_count, e);
+             e->client->event_count = eina_list_remove(e->client->event_count, e);
+             if ((!e->client->event_count) && (e->client->delete_me))
+               {
+                  _ecore_con_client_free(e->client);
+                  svrfreed = EINA_TRUE;
+               }
+          }
+        svr->event_count = eina_list_remove(svr->event_count, e);
+        if (!svrfreed)
+          {
              if ((!svr->event_count) && (svr->delete_me))
                _ecore_con_server_free(svr);
           }

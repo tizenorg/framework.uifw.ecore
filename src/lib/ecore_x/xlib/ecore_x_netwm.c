@@ -137,11 +137,12 @@ ecore_x_netwm_supported_get(Ecore_X_Window root,
 {
    int num_ret;
 
+   if (!supported) return EINA_FALSE;
+
    if (num)
      *num = 0;
 
-   if (supported)
-     *supported = NULL;
+   *supported = NULL;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    num_ret = ecore_x_window_prop_atom_list_get(root, ECORE_X_ATOM_NET_SUPPORTED,
@@ -1237,7 +1238,10 @@ ecore_x_netwm_window_types_get(Ecore_X_Window win,
 
    atoms2 = malloc(num * sizeof(Ecore_X_Window_Type));
    if (!atoms2)
-     return 0;
+     {
+        free(atoms);
+        return 0;
+     }
 
    for (i = 0; i < num; i++)
      atoms2[i] = _ecore_x_netwm_window_type_type_get(atoms[i]);

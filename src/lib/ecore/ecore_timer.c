@@ -161,18 +161,6 @@ unlock:
    return timer;
 }
 
-/**
- * Creates a timer to call the given function in the given period of time.
- * @param   in   The interval in seconds from current loop time.
- * @param   func The given function.  If @p func returns 1, the timer is
- *               rescheduled for the next interval @p in.
- * @param   data Data to pass to @p func when it is called.
- * @return  A timer object on success.  @c NULL on failure.
- *
- * This is the same as ecore_timer_add(), but "now" is the time from
- * ecore_loop_time_get() not ecore_time_get() as ecore_timer_add() uses. See
- * ecore_timer_add() for more details.
- */
 EAPI Ecore_Timer *
 ecore_timer_loop_add(double        in,
                      Ecore_Task_Cb func,
@@ -201,6 +189,7 @@ EAPI void *
 ecore_timer_del(Ecore_Timer *timer)
 {
    void *data = NULL;
+   if (!timer) return NULL;
 
    EINA_MAIN_LOOP_CHECK_RETURN_VAL(NULL);
    _ecore_lock();
@@ -232,7 +221,7 @@ ecore_timer_interval_set(Ecore_Timer *timer,
 {
    EINA_MAIN_LOOP_CHECK_RETURN;
    _ecore_lock();
-
+   if (in < 0.0) in = 0.0;
    if (!ECORE_MAGIC_CHECK(timer, ECORE_MAGIC_TIMER))
      {
         ECORE_MAGIC_FAIL(timer, ECORE_MAGIC_TIMER,

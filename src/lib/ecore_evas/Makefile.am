@@ -132,6 +132,11 @@ ecore_evas_wayland_shm.c \
 ecore_evas_wayland_egl.c \
 ecore_evas_extn.c
 
+if BUILD_ECORE_WAYLAND
+libecore_evas_la_SOURCES += \
+ecore_evas_wayland_common.c
+endif
+
 libecore_evas_la_LIBADD = \
 $(ECORE_X_LIB) \
 $(ECORE_FB_LIB) \
@@ -155,6 +160,19 @@ $(top_builddir)/src/lib/ecore/libecore.la \
 @WAYLAND_EGL_LIBS@
 
 libecore_evas_la_LDFLAGS = -no-undefined @lt_enable_auto_import@ -version-info @version_info@ @release_info@
+
+# Converter
+ECORE_EVAS_CONVERT_PROG = ecore_evas_convert
+
+ecore_evas_convert_SOURCES = ecore_evas_convert.c
+ecore_evas_convert_LDADD = libecore_evas.la \
+$(top_builddir)/src/lib/ecore/libecore.la \
+@EINA_LIBS@ @EVAS_LIBS@
+
+ecore_evas_convert_DEPENDENCIES = libecore_evas.la \
+$(top_builddir)/src/lib/ecore/libecore.la
+
+bin_PROGRAMS = $(ECORE_EVAS_CONVERT_PROG)
 
 EXTRA_DIST = \
 ecore_evas_private.h

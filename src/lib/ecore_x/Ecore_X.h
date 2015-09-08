@@ -28,15 +28,23 @@
 #include <sys/types.h>
 
 /**
+ * @internal
  * @file
- * @brief Ecore functions for dealing with the X Windows System
+ * @brief Ecore functions for dealing with the X Windows System.
  *
- * Ecore_X provides a wrapper and convenience functions for using the
- * X Windows System.  Function groups for this part of the library
- * include the following:
+ * @remarks Ecore_X provides wrapper and convenience functions for using the
+ *          X Windows System.  Function groups for this part of the library
+ *          include the following:
  * @li @ref Ecore_X_Init_Group
  * @li @ref Ecore_X_Display_Attr_Group
  * @li @ref Ecore_X_Flush_Group
+ */
+
+/**
+ * @internal
+ * @defgroup Ecore_X_Group Ecore X
+ * @ingroup Ecore_Group
+ * @{
  */
 
 typedef unsigned int   Ecore_X_ID;
@@ -121,26 +129,25 @@ typedef enum _Ecore_X_Composite_Update_Type
 
 /**
  * @typedef _Ecore_X_Window_State
- * Defines the different states of the window of Ecore_X.
+ * @brief Enumeration of the different states of the window of Ecore_X.
  */
 typedef enum _Ecore_X_Window_State
 {
-   /* Unknown state */
-   ECORE_X_WINDOW_STATE_UNKNOWN = 0,  /** The window is iconified. */
-   ECORE_X_WINDOW_STATE_ICONIFIED,  /** The window is a modal dialog box. */
-   ECORE_X_WINDOW_STATE_MODAL,  /** The window manager should keep the window's position fixed
-                                 * even if the virtual desktop scrolls. */
-   ECORE_X_WINDOW_STATE_STICKY,  /** The window has the maximum vertical size. */
-   ECORE_X_WINDOW_STATE_MAXIMIZED_VERT,  /** The window has the maximum horizontal size. */
-   ECORE_X_WINDOW_STATE_MAXIMIZED_HORZ,  /** The window is shaded. */
-   ECORE_X_WINDOW_STATE_SHADED,  /** The window should not be included in the taskbar. */
-   ECORE_X_WINDOW_STATE_SKIP_TASKBAR,  /** The window should not be included in the pager. */
-   ECORE_X_WINDOW_STATE_SKIP_PAGER,  /** The window is invisible (i.e. minimized/iconified) */
-   ECORE_X_WINDOW_STATE_HIDDEN,  /** The window should fill the entire screen and have no
-                                  * window border/decorations */
-   ECORE_X_WINDOW_STATE_FULLSCREEN,  /* The following are not documented because they are not
-                                      * intended for use in applications. */
-   ECORE_X_WINDOW_STATE_ABOVE, ECORE_X_WINDOW_STATE_BELOW,  /* FIXME: Documentation */
+   ECORE_X_WINDOW_STATE_UNKNOWN = 0,
+   ECORE_X_WINDOW_STATE_ICONIFIED,  /**< The window is iconified */
+   ECORE_X_WINDOW_STATE_MODAL,  /**< The window is a modal dialog box */
+   ECORE_X_WINDOW_STATE_STICKY, /**< The window manager should keep the window's position fixed
+                                 * even if the virtual desktop scrolls */
+   ECORE_X_WINDOW_STATE_MAXIMIZED_VERT,  /**< The window has the maximum vertical size */
+   ECORE_X_WINDOW_STATE_MAXIMIZED_HORZ,  /**< The window has the maximum horizontal size */
+   ECORE_X_WINDOW_STATE_SHADED,  /**< The window is shaded */
+   ECORE_X_WINDOW_STATE_SKIP_TASKBAR,  /**< The window should not be included in the taskbar */
+   ECORE_X_WINDOW_STATE_SKIP_PAGER,  /**< The window should not be included in the pager */
+   ECORE_X_WINDOW_STATE_HIDDEN,  /**< The window is invisible (i.e. minimized/iconified) */
+   ECORE_X_WINDOW_STATE_FULLSCREEN,  /**< The window should fill the entire screen and have no
+                                      * window border/decorations */
+   ECORE_X_WINDOW_STATE_ABOVE,
+   ECORE_X_WINDOW_STATE_BELOW,
    ECORE_X_WINDOW_STATE_DEMANDS_ATTENTION
 } Ecore_X_Window_State;
 
@@ -159,6 +166,26 @@ typedef enum _Ecore_X_Window_Stack_Mode
    ECORE_X_WINDOW_STACK_BOTTOM_IF = 3,
    ECORE_X_WINDOW_STACK_OPPOSITE = 4
 } Ecore_X_Window_Stack_Mode;
+
+/**
+ * @typedef _Ecore_X_Window_Rotation_Transform_Hint
+ * @brief Enumeration of the different transform hints of the window of Ecore_X.
+ *
+ * @remarks A value of @c 3 means, HINT_0 goes to HINT_180(0x3).
+ *          It is same as HINT_0 goes to HINT_FLIP_H(0x1) and it goes to HINT_FLIP_V(0x2).( 0x1 + 0x2 = 0x3 )
+ *
+ * @remarks A value of @c 7 means, HINT_0 goes to HINT_270(0x7).
+ *          It is same as HINT_0 goes to HINT_90(0x4) and it goes to HINT_FLIP_H(0x1) and HINT_FLIP_V(0x2).( 0x4 + 0x1 + 0x2 = 0x7 )
+ */
+typedef enum _Ecore_X_Window_Rotation_Transform_Hint
+{
+   ECORE_X_WINDOW_ROTATION_TRANSFORM_HINT_0 = 0,
+   ECORE_X_WINDOW_ROTATION_TRANSFORM_HINT_FLIP_H = 0x1,  /**< Rotate source image along the horizontal axis */
+   ECORE_X_WINDOW_ROTATION_TRANSFORM_HINT_FLIP_V = 0x2,  /**< Rotate source image along the vertical axis */
+   ECORE_X_WINDOW_ROTATION_TRANSFORM_HINT_180 = 0x3,       /**< Rotate source image 180 degrees clockwise */
+   ECORE_X_WINDOW_ROTATION_TRANSFORM_HINT_90 = 0x4,         /**< Rotate source image 90 degrees clockwise */
+   ECORE_X_WINDOW_ROTATION_TRANSFORM_HINT_270 = 0x7        /**< Rotate source image 270 degrees clockwise */
+} Ecore_X_Window_Rotation_Transform_Hint;
 
 typedef enum _Ecore_X_Randr_Orientation
 {
@@ -353,31 +380,31 @@ typedef enum _Ecore_X_Netwm_Direction
 
 /**
  * @typedef _Ecore_X_Error_Code
- * Defines the error codes of Ecore_X which wraps the X Window Systems
- * protocol's errors.
+ * @brief Enumeration of the error codes of Ecore_X that wraps the X Window Systems
+ *        protocol errors.
  *
  * @since 1.7.0
  */
 typedef enum _Ecore_X_Error_Code
 {
-   /** Everything is okay. */
-   ECORE_X_ERROR_CODE_SUCCESS = 0, /** Bad request code */
-   ECORE_X_ERROR_CODE_BAD_REQUEST = 1, /** Int parameter out of range */
-   ECORE_X_ERROR_CODE_BAD_VALUE = 2, /** Parameter not a Window */
-   ECORE_X_ERROR_CODE_BAD_WINDOW = 3, /** Parameter not a Pixmap */
-   ECORE_X_ERROR_CODE_BAD_PIXMAP = 4, /** Parameter not an Atom */
-   ECORE_X_ERROR_CODE_BAD_ATOM = 5, /** Parameter not a Cursor */
-   ECORE_X_ERROR_CODE_BAD_CURSOR = 6, /** Parameter not a Font */
-   ECORE_X_ERROR_CODE_BAD_FONT = 7, /** Parameter mismatch */
-   ECORE_X_ERROR_CODE_BAD_MATCH = 8, /** Parameter not a Pixmap or Window */
-   ECORE_X_ERROR_CODE_BAD_DRAWABLE = 9, /** Bad access */
-   ECORE_X_ERROR_CODE_BAD_ACCESS = 10, /** Insufficient resources */
-   ECORE_X_ERROR_CODE_BAD_ALLOC = 11, /** No such colormap */
-   ECORE_X_ERROR_CODE_BAD_COLOR = 12, /** Parameter not a GC */
-   ECORE_X_ERROR_CODE_BAD_GC = 13, /** Choice not in range or already used */
-   ECORE_X_ERROR_CODE_BAD_ID_CHOICE = 14, /** Font or color name doesn't exist */
-   ECORE_X_ERROR_CODE_BAD_NAME = 15, /** Request length incorrect */
-   ECORE_X_ERROR_CODE_BAD_LENGTH = 16, /** Server is defective */
+   /** Everything is okay */
+   ECORE_X_ERROR_CODE_SUCCESS = 0, /**< Bad request code */
+   ECORE_X_ERROR_CODE_BAD_REQUEST = 1, /**< Integer parameter is out of range */
+   ECORE_X_ERROR_CODE_BAD_VALUE = 2, /**< Parameter is not a Window */
+   ECORE_X_ERROR_CODE_BAD_WINDOW = 3, /**< Parameter is not a Pixmap */
+   ECORE_X_ERROR_CODE_BAD_PIXMAP = 4, /**< Parameter is not an Atom */
+   ECORE_X_ERROR_CODE_BAD_ATOM = 5, /**< Parameter is not a Cursor */
+   ECORE_X_ERROR_CODE_BAD_CURSOR = 6, /**< Parameter is not a Font */
+   ECORE_X_ERROR_CODE_BAD_FONT = 7, /**< Parameter mismatch */
+   ECORE_X_ERROR_CODE_BAD_MATCH = 8, /**< Parameter is not a Pixmap or Window */
+   ECORE_X_ERROR_CODE_BAD_DRAWABLE = 9, /**< Bad access */
+   ECORE_X_ERROR_CODE_BAD_ACCESS = 10, /**< Insufficient resources */
+   ECORE_X_ERROR_CODE_BAD_ALLOC = 11, /**< No such colormap */
+   ECORE_X_ERROR_CODE_BAD_COLOR = 12, /**< Parameter is not a GC */
+   ECORE_X_ERROR_CODE_BAD_GC = 13, /**< Choice is not in the range or already used */
+   ECORE_X_ERROR_CODE_BAD_ID_CHOICE = 14, /**< Font or color name doesn't exist */
+   ECORE_X_ERROR_CODE_BAD_NAME = 15, /**< Request length is incorrect */
+   ECORE_X_ERROR_CODE_BAD_LENGTH = 16, /**< Server is defective */
    ECORE_X_ERROR_CODE_BAD_IMPLEMENTATION = 17,
 } Ecore_X_Error_Code;
 
@@ -543,6 +570,7 @@ struct _Ecore_X_Event_Window_Hide
    Ecore_X_Window win;
    Ecore_X_Window event_win;
    Ecore_X_Time   time;
+   Eina_Bool      send_event : 1;
 };
 
 struct _Ecore_X_Event_Window_Show
@@ -837,7 +865,7 @@ struct _Ecore_X_Event_Screen_Change
 {
    Ecore_X_Window                win;
    Ecore_X_Window                root;
-   Ecore_X_Randr_Screen_Size_MM  size;  /* in pixel and millimeters */
+   Ecore_X_Randr_Screen_Size_MM  size;  /* In pixel and millimeters */
    Ecore_X_Time                  time;
    Ecore_X_Time                  config_time;
    Ecore_X_Randr_Orientation     orientation;
@@ -986,9 +1014,9 @@ struct _Ecore_X_Event_Generic
    void        *data;
 };
 
-EAPI extern int ECORE_X_EVENT_ANY; /**< low level event dependent on
-                                        backend in use, if Xlib will be XEvent, if XCB will be xcb_generic_event_t.
-                                        @warning avoid using it.
+EAPI extern int ECORE_X_EVENT_ANY; /**< Low level event is dependent on the
+                                        backend being used, if Xlib is XEvent, if XCB is xcb_generic_event_t.
+                                        @remarks Avoid using it
                                     */
 EAPI extern int ECORE_X_EVENT_MOUSE_IN;
 EAPI extern int ECORE_X_EVENT_MOUSE_OUT;
@@ -1046,6 +1074,8 @@ EAPI extern int ECORE_X_EVENT_DESKTOP_CHANGE;
 EAPI extern int ECORE_X_EVENT_STARTUP_SEQUENCE_NEW;
 EAPI extern int ECORE_X_EVENT_STARTUP_SEQUENCE_CHANGE;
 EAPI extern int ECORE_X_EVENT_STARTUP_SEQUENCE_REMOVE;
+EAPI extern int ECORE_X_EVENT_XKB_STATE_NOTIFY; /** @since 1.7 */
+EAPI extern int ECORE_X_EVENT_XKB_NEWKBD_NOTIFY; /** @since 1.7 */
 
 EAPI extern int ECORE_X_EVENT_GENERIC;
 
@@ -1067,61 +1097,71 @@ EAPI extern int ECORE_X_LOCK_NUM;
 EAPI extern int ECORE_X_LOCK_CAPS;
 EAPI extern int ECORE_X_LOCK_SHIFT;
 
+EAPI extern int ECORE_X_RAW_BUTTON_PRESS;   /**< @since 1.8 */
+EAPI extern int ECORE_X_RAW_BUTTON_RELEASE; /**< @since 1.8 */
+EAPI extern int ECORE_X_RAW_MOTION;         /**< @since 1.8 */
+
+/**
+ * @brief Ecore X WM Protocol
+ */
 typedef enum _Ecore_X_WM_Protocol
 {
-   /** If enabled the window manager will be asked to send a
-    * delete message instead of just closing (destroying) the window. */
+   /**< If enabled, the window manager is asked to send a
+    * delete message instead of just closing (destroying) the window */
    ECORE_X_WM_PROTOCOL_DELETE_REQUEST,
 
-   /** If enabled the window manager will be told that the window
-    * explicitly sets input focus. */
+   /**< If enabled, the window manager is told that the window
+    * explicitly sets the input focus */
    ECORE_X_WM_PROTOCOL_TAKE_FOCUS,
 
-   /** If enabled the window manager can ping the window to check
-    * if it is alive. */
+   /**< If enabled, the window manager can ping the window to check
+    * if it is alive */
    ECORE_X_NET_WM_PROTOCOL_PING,
 
-   /** If enabled the window manager can sync updating with the
+   /**< If enabled, the window manager can sync updating with the
     * window (?) */
    ECORE_X_NET_WM_PROTOCOL_SYNC_REQUEST,
 
-   /** Number of defined items */
+   /**< Number of defined items */
    ECORE_X_WM_PROTOCOL_NUM
 } Ecore_X_WM_Protocol;
 
+/**
+ * @brief Enumeration Ecore X Window Input Mode type
+ */
 typedef enum _Ecore_X_Window_Input_Mode
 {
-   /** The window can never be focused */
+   /**< The window can never be focused */
    ECORE_X_WINDOW_INPUT_MODE_NONE,
 
-   /** The window can be focused by the WM but doesn't focus itself */
+   /**< The window can be focused by the WM but doesn't focus itself */
    ECORE_X_WINDOW_INPUT_MODE_PASSIVE,
 
-   /** The window sets the focus itself if one of its sub-windows
-    * already is focused */
+   /**< The window sets the focus on its own if one of its sub-windows
+    * is already focused */
    ECORE_X_WINDOW_INPUT_MODE_ACTIVE_LOCAL,
 
-   /** The window sets the focus itself even if another window
+   /**< The window sets the focus itself even if another window
     * is currently focused */
    ECORE_X_WINDOW_INPUT_MODE_ACTIVE_GLOBAL
 } Ecore_X_Window_Input_Mode;
 
 /**
  * @typedef _Ecore_X_Window_State_Hint
- * Defines the different state hint of the window of Ecore_X.
+ * @brief Enumeration of the different state hints of the window of Ecore_X.
  */
 typedef enum _Ecore_X_Window_State_Hint
 {
-   /** Do not provide any state hint to the window manager */
+   /**< Do not provide any state hint to the window manager */
    ECORE_X_WINDOW_STATE_HINT_NONE = -1,
 
-   /** The window wants to remain hidden and NOT iconified */
+   /**< The window wants to remain hidden and NOT iconified */
    ECORE_X_WINDOW_STATE_HINT_WITHDRAWN,
 
-   /** The window wants to be mapped normally */
+   /**< The window wants to be mapped normally */
    ECORE_X_WINDOW_STATE_HINT_NORMAL,
 
-   /** The window wants to start in an iconified state */
+   /**< The window wants to start in an iconified state */
    ECORE_X_WINDOW_STATE_HINT_ICONIC
 } Ecore_X_Window_State_Hint;
 
@@ -1225,13 +1265,23 @@ typedef enum _Ecore_X_Illume_Indicator_Opacity_Mode
    ECORE_X_ILLUME_INDICATOR_OPACITY_UNKNOWN = 0,
    ECORE_X_ILLUME_INDICATOR_OPAQUE,
    ECORE_X_ILLUME_INDICATOR_TRANSLUCENT,
-   ECORE_X_ILLUME_INDICATOR_TRANSPARENT
+   ECORE_X_ILLUME_INDICATOR_TRANSPARENT,
+   ECORE_X_ILLUME_INDICATOR_BG_TRANSPARENT
 } Ecore_X_Illume_Indicator_Opacity_Mode;
+
+typedef enum _Ecore_X_Illume_Indicator_Type_Mode
+{
+   ECORE_X_ILLUME_INDICATOR_TYPE_UNKNOWN = 0,
+   ECORE_X_ILLUME_INDICATOR_TYPE_1,
+   ECORE_X_ILLUME_INDICATOR_TYPE_2,
+   ECORE_X_ILLUME_INDICATOR_TYPE_3
+} Ecore_X_Illume_Indicator_Type_Mode;
 
 typedef enum _Ecore_X_Illume_Window_State
 {
    ECORE_X_ILLUME_WINDOW_STATE_NORMAL = 0,
-   ECORE_X_ILLUME_WINDOW_STATE_FLOATING
+   ECORE_X_ILLUME_WINDOW_STATE_FLOATING,
+   ECORE_X_ILLUME_WINDOW_STATE_ASSISTANT_MENU
 } Ecore_X_Illume_Window_State;
 
 /* Window layer constants */
@@ -1247,21 +1297,55 @@ typedef enum _Ecore_X_Illume_Window_State
 EAPI int                       ecore_x_init(const char *name);
 EAPI int                       ecore_x_shutdown(void);
 EAPI int                       ecore_x_disconnect(void);
+
+/**
+ * Retrieves the Ecore_X_Display handle used for the current X connection.
+ * @return  The current X display.
+ * @ingroup Ecore_X_Display_Attr_Group
+ */
 EAPI Ecore_X_Display          *ecore_x_display_get(void);
 EAPI Ecore_X_Connection       *ecore_x_connection_get(void);
 EAPI int                       ecore_x_fd_get(void);
 EAPI Ecore_X_Screen           *ecore_x_default_screen_get(void);
 EAPI void                      ecore_x_screen_size_get(const Ecore_X_Screen *screen, int *w, int *h);
+
+/**
+ * Retrieves the number of screens.
+ *
+ * @return  The count of the number of screens.
+ * @ingroup Ecore_X_Display_Attr_Group
+ *
+ * @since 1.1
+ */
 EAPI int                       ecore_x_screen_count_get(void);
 EAPI int                       ecore_x_screen_index_get(const Ecore_X_Screen *screen);
 EAPI Ecore_X_Screen           *ecore_x_screen_get(int index);
 
 EAPI void                      ecore_x_double_click_time_set(double t);
+
+/**
+ * @brief Retrieves the double and triple click flag timeout.
+ *
+ * @see ecore_x_double_click_time_set for more information.
+ *
+ * @return  The timeout for double clicks in seconds.
+ * @ingroup Ecore_X_Display_Attr_Group
+ */
 EAPI double                    ecore_x_double_click_time_get(void);
 EAPI void                      ecore_x_flush(void);
 EAPI void                      ecore_x_sync(void);
 EAPI void                      ecore_x_killall(Ecore_X_Window root);
 EAPI void                      ecore_x_kill(Ecore_X_Window win);
+
+/**
+ * Return the screen DPI
+ *
+ * This is a simplistic call to get DPI. It does not account for differing
+ * DPI in the x amd y axes nor does it account for multihead or xinerama and
+ * xrander where different parts of the screen may have different DPI etc.
+ *
+ * @return the general screen DPI (dots/pixels per inch).
+ */
 EAPI int                       ecore_x_dpi_get(void);
 EAPI Eina_Bool                 ecore_x_bell(int percent);
 EAPI unsigned int              ecore_x_visual_id_get(Ecore_X_Visual visual);
@@ -1303,6 +1387,7 @@ EAPI void                      ecore_x_selection_parser_add(const char *target, 
 EAPI void                      ecore_x_selection_parser_del(const char *target);
 EAPI void                      ecore_x_selection_owner_set(Ecore_X_Window win, Ecore_X_Atom atom, Ecore_X_Time tm);
 EAPI Ecore_X_Window            ecore_x_selection_owner_get(Ecore_X_Atom atom);
+EAPI Eina_Bool                 ecore_x_selection_converter_text(char *target, void *data, int size, void **data_ret, int *size_ret, Ecore_X_Atom *targprop, int *s); /** @since 1.8 */
 
 EAPI void                      ecore_x_dnd_aware_set(Ecore_X_Window win, Eina_Bool on);
 EAPI int                       ecore_x_dnd_version_get(Ecore_X_Window win);
@@ -1312,11 +1397,14 @@ EAPI void                      ecore_x_dnd_types_set(Ecore_X_Window win, const c
 EAPI void                      ecore_x_dnd_actions_set(Ecore_X_Window win, Ecore_X_Atom *actions, unsigned int num_actions);
 EAPI Eina_Bool                 ecore_x_dnd_begin(Ecore_X_Window source, unsigned char *data, int size);
 EAPI Eina_Bool                 ecore_x_dnd_drop(void);
+EAPI Eina_Bool                 ecore_x_dnd_self_begin(Ecore_X_Window source, unsigned char *data, int size); /**< @since 1.8 */
+EAPI Eina_Bool                 ecore_x_dnd_self_drop(void); /**< @since 1.8 */
 EAPI void                      ecore_x_dnd_send_status(Eina_Bool will_accept, Eina_Bool suppress, Ecore_X_Rectangle rectangle, Ecore_X_Atom action);
 EAPI void                      ecore_x_dnd_send_finished(void);
 EAPI void                      ecore_x_dnd_source_action_set(Ecore_X_Atom action);
 EAPI Ecore_X_Atom              ecore_x_dnd_source_action_get(void);
 EAPI void                      ecore_x_dnd_callback_pos_update_set(void (*cb)(void *, Ecore_X_Xdnd_Position *data), const void *data);
+EAPI Eina_Bool                 ecore_x_dnd_abort(Ecore_X_Window xwin_source); /**< @since 1.9 */
 
 EAPI Ecore_X_Window            ecore_x_window_new(Ecore_X_Window parent, int x, int y, int w, int h);
 EAPI Ecore_X_Window            ecore_x_window_override_new(Ecore_X_Window parent, int x, int y, int w, int h);
@@ -1324,6 +1412,7 @@ EAPI int                       ecore_x_window_argb_get(Ecore_X_Window win);
 EAPI Ecore_X_Window            ecore_x_window_manager_argb_new(Ecore_X_Window parent, int x, int y, int w, int h);
 EAPI Ecore_X_Window            ecore_x_window_argb_new(Ecore_X_Window parent, int x, int y, int w, int h);
 EAPI Ecore_X_Window            ecore_x_window_override_argb_new(Ecore_X_Window parent, int x, int y, int w, int h);
+EAPI Ecore_X_Window            ecore_x_window_permanent_create(Ecore_X_Window parent, Ecore_X_Atom unique_atom); /* @since 1.9 */
 EAPI Ecore_X_Window            ecore_x_window_input_new(Ecore_X_Window parent, int x, int y, int w, int h);
 EAPI void                      ecore_x_window_configure(Ecore_X_Window win, Ecore_X_Window_Configure_Mask mask, int x, int y, int w, int h, int border_width, Ecore_X_Window sibling, int stack_mode);
 EAPI void                      ecore_x_window_cursor_set(Ecore_X_Window win, Ecore_X_Cursor c);
@@ -1343,10 +1432,48 @@ EAPI Ecore_X_Window            ecore_x_window_focus_get(void);
 EAPI void                      ecore_x_window_raise(Ecore_X_Window win);
 EAPI void                      ecore_x_window_lower(Ecore_X_Window win);
 EAPI void                      ecore_x_window_reparent(Ecore_X_Window win, Ecore_X_Window new_parent, int x, int y);
+
+/**
+ * Retrieves the size of the given window.
+ * @param   win The given window.
+ * @param   w   Pointer to an integer into which the width is to be stored.
+ * @param   h   Pointer to an integer into which the height is to be stored.
+ * @ingroup Ecore_X_Window_Geometry_Group
+ */
 EAPI void                      ecore_x_window_size_get(Ecore_X_Window win, int *w, int *h);
+
+/**
+ * Retrieves the geometry of the given window.
+ *
+ * Note that the x & y coordinates are relative to your parent.  In
+ * particular for reparenting window managers - relative to you window border.
+ * If you want screen coordinates either walk the window tree to the root,
+ * else for ecore_evas applications see ecore_evas_geometry_get().  Elementary
+ * applications can use elm_win_screen_position_get().
+ *
+ * @param   win The given window.
+ * @param   x   Pointer to an integer in which the X position is to be stored.
+ * @param   y   Pointer to an integer in which the Y position is to be stored.
+ * @param   w   Pointer to an integer in which the width is to be stored.
+ * @param   h   Pointer to an integer in which the height is to be stored.
+ * @ingroup Ecore_X_Window_Geometry_Group
+ */
 EAPI void                      ecore_x_window_geometry_get(Ecore_X_Window win, int *x, int *y, int *w, int *h);
+
+/**
+ * Retrieves the width of the border of the given window.
+ * @param   win The given window.
+ * @return  Width of the border of @p win.
+ * @ingroup Ecore_X_Window_Geometry_Group
+ */
 EAPI int                       ecore_x_window_border_width_get(Ecore_X_Window win);
 EAPI void                      ecore_x_window_border_width_set(Ecore_X_Window win, int width);
+
+/**
+ * Retrieves the depth of the given window.
+ * @param  win The given window.
+ * @return Depth of the window.
+ */
 EAPI int                       ecore_x_window_depth_get(Ecore_X_Window win);
 EAPI void                      ecore_x_window_cursor_show(Ecore_X_Window win, Eina_Bool show);
 EAPI void                      ecore_x_window_defaults_set(Ecore_X_Window win);
@@ -1450,13 +1577,14 @@ EAPI Ecore_X_Cursor            ecore_x_cursor_shape_get(int shape);
 EAPI void                      ecore_x_cursor_size_set(int size);
 EAPI int                       ecore_x_cursor_size_get(void);
 
-/* FIXME: these funcs need categorising */
+/* FIXME: These functions need categorising */
 EAPI Ecore_X_Window           *ecore_x_window_root_list(int *num_ret);
 EAPI Ecore_X_Window            ecore_x_window_root_first_get(void);
 EAPI Eina_Bool                 ecore_x_window_manage(Ecore_X_Window win);
 EAPI void                      ecore_x_window_container_manage(Ecore_X_Window win);
 EAPI void                      ecore_x_window_client_manage(Ecore_X_Window win);
 EAPI void                      ecore_x_window_sniff(Ecore_X_Window win);
+EAPI void                      ecore_x_window_unsniff(Ecore_X_Window win);
 EAPI void                      ecore_x_window_client_sniff(Ecore_X_Window win);
 
 EAPI Ecore_X_Atom              ecore_x_atom_get(const char *name);
@@ -1594,6 +1722,7 @@ EAPI void                            ecore_x_netwm_ping_send(Ecore_X_Window win)
 EAPI void                            ecore_x_netwm_sync_request_send(Ecore_X_Window win, unsigned int serial);
 EAPI void                            ecore_x_netwm_state_request_send(Ecore_X_Window win, Ecore_X_Window root, Ecore_X_Window_State s1, Ecore_X_Window_State s2, Eina_Bool set);
 EAPI void                            ecore_x_netwm_desktop_request_send(Ecore_X_Window win, Ecore_X_Window root, unsigned int desktop);
+EAPI void                            ecore_x_netwm_moveresize_request_send(Ecore_X_Window win, int x, int y, Ecore_X_Netwm_Direction direction, unsigned int button);
 
 EAPI void                            ecore_x_e_init(void);
 EAPI void                            ecore_x_e_frame_size_set(Ecore_X_Window win, int fl, int fr, int ft, int fb);
@@ -1621,9 +1750,12 @@ EAPI void                            ecore_x_e_illume_home_del_send(Ecore_X_Wind
 EAPI void                            ecore_x_e_illume_access_action_next_send(Ecore_X_Window win);
 EAPI void                            ecore_x_e_illume_access_action_prev_send(Ecore_X_Window win);
 EAPI void                            ecore_x_e_illume_access_action_activate_send(Ecore_X_Window win);
+EAPI void                            ecore_x_e_illume_access_action_over_send(Ecore_X_Window win);
 EAPI void                            ecore_x_e_illume_access_action_read_send(Ecore_X_Window win);
 EAPI void                            ecore_x_e_illume_access_action_read_next_send(Ecore_X_Window win);
 EAPI void                            ecore_x_e_illume_access_action_read_prev_send(Ecore_X_Window win);
+EAPI void                            ecore_x_e_illume_access_action_up_send(Ecore_X_Window win);
+EAPI void                            ecore_x_e_illume_access_action_down_send(Ecore_X_Window win);
 
 EAPI void                            ecore_x_e_illume_drag_set(Ecore_X_Window win, unsigned int drag);
 EAPI Eina_Bool                       ecore_x_e_illume_drag_get(Ecore_X_Window win);
@@ -1678,6 +1810,26 @@ EAPI void                             ecore_x_e_window_profile_set(Ecore_X_Windo
 EAPI void                             ecore_x_e_window_profile_list_set(Ecore_X_Window  win, const char **profiles, unsigned int num_profiles);
 EAPI Eina_Bool                        ecore_x_e_window_profile_list_get(Ecore_X_Window win, const char ***profiles, int *ret_num);
 
+EAPI void                            ecore_x_e_window_rotation_supported_set(Ecore_X_Window root, Eina_Bool enabled);
+EAPI Eina_Bool                       ecore_x_e_window_rotation_supported_get(Ecore_X_Window root);
+EAPI void                            ecore_x_e_window_rotation_app_set(Ecore_X_Window win, Eina_Bool set);
+EAPI Eina_Bool                       ecore_x_e_window_rotation_app_get(Ecore_X_Window win);
+EAPI void                            ecore_x_e_window_rotation_preferred_rotation_set(Ecore_X_Window win, int rot);
+EAPI Eina_Bool                       ecore_x_e_window_rotation_preferred_rotation_get(Ecore_X_Window win, int *rot);
+EAPI void                            ecore_x_e_window_rotation_available_rotations_set(Ecore_X_Window win, const int *rots, unsigned int count);
+EAPI Eina_Bool                       ecore_x_e_window_rotation_available_rotations_get(Ecore_X_Window win, int **rots, unsigned int *count);
+EAPI void                            ecore_x_e_window_rotation_change_prepare_send(Ecore_X_Window win, int rot, Eina_Bool resize, int w, int h);
+EAPI void                            ecore_x_e_window_rotation_change_prepare_done_send(Ecore_X_Window root, Ecore_X_Window win, int rot);
+EAPI void                            ecore_x_e_window_rotation_change_request_send(Ecore_X_Window win, int rot);
+EAPI void                            ecore_x_e_window_rotation_change_done_send(Ecore_X_Window root, Ecore_X_Window win, int rot, int w, int h);
+EAPI void                            ecore_x_e_window_rotation_geometry_set(Ecore_X_Window win, int rot, int x, int y, int w, int h);
+EAPI Eina_Bool                       ecore_x_e_window_rotation_geometry_get(Ecore_X_Window win, int rot, int *x, int *y, int *w, int *h);
+EAPI void                            ecore_x_e_virtual_keyboard_control_window_set(Ecore_X_Window root, Ecore_X_Window win, unsigned int zone, Eina_Bool set);
+EAPI void                            ecore_x_e_virtual_keyboard_on_prepare_request_send(Ecore_X_Window win);
+EAPI void                            ecore_x_e_virtual_keyboard_on_prepare_done_send(Ecore_X_Window root, Ecore_X_Window win);
+EAPI void                            ecore_x_e_virtual_keyboard_off_prepare_request_send(Ecore_X_Window win);
+EAPI void                            ecore_x_e_virtual_keyboard_off_prepare_done_send(Ecore_X_Window root, Ecore_X_Window win);
+
 EAPI Ecore_X_Sync_Alarm              ecore_x_sync_alarm_new(Ecore_X_Sync_Counter counter);
 EAPI Eina_Bool                       ecore_x_sync_alarm_free(Ecore_X_Sync_Alarm alarm);
 EAPI Eina_Bool                       ecore_x_sync_counter_query(Ecore_X_Sync_Counter counter, unsigned int *val);
@@ -1705,8 +1857,10 @@ EAPI int                             ecore_x_screensaver_expose_get(void);
 EAPI void                            ecore_x_screensaver_interval_set(int timeout);
 EAPI int                             ecore_x_screensaver_interval_get(void);
 EAPI void                            ecore_x_screensaver_event_listen_set(Eina_Bool on);
-
-/* FIXME: these funcs need categorising */
+EAPI Eina_Bool                       ecore_x_screensaver_custom_blanking_enable(void); /** @since 1.7 */
+EAPI Eina_Bool                       ecore_x_screensaver_custom_blanking_disable(void); /** @since 1.7 */
+       
+/* FIXME: These functions need categorising */
 
 typedef struct _Ecore_X_Window_Attributes
 {
@@ -1780,8 +1934,8 @@ EAPI Eina_Bool        ecore_x_xregion_rect_contain(Ecore_X_XRegion *region, Ecor
 /* ecore_x_randr.c */
 
 /* The usage of 'Ecore_X_Randr_None' or 'Ecore_X_Randr_Unset'
- * depends on the context. In most cases 'Ecore_X_Randr_Unset'
- * can be used, but in some cases -1 is a special value to
+ * depends on the context. In most cases, 'Ecore_X_Randr_Unset'
+ * can be used, but in some cases @c -1 is a special value to
  * functions, thus 'Ecore_X_Randr_None' (=0) must be used.
  */
 
@@ -1819,13 +1973,14 @@ EAPI Eina_Bool                                 ecore_x_randr_screen_primary_outp
 EAPI Ecore_X_Randr_Screen_Size_MM             *ecore_x_randr_screen_primary_output_sizes_get(Ecore_X_Window root, int *num);
 
 /**
- * @brief get the current set size of a given screen's primary output
- * @param root window which's primary output will be queried
- * @param w the current size's width
- * @param h the current size's height
- * @param w_mm the current size's width in mm
- * @param h_mm the current size's height in mm
- * @param size_index of current set size to be used with ecore_x_randr_primary_output_size_set()
+ * @brief Gets the current set size of a given screen's primary output.
+ *
+ * @param[in] root The window whose primary output is queried
+ * @param[out] w The current size's width
+ * @param[out] h The current size's height
+ * @param[out] w_mm The current size's width in mm
+ * @param[out] h_mm The current size's height in mm
+ * @param[out] size_index The size index of the current set size to be used with ecore_x_randr_primary_output_size_set()
  */
 EAPI void                                      ecore_x_randr_screen_primary_output_current_size_get(Ecore_X_Window root, int *w, int *h, int *w_mm, int *h_mm, int *size_index);
 EAPI Eina_Bool                                 ecore_x_randr_screen_primary_output_size_set(Ecore_X_Window root, int size_index);
@@ -1886,183 +2041,188 @@ EAPI Eina_Bool                                 ecore_x_randr_output_crtc_set(Eco
 /* ecore_x_randr_12_edid.c */
 
 /**
- * @brief Validates the header from raw EDID data.
+ * @brief Validates the header from the raw EDID data.
  *
- * @param edid The edid structure.
- * @param edid_length Length of the edid structure.
- * @return @c EINA_TRUE, if the header is valid, @c EINA_FALSE otherwise.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return @c EINA_TRUE if the header is valid,
+ *         otherwise @c EINA_FALSE
  */
 EAPI Eina_Bool                                 ecore_x_randr_edid_has_valid_header(unsigned char *edid, unsigned long edid_length);
 
 /**
  * @brief Checks whether a display's EDID has a valid checksum.
  *
- * @param edid The edid structure.
- * @param edid_length Length of the edid structure.
- * @return @c EINA_TRUE, if the checksum is valid, @c EINA_FALSE otherwise.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return @c EINA_TRUE if the checksum is valid,
+ *         otherwise @c EINA_FALSE
  */
 EAPI Eina_Bool                                 ecore_x_randr_edid_info_has_valid_checksum(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Get the encoded version from raw EDID data.
+ * @brief Gets the encoded version from the raw EDID data.
  *
- * The return value has the minor version in the lowest 8 bits, and the major
- * version in all the rest of the bits. i.e.
+ * @remarks The return value has the minor version in the lowest 8 bits, and the major
+ *          version in all the rest of the bits. i.e.
  *
- * minor = (version & 0x000000ff);
- * major = (version & 0xffffff00) >> 8;
+ *          minor = (version & 0x000000ff);
+ *          major = (version & 0xffffff00) >> 8;
  *
- * @param edid the edid structure
- * @param edid_length length of the edid structure
- * @return The encoded major and minor version encasuplated an int.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return The encoded major and minor version encasuplated an int
  */
 EAPI int                                       ecore_x_randr_edid_version_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Get the encoded manufacturer from raw EDID data.
+ * @brief Gets the encoded manufacturer from the raw EDID data.
  *
- * @param edid the edid structure
- * @param edid_length length of the edid structure
- * @return The encoded manufacturer identifier.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return The encoded manufacturer identifier
  */
 EAPI char                                     *ecore_x_randr_edid_manufacturer_name_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Get the encoded name from raw EDID data.
+ * @brief Gets the encoded name from the raw EDID data.
  *
- * @param edid the edid structure
- * @param edid_length length of the edid structure
- * @return The encoded manufacturer identifier.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return The encoded manufacturer identifier
  */
 EAPI char                                     *ecore_x_randr_edid_display_name_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Get the encoded ASCII from raw EDID data.
+ * @brief Gets the encoded ASCII from the raw EDID data.
  *
- * @param edid the edid structure
- * @param edid_length length of the edid structure
- * @return The encoded ASCII display identifier.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return The encoded ASCII display identifier
  */
 EAPI char                                     *ecore_x_randr_edid_display_ascii_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Get the encoded serial identifier from raw EDID data.
+ * @brief Gets the encoded serial identifier from the raw EDID data.
  *
- * @param edid the edid structure
- * @param edid_length length of the edid structure
- * @return The encoded serial identifier.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return The encoded serial identifier
  */
 EAPI char                                     *ecore_x_randr_edid_display_serial_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Get the encoded model number from raw EDID data.
+ * @brief Gets the encoded model number from the raw EDID data.
  *
- * The manufacturer ID table is necessary for a useful description.
+ * @remarks The manufacturer ID table is necessary for a useful description.
  *
- * @param edid the edid structure
- * @param edid_length length of the edid structure
- * @return The encoded model number.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return The encoded model number
  */
 EAPI int                                       ecore_x_randr_edid_model_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Get the manufacturer serial number from raw EDID data.
+ * @brief Gets the manufacturer serial number from the raw EDID data.
  *
- * @param edid the edid structure
- * @param edid_length length of the edid structure
- * @return The encoded serial manufacturer serial number.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return The encoded serial manufacturer serial number
  */
 EAPI int                                       ecore_x_randr_edid_manufacturer_serial_number_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Get the manufacturer model number from raw EDID data.
+ * @brief Gets the manufacturer model number from the raw EDID data.
  *
- * @param edid the edid structure
- * @param edid_length length of the edid structure
- * @return The manufacturer's model number.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return The manufacturer model number
  */
 EAPI int                                       ecore_x_randr_edid_manufacturer_model_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Looks up the DPMS support from raw EDID data.
+ * @brief Looks for DPMS support from the raw EDID data.
  *
- * @param edid The edid structure.
- * @param edid_length Length of the edid structure.
- * @return @c EINA_TRUE, if DPMS is supported in some way, @c EINA_FALSE
- * otherwise.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return @c EINA_TRUE if DPMS is supported in some way, 
+ *         otherwise @c EINA_FALSE
  */
 EAPI Eina_Bool                                 ecore_x_randr_edid_dpms_available_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Looks up the DPMS Standby support from raw EDID data.
+ * @brief Looks for DPMS Standby support from the raw EDID data.
  *
- * @param edid The edid structure.
- * @param edid_length Length of the edid structure.
- * @return @c EINA_TRUE, if DPMS Standby is supported, @c EINA_FALSE otherwise.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return @c EINA_TRUE if DPMS Standby is supported, 
+ *         otherwise @c EINA_FALSE
  */
 EAPI Eina_Bool                                 ecore_x_randr_edid_dpms_standby_available_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Looks up the DPMS Suspend support from raw EDID data.
+ * @brief Looks for DPMS Suspend support from the raw EDID data.
  *
- * @param edid The edid structure.
- * @param edid_length Length of the edid structure.
- * @return @c EINA_TRUE, if DPMS Suspend is supported, @c EINA_FALSE otherwise.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return @c EINA_TRUE if DPMS Suspend is supported,
+ *         otherwise @c EINA_FALSE
  */
 EAPI Eina_Bool                                 ecore_x_randr_edid_dpms_suspend_available_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Looks up the DPMS Off support from raw EDID data.
+ * @brief Looks for DPMS Off support from the raw EDID data.
  *
- * @param edid The edid structure.
- * @param edid_length Length of the edid structure.
- * @return @c EINA_TRUE, if DPMS Off is supported, @c EINA_FALSE otherwise.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return @c EINA_TRUE if DPMS Off is supported,
+ *         otherwise @c EINA_FALSE
  */
 EAPI Eina_Bool                                 ecore_x_randr_edid_dpms_off_available_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Get the preferred aspect ratio from raw EDID data.
+ * @brief Gets the preferred aspect ratio from the raw EDID data.
  *
- * @param edid the edid structure
- * @param edid_length length of the edid structure
- * @return The preferred aspect ratio.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return The preferred aspect ratio
  */
 EAPI Ecore_X_Randr_Edid_Aspect_Ratio           ecore_x_randr_edid_display_aspect_ratio_preferred_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Get the supported aspect ratios from raw EDID data.
+ * @brief Gets the supported aspect ratios from the raw EDID data.
  *
- * @param edid the edid structure
- * @param edid_length length of the edid structure
- * @return The supported aspect ratios.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return The supported aspect ratios
  */
 EAPI Ecore_X_Randr_Edid_Aspect_Ratio           ecore_x_randr_edid_display_aspect_ratios_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Get the supported colorschemes from raw EDID data.
+ * @brief Gets the supported colorschemes from the raw EDID data.
  *
- * @param edid the edid structure
- * @param edid_length length of the edid structure
- * @return The supported colorschemes.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return The supported colorschemes
  */
 EAPI Ecore_X_Randr_Edid_Display_Colorscheme    ecore_x_randr_edid_display_colorscheme_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Get the display type from raw EDID data.
+ * @brief Gets the display type from the raw EDID data.
  *
- * @param edid The edid structure.
- * @param edid_length Length of the edid structure.
- * @return @c EINA_TRUE, if the display is a digital one, @c EINA_FALSE
- * otherwise.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return @c EINA_TRUE if the display is a digital one, 
+ *         otherwise @c EINA_FALSE
  */
 EAPI Eina_Bool                                 ecore_x_randr_edid_display_type_digital_get(unsigned char *edid, unsigned long edid_length);
 
 /**
- * @brief Get the display interface type from raw EDID data.
+ * @brief Gets the display interface type from the raw EDID data.
  *
- * @param edid the edid structure
- * @param edid_length length of the edid structure
- * @return The interface type.
+ * @param[in] edid The edid structure
+ * @param[in] edid_length The length of the edid structure
+ * @return The interface type
  */
 EAPI Ecore_X_Randr_Edid_Display_Interface_Type ecore_x_randr_edid_display_interface_type_get(unsigned char *edid, unsigned long edid_length);
 
@@ -2083,15 +2243,14 @@ EAPI Eina_Bool                                 ecore_x_randr_output_signal_forma
 EAPI Ecore_X_Randr_Signal_Property            *ecore_x_randr_output_signal_properties_get(Ecore_X_Window root, Ecore_X_Randr_Output output, int *num);
 EAPI int                                       ecore_x_randr_output_connector_number_get(Ecore_X_Window root, Ecore_X_Randr_Output output);
 EAPI Ecore_X_Randr_Connector_Type              ecore_x_randr_output_connector_type_get(Ecore_X_Window root, Ecore_X_Randr_Output output);
-/* WTF - these dont exist in ecore-x!!!!   
+/* These dont exist in ecore-x */
 EAPI Eina_Rectangle                           *ecore_x_randr_crtc_panning_area_get(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc, int *x, int *y, int *w, int *h);
 EAPI Eina_Bool                                 ecore_x_randr_crtc_panning_area_set(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc, int x, const int y, const int w, const int h);
 EAPI Eina_Rectangle                           *ecore_x_randr_crtc_tracking_area_get(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc, int *x, int *y, int *w, int *h);
 EAPI Eina_Bool                                 ecore_x_randr_crtc_tracking_area_set(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc, int x, const int y, const int w, const int h);
 EAPI Eina_Rectangle                           *ecore_x_randr_crtc_border_area_get(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc);
 EAPI Eina_Bool                                 ecore_x_randr_crtc_border_area_set(Ecore_X_Window root, Ecore_X_Randr_Crtc crtc, int left, const int top, const int right, const int bottom);
-*/
-   
+
 /* XRender Support (horrendously incomplete) */
 typedef Ecore_X_ID Ecore_X_Picture;
 
@@ -2125,12 +2284,15 @@ EAPI void               ecore_x_region_window_shape_set(Ecore_X_Region region, E
 EAPI void               ecore_x_region_picture_clip_set(Ecore_X_Region region, Ecore_X_Picture picture, int x_origin, int y_origin);
 
 /**
- * xfixes selection notification request.
+ * @brief Decides the xfixes selection for which to get a notification request.
  *
- * This lets you choose which selections you want to get notifications for.
- * @param selection The selection atom.
- * @return @c EINA_TRUE on success, @c EINA_FALSE otherwise.
+ * @details This lets you choose which selections you want to get notifications for.
+ *
  * @since 1.1.0
+ *
+ * @param[in] selection The selection atom
+ * @return @c EINA_TRUE on success,
+ *         otherwise @c EINA_FALSE on failure
  */
 EAPI Eina_Bool          ecore_x_fixes_selection_notification_request(Ecore_X_Atom selection);
 
@@ -2170,6 +2332,12 @@ struct _Ecore_X_Event_Damage
 
 typedef struct _Ecore_X_Event_Damage Ecore_X_Event_Damage;
 
+struct _Ecore_X_Event_Xkb
+{
+   int group;
+};
+typedef struct _Ecore_X_Event_Xkb Ecore_X_Event_Xkb; /** @since 1.7 */
+
 EAPI Eina_Bool      ecore_x_damage_query(void);
 EAPI Ecore_X_Damage ecore_x_damage_new(Ecore_X_Drawable d, Ecore_X_Damage_Report_Level level);
 EAPI void           ecore_x_damage_free(Ecore_X_Damage damage);
@@ -2197,11 +2365,12 @@ EAPI Eina_Bool      ecore_x_test_fake_key_press(const char *key);
 EAPI const char    *ecore_x_keysym_string_get(int keysym);
 
 /**
- * Given a keyname, return the keycode representing that key
- * @param keyname The key from which to get the keycode.
- * @return The keycode of the key.
+ * @brief Returns the keycode representing a key, given that the keyname is provided.
  *
  * @since 1.2.0
+ *
+ * @param[in] keyname The key from which to get the keycode
+ * @return The keycode of the key
  */
 EAPI int            ecore_x_keysym_keycode_get(const char *keyname);
 
@@ -2217,6 +2386,10 @@ EAPI Eina_Bool      ecore_x_image_is_argb32_get(Ecore_X_Image *im);
 EAPI Eina_Bool      ecore_x_image_to_argb_convert(void *src, int sbpp, int sbpl, Ecore_X_Colormap c, Ecore_X_Visual v, int x, int y, int w, int h, unsigned int *dst, int dbpl, int dx, int dy);
 
 EAPI Eina_Bool      ecore_x_input_multi_select(Ecore_X_Window win);
+/**
+ * @since 1.8 
+ */
+EAPI Eina_Bool	    ecore_x_input_raw_select(Ecore_X_Window win); 
 
 EAPI Eina_Bool      ecore_x_vsync_animator_tick_source_set(Ecore_X_Window win);
 
@@ -2367,28 +2540,26 @@ EAPI Ecore_X_Illume_Indicator_State        ecore_x_e_illume_indicator_state_get(
 EAPI void                                  ecore_x_e_illume_indicator_state_send(Ecore_X_Window win, Ecore_X_Illume_Indicator_State state);
 
 EAPI void                                  ecore_x_e_illume_indicator_opacity_set(Ecore_X_Window win, Ecore_X_Illume_Indicator_Opacity_Mode mode);
-
 EAPI Ecore_X_Illume_Indicator_Opacity_Mode ecore_x_e_illume_indicator_opacity_get(Ecore_X_Window win);
-
 EAPI void                                  ecore_x_e_illume_indicator_opacity_send(Ecore_X_Window win, Ecore_X_Illume_Indicator_Opacity_Mode mode);
 
-EAPI void
-ecore_x_e_illume_window_state_set(Ecore_X_Window win,
-                                  Ecore_X_Illume_Window_State state);
+EAPI void                                  ecore_x_e_illume_indicator_type_set(Ecore_X_Window win, Ecore_X_Illume_Indicator_Type_Mode mode);
+EAPI Ecore_X_Illume_Indicator_Type_Mode    ecore_x_e_illume_indicator_type_get(Ecore_X_Window win);
+EAPI void                                  ecore_x_e_illume_indicator_type_send(Ecore_X_Window win, Ecore_X_Illume_Indicator_Type_Mode mode);
 
-EAPI Ecore_X_Illume_Window_State
-ecore_x_e_illume_window_state_get(Ecore_X_Window win);
+EAPI void                                  ecore_x_e_illume_window_state_set(Ecore_X_Window win, Ecore_X_Illume_Window_State state);
+EAPI Ecore_X_Illume_Window_State           ecore_x_e_illume_window_state_get(Ecore_X_Window win);
+EAPI void                                  ecore_x_e_illume_window_state_send(Ecore_X_Window win, Ecore_X_Illume_Window_State state);
 
-EAPI void
-ecore_x_e_illume_window_state_set(Ecore_X_Window win,
-                                  Ecore_X_Illume_Window_State state);
-
-EAPI Ecore_X_Illume_Window_State
-ecore_x_e_illume_window_state_get(Ecore_X_Window win);
+EAPI void                                  ecore_x_xkb_select_group(int group); /* @since 1.7 */
 
 #ifdef __cplusplus
 }
 #endif // ifdef __cplusplus
+
+/**
+ * @}
+ */
 
 #include <Ecore_X_Atoms.h>
 #include <Ecore_X_Cursor.h>

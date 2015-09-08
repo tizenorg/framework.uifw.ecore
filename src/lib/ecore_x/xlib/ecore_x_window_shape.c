@@ -201,16 +201,17 @@ ecore_x_window_shape_rectangles_set(Ecore_X_Window win,
              rect[i].width = rects[i].width;
              rect[i].height = rects[i].height;
           }
+        XShapeCombineRectangles(_ecore_x_disp,
+                                win,
+                                ShapeBounding,
+                                0,
+                                0,
+                                rect,
+                                num,
+                                ShapeSet,
+                                Unsorted);
      }
-   XShapeCombineRectangles(_ecore_x_disp,
-                           win,
-                           ShapeBounding,
-                           0,
-                           0,
-                           rect,
-                           num,
-                           ShapeSet,
-                           Unsorted);
+
    if (rect) free(rect);
 #else
    return;
@@ -496,17 +497,17 @@ ecore_x_window_shape_rectangles_add(Ecore_X_Window win,
              rect[i].width = rects[i].width;
              rect[i].height = rects[i].height;
           }
+        XShapeCombineRectangles(_ecore_x_disp,
+                                win,
+                                ShapeBounding,
+                                0,
+                                0,
+                                rect,
+                                num,
+                                ShapeUnion,
+                                Unsorted);
      }
 
-   XShapeCombineRectangles(_ecore_x_disp,
-                           win,
-                           ShapeBounding,
-                           0,
-                           0,
-                           rect,
-                           num,
-                           ShapeUnion,
-                           Unsorted);
    if (rect) free(rect);
 }
 
@@ -531,17 +532,17 @@ ecore_x_window_shape_input_rectangles_add(Ecore_X_Window win,
              rect[i].width = rects[i].width;
              rect[i].height = rects[i].height;
           }
+        XShapeCombineRectangles(_ecore_x_disp,
+                                win,
+                                ShapeInput,
+                                0,
+                                0,
+                                rect,
+                                num,
+                                ShapeUnion,
+                                Unsorted);
      }
 
-   XShapeCombineRectangles(_ecore_x_disp,
-                           win,
-                           ShapeInput,
-                           0,
-                           0,
-                           rect,
-                           num,
-                           ShapeUnion,
-                           Unsorted);
    if (rect) free(rect);
 #else
    return;

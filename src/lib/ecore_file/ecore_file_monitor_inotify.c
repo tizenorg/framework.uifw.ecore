@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "ecore_file_private.h"
 
@@ -62,10 +63,19 @@ int
 ecore_file_monitor_inotify_init(void)
 {
    int fd;
+#ifdef HAVE_EXECVP
+   int flags;
+#endif
 
    fd = inotify_init();
    if (fd < 0)
      return 0;
+
+#ifdef HAVE_EXECVP
+   flags = fcntl(fd, F_GETFD);
+   flags |= FD_CLOEXEC;
+   fcntl(fd, F_SETFD, flags);
+#endif
 
    _fdh = ecore_main_fd_handler_add(fd, ECORE_FD_READ, _ecore_file_monitor_inotify_handler,
                                     NULL, NULL, NULL);
@@ -205,7 +215,11 @@ _ecore_file_monitor_inotify_events(Ecore_File_Monitor *em, char *file, int mask)
    if ((file) && (file[0]))
      snprintf(buf, sizeof(buf), "%s/%s", em->path, file);
    else
-     strcpy(buf, em->path);
+     {
+        strncpy(buf, em->path, sizeof(buf));
+        buf[PATH_MAX - 1] = 0;
+     }
+
    isdir = mask & IN_ISDIR;
 
 #if 0

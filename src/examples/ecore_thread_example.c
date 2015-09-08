@@ -79,7 +79,6 @@ _short_job(void *data, Ecore_Thread *th)
 
         snprintf(buf, sizeof(buf), "Thread %p: String number %d", th, i);
         td->list = eina_list_append(td->list, strdup(buf));
-        sleep(1);
      }
 }
 

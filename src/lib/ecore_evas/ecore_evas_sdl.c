@@ -135,6 +135,8 @@ _ecore_evas_sdl_event_video_resize(void *data __UNUSED__, int type __UNUSED__, v
 
    ee->w = e->w;
    ee->h = e->h;
+   ee->req.w = e->w;
+   ee->req.h = e->h;
 
    evas_output_size_set(ee->evas, e->w, e->h);
    evas_output_viewport_set(ee->evas, 0, 0, e->w, e->h);
@@ -274,6 +276,8 @@ _ecore_evas_resize(Ecore_Evas *ee, int w, int h)
    int rmethod;
 
    if ((w == ee->w) && (h == ee->h)) return;
+   ee->req.w = w;
+   ee->req.h = h;
    ee->w = w;
    ee->h = h;
 
@@ -324,6 +328,8 @@ static void
 _ecore_evas_move_resize(Ecore_Evas *ee, int x __UNUSED__, int y __UNUSED__, int w, int h)
 {
    if ((w == ee->w) && (h == ee->h)) return;
+   ee->req.w = w;
+   ee->req.h = h;
    ee->w = w;
    ee->h = h;
 
@@ -442,7 +448,16 @@ static Ecore_Evas_Engine_Func _ecore_sdl_engine_func =
 
    NULL, // render
    NULL, // screen_geometry_get
-   NULL  // screen_dpi_get
+   NULL, // screen_dpi_get
+   NULL,
+   NULL, // msg_send
+
+   NULL, // wm_rot_preferred_rotation_set
+   NULL, // wm_rot_available_rotations_set
+   NULL, // wm_rot_manual_rotation_done_set
+   NULL, // wm_rot_manual_rotation_done
+
+   NULL  // aux_hints_set
 };
 
 static Ecore_Evas*
@@ -466,6 +481,8 @@ _ecore_evas_internal_sdl_new(int rmethod, const char* name, int w, int h, int fu
    if (w < 1) w = 1;
    if (h < 1) h = 1;
    ee->visible = 1;
+   ee->req.w = w;
+   ee->req.h = h;
    ee->w = w;
    ee->h = h;
 

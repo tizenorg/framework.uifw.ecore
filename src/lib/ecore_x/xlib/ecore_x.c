@@ -2,6 +2,32 @@
 # include <config.h>
 #endif /* ifdef HAVE_CONFIG_H */
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -50,6 +76,9 @@ static int _ecore_x_event_damage_id = 0;
 #ifdef ECORE_XGESTURE
 static int _ecore_x_event_gesture_id = 0;
 #endif /* ifdef ECORE_XGESTURE */
+#ifdef ECORE_XKB
+static int _ecore_x_event_xkb_id = 0;
+#endif /* ifdef ECORE_XKB */
 static int _ecore_x_event_handlers_num = 0;
 static void (**_ecore_x_event_handlers) (XEvent * event) = NULL;
 
@@ -124,6 +153,10 @@ EAPI int ECORE_X_EVENT_STARTUP_SEQUENCE_NEW = 0;
 EAPI int ECORE_X_EVENT_STARTUP_SEQUENCE_CHANGE = 0;
 EAPI int ECORE_X_EVENT_STARTUP_SEQUENCE_REMOVE = 0;
 
+EAPI int ECORE_X_EVENT_XKB_STATE_NOTIFY = 0;
+EAPI int ECORE_X_EVENT_XKB_NEWKBD_NOTIFY = 0;
+
+
 EAPI int ECORE_X_EVENT_GENERIC = 0;
 
 EAPI int ECORE_X_MODIFIER_SHIFT = 0;
@@ -136,6 +169,10 @@ EAPI int ECORE_X_LOCK_SCROLL = 0;
 EAPI int ECORE_X_LOCK_NUM = 0;
 EAPI int ECORE_X_LOCK_CAPS = 0;
 EAPI int ECORE_X_LOCK_SHIFT = 0;
+
+EAPI int ECORE_X_RAW_BUTTON_PRESS = 0;
+EAPI int ECORE_X_RAW_BUTTON_RELEASE = 0;
+EAPI int ECORE_X_RAW_MOTION = 0;
 
 #ifdef LOGRT
 static double t0 = 0.0;
@@ -299,7 +336,9 @@ ecore_x_init(const char *name)
    int gesture_base = 0;
    int gesture_err_base = 0;
 #endif /* ifdef ECORE_XGESTURE */
-
+#ifdef ECORE_XKB
+   int xkb_base = 0;
+#endif /* ifdef ECORE_XKB */
    if (++_ecore_x_init_count != 1)
      return _ecore_x_init_count;
 
@@ -390,6 +429,18 @@ ecore_x_init(const char *name)
 
    ECORE_X_EVENT_HANDLERS_GROW(gesture_base, GestureNumberEvents);
 #endif /* ifdef ECORE_XGESTURE */
+#ifdef ECORE_XKB
+     {
+        int dummy;
+        
+        if (XkbQueryExtension(_ecore_x_disp, &dummy, &xkb_base,
+                              &dummy, &dummy, &dummy))
+          _ecore_x_event_xkb_id = xkb_base;
+        XkbSelectEventDetails(_ecore_x_disp, XkbUseCoreKbd, XkbStateNotify,
+                              XkbAllStateComponentsMask, XkbGroupStateMask);
+     }
+   ECORE_X_EVENT_HANDLERS_GROW(xkb_base, XkbNumberEvents);
+#endif
 
    _ecore_x_event_handlers = calloc(_ecore_x_event_handlers_num, sizeof(void *));
    if (!_ecore_x_event_handlers)
@@ -502,7 +553,9 @@ ecore_x_init(const char *name)
         Bool works = 0;
         XkbSetDetectableAutoRepeat(_ecore_x_disp, 1, &works);
      }
-   while (0);
+     while (0);
+   if (_ecore_x_event_xkb_id)
+   _ecore_x_event_handlers[_ecore_x_event_xkb_id] = _ecore_x_event_handle_xkb;
 #endif /* ifdef ECORE_XKB */
 
 #ifdef ECORE_XGESTURE
@@ -585,7 +638,14 @@ ecore_x_init(const char *name)
         ECORE_X_EVENT_STARTUP_SEQUENCE_CHANGE = ecore_event_type_new();
         ECORE_X_EVENT_STARTUP_SEQUENCE_REMOVE = ecore_event_type_new();
 
+        ECORE_X_EVENT_XKB_STATE_NOTIFY = ecore_event_type_new();
+        ECORE_X_EVENT_XKB_NEWKBD_NOTIFY = ecore_event_type_new();
+	
         ECORE_X_EVENT_GENERIC = ecore_event_type_new();
+
+	ECORE_X_RAW_BUTTON_PRESS = ecore_event_type_new();
+	ECORE_X_RAW_BUTTON_RELEASE = ecore_event_type_new();
+	ECORE_X_RAW_MOTION = ecore_event_type_new();
      }
 
    _ecore_x_modifiers_get();
@@ -790,14 +850,6 @@ ecore_x_screen_size_get(const Ecore_X_Screen *screen,
    if (h) *h = s->height;
 }
 
-/**
- * Retrieves the number of screens.
- *
- * @return  The count of the number of screens.
- * @ingroup Ecore_X_Display_Attr_Group
- *
- * @since 1.1
- */
 EAPI int
 ecore_x_screen_count_get(void)
 {
@@ -855,14 +907,6 @@ ecore_x_double_click_time_set(double t)
    _ecore_x_double_click_time = t;
 }
 
-/**
- * Retrieves the double and triple click flag timeout.
- *
- * See @ref ecore_x_double_click_time_set for more information.
- *
- * @return  The timeout for double clicks in seconds.
- * @ingroup Ecore_X_Display_Attr_Group
- */
 EAPI double
 ecore_x_double_click_time_get(void)
 {
@@ -958,15 +1002,6 @@ ecore_x_current_time_get(void)
    return _ecore_x_event_last_time;
 }
 
-/**
- * Return the screen DPI
- *
- * This is a simplistic call to get DPI. It does not account for differing
- * DPI in the x amd y axes nor does it account for multihead or xinerama and
- * xrander where different parts of the screen may have different DPI etc.
- *
- * @return the general screen DPI (dots/pixels per inch).
- */
 EAPI int
 ecore_x_dpi_get(void)
 {
@@ -1016,14 +1051,12 @@ _ecore_x_fd_handler(void *data,
         XEvent ev;
 
         XNextEvent(d, &ev);
-
 #ifdef ENABLE_XIM
         /* Filter event for XIM */
         if (XFilterEvent(&ev, ev.xkey.window))
           continue;
 
 #endif /* ifdef ENABLE_XIM */
-
         if ((ev.type >= 0) && (ev.type < _ecore_x_event_handlers_num))
           {
              if (_ecore_x_event_handlers[AnyXEvent])
@@ -1310,6 +1343,15 @@ ecore_x_window_sniff(Ecore_X_Window win)
    XSelectInput(_ecore_x_disp, win,
                 PropertyChangeMask |
                 SubstructureNotifyMask);
+}
+
+EAPI void
+ecore_x_window_unsniff(Ecore_X_Window win)
+{
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   ///TODO:implement check previous masking
+   XSelectInput(_ecore_x_disp, win,
+                NoEventMask);
 }
 
 EAPI void
@@ -1878,7 +1920,8 @@ ecore_x_client_message8_send(Ecore_X_Window win,
      len = 20;
 
    memcpy(xev.xclient.data.b, data, len);
-   memset(xev.xclient.data.b + len, 0, 20 - len);
+   if (len < 20)
+     memset(xev.xclient.data.b + len, 0, 20 - len);
 
    return XSendEvent(_ecore_x_disp, win, False, NoEventMask, &xev) ? EINA_TRUE : EINA_FALSE;
 }
@@ -2133,6 +2176,14 @@ ecore_x_default_depth_get(Ecore_X_Display *disp,
                           Ecore_X_Screen *screen)
 {
    return DefaultDepth(disp, ecore_x_screen_index_get(screen));
+}
+
+EAPI void
+ecore_x_xkb_select_group(int group)
+{
+#ifdef ECORE_XKB
+   XkbLockGroup(_ecore_x_disp, XkbUseCoreKbd, group);
+#endif
 }
 
 /*****************************************************************************/

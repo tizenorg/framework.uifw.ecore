@@ -28,15 +28,7 @@ static Eina_Array *module_list = NULL;
 void
 ecore_imf_module_init(void)
 {
-   char *homedir;
-
    module_list = eina_module_list_get(NULL, PACKAGE_LIB_DIR "/ecore/immodules", 0, NULL, NULL);
-   homedir = eina_module_environment_path_get("HOME", "/.ecore/immodules");
-   if (homedir)
-     {
-        module_list = eina_module_list_get(module_list, homedir, 0, NULL, NULL);
-        free(homedir);
-     }
    eina_module_list_load(module_list);
 }
 
@@ -98,7 +90,7 @@ ecore_imf_module_context_create(const char *ctx_id)
    module = eina_hash_find(modules, ctx_id);
    if (module)
      {
-        ctx = module->create();
+        if (!(ctx = module->create())) return NULL;
         if (!ECORE_MAGIC_CHECK(ctx, ECORE_MAGIC_CONTEXT))
           {
              ECORE_MAGIC_FAIL(ctx, ECORE_MAGIC_CONTEXT,

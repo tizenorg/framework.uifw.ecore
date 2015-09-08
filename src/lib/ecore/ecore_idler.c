@@ -49,6 +49,7 @@ EAPI void *
 ecore_idler_del(Ecore_Idler *idler)
 {
    void *data = NULL;
+   if (!idler) return NULL;
 
    EINA_MAIN_LOOP_CHECK_RETURN_VAL(NULL);
    if (!ECORE_MAGIC_CHECK(idler, ECORE_MAGIC_IDLER))

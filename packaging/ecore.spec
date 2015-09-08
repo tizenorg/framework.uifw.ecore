@@ -1,9 +1,9 @@
 Name:       ecore
 Summary:    Enlightened Core X interface library
-Version:    1.6.0+svn.74576slp2+build05
-Release:    1
+Version:    1.7.1+svn.77580+build125
+Release:    2
 Group:      System/Libraries
-License:    BSD
+License:    BSD 2-Clause
 URL:        http://www.enlightenment.org
 Source0:    %{name}-%{version}.tar.gz
 Requires(post): /sbin/ldconfig
@@ -165,8 +165,7 @@ Core abstraction layer for enlightenment (fb)
 export CFLAGS+=" -fvisibility=hidden -fPIC"
 export LDFLAGS+=" -fvisibility=hidden -Wl,--hash-style=both -Wl,--as-needed"
 
-%autogen
-%configure --disable-static \
+%autogen --disable-static \
 	--enable-ecore-fb \
 	--enable-dependency-tracking \
 	--disable-ecore-directfb \
@@ -177,7 +176,6 @@ export LDFLAGS+=" -fvisibility=hidden -Wl,--hash-style=both -Wl,--as-needed"
 	--disable-tslib \
 	--enable-simple-x11 \
 	--enable-ecore-evas-opengl-x11 \
-	--disable-ecore-evas-xrender-x11 \
 	--enable-curl \
 	--enable-glib-integration-always \
 	--enable-ecore-x-gesture \
@@ -190,7 +188,18 @@ make %{?jobs:-j%jobs}
 %install
 rm -rf %{buildroot}
 %make_install
-
+mkdir -p %{buildroot}/usr/share/license
+cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}
+cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}-con
+cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}-evas
+cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}-file
+cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}-imf
+cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}-imf-evas
+cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}-input
+cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}-input-evas
+cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}-ipc
+cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}-x
+cp %{_builddir}/%{buildsubdir}/COPYING %{buildroot}/usr/share/license/%{name}-fb
 
 %post -p /sbin/ldconfig
 
@@ -247,7 +256,9 @@ rm -rf %{buildroot}
 %files 
 %defattr(-,root,root,-)
 %{_libdir}/libecore.so.*
+%manifest %{name}.manifest
 /usr/share/locale/*
+/usr/share/license/%{name}
 
 %files devel
 %defattr(-,root,root,-)
@@ -268,44 +279,65 @@ rm -rf %{buildroot}
 %files tools
 %defattr(-,root,root,-)
 #/usr/bin/ecore_test
+%{_bindir}/ecore_evas_convert
 
 %files con
 %defattr(-,root,root,-)
 %{_libdir}/libecore_con.so.*
+%manifest %{name}-con.manifest
+/usr/share/license/%{name}-con
 
 %files evas
 %defattr(-,root,root,-)
 %{_libdir}/libecore_evas.so.*
+%manifest %{name}-evas.manifest
+/usr/share/license/%{name}-evas
 
 %files file
 %defattr(-,root,root,-)
 %{_libdir}/libecore_file.so.*
+%manifest %{name}-file.manifest
+/usr/share/license/%{name}-file
 
 %files imf
 %defattr(-,root,root,-)
 %{_libdir}/libecore_imf.so.*
+%manifest %{name}-imf.manifest
+/usr/share/license/%{name}-imf
 
 %files imf-evas
 %defattr(-,root,root,-)
 %{_libdir}/libecore_imf_evas.so.*
+%manifest %{name}-imf-evas.manifest
+/usr/share/license/%{name}-imf-evas
 
 %files input
 %defattr(-,root,root,-)
 %{_libdir}/libecore_input.so.*
+%manifest %{name}-input.manifest
+/usr/share/license/%{name}-input
 
 %files input-evas
 %defattr(-,root,root,-)
 %{_libdir}/libecore_input_evas.so.*
+%manifest %{name}-input-evas.manifest
+/usr/share/license/%{name}-input-evas
 
 %files ipc
 %defattr(-,root,root,-)
 %{_libdir}/libecore_ipc.so.*
+%manifest %{name}-ipc.manifest
+/usr/share/license/%{name}-ipc
 
 %files x
 %defattr(-,root,root,-)
 %{_libdir}/libecore_x.so.*
+%manifest %{name}-x.manifest
+/usr/share/license/%{name}-x
 
 %files fb
 %defattr(-,root,root,-)
 %{_libdir}/libecore_fb.so.*
+%manifest %{name}-fb.manifest
+/usr/share/license/%{name}-fb
 

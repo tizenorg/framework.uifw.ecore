@@ -27,6 +27,32 @@
 # include "config.h"
 #endif
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #if !defined(__FreeBSD__)
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE	600
@@ -2117,12 +2143,11 @@ size_t dns_rr_print(void *dst, size_t lim, struct dns_rr *rr, struct dns_packet 
 	if (cp < lim) {
 		rd	= &((unsigned char *)dst)[cp];
 		rdlen	= lim - cp;
+        cp	+= dns_any_print(rd, rdlen, &any, rr->type);
 	} else {
 		rd	= 0;
 		rdlen	= 0;
 	}
-
-	cp	+= dns_any_print(rd, rdlen, &any, rr->type);
 
 epilog:
 	dns__printnul(dst, lim, cp);
@@ -4774,8 +4799,9 @@ void dns_so_close(struct dns_socket *so) {
 
 
 void dns_so_reset(struct dns_socket *so) {
-	free(so->answer);
+	if (so->answer) free(so->answer);
 
+    so->answer = NULL;
 	memset(&so->state, '\0', sizeof *so - offsetof(struct dns_socket, state));
 } /* dns_so_reset() */
 
@@ -5285,7 +5311,7 @@ struct dns_resolver *dns_res_open(struct dns_resolv_conf *resconf, struct dns_ho
 	 * dns_resconf_local() by default would create undesirable surpises.
 	 */
 	if (!resconf || !hosts || !hints)
-		goto error;
+		goto _error;
 
 	if (!(R = malloc(sizeof *R)))
 		goto syerr;
@@ -5306,7 +5332,7 @@ syerr:
 	error	= dns_syerr();
 error:
 	*error_	= error;
-
+_error:
 	dns_res_close(R);
 
 	dns_resconf_close(resconf);

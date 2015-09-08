@@ -2,21 +2,30 @@
 # include <config.h>
 #endif
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
 #ifdef HAVE_ALLOCA_H
 # include <alloca.h>
-#elif defined __GNUC__
-# define alloca __builtin_alloca
-#elif defined _AIX
-# define alloca __alloca
-#elif defined _MSC_VER
-# include <malloc.h>
-# define alloca _alloca
-#else
-# include <stddef.h>
-# ifdef  __cplusplus
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
 extern "C"
+#  endif
+void *alloca (size_t);
 # endif
-void *alloca(size_t);
 #endif
 
 #include <stdlib.h>
@@ -873,6 +882,9 @@ static Eina_Bool
 _ecore_getopt_parse_bool(const char *str,
                          Eina_Bool  *v)
 {
+   if (!str)
+     return EINA_FALSE;
+
    if ((strcmp(str, "0") == 0) ||
        (strcasecmp(str, "f") == 0) ||
        (strcasecmp(str, "false") == 0) ||
@@ -902,6 +914,7 @@ _ecore_getopt_parse_long(const char *str,
                          long int   *v)
 {
    char *endptr = NULL;
+   if (!str) return EINA_FALSE;
    *v = strtol(str, &endptr, 0);
    return endptr > str;
 }
@@ -911,6 +924,7 @@ _ecore_getopt_parse_double(const char *str,
                            double     *v)
 {
    char *endptr = NULL;
+   if (!str) return EINA_FALSE;
    *v = strtod(str, &endptr);
    return endptr > str;
 }
@@ -1110,6 +1124,9 @@ _ecore_getopt_parse_choice(const Ecore_Getopt      *parser __UNUSED__,
                            const char              *arg_val)
 {
    const char *const *pchoice;
+
+   if (!arg_val)
+     return EINA_FALSE;
 
    if (!val->strp)
      {
@@ -1461,7 +1478,7 @@ _ecore_getopt_parse_arg_long(const Ecore_Getopt *parser,
    const char *arg_val;
    int desc_idx;
    Ecore_Getopt_Value *value;
-   Eina_Bool ret;
+   Eina_Bool ret = EINA_FALSE;
 
    desc = _ecore_getopt_parse_find_long(parser, arg);
    if (!desc)
@@ -1535,7 +1552,7 @@ _ecore_getopt_parse_arg_short(const Ecore_Getopt *parser,
         const char *arg_val;
         int desc_idx;
         Ecore_Getopt_Value *value;
-        Eina_Bool ret;
+        Eina_Bool ret = EINA_FALSE;
 
         desc = _ecore_getopt_parse_find_short(parser, arg[0]);
         if (!desc)

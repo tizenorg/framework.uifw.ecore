@@ -2,6 +2,32 @@
 # include <config.h>
 #endif
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #if USE_GNUTLS
 # include <gnutls/gnutls.h>
 # include <gnutls/x509.h>
@@ -1557,6 +1583,7 @@ _ecore_con_ssl_server_prepare_openssl(Ecore_Con_Server *svr,
         break;
 
       default:
+        svr->ssl_prepared = EINA_TRUE;
         return ECORE_CON_SSL_ERROR_NONE;
      }
 
@@ -1577,6 +1604,7 @@ _ecore_con_ssl_server_prepare_openssl(Ecore_Con_Server *svr,
    else if (!svr->use_cert)
      SSL_ERROR_CHECK_GOTO_ERROR(!SSL_CTX_set_cipher_list(svr->ssl_ctx, "aNULL:!eNULL:!LOW:!EXPORT:!ECDH:RSA:AES:!PSK:@STRENGTH"));
 
+   svr->ssl_prepared = EINA_TRUE;
    return ECORE_CON_SSL_ERROR_NONE;
 
 error:
@@ -1741,6 +1769,7 @@ _ecore_con_ssl_server_privkey_add_openssl(Ecore_Con_Server *svr,
    SSL_ERROR_CHECK_GOTO_ERROR(!(privkey = PEM_read_PrivateKey(fp, NULL, NULL, NULL)));
 
    fclose(fp);
+   fp = NULL;
    SSL_ERROR_CHECK_GOTO_ERROR(SSL_CTX_use_PrivateKey(svr->ssl_ctx, privkey) < 1);
    SSL_ERROR_CHECK_GOTO_ERROR(SSL_CTX_check_private_key(svr->ssl_ctx) < 1);
 
@@ -1766,7 +1795,7 @@ _ecore_con_ssl_server_cert_add_openssl(Ecore_Con_Server *svr,
    SSL_ERROR_CHECK_GOTO_ERROR(!(cert = PEM_read_X509(fp, NULL, NULL, NULL)));
 
    fclose(fp);
-
+   fp = NULL;
    SSL_ERROR_CHECK_GOTO_ERROR(SSL_CTX_use_certificate(svr->ssl_ctx, cert) < 1);
 
    return EINA_TRUE;

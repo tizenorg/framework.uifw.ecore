@@ -31,20 +31,21 @@
 #endif /* ! _WIN32 */
 
 /**
+ * @internal
  * @file Ecore_Getopt.h
  * @brief Contains powerful getopt replacement.
  *
  * This replacement handles both short (-X) or long options (--ABC)
  * options, with various actions supported, like storing one value and
  * already converting to required type, counting number of
- * occurrences, setting true or false values, show help, license,
- * copyright and even support user-defined callbacks.
+ * occurrences, setting true or false values, showing help, license,
+ * copyright, and even supporting user-defined callbacks.
  *
- * It is provided a set of C Pre Processor macros so definition is
+ * It is provided a set of C Pre Processor macros. So definition is
  * straightforward.
  *
- * Values will be stored elsewhere indicated by an array of pointers
- * to values, it is given in separate to parser description so you can
+ * Values are stored elsewhere indicated by an array of pointers
+ * to values. It is given separately to parser description. So you can
  * use multiple values with the same parser.
  */
 
@@ -109,7 +110,7 @@ union _Ecore_Getopt_Value
 
 struct _Ecore_Getopt_Desc_Store
 {
-   Ecore_Getopt_Type                 type; /**< type of data being handled */
+   Ecore_Getopt_Type                 type; /**< Type of data being handled */
    Ecore_Getopt_Desc_Arg_Requirement arg_req;
    union
    {
@@ -139,12 +140,12 @@ struct _Ecore_Getopt_Desc_Callback
 
 struct _Ecore_Getopt_Desc
 {
-   char                shortname; /**< used with a single dash */
-   const char         *longname; /**< used with double dashes */
-   const char         *help; /**< used by --help/ecore_getopt_help() */
-   const char         *metavar; /**< used by ecore_getopt_help() with nargs > 0 */
+   char                shortname; /**< Used with a single dash */
+   const char         *longname; /**< Used with double dashes */
+   const char         *help; /**< Used by -- help/ecore_getopt_help() */
+   const char         *metavar; /**< Used by ecore_getopt_help() with nargs > 0 */
 
-   Ecore_Getopt_Action action;   /**< define how to handle it */
+   Ecore_Getopt_Action action;   /**< Define how to handle it */
    union
    {
       const Ecore_Getopt_Desc_Store    store;
@@ -158,14 +159,14 @@ struct _Ecore_Getopt_Desc
 
 struct _Ecore_Getopt
 {
-   const char             *prog; /**< to be used when ecore_app_args_get() fails */
-   const char             *usage; /**< usage example, %prog is replaced */
-   const char             *version; /**< if exists, --version will work */
-   const char             *copyright; /**< if exists, --copyright will work */
-   const char             *license; /**< if exists, --license will work */
-   const char             *description; /**< long description, possible multiline */
-   Eina_Bool               strict : 1; /**< fail on errors */
-   const Ecore_Getopt_Desc descs[];   /* NULL terminated. */
+   const char             *prog; /**< To be used when ecore_app_args_get() fails */
+   const char             *usage; /**< Usage example, %prog is replaced */
+   const char             *version; /**< If exists, --version works */
+   const char             *copyright; /**< If exists, --copyright works */
+   const char             *license; /**< If exists, --license works */
+   const char             *description; /**< Long description, possible multiline */
+   Eina_Bool               strict : 1; /**< Fail on errors */
+   const Ecore_Getopt_Desc descs[];   /**< @c NULL terminated */
 };
 
 #define ECORE_GETOPT_STORE_FULL(shortname, longname, help, metavar, type, arg_requirement, default_value) \
@@ -399,7 +400,7 @@ EAPI int
 
 EAPI Eina_List *ecore_getopt_list_free(Eina_List *list);
 
-/* helper functions to be used with ECORE_GETOPT_CALLBACK_*() */
+/* Helper functions to be used with ECORE_GETOPT_CALLBACK_*() */
 EAPI Eina_Bool
 ecore_getopt_callback_geometry_parse(const Ecore_Getopt *parser,
                                      const Ecore_Getopt_Desc *desc,

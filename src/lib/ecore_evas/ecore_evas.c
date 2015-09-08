@@ -218,6 +218,21 @@ ecore_evas_engine_type_supported_get(Ecore_Evas_Engine_Type engine)
      };
 }
 
+static void
+_ecore_evas_fork_cb(void *data __UNUSED__)
+{
+   int fd;
+   
+   if (_ecore_evas_async_events_fd)
+     ecore_main_fd_handler_del(_ecore_evas_async_events_fd);
+   fd = evas_async_events_fd_get();
+   if (fd >= 0)
+     _ecore_evas_async_events_fd = 
+     ecore_main_fd_handler_add(fd, ECORE_FD_READ,
+                               _ecore_evas_async_events_fd_handler, NULL,
+                               NULL, NULL);
+}
+
 EAPI int
 ecore_evas_init(void)
 {
@@ -240,12 +255,13 @@ ecore_evas_init(void)
         goto shutdown_ecore;
      }
 
+   ecore_fork_reset_callback_add(_ecore_evas_fork_cb, NULL);
    fd = evas_async_events_fd_get();
-   if (fd > 0)
-     _ecore_evas_async_events_fd = ecore_main_fd_handler_add(fd,
-                                                             ECORE_FD_READ,
-                                                             _ecore_evas_async_events_fd_handler, NULL,
-                                                             NULL, NULL);
+   if (fd >= 0)
+     _ecore_evas_async_events_fd = 
+     ecore_main_fd_handler_add(fd, ECORE_FD_READ,
+                               _ecore_evas_async_events_fd_handler, NULL,
+                               NULL, NULL);
 
    ecore_evas_idle_enterer =
      ecore_idle_enterer_add(_ecore_evas_idle_enter, NULL);
@@ -308,6 +324,8 @@ ecore_evas_shutdown(void)
 
    if (_ecore_evas_async_events_fd)
      ecore_main_fd_handler_del(_ecore_evas_async_events_fd);
+   
+   ecore_fork_reset_callback_del(_ecore_evas_fork_cb, NULL);
 
    eina_log_domain_unregister(_ecore_evas_log_dom);
    _ecore_evas_log_dom = -1;
@@ -588,7 +606,7 @@ static Ecore_Evas *
 _ecore_evas_constructor_wayland_shm(int x, int y, int w, int h, const char *extra_options)
 {
    char *disp_name = NULL;
-   unsigned int frame = 0, parent = 0;
+   unsigned int frame = 1, parent = 0;
    Ecore_Evas *ee;
 
    _ecore_evas_parse_extra_options_str(extra_options, "display=", &disp_name);
@@ -606,7 +624,7 @@ static Ecore_Evas *
 _ecore_evas_constructor_wayland_egl(int x, int y, int w, int h, const char *extra_options)
 {
    char *disp_name = NULL;
-   unsigned int frame = 0, parent = 0;
+   unsigned int frame = 1, parent = 0;
    Ecore_Evas *ee;
 
    _ecore_evas_parse_extra_options_str(extra_options, "display=", &disp_name);
@@ -875,6 +893,7 @@ ecore_evas_ecore_evas_get(const Evas *e)
 EAPI void
 ecore_evas_free(Ecore_Evas *ee)
 {
+   if (!ee) return;
    if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
      {
         ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
@@ -1942,6 +1961,314 @@ ecore_evas_profile_get(const Ecore_Evas *ee)
    return ee->prop.profile;
 }
 
+EAPI Eina_Bool
+ecore_evas_wm_rotation_supported_get(const Ecore_Evas *ee)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_wm_rotation_supported_get");
+        return EINA_FALSE;
+     }
+   return ee->prop.wm_rot.supported;
+}
+
+EAPI void
+ecore_evas_wm_rotation_preferred_rotation_set(Ecore_Evas *ee, int rotation)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_wm_rotation_preferred_rotation_set");
+        return;
+     }
+   if (rotation != -1)
+     {
+        if (ee->prop.wm_rot.available_rots)
+          {
+             Eina_Bool found = EINA_FALSE;
+             unsigned int i;
+             for (i = 0; i < ee->prop.wm_rot.count; i++)
+               {
+                  if (ee->prop.wm_rot.available_rots[i] == rotation)
+                    {
+                       found = EINA_TRUE;
+                       break;
+                    }
+               }
+             if (!found) return;
+          }
+     }
+   IFC(ee, fn_wm_rot_preferred_rotation_set) (ee, rotation);
+   IFE;
+}
+
+EAPI int
+ecore_evas_wm_rotation_preferred_rotation_get(const Ecore_Evas *ee)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_wm_rotation_preferred_rotation_get");
+        return 0;
+     }
+   return ee->prop.wm_rot.preferred_rot;
+}
+
+EAPI void
+ecore_evas_wm_rotation_available_rotations_set(Ecore_Evas *ee, const int *rotations, unsigned int count)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_wm_rotation_available_rotations_set");
+        return;
+     }
+   IFC(ee, fn_wm_rot_available_rotations_set) (ee, rotations, count);
+   IFE;
+}
+
+EAPI Eina_Bool
+ecore_evas_wm_rotation_available_rotations_get(const Ecore_Evas *ee, int **rotations, unsigned int *count)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_wm_rotation_available_rotations_get");
+        return EINA_FALSE;
+     }
+   if ((!rotations) || (!count))
+     return EINA_FALSE;
+
+   if ((!ee->prop.wm_rot.available_rots) || (ee->prop.wm_rot.count == 0))
+     return EINA_FALSE;
+
+   *rotations = calloc(ee->prop.wm_rot.count, sizeof(int));
+   if (!*rotations) return EINA_FALSE;
+
+   memcpy(*rotations, ee->prop.wm_rot.available_rots, sizeof(int) * ee->prop.wm_rot.count);
+   *count = ee->prop.wm_rot.count;
+
+   return EINA_TRUE;
+}
+
+EAPI void
+ecore_evas_wm_rotation_manual_rotation_done_set(Ecore_Evas *ee, Eina_Bool set)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_wm_rotation_manual_rotation_done_set");
+        return;
+     }
+
+   if (!ee->prop.wm_rot.app_set)
+     {
+        return;
+     }
+
+   IFC(ee, fn_wm_rot_manual_rotation_done_set) (ee, set);
+   IFE;
+}
+
+EAPI Eina_Bool
+ecore_evas_wm_rotation_manual_rotation_done_get(const Ecore_Evas *ee)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_wm_rotation_manual_rotation_done_get");
+        return EINA_FALSE;
+     }
+
+   if (!ee->prop.wm_rot.app_set)
+     {
+        return EINA_FALSE;
+     }
+
+   return ee->prop.wm_rot.manual_mode.set;
+}
+
+EAPI void
+ecore_evas_wm_rotation_manual_rotation_done(Ecore_Evas *ee)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_wm_rotation_manual_rotation_done");
+        return;
+     }
+
+   if (!ee->prop.wm_rot.app_set)
+     {
+        return;
+     }
+
+   IFC(ee, fn_wm_rot_manual_rotation_done) (ee);
+   IFE;
+}
+
+EAPI const Eina_List *
+ecore_evas_aux_hints_supported_get(const Ecore_Evas *ee)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_aux_hints_supported_get");
+        return NULL;
+     }
+   return ee->prop.aux_hint.supported_list;
+}
+
+EAPI Eina_List *
+ecore_evas_aux_hints_allowed_get(const Ecore_Evas *ee)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_aux_hints_allowed_get");
+        return NULL;
+     }
+
+   Eina_List *list = NULL, *ll;
+   Ecore_Evas_Aux_Hint *aux;
+   EINA_LIST_FOREACH(ee->prop.aux_hint.hints, ll, aux)
+     {
+        if ((aux->allowed) && !(aux->notified))
+          {
+             list = eina_list_append(list, aux->id);
+          }
+     }
+
+   return list;
+}
+
+EAPI int
+ecore_evas_aux_hint_add(Ecore_Evas *ee, const char *hint, const char *val)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_aux_hint_add");
+        return -1;
+     }
+
+   Eina_List *ll;
+   char *supported_hint;
+   EINA_LIST_FOREACH(ee->prop.aux_hint.supported_list, ll, supported_hint)
+     {
+        if (!strncmp(supported_hint, hint, strlen(hint)))
+          {
+             Ecore_Evas_Aux_Hint *aux= (Ecore_Evas_Aux_Hint *)calloc(1, sizeof(Ecore_Evas_Aux_Hint));
+             if (aux)
+               {
+                  aux->id = ee->prop.aux_hint.id;
+                  aux->hint = eina_stringshare_add(hint);
+                  aux->val = eina_stringshare_add(val);
+
+                  ee->prop.aux_hint.hints = eina_list_append(ee->prop.aux_hint.hints, aux);
+
+                  Eina_Strbuf *buf = _ecore_evas_aux_hints_string_get(ee);
+                  if (buf)
+                    {
+                       if (ee->engine.func->fn_aux_hints_set)
+                         ee->engine.func->fn_aux_hints_set(ee, eina_strbuf_string_get(buf));
+
+                       eina_strbuf_free(buf);
+
+                       ee->prop.aux_hint.id++;
+
+                       return aux->id;
+                    }
+
+                  eina_stringshare_del(aux->hint);
+                  eina_stringshare_del(aux->val);
+                  free(aux);
+               }
+             break;
+          }
+     }
+
+   return -1;
+}
+
+EAPI Eina_Bool
+ecore_evas_aux_hint_del(Ecore_Evas *ee, const int id)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_aux_hint_del");
+        return EINA_FALSE;
+     }
+
+   Eina_List *ll;
+   Ecore_Evas_Aux_Hint *aux;
+   EINA_LIST_FOREACH(ee->prop.aux_hint.hints, ll, aux)
+     {
+        if (id == aux->id)
+          {
+             ee->prop.aux_hint.hints = eina_list_remove(ee->prop.aux_hint.hints, aux);
+
+             eina_stringshare_del(aux->hint);
+             eina_stringshare_del(aux->val);
+             free(aux);
+
+             Eina_Strbuf *buf = _ecore_evas_aux_hints_string_get(ee);
+             if (buf)
+               {
+                  if (ee->engine.func->fn_aux_hints_set)
+                    ee->engine.func->fn_aux_hints_set(ee, eina_strbuf_string_get(buf));
+
+                  eina_strbuf_free(buf);
+
+                  return EINA_TRUE;
+               }
+             break;
+          }
+     }
+
+   return EINA_FALSE;
+}
+
+EAPI Eina_Bool
+ecore_evas_aux_hint_val_set(Ecore_Evas *ee, const int id, const char *val)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_aux_hint_val_set");
+        return EINA_FALSE;
+     }
+
+   Eina_List *ll;
+   Ecore_Evas_Aux_Hint *aux;
+   EINA_LIST_FOREACH(ee->prop.aux_hint.hints, ll, aux)
+     {
+        if (id == aux->id)
+          {
+             eina_stringshare_del(aux->val);
+             aux->val = eina_stringshare_add(val);
+			 aux->allowed = 0;
+			 aux->notified = 0;
+
+             Eina_Strbuf *buf = _ecore_evas_aux_hints_string_get(ee);
+             if (buf)
+               {
+                  if (ee->engine.func->fn_aux_hints_set)
+                    ee->engine.func->fn_aux_hints_set(ee, eina_strbuf_string_get(buf));
+
+                  eina_strbuf_free(buf);
+
+                  return EINA_TRUE;
+               }
+             break;
+          }
+     }
+
+   return EINA_TRUE;
+}
+
 EAPI void
 ecore_evas_fullscreen_set(Ecore_Evas *ee, Eina_Bool on)
 {
@@ -2264,6 +2591,60 @@ ecore_evas_manual_render(Ecore_Evas *ee)
 }
 
 EAPI void
+ecore_evas_msg_parent_send(Ecore_Evas *ee, int msg_domain, int msg_id, void *data, int size)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_msg_parent_send");
+        return;
+     }
+   DBG("Msg(to parent): ee=%p msg_domain=%x msg_id=%x size=%d", ee, msg_domain, msg_id, size);
+   IFC(ee, fn_msg_parent_send) (ee, msg_domain, msg_id, data, size);
+   IFE;
+}
+
+EAPI void
+ecore_evas_msg_send(Ecore_Evas *ee, int msg_domain, int msg_id, void *data, int size)
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_msg_send");
+        return;
+     }
+   DBG("Msg: ee=%p msg_domain=%x msg_id=%x size=%d", ee, msg_domain, msg_id, size);
+   IFC(ee, fn_msg_send) (ee, msg_domain, msg_id, data, size);
+   IFE;
+}
+
+EAPI void
+ecore_evas_callback_msg_parent_handle_set(Ecore_Evas *ee, void (*func_parent_handle)(Ecore_Evas *ee, int msg_domain, int msg_id, void *data, int size))
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_msg_parent_handle");
+        return;
+     }
+   DBG("Msg Parent handle: ee=%p", ee);
+   ee->func.fn_msg_parent_handle = func_parent_handle;
+}
+
+EAPI void
+ecore_evas_callback_msg_handle_set(Ecore_Evas *ee, void (*func_handle)(Ecore_Evas *ee, int msg_domain, int msg_id, void *data, int size))
+{
+   if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
+     {
+        ECORE_MAGIC_FAIL(ee, ECORE_MAGIC_EVAS,
+                         "ecore_evas_msg_handle");
+        return;
+     }
+   DBG("Msg handle: ee=%p", ee);
+   ee->func.fn_msg_handle = func_handle;
+}
+
+EAPI void
 ecore_evas_comp_sync_set(Ecore_Evas *ee, Eina_Bool do_sync)
 {
    if (!ECORE_MAGIC_CHECK(ee, ECORE_MAGIC_EVAS))
@@ -2516,6 +2897,12 @@ _ecore_evas_free(Ecore_Evas *ee)
    ee->prop.name = NULL;
    if (ee->prop.clas) free(ee->prop.clas);
    ee->prop.clas = NULL;
+   if (ee->prop.wm_rot.available_rots) free(ee->prop.wm_rot.available_rots);
+   ee->prop.wm_rot.available_rots = NULL;
+   if (ee->prop.wm_rot.manual_mode.timer)
+     ecore_timer_del(ee->prop.wm_rot.manual_mode.timer);
+   ee->prop.wm_rot.manual_mode.timer = NULL;
+   _ecore_evas_aux_hint_free(ee);
    if (ee->prop.cursor.object) evas_object_del(ee->prop.cursor.object);
    ee->prop.cursor.object = NULL;
    if (ee->evas) evas_free(ee->evas);
@@ -2524,6 +2911,7 @@ _ecore_evas_free(Ecore_Evas *ee)
    ee->driver = NULL;
    if (ee->engine.idle_flush_timer)
      ecore_timer_del(ee->engine.idle_flush_timer);
+   ee->engine.idle_flush_timer = NULL;
    if (ee->engine.func->fn_free) ee->engine.func->fn_free(ee);
    if (ee->registered)
      {
@@ -2536,11 +2924,10 @@ _ecore_evas_free(Ecore_Evas *ee)
 static Eina_Bool
 _ecore_evas_cb_idle_flush(void *data)
 {
-   Ecore_Evas *ee;
+   Ecore_Evas *ee = data;
 
-   ee = (Ecore_Evas *)data;
-   evas_render_idle_flush(ee->evas);
    ee->engine.idle_flush_timer = NULL;
+   evas_render_idle_flush(ee->evas);
    return ECORE_CALLBACK_CANCEL;
 }
 
@@ -2773,6 +3160,48 @@ ecore_evas_input_event_unregister(Ecore_Evas *ee)
    ecore_event_window_unregister((Ecore_Window)ee);
 }
 
+Eina_Strbuf *
+_ecore_evas_aux_hints_string_get(Ecore_Evas *ee)
+{
+   Eina_Strbuf *buf = eina_strbuf_new();
+   if (buf)
+     {
+        if (eina_list_count(ee->prop.aux_hint.hints) > 0)
+          {
+             Eina_List *l;
+             Ecore_Evas_Aux_Hint *aux;
+             int i = 0;
+
+             EINA_LIST_FOREACH(ee->prop.aux_hint.hints, l, aux)
+               {
+                  /* add delimiter */
+                  if (i > 0) eina_strbuf_append_char(buf, ',');
+                  eina_strbuf_append_printf(buf, "%d:%s:%s", aux->id, aux->hint, aux->val);
+                  i++;
+               }
+          }
+     }
+   return buf;
+}
+
+void
+_ecore_evas_aux_hint_free(Ecore_Evas *ee)
+{
+   char *hint;
+   EINA_LIST_FREE(ee->prop.aux_hint.supported_list, hint)
+     {
+        eina_stringshare_del(hint);
+     }
+
+   Ecore_Evas_Aux_Hint *aux;
+   EINA_LIST_FREE(ee->prop.aux_hint.hints, aux)
+     {
+        eina_stringshare_del(aux->hint);
+        eina_stringshare_del(aux->val);
+        free(aux);
+     }
+}
+
 #if defined(BUILD_ECORE_EVAS_WAYLAND_SHM) || defined (BUILD_ECORE_EVAS_WAYLAND_EGL)
 EAPI void
 ecore_evas_wayland_resize(Ecore_Evas *ee, int location)
@@ -2796,17 +3225,13 @@ EAPI void
 ecore_evas_wayland_move(Ecore_Evas *ee, int x, int y)
 {
    if (!ee) return;
-   if (!strcmp(ee->driver, "wayland_shm"))
+   if (!strncmp(ee->driver, "wayland", 7))
      {
-#ifdef BUILD_ECORE_EVAS_WAYLAND_SHM
-        _ecore_evas_wayland_shm_move(ee, x, y);
-#endif
-     }
-   else if (!strcmp(ee->driver, "wayland_egl"))
-     {
-#ifdef BUILD_ECORE_EVAS_WAYLAND_EGL
-        _ecore_evas_wayland_egl_move(ee, x, y);
-#endif
+        if (ee->engine.wl.win)
+          {
+             ee->engine.wl.win->moving = EINA_TRUE;
+             ecore_wl_window_move(ee->engine.wl.win, x, y);
+          }
      }
 }
 
@@ -2827,12 +3252,9 @@ ecore_evas_wayland_window_get(const Ecore_Evas *ee)
 }
 
 EAPI void
-ecore_evas_wayland_pointer_set(Ecore_Evas *ee, int hot_x, int hot_y)
+ecore_evas_wayland_pointer_set(Ecore_Evas *ee __UNUSED__, int hot_x __UNUSED__, int hot_y __UNUSED__)
 {
-   Ecore_Wl_Window *win;
 
-   win = ecore_evas_wayland_window_get(ee);
-   /* ecore_wl_window_pointer_set(win, ee->engine.wl.buffer, hot_x, hot_y); */
 }
 
 #else
@@ -2865,4 +3287,5 @@ ecore_evas_wayland_pointer_set(Ecore_Evas *ee __UNUSED__, int hot_x __UNUSED__, 
 {
 
 }
+
 #endif

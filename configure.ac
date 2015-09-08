@@ -1,7 +1,7 @@
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
 ##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##--##
 m4_define([v_maj], [1])
-m4_define([v_min], [6])
+m4_define([v_min], [7])
 m4_define([v_mic], [99])
 m4_define([v_rev], m4_esyscmd([(svnversion "${SVN_REPO_PATH:-.}" | grep -v '\(export\|Unversioned directory\)' || echo 0) | awk -F : '{printf("%s\n", $1);}' | tr -d ' :MSP\n' | sed 's/Unversioneddirectory/0/' | tr -d '\n']))
 m4_if(v_rev, [0], [m4_define([v_rev], m4_esyscmd([git log 2> /dev/null | (grep -m1 git-svn-id || echo 0) | sed -e 's/.*@\([0-9]*\).*/\1/' | tr -d '\n']))])
@@ -114,6 +114,7 @@ want_glib="no"
 
 # core modules
 want_ecore_con="yes"
+want_ecore_con_eet="yes"
 want_ecore_ipc="yes"
 want_ecore_file="yes"
 #want_ecore_config="no"
@@ -184,6 +185,7 @@ want_ecore_imf_ibus="no"
 case "$host_os" in
    mingw32ce*)
       want_ecore_con="no"
+      want_ecore_con_eet="no"
       want_ecore_ipc="no"
       want_ecore_wince="yes"
       want_ecore_evas_software_16_wince="yes"
@@ -558,7 +560,7 @@ requirements_ecore_input_evas="ecore >= 1.6.99 eina >= 1.6.99 ${requirements_eco
 requirements_ecore_ipc="ecore >= 1.6.99 eina >= 1.6.99 ${requirements_ecore_ipc}"
 requirements_ecore_cocoa="ecore >= 1.6.99 eina >= 1.6.99 ${requirements_ecore_cocoa}"
 requirements_ecore_sdl="ecore >= 1.6.99 eina >= 1.6.99 ${requirements_ecore_sdl}"
-requirements_ecore_psl1ght="ecore >= 1.6.99 eina >= 1.6.99 ${requirements_ecore_sdl}"
+requirements_ecore_psl1ght="ecore >= 1.6.99 eina >= 1.6.99 ${requirements_ecore_psl1ght}"
 requirements_ecore_win32="ecore >= 1.6.99 eina >= 1.6.99 ${requirements_ecore_win32}"
 requirements_ecore_wince="ecore >= 1.6.99 eina >= 1.6.99 ${requirements_ecore_wince}"
 requirements_ecore_x="ecore >= 1.6.99 eina >= 1.6.99 ${requirements_ecore_x}"
@@ -622,11 +624,10 @@ PKG_CHECK_MODULES([DIRECTFB],
 
 # Eet library (ecore_config)
 
-#PKG_CHECK_MODULES([EET],
-#   [eet >= 1.6.99],
-#   [have_eet="yes"],
-#   [have_eet="no"])
-
+PKG_CHECK_MODULES([EET],
+   [eet >= 1.6.99],
+   [have_eet="yes"],
+   [have_eet="no"])
 
 # Xlib and XCB (ecore_x)
 
@@ -1182,6 +1183,7 @@ if ! test "x$have_ecore_x_xcb" = "xyes" ; then
     ECORE_CHECK_X_EXTENSION([Xtest], [XTest.h], [Xtst], [XTestFakeKeyEvent], [$want_ecore_x_xtest])
     ECORE_CHECK_X_EXTENSION([Xss], [scrnsaver.h], [Xss], [XScreenSaverSelectInput], [$want_ecore_x_screensaver])
     ECORE_CHECK_X_EXTENSION([Xi2], [XInput2.h], [Xi], [XIQueryDevice], [$want_ecore_x_input])
+    ECORE_CHECK_X_EXTENSION([Xi2_2], [XInput2.h], [Xi], [XIGrabTouchBegin], [$want_ecore_x_input])
 
     ecore_x_libs_private="${Xcursor_libs} ${XKB_LIBS} ${XCOMPOSITE_LIBS} ${XGESTURE_LIBS} ${XDAMAGE_LIBS} ${XDPMS_LIBS} ${XFIXES_LIBS} ${XINERAMA_LIBS} ${XPRINT_LIBS} ${XRANDR_LIBS} ${XRENDER_LIBS} ${XTEST_LIBS} ${XSS_LIBS} ${XI2_LIBS}"
 
@@ -1248,7 +1250,22 @@ AC_CHECK_HEADERS([net/if.h], [], [],
 # include <sys/socket.h>
 #endif
 ])
-AC_CHECK_HEADERS([sys/un.h arpa/inet.h arpa/nameser.h netinet/tcp.h netinet/in.h ws2tcpip.h netdb.h errno.h])
+AC_CHECK_HEADERS([sys/un.h], [], [],
+[
+#include <stdio.h>
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
+])
+AC_CHECK_HEADERS([arpa/inet.h arpa/nameser.h netinet/tcp.h netinet/in.h ws2tcpip.h netdb.h errno.h])
 
 if test "x${ac_cv_header_netdb_h}" = "xyes" ; then
    have_addrinfo="yes"
@@ -1462,6 +1479,7 @@ have_openssl="no"
 have_cares="no"
 want_ipv6="yes"
 have_ipv6="no"
+have_ecore_con_eet="no"
 
 AC_ARG_ENABLE([ipv6],
    [AC_HELP_STRING([--disable-ipv6],
@@ -1494,7 +1512,12 @@ if test "x${have_ecore_con}" = "xyes" ; then
    if test "x${have_ipv6}" = "xyes" ; then
       AC_DEFINE(HAVE_IPV6, 1, [Define if IPV6 is supported])
    fi
-   AM_CONDITIONAL([HAVE_IPV6], [test "x${have_ipv6}" = "xyes"])
+
+   if test "x${have_eet}" = "xyes" ; then
+      requirements_ecore_con="eet > 1.7 ${requirements_ecore_con}"
+      have_ecore_con_eet="yes"
+      AC_DEFINE(ECORE_HAVE_EET, 1, [Define if Ecore_Con Eet_Connection helper is supported])
+   fi
 
    ECORE_CHECK_CURL([${want_curl}],
       [
@@ -1531,6 +1554,8 @@ if test "x${have_ecore_con}" = "xyes" ; then
       [have_cares="no"])
 
 fi
+AM_CONDITIONAL([HAVE_IPV6], [test "x${have_ipv6}" = "xyes"])
+AM_CONDITIONAL([ECORE_HAVE_EET], [test "x${have_ecore_con_eet}" = "xyes"])
 
 EFL_CHECK_COMPILER_FLAGS([ECORE_CON], [-Wno-override-init -Wno-initializer-overrides])
 
@@ -1644,23 +1669,6 @@ fi
 ECORE_CHECK_MODULE([imf-ibus], [${want_ecore_imf}], [Imf_IBUS], [${ecore_imf_ibus_deps}],
    [requirements_ecore_imf_ibus="ecore-imf >= 1.6.99 ecore-x >= 1.6.99 ecore-input >= 1.6.99 ${requirements_ecore_imf_ibus}"])
 
-# ecore_imf_ibus
-PKG_CHECK_MODULES([IBUS], [ibus-1.0 >= 1.3.99], [have_ibus="yes"], [have_ibus="no"])
-
-AM_CONDITIONAL(BUILD_ECORE_IMF_IBUS, false)
-ecore_imf_ibus_deps="no"
-echo "have_ecore_x_xlib: ${have_ecore_x_xlib}"
-if test    "x${have_ecore_imf}" = "xyes" \
-        -a "x${have_glib}" =  "xyes" \
-        -a "x${have_ibus}" =  "xyes" \
-        -a "x${have_ecore_input}" = "xyes" ; then
-   ecore_imf_ibus_deps="yes"
-   AC_DEFINE(BUILD_ECORE_IMF_IBUS, 1, [Ecore Imf IBUS Support])
-fi
-
-ECORE_CHECK_MODULE([imf-ibus], [${want_ecore_imf}], [Imf_IBUS], [${ecore_imf_ibus_deps}],
-   [requirements_ecore_imf_ibus="ecore-imf >= 1.2.0 ecore-x >= 1.2.0 ecore-input >= 1.2.0 ${requirements_ecore_imf_ibus}"])
-
 ## Graphic systems
 
 # ecore_x{cb}
@@ -1729,7 +1737,7 @@ ECORE_CHECK_MODULE([directfb], [${want_ecore_directfb}], [DirectFB], [${have_dir
 # ecore_wince
 
 ECORE_CHECK_MODULE([wince], [${want_ecore_wince}], [WinCE], [${have_ecore_input}],
-   [requirements_ecore_win32="ecore-input >= 1.6.99 ${requirements_ecore_win32}"])
+   [requirements_ecore_wince="ecore-input >= 1.6.99 ${requirements_ecore_wince}"])
 
 ## Ecore Evas
 
@@ -1966,7 +1974,7 @@ fi
 
 ECORE_CHECK_MODULE([wayland], [${want_ecore_wayland}], [Wayland], [${ecore_wayland_deps}])
 if test "x${have_ecore_wayland}" = "xyes" ; then
-  requirements_ecore_wayland="ecore-input >= 1.6.99 wayland-client xkbcommon ${requirements_ecore_wayland}"
+  requirements_ecore_wayland="ecore-input >= 1.6.99 wayland-client wayland-cursor xkbcommon ${requirements_ecore_wayland}"
 fi
 
 ECORE_EVAS_CHECK_MODULE_FULL([wayland-shm], [wayland-shm], 
@@ -1986,9 +1994,16 @@ ECORE_EVAS_CHECK_MODULE_FULL([wayland-egl], [wayland-egl egl >= 7.10],
       fi
    ])
 
-### Unit tests
+### Unit tests and coverage
 
 EFL_CHECK_TESTS([enable_tests="yes"], [enable_tests="no"])
+
+EFL_CHECK_COVERAGE([${enable_tests}], [enable_coverage="yes"], [enable_coverage="no"])
+CFLAGS="${CFLAGS} ${EFL_COVERAGE_CFLAGS}"
+ECORE_LIBS="${ECORE_LIBS} ${EFL_COVERAGE_LIBS}"
+if test "x$enable_coverage" = "xyes" ; then
+   CFLAGS="${CFLAGS} ${EFL_DEBUG_CFLAGS}"
+fi
 
 ### install and build examples
 
@@ -2108,6 +2123,7 @@ fi
   echo "    IPv6.......................: $have_ipv6"
   echo "    GnuTLS.....................: $have_gnutls"
   echo "    CURL.......................: $have_curl"
+  echo "    Eet........................: $have_ecore_con_eet"
   echo "    Local Sockets..............: $want_ecore_con_local_sockets"
 if test "x$want_ecore_con_local_sockets" = "xyes" ; then
   echo "      Abstract Sockets.........: $want_ecore_con_abstract_sockets"
@@ -2183,6 +2199,7 @@ if test "x$have_ecore_x" = "xyes" ; then
     echo "    Xtest......................: $use_xtest"
     echo "    XIM........................: $want_xim"
     echo "    Xi2........................: $use_xi2"
+    echo "    Xi2.2......................: $use_xi2_2"
   fi
 else
   echo "  Ecore_X......................: $have_ecore_x"
@@ -2237,6 +2254,7 @@ if test "x${have_ecore_evas}" = "xyes" ; then
 fi
 echo
 echo "  Tests................: ${enable_tests}"
+echo "  Coverage.............: ${enable_coverage}"
 echo "  Maximum log level....: ${with_max_log_level}"
 echo "Documentation..........: ${build_doc}"
 echo "Examples...............: ${enable_build_examples}"

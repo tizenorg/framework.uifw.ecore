@@ -1,4 +1,109 @@
-Ecore 1.3.0
+Ecore 1.8.0
+
+
+Ecore 1.7.99
+
+Changes since Ecore 1.7.98:
+--------------------------
+
+Additions:
+    * ecore_con:
+     - Add Ecore_Con_Eet API to help using Eet_Data with Ecore_Con.
+    * ecore_x:
+     - ECORE_X_ATOM_E_ILLUME_ACCESS_ACTION_UP.
+     - ECORE_X_ATOM_E_ILLUME_ACCESS_ACTION_DOWN.
+     - ECORE_X_ATOM_E_ILLUME_ACCESS_ACTION_ENABLE.
+     - ECORE_X_ATOM_E_ILLUME_ACCESS_ACTION_DISABLE.
+     - ecore_x_input_raw_select.
+     - +ecore_x_selection_converter_text.
+     - ECORE_X_RAW_MOTION, ECORE_X_RAW_BUTTON_PRESS and ECORE_X_RAW_BUTTON_RELEASE.
+    * ecore_imf:
+     - ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_SIGNIN.
+     - ECORE_IMF_PREEDIT_TYPE_SUB4~7 style.
+    * ecore_evas:
+     - Wayland SHM engine now features a mechanism to synchronize rendering with
+       the compositor, removing the tearing effect in animations when using that
+       engine.
+
+Fixes:
+    * ecore_con_url:
+     - Timeouts are handled correctly now (passing HTTP status 408 to
+       completion callback).
+     - properly reschedule call to curl.
+    * ecore_evas rotation handling on some driver implementations
+    * ecore_file_escape_name() escape taba nd newline right.
+    * ecore_imf ibus module potential segv fixed.
+    * ecore_thread_feedback() memory allocation and corruption fixed.
+    * ecore_x:
+     - ecore_x_image_is_argb32_get() returns correctly given endianness.
+     - ecore_x_randr to actually return outputs properly.
+     - ecore_x_randr to actually return crtcs properly.
+     - ecore_x_randr to actually return crtcs possible outputs properly.
+     - ecore_x_randr to actually return crtcs outputs properly.
+    * send ECORE_X_EVENT_SELECTION_NOTIFY even if there is no data.
+    * Ecore-X: Fix selection parser to not overrun buffer read by using longs on 64bit.
+
+Improvements:
+
+
+Ecore 1.7.5
+
+Changes since Ecore 1.7.4:
+--------------------------
+
+Fixes:
+    * Fix ecore_con case where freeing server double-frees clients
+        
+Ecore 1.7.4
+
+Changes since Ecore 1.7.3:
+--------------------------
+
+Fixes:
+    * Fix XCB compile with screensaver support
+    * Fix build without IPv6.
+    * Fix possible memory corruption in xrandr EDID functions.
+    * Backport 81304, which fixes memory errors in ecore_evas_extn
+    * Fix big rendering/conversion problem in kvm/qemu 24bpp.
+
+Ecore 1.7.3
+
+Changes since Ecore 1.7.2:
+--------------------------
+
+Fixes:
+    * Fix small leak in Ecore Wayland.
+    * Fix Ecore_Evas_SDL resize bug.
+    * Fix Ecore_Evas_Extn build on Solaris 11.
+    * Fix Wayland support to latest API.
+    * Don't leak fd on exec.
+
+Ecore 1.7.2
+
+Changes since Ecore 1.7.1:
+--------------------------
+
+No Changes, just updating to keep in sync with last release.
+
+Changes since Ecore 1.7.0
+--------------------------
+
+Fixes:
+    * ecore_con_ssl: fix crash on failure with privkeys and certificate.
+    * ecore_con_ssl: fix ssl connections.
+    * ecore_con: fix race condition with event from disconnected clients.
+    * ecore_con_url: properly reschedule call to curl.
+    * ecore_evas: rotation handling on some driver implementations
+    * ecore_file: ecore_file_escape_name() escape taba nd newline right.
+    * ecore_x_image_is_argb32_get() returns correctly given endianness.
+    * ecore_x: fix ecore_x_randr.
+    * ecore_x: send ECORE_X_EVENT_SELECTION_NOTIFY even if there is no data.
+    * ecore_imf: ibus module potential segv fixed.
+    * ecore: ecore_thread_feedback() memory allocation and corruption fixed.
+    * ecore_wayland:
+     - Update to work with latest wayland (0.99) from git.
+     - Fix leak of struct wl_registry
+    * ecore_evas: fix Ecore_Evas_Extn build on Solaris 11.
 
 Changes since Ecore 1.2.0:
 --------------------------
@@ -6,6 +111,7 @@ Changes since Ecore 1.2.0:
 Additions:
     * ecore:
      - Add ecore_main_fd_handler_file_add()
+     - Add ecore_fork_reset()
     * ecore_evas:
      - Add transparency support on Windows (GDI engine only)
      - Add API functions to get/set an Ecore_Evas's profile.
@@ -28,9 +134,13 @@ Fixes:
      - Force cancel of all running Ecore_Thread on shutdown.
      - Make Ecore_Thread work reliably when called without a running main loop.
      - Correctly shutdown Ecore_Thread.
+     - Fix usage of FD_SET and al. when fd_set pointers are NULL (Windows)
+     - Fix ecore_thread seg fault on Windows where PHS() was returning a wrong value
+     - Always call evas_render_update_free to prevent leak in Ecore_Evas X bakcend.
 
     * ecore_x
      - Fix unitialized Ecore_X_Atom use.
+    * send ECORE_X_EVENT_SELECTION_NOTIFY even if there is no data.
 
 
 Ecore 1.2.0

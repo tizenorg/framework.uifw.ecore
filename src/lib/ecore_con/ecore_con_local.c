@@ -7,7 +7,12 @@
 #include <unistd.h>
 #include <time.h>
 #include <fcntl.h>
+#include <sys/types.h>
 #include <sys/stat.h>
+
+#ifdef HAVE_ERRNO_H
+# include <errno.h>
+#endif
 
 #ifdef HAVE_SYS_SOCKET_H
 # include <sys/socket.h>
@@ -85,7 +90,10 @@ ecore_con_local_connect(Ecore_Con_Server *svr,
         if (svr->port < 0)
           {
              if (svr->name[0] == '/')
-               strncpy(buf, svr->name, sizeof(buf));
+               {
+                  strncpy(buf, svr->name, sizeof(buf) - 1);
+                  buf[sizeof(buf) - 1] = 0;
+               }
              else
                snprintf(buf, sizeof(buf), "/tmp/.ecore_service|%s", svr->name);
           }
@@ -144,7 +152,7 @@ ecore_con_local_connect(Ecore_Con_Server *svr,
    if (connect(svr->fd, (struct sockaddr *)&socket_unix,
                socket_unix_len) < 0)
      {
-        ERR("local connection failed: %s", strerror(errno));
+        WRN("local connection failed: %s", strerror(errno));
         return 0;
      }
 
@@ -240,8 +248,10 @@ ecore_con_local_listen(
                    svr->port);
      }
    else if ((svr->type & ECORE_CON_TYPE) == ECORE_CON_LOCAL_ABSTRACT)
-     strncpy(buf, svr->name,
-             sizeof(buf));
+     {
+        strncpy(buf, svr->name, sizeof(buf) - 1);
+        buf[sizeof(buf) - 1] = 0;
+     }
 
    pmode = umask(mask);
 start:
@@ -273,7 +283,7 @@ start:
         socket_unix_len = LENGTH_OF_ABSTRACT_SOCKADDR_UN(&socket_unix,
                                                          svr->name);
 #else
-        ERR("Your system does not support abstract sockets!");
+        WRN("Your system does not support abstract sockets!");
         goto error_umask;
 #endif
      }
@@ -285,14 +295,24 @@ start:
 
    if (bind(svr->fd, (struct sockaddr *)&socket_unix, socket_unix_len) < 0)
      {
-        if ((((svr->type & ECORE_CON_TYPE) == ECORE_CON_LOCAL_USER) ||
-             ((svr->type & ECORE_CON_TYPE) == ECORE_CON_LOCAL_SYSTEM)) &&
-            (connect(svr->fd, (struct sockaddr *)&socket_unix,
-                     socket_unix_len) < 0) &&
-            (unlink(buf) >= 0))
-          goto start;
+        WRN("bind error[%s].", strerror(errno));
+        if (((svr->type & ECORE_CON_TYPE) == ECORE_CON_LOCAL_USER) ||
+             ((svr->type & ECORE_CON_TYPE) == ECORE_CON_LOCAL_SYSTEM))
+          {
+             int u = unlink(buf);
+             if (u >= 0)
+               {
+                  if (bind(svr->fd, (struct sockaddr *)&socket_unix, socket_unix_len) < 0)
+                    {
+                       WRN("bind error[%s].", strerror(errno));
+                       goto error_umask;
+                    }
+               }
+          }
         else
-          goto error_umask;
+          {
+             goto error_umask;
+          }
      }
 
    if (listen(svr->fd, 4096) < 0)
@@ -315,6 +335,8 @@ error_umask:
    umask(pmode);
 error:
 #endif /* HAVE_LOCAL_SOCKETS */
+
+   WRN("error returned.");
    return 0;
 }
 

@@ -235,6 +235,7 @@ ecore_x_window_defaults_set(Ecore_X_Window win)
    int argc;
    char **argv;
    XTextProperty xprop;
+   unsigned int transform_hint = ECORE_X_WINDOW_ROTATION_TRANSFORM_HINT_0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    /*
@@ -263,6 +264,8 @@ ecore_x_window_defaults_set(Ecore_X_Window win)
 
    ecore_app_args_get(&argc, &argv);
    ecore_x_icccm_command_set(win, argc, argv);
+
+   ecore_x_window_prop_card32_set(win, ECORE_X_ATOM_E_WINDOW_ROTATION_TRANSFORM_HINT, &transform_hint, 1);
 }
 
 EAPI void
@@ -670,13 +673,6 @@ ecore_x_window_reparent(Ecore_X_Window win,
    XReparentWindow(_ecore_x_disp, win, new_parent, x, y);
 }
 
-/**
- * Retrieves the size of the given window.
- * @param   win The given window.
- * @param   w   Pointer to an integer into which the width is to be stored.
- * @param   h   Pointer to an integer into which the height is to be stored.
- * @ingroup Ecore_X_Window_Geometry_Group
- */
 EAPI void
 ecore_x_window_size_get(Ecore_X_Window win,
                         int *w,
@@ -691,22 +687,6 @@ ecore_x_window_size_get(Ecore_X_Window win,
    ecore_x_drawable_geometry_get(win, &dummy_x, &dummy_y, w, h);
 }
 
-/**
- * Retrieves the geometry of the given window.
- *
- * Note that the x & y coordinates are relative to your parent.  In
- * particular for reparenting window managers - relative to you window border.
- * If you want screen coordinates either walk the window tree to the root,
- * else for ecore_evas applications see ecore_evas_geometry_get().  Elementary
- * applications can use elm_win_screen_position_get().
- *
- * @param   win The given window.
- * @param   x   Pointer to an integer in which the X position is to be stored.
- * @param   y   Pointer to an integer in which the Y position is to be stored.
- * @param   w   Pointer to an integer in which the width is to be stored.
- * @param   h   Pointer to an integer in which the height is to be stored.
- * @ingroup Ecore_X_Window_Geometry_Group
- */
 EAPI void
 ecore_x_window_geometry_get(Ecore_X_Window win,
                             int *x,
@@ -721,12 +701,6 @@ ecore_x_window_geometry_get(Ecore_X_Window win,
    ecore_x_drawable_geometry_get(win, x, y, w, h);
 }
 
-/**
- * Retrieves the width of the border of the given window.
- * @param   win The given window.
- * @return  Width of the border of @p win.
- * @ingroup Ecore_X_Window_Geometry_Group
- */
 EAPI int
 ecore_x_window_border_width_get(Ecore_X_Window win)
 {
@@ -756,11 +730,6 @@ ecore_x_window_border_width_set(Ecore_X_Window win,
    XSetWindowBorderWidth (_ecore_x_disp, win, width);
 }
 
-/**
- * Retrieves the depth of the given window.
- * @param  win The given window.
- * @return Depth of the window.
- */
 EAPI int
 ecore_x_window_depth_get(Ecore_X_Window win)
 {
@@ -1725,3 +1694,71 @@ ecore_x_window_override_argb_new(Ecore_X_Window parent,
 #endif /* ifdef ECORE_XRENDER */
 }
 
+EAPI Ecore_X_Window
+ecore_x_window_permanent_create(Ecore_X_Window parent,
+                                Ecore_X_Atom unique_atom)
+{
+   Display *disp;
+   Window win, win2, realwin = 0;
+   Atom type_ret;
+   int format_ret;
+   unsigned long ldata, bytes_after, num_ret, *datap;
+   unsigned char *prop_ret;
+
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
+   disp = XOpenDisplay(DisplayString(_ecore_x_disp));
+   if (!disp) return 0;
+
+   XGrabServer(disp);
+   if (XGetWindowProperty(disp, parent, unique_atom, 0, 0x7fffffff,
+                          False, XA_WINDOW, &type_ret, &format_ret,
+                          &num_ret, &bytes_after, &prop_ret))
+     {
+        if (prop_ret)
+          {
+             if ((format_ret == 32) && (type_ret == XA_WINDOW) &&
+                 (num_ret == 1))
+               {
+                  datap = (unsigned long *)prop_ret;
+                  win = (Window)(*datap);
+                  XFree(prop_ret);
+                  if (XGetWindowProperty(disp, win, unique_atom, 0, 0x7fffffff,
+                                         False, XA_WINDOW, &type_ret, &format_ret,
+                                         &num_ret, &bytes_after, &prop_ret))
+                    {
+                       if (prop_ret)
+                         {
+                            if ((format_ret == 32) && (type_ret == XA_WINDOW) &&
+                                (num_ret == 1))
+                              {
+                                 datap = (unsigned long *)prop_ret;
+                                 win2 = (Window)(*datap);
+                                 XFree(prop_ret);
+                                 if (win2 == win) realwin = win;
+                              }
+                            else XFree(prop_ret);
+                         }
+                    }
+               }
+             else XFree(prop_ret);
+          }
+     }
+   if (realwin != 0)
+     {
+        XUngrabServer(disp);
+        XFlush(disp);
+        XCloseDisplay(disp);
+        return realwin;
+     }
+   win = XCreateSimpleWindow(disp, parent, -77, -77, 7, 7, 0, 0, 0);
+   ldata = (unsigned long)win;
+   XChangeProperty(disp, win, unique_atom, XA_WINDOW, 32,
+                   PropModeReplace, (unsigned char *)(&ldata), 1);
+   XChangeProperty(disp, parent, unique_atom, XA_WINDOW, 32,
+                   PropModeReplace, (unsigned char *)(&ldata), 1);
+   XSetCloseDownMode(disp, RetainPermanent);
+   XUngrabServer(disp);
+   XFlush(disp);
+   XCloseDisplay(disp);
+   return win;
+}

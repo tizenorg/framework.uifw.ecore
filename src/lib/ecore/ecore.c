@@ -80,6 +80,7 @@ static void _thread_callback(void        *data,
 static Eina_List *_thread_cb = NULL;
 static Ecore_Pipe *_thread_call = NULL;
 static Eina_Lock _thread_safety;
+static const int wakeup = 42;
 
 static int _thread_loop = 0;
 static Eina_Lock _thread_mutex;
@@ -94,6 +95,8 @@ static int _thread_id_update = 0;
 
 Eina_Lock _ecore_main_loop_lock;
 int _ecore_main_lock_count;
+
+extern int _ecore_thread_count_real;
 
 /** OpenBSD does not define CODESET
  * FIXME ??
@@ -175,11 +178,8 @@ ecore_init(void)
    eina_condition_new(&_thread_cond, &_thread_mutex);
    eina_lock_new(&_thread_feedback_mutex);
    eina_condition_new(&_thread_feedback_cond, &_thread_feedback_mutex);
-   if (!_thread_call)
-     {
-       _thread_call = ecore_pipe_add(_thread_callback, NULL);
-       eina_lock_new(&_thread_safety);
-     }
+   _thread_call = ecore_pipe_add(_thread_callback, NULL);
+   eina_lock_new(&_thread_safety);
 
    eina_lock_new(&_thread_id_lock);
 
@@ -224,7 +224,6 @@ shutdown_evil:
 EAPI int
 ecore_shutdown(void)
 {
-     Ecore_Pipe *p;
    /*
     * take a lock here because _ecore_event_shutdown() does callbacks
     */
@@ -259,10 +258,15 @@ ecore_shutdown(void)
     * It should be fine now as we do wait for thread to shutdown before
     * we try to destroy the pipe.
     */
-     p = _thread_call;
+     do
+       {
+         ecore_pipe_wait(_thread_call, 1, 0.1);
+         // 0.1 seconds waiting for up to this delay for pending
+         // threads to still join
+       }
+     while (_ecore_thread_count_real > 0);
+     ecore_pipe_del(_thread_call);
      _thread_call = NULL;
-     ecore_pipe_wait(p, 1, 0.1);
-     ecore_pipe_del(p);
      eina_lock_free(&_thread_safety);
      eina_condition_free(&_thread_cond);
      eina_lock_free(&_thread_mutex);
@@ -307,11 +311,91 @@ unlock:
      return _ecore_init_count;
 }
 
+struct _Ecore_Fork_Cb
+{
+   Ecore_Cb func;
+   void *data;
+   Eina_Bool delete_me : 1;
+};
+
+typedef struct _Ecore_Fork_Cb Ecore_Fork_Cb;
+
+static int fork_cbs_walking = 0;
+static Eina_List *fork_cbs = NULL;
+
+EAPI Eina_Bool
+ecore_fork_reset_callback_add(Ecore_Cb func, const void *data)
+{
+   Ecore_Fork_Cb *fcb;
+   
+   fcb = calloc(1, sizeof(Ecore_Fork_Cb));
+   if (!fcb) return EINA_FALSE;
+   fcb->func = func;
+   fcb->data = (void *)data;
+   fork_cbs = eina_list_append(fork_cbs, fcb);
+   return EINA_TRUE;
+}
+
+EAPI Eina_Bool
+ecore_fork_reset_callback_del(Ecore_Cb func, const void *data)
+{
+   Eina_List *l;
+   Ecore_Fork_Cb *fcb;
+
+   EINA_LIST_FOREACH(fork_cbs, l, fcb)
+     {
+        if ((fcb->func == func) && (fcb->data == data))
+          {
+             if (!fork_cbs_walking)
+               {
+                  fork_cbs = eina_list_remove_list(fork_cbs, l);
+                  free(fcb);
+               }
+             else
+               fcb->delete_me = EINA_TRUE;
+             return EINA_TRUE;
+          }
+     }
+   return EINA_FALSE;
+}
+
+EAPI void
+ecore_fork_reset(void)
+{
+   Eina_List *l, *ln;
+   Ecore_Fork_Cb *fcb;
+   
+   eina_lock_take(&_thread_safety);
+
+   ecore_pipe_del(_thread_call);
+   _thread_call = ecore_pipe_add(_thread_callback, NULL);
+   /* If there was something in the pipe, trigger a wakeup again */
+   if (_thread_cb) ecore_pipe_write(_thread_call, &wakeup, sizeof (int));
+
+   eina_lock_release(&_thread_safety);
+
+   // should this be done withing the eina lock stuff?
+   
+   fork_cbs_walking++;
+   EINA_LIST_FOREACH(fork_cbs, l, fcb)
+     {
+        fcb->func(fcb->data);
+     }
+   fork_cbs_walking--;
+   
+   EINA_LIST_FOREACH_SAFE(fork_cbs, l, ln, fcb)
+     {
+        if (fcb->delete_me)
+          {
+             fork_cbs = eina_list_remove_list(fork_cbs, l);
+             free(fcb);
+          }
+     }
+}
+
 /**
  * @}
  */
-
-static int wakeup = 42;
 
 EAPI void
 ecore_main_loop_thread_safe_call_async(Ecore_Cb callback,
@@ -466,7 +550,11 @@ ecore_print_warning(const char *function __UNUSED__,
        "\tWith the parameter:\n\n"
        "\t%s\n\n"
        "\tbeing NULL. Please fix your program.", function, sparam);
-   if (getenv("ECORE_ERROR_ABORT")) abort();
+   if (getenv("ECORE_ERROR_ABORT"))
+     {
+        ERR("### EFL abort on errors ###\n");
+        abort();
+     }
 }
 
 EAPI void
@@ -491,7 +579,11 @@ _ecore_magic_fail(const void *d,
    ERR("*** NAUGHTY PROGRAMMER!!!\n"
        "*** SPANK SPANK SPANK!!!\n"
        "*** Now go fix your code. Tut tut tut!");
-   if (getenv("ECORE_ERROR_ABORT")) abort();
+   if (getenv("ECORE_ERROR_ABORT"))
+     {
+        ERR("### EFL abort on errors ###\n");
+        abort();
+     }
 }
 
 static const char *

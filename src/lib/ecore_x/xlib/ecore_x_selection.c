@@ -2,6 +2,32 @@
 # include <config.h>
 #endif /* ifdef HAVE_CONFIG_H */
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -15,13 +41,6 @@ static Ecore_X_Selection_Intern selections[4];
 static Ecore_X_Selection_Converter *converters = NULL;
 static Ecore_X_Selection_Parser *parsers = NULL;
 
-static Eina_Bool _ecore_x_selection_converter_text(char *target,
-                                                   void *data,
-                                                   int size,
-                                                   void **data_ret,
-                                                   int *size_ret,
-                                                   Ecore_X_Atom *tprop,
-                                                   int *);
 static int   _ecore_x_selection_data_default_free(void *data);
 static void *_ecore_x_selection_parser_files(const char *target,
                                              void *data,
@@ -49,15 +68,15 @@ _ecore_x_selection_data_init(void)
 
    /* Initialize converters */
    ecore_x_selection_converter_atom_add(ECORE_X_ATOM_TEXT,
-                                        _ecore_x_selection_converter_text);
+                                        ecore_x_selection_converter_text);
 #ifdef X_HAVE_UTF8_STRING
    ecore_x_selection_converter_atom_add(ECORE_X_ATOM_UTF8_STRING,
-                                        _ecore_x_selection_converter_text);
+                                        ecore_x_selection_converter_text);
 #endif /* ifdef X_HAVE_UTF8_STRING */
    ecore_x_selection_converter_atom_add(ECORE_X_ATOM_COMPOUND_TEXT,
-                                        _ecore_x_selection_converter_text);
+                                        ecore_x_selection_converter_text);
    ecore_x_selection_converter_atom_add(ECORE_X_ATOM_STRING,
-                                        _ecore_x_selection_converter_text);
+                                        ecore_x_selection_converter_text);
 
    /* Initialize parsers */
    ecore_x_selection_parser_add("text/plain",
@@ -143,6 +162,12 @@ _ecore_x_selection_set(Window w,
    else
      return EINA_FALSE;
 
+   if (selections[in].data)
+     {
+        free(selections[in].data);
+        memset(&selections[in], 0, sizeof(Ecore_X_Selection_Intern));
+     }
+
    if (data)
      {
         selections[in].win = w;
@@ -154,11 +179,6 @@ _ecore_x_selection_set(Window w,
         if (!buf) return EINA_FALSE;
         memcpy(buf, data, size);
         selections[in].data = buf;
-     }
-   else if (selections[in].data)
-     {
-        free(selections[in].data);
-        memset(&selections[in], 0, sizeof(Ecore_X_Selection_Data));
      }
 
    return EINA_TRUE;
@@ -543,7 +563,7 @@ ecore_x_selection_convert(Ecore_X_Atom selection,
 {
    Ecore_X_Selection_Intern *sel;
    Ecore_X_Selection_Converter *cnv;
-   void *data;
+   void *data = NULL;
    char *tgt_str;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
@@ -555,6 +575,7 @@ ecore_x_selection_convert(Ecore_X_Atom selection,
         if (cnv->target == target)
           {
              int r;
+
              r = cnv->convert(tgt_str, sel->data, sel->length, &data, size,
                               targtype, typesize);
              free(tgt_str);
@@ -567,6 +588,7 @@ ecore_x_selection_convert(Ecore_X_Atom selection,
                return EINA_FALSE;
           }
      }
+   free(tgt_str);
 
    /* ICCCM says "If the selection cannot be converted into a form based on the target (and parameters, if any), the owner should refuse the SelectionRequest as previously described." */
    return EINA_FALSE;
@@ -582,14 +604,14 @@ ecore_x_selection_convert(Ecore_X_Atom selection,
 /* TODO: We need to work out a mechanism for automatic conversion to any requested
  * locale using Ecore_Txt functions */
 /* Converter for standard non-utf8 text targets */
-static Eina_Bool
-_ecore_x_selection_converter_text(char *target,
-                                  void *data,
-                                  int size,
-                                  void **data_ret,
-                                  int *size_ret,
-                                  Ecore_X_Atom *targprop __UNUSED__,
-                                  int *s __UNUSED__)
+EAPI Eina_Bool
+ecore_x_selection_converter_text(char *target,
+                                 void *data,
+                                 int size,
+                                 void **data_ret,
+                                 int *size_ret,
+                                 Ecore_X_Atom *targprop __UNUSED__,
+                                 int *s __UNUSED__)
 {
    XTextProperty text_prop;
    char *mystr;
@@ -813,11 +835,13 @@ _ecore_x_selection_parser_files(const char *target,
        strcmp(target, "_NETSCAPE_URL"))
      return NULL;
 
+   if (!data) return NULL;
+
    sel = calloc(1, sizeof(Ecore_X_Selection_Data_Files));
    if (!sel) return NULL;
    ECORE_X_SELECTION_DATA(sel)->free = _ecore_x_selection_data_files_free;
 
-   if (data[size - 1])
+   if (data && data[size - 1])
      {
         /* Isn't nul terminated */
         size++;
@@ -834,6 +858,7 @@ _ecore_x_selection_parser_files(const char *target,
    tmp = malloc(size);
    if (!tmp)
      {
+        if(data) free(data);
         free(sel);
         return NULL;
      }
@@ -916,7 +941,7 @@ _ecore_x_selection_parser_text(const char *target __UNUSED__,
 
    sel = calloc(1, sizeof(Ecore_X_Selection_Data_Text));
    if (!sel) return NULL;
-   if (data[size - 1])
+   if (data && data[size - 1])
      {
         /* Isn't nul terminated */
         size++;
@@ -956,12 +981,12 @@ _ecore_x_selection_parser_targets(const char *target __UNUSED__,
                                   int format __UNUSED__)
 {
    Ecore_X_Selection_Data_Targets *sel;
-   unsigned long *targets;
+   int *targets;
    int i;
 
    sel = calloc(1, sizeof(Ecore_X_Selection_Data_Targets));
    if (!sel) return NULL;
-   targets = (unsigned long *)data;
+   targets = data;
 
    sel->num_targets = size - 2;
    sel->targets = malloc((size - 2) * sizeof(char *));

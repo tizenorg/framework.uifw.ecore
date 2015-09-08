@@ -79,13 +79,15 @@
 # include <Evas_Engine_Gl_Cocoa.h>
 #endif
 
-#ifdef BUILD_ECORE_EVAS_WAYLAND_SHM
+#if defined(BUILD_ECORE_EVAS_WAYLAND_SHM) || defined(BUILD_ECORE_EVAS_WAYLAND_EGL)
 # include "Ecore_Wayland.h"
+#endif
+
+#ifdef BUILD_ECORE_EVAS_WAYLAND_SHM
 # include <Evas_Engine_Wayland_Shm.h>
 #endif
 
 #ifdef BUILD_ECORE_EVAS_WAYLAND_EGL
-# include "Ecore_Wayland.h"
 # include <Evas_Engine_Wayland_Egl.h>
 #endif
 
@@ -128,6 +130,7 @@ typedef void   (*Ecore_Evas_Event_Cb) (Ecore_Evas *ee);
 
 typedef struct _Ecore_Evas_Engine Ecore_Evas_Engine;
 typedef struct _Ecore_Evas_Engine_Func Ecore_Evas_Engine_Func;
+typedef struct _Ecore_Evas_Aux_Hint Ecore_Evas_Aux_Hint;
 
 struct _Ecore_Evas_Engine_Func
 {
@@ -189,6 +192,15 @@ struct _Ecore_Evas_Engine_Func
    int (*fn_render) (Ecore_Evas *ee);
    void (*fn_screen_geometry_get) (const Ecore_Evas *ee, int *x, int *y, int *w, int *h);
    void (*fn_screen_dpi_get) (const Ecore_Evas *ee, int *xdpi, int *ydpi);
+   void (*fn_msg_parent_send) (Ecore_Evas *ee, int maj, int min, void *data, int size);
+   void (*fn_msg_send) (Ecore_Evas *ee, int maj, int min, void *data, int size);
+
+   void (*fn_wm_rot_preferred_rotation_set) (Ecore_Evas *ee, int rot);
+   void (*fn_wm_rot_available_rotations_set) (Ecore_Evas *ee, const int *rots, unsigned int count);
+   void (*fn_wm_rot_manual_rotation_done_set) (Ecore_Evas *ee, Eina_Bool set);
+   void (*fn_wm_rot_manual_rotation_done) (Ecore_Evas *ee);
+
+   void (*fn_aux_hints_set) (Ecore_Evas *ee, const char *hints);
 };
 
 struct _Ecore_Evas_Engine
@@ -221,6 +233,14 @@ struct _Ecore_Evas_Engine
       unsigned char  netwm_sync_set : 1;
       unsigned char  configure_coming : 1;
       struct {
+	   unsigned char supported: 1;
+	   unsigned char prepare : 1;
+	   unsigned char request : 1;
+	   unsigned char done : 1;
+	   unsigned char configure_coming : 1;
+           Ecore_Job    *manual_mode_job;
+      } wm_rot;
+      struct {
 	   unsigned char modal : 1;
 	   unsigned char sticky : 1;
 	   unsigned char maximized_v : 1;
@@ -233,6 +253,23 @@ struct _Ecore_Evas_Engine
 	   unsigned char below : 1;
       } state;
       Ecore_X_Window win_shaped_input;
+      Ecore_Job     *deiconify_job;
+      Ecore_Idle_Enterer *manual_render_idle_enterer; /**< idle enterer for manual render on
+                                                       ECORE_X_ATOM_E_COMP_SYNC_BEGIN,
+                                                       ECORE_X_EVENT_WINDOW_CONFIGURE,
+                                                       and rotation.
+                                                       */
+      Eina_Bool manual_render_by_ecore_evas : 1; /**< mark this true if the manual render was set by ecore_evas */
+      Eina_Bool deiconify_approve_after_manual_render : 1; /**< marked when deiconify approve should be sent after manual rendering in idle enterer */
+      struct
+        {
+           unsigned int front, back; // front and back pixmaps (double-buffer)
+           Evas_Coord front_w, front_h; // store pixmap size for front pixmap
+           Evas_Coord back_w, back_h; // store pixmap size for back pixmap
+           int depth; // store depth to save us from fetching engine info pre_render
+           void *visual; // store visual used to create pixmap
+           unsigned long colormap; // store colormap used to create pixmap
+      } pixmap;
    } x;
 #endif
 #ifdef BUILD_ECORE_EVAS_FB
@@ -313,6 +350,7 @@ struct _Ecore_Evas
    Eina_Bool   alpha  : 1;
    Eina_Bool   transparent  : 1;
    Eina_Bool   in  : 1;
+   Eina_Bool   events_block  : 1;
 
    Eina_Hash  *data;
 
@@ -332,7 +370,29 @@ struct _Ecore_Evas
       char           *title;
       char           *name;
       char           *clas;
-      char           *profile;
+      const char     *profile;
+      struct {
+         Eina_Bool    supported;
+         int          angle;         // v0
+         Eina_Bool    win_resize;    // v0
+         int          w, h;          // v0
+         // added for the window manager rotation protocol
+         Eina_Bool    app_set;       // v1: app wants to communicate with the window manager to rotate
+         int          rot;           // v1: decided rotation by the window manager
+         int          preferred_rot; // v1: app specified rotation
+         int         *available_rots;// v1: app specified available rotations
+         unsigned int count;         // v1: number of elements of available rotations
+         struct {
+            Eina_Bool    set;           // v1: app wants to send 'rotation_done' message manually
+            Eina_Bool    wait_for_done; // v1: wait for app's 'rotation_done'
+            Ecore_Timer *timer;         // v1: timer to check app's request has expired
+         } manual_mode;
+      } wm_rot;
+      struct {
+         Eina_List   *supported_list;
+         Eina_List   *hints;
+         int          id;
+      } aux_hint;
       struct {
 	 int          w, h;
       } min,
@@ -386,6 +446,8 @@ struct _Ecore_Evas
       void          (*fn_post_render) (Ecore_Evas *ee);
       void          (*fn_pre_free) (Ecore_Evas *ee);
       void          (*fn_state_change) (Ecore_Evas *ee);
+      void          (*fn_msg_parent_handle) (Ecore_Evas *ee, int maj, int min, void *data, int size);
+      void          (*fn_msg_handle) (Ecore_Evas *ee, int maj, int min, void *data, int size);
    } func;
 
    Ecore_Evas_Engine engine;
@@ -399,7 +461,24 @@ struct _Ecore_Evas
    unsigned char no_comp_sync  : 1;
    unsigned char semi_sync  : 1;
    unsigned char deleted : 1;
-   int           gl_sync_draw_done; // added by gl77.lee
+
+   /* TIZEN ONLY
+    * Disable sync draw done from application side when it is needed.
+    * Currently this is set true when a back-end engine uses DRI2.
+    * This depends on engine so we need to check it from evas engine.
+    */
+   Eina_Bool     disable_sync_draw_done : 1;
+
+   int           gl_sync_draw_done;
+};
+
+struct _Ecore_Evas_Aux_Hint
+{
+   int           id;           // ID of aux hint
+   const char   *hint;         // hint string
+   const char   *val;          // value string
+   unsigned char allowed : 1;  // received allowed event from the window manager
+   unsigned char notified : 1; // let caller know ee has got response for this aux hint
 };
 
 void _ecore_evas_ref(Ecore_Evas *ee);
@@ -429,20 +508,47 @@ void _ecore_evas_ews_events_init(void);
 int _ecore_evas_ews_shutdown(void);
 #endif
 
+#if defined(BUILD_ECORE_EVAS_WAYLAND_SHM) || defined(BUILD_ECORE_EVAS_WAYLAND_EGL)
+int  _ecore_evas_wl_common_init(void);
+int  _ecore_evas_wl_common_shutdown(void);
+void _ecore_evas_wl_common_pre_free(Ecore_Evas *ee);
+void _ecore_evas_wl_common_free(Ecore_Evas *ee);
+void _ecore_evas_wl_common_callback_resize_set(Ecore_Evas *ee, void (*func)(Ecore_Evas *ee));
+void _ecore_evas_wl_common_callback_move_set(Ecore_Evas *ee, void (*func)(Ecore_Evas *ee));
+void _ecore_evas_wl_common_callback_delete_request_set(Ecore_Evas *ee, void (*func)(Ecore_Evas *ee));
+void _ecore_evas_wl_common_callback_focus_in_set(Ecore_Evas *ee, void (*func)(Ecore_Evas *ee));
+void _ecore_evas_wl_common_callback_focus_out_set(Ecore_Evas *ee, void (*func)(Ecore_Evas *ee));
+void _ecore_evas_wl_common_callback_mouse_in_set(Ecore_Evas *ee, void (*func)(Ecore_Evas *ee));
+void _ecore_evas_wl_common_callback_mouse_out_set(Ecore_Evas *ee, void (*func)(Ecore_Evas *ee));
+void _ecore_evas_wl_common_move(Ecore_Evas *ee, int x, int y);
+void _ecore_evas_wl_common_raise(Ecore_Evas *ee);
+void _ecore_evas_wl_common_title_set(Ecore_Evas *ee, const char *title);
+void _ecore_evas_wl_common_name_class_set(Ecore_Evas *ee, const char *n, const char *c);
+void _ecore_evas_wl_common_size_min_set(Ecore_Evas *ee, int w, int h);
+void _ecore_evas_wl_common_size_max_set(Ecore_Evas *ee, int w, int h);
+void _ecore_evas_wl_common_size_base_set(Ecore_Evas *ee, int w, int h);
+void _ecore_evas_wl_common_size_step_set(Ecore_Evas *ee, int w, int h);
+void _ecore_evas_wl_common_layer_set(Ecore_Evas *ee, int layer);
+void _ecore_evas_wl_common_iconified_set(Ecore_Evas *ee, int iconify);
+void _ecore_evas_wl_common_maximized_set(Ecore_Evas *ee, int max);
+void _ecore_evas_wl_common_fullscreen_set(Ecore_Evas *ee, int full);
+void _ecore_evas_wl_common_ignore_events_set(Ecore_Evas *ee, int ignore);
+int  _ecore_evas_wl_common_pre_render(Ecore_Evas *ee);
+int  _ecore_evas_wl_common_render_updates(Ecore_Evas *ee);
+void _ecore_evas_wl_common_post_render(Ecore_Evas *ee);
+int  _ecore_evas_wl_common_render(Ecore_Evas *ee);
+void _ecore_evas_wl_common_screen_geometry_get(const Ecore_Evas *ee, int *x, int *y, int *w, int *h);
+void _ecore_evas_wl_common_screen_dpi_get(const Ecore_Evas *ee, int *xdpi, int *ydpi);
+
+Evas_Object * _ecore_evas_wl_common_frame_add(Evas *evas);
+
 #ifdef BUILD_ECORE_EVAS_WAYLAND_SHM
 void _ecore_evas_wayland_shm_resize(Ecore_Evas *ee, int location);
-void _ecore_evas_wayland_shm_move(Ecore_Evas *ee, int x, int y);
-void _ecore_evas_wayland_shm_drag_start(Ecore_Evas *ee, Ecore_Evas *drag_ee, void *source);
-void _ecore_evas_wayland_shm_pointer_set(Ecore_Evas *ee, int hot_x, int hot_y);
-void _ecore_evas_wayland_shm_type_set(Ecore_Evas *ee, int type);
 #endif
 
 #ifdef BUILD_ECORE_EVAS_WAYLAND_EGL
 void _ecore_evas_wayland_egl_resize(Ecore_Evas *ee, int location);
-void _ecore_evas_wayland_egl_move(Ecore_Evas *ee, int x, int y);
-void _ecore_evas_wayland_egl_drag_start(Ecore_Evas *ee, Ecore_Evas *drag_ee, void *source);
-void _ecore_evas_wayland_egl_pointer_set(Ecore_Evas *ee, int hot_x, int hot_y);
-void _ecore_evas_wayland_egl_type_set(Ecore_Evas *ee, int type);
+#endif
 #endif
 
 void _ecore_evas_fps_debug_init(void);
@@ -483,5 +589,8 @@ extern Eina_Bool _ecore_evas_app_comp_sync;
 
 void _ecore_evas_extn_init(void);
 void _ecore_evas_extn_shutdown(void);
+
+Eina_Strbuf *_ecore_evas_aux_hints_string_get(Ecore_Evas *ee);
+void         _ecore_evas_aux_hint_free(Ecore_Evas *ee);
 
 #endif

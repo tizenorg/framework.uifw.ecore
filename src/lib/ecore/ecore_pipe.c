@@ -143,6 +143,9 @@ ecore_pipe_add(Ecore_Pipe_Cb handler,
    p->handler = handler;
    p->data = data;
 
+   _ecore_fd_close_on_exec(fds[0]);
+   _ecore_fd_close_on_exec(fds[1]);
+
    fcntl(p->fd_read, F_SETFL, O_NONBLOCK);
    p->fd_handler = ecore_main_fd_handler_add(p->fd_read,
                                              ECORE_FD_READ,
@@ -543,6 +546,7 @@ _ecore_pipe_read(void             *data,
               else if ((ret == PIPE_FD_ERROR) &&
                        ((errno == EINTR) || (errno == EAGAIN)))
                 {
+                   _ecore_pipe_unhandle(p);
                    return ECORE_CALLBACK_RENEW;
                 }
               else
@@ -550,6 +554,7 @@ _ecore_pipe_read(void             *data,
                    ERR("An unhandled error (ret: %i errno: %i [%s])"
                        "occurred while reading from the pipe the length",
                        (int)ret, errno, strerror(errno));
+                   _ecore_pipe_unhandle(p);
                    return ECORE_CALLBACK_RENEW;
                 }
 #else

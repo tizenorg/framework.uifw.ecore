@@ -341,7 +341,13 @@ _ecore_key_press(int event,
 
    ecore_event_add(event, e, NULL, NULL);
 
-   _ecore_x_event_last_time = e->timestamp;
+   //FIXME: isf team send timestamp set as 1 or 0 for distinguish between SW keyborad or
+   //HW keyboard. it makes side effect about using X API(XSetSelectionOwner)
+   //so i insert code for avoid that side effect. it have to fix at TIZEN 3.0
+   if (e->timestamp <= 1)
+     _ecore_x_event_last_time++;
+   else
+     _ecore_x_event_last_time = e->timestamp;
 
 on_error:
    if (tmp)
@@ -522,6 +528,8 @@ _ecore_x_event_handle_button_press(XEvent *xevent)
 {
    int i;
 
+   DBG("ButtonEvent:press time=%u button=%d", (unsigned int)xevent->xbutton.time, xevent->xbutton.button);
+
    _ecore_x_last_event_mouse_move = 0;
    if ((xevent->xbutton.button > 3) && (xevent->xbutton.button < 8))
      {
@@ -672,6 +680,7 @@ void
 _ecore_x_event_handle_button_release(XEvent *xevent)
 {
    _ecore_x_last_event_mouse_move = 0;
+   DBG("ButtonEvent:release time=%u button=%d", (unsigned int)xevent->xbutton.time, xevent->xbutton.button);
    /* filter out wheel buttons */
    if ((xevent->xbutton.button <= 3) || (xevent->xbutton.button > 7))
      {
@@ -1087,6 +1096,7 @@ _ecore_x_event_handle_unmap_notify(XEvent *xevent)
    e->win = xevent->xunmap.window;
    e->event_win = xevent->xunmap.event;
    e->time = _ecore_x_event_last_time;
+   e->send_event = xevent->xunmap.send_event;
    ecore_event_add(ECORE_X_EVENT_WINDOW_HIDE, e, NULL, NULL);
 }
 
@@ -1309,6 +1319,8 @@ _ecore_x_event_handle_selection_clear(XEvent *xevent)
      e->selection = ECORE_X_SELECTION_PRIMARY;
    else if (sel == ECORE_X_ATOM_SELECTION_SECONDARY)
      e->selection = ECORE_X_SELECTION_SECONDARY;
+   else if (sel == ECORE_X_ATOM_SELECTION_XDND)
+     e->selection = ECORE_X_SELECTION_XDND;
    else if (sel == ECORE_X_ATOM_SELECTION_CLIPBOARD)
      e->selection = ECORE_X_SELECTION_CLIPBOARD;
    else
@@ -2007,7 +2019,8 @@ _ecore_x_event_handle_screensaver_notify(XEvent *xevent)
      return;
 
    e->win = screensaver_event->window;
-   if (screensaver_event->state == ScreenSaverOn)
+   if ((screensaver_event->state == ScreenSaverOn) ||
+       (screensaver_event->state == ScreenSaverCycle))
      e->on = EINA_TRUE;
    else
      e->on = EINA_FALSE;
@@ -2206,6 +2219,8 @@ _ecore_x_event_handle_fixes_selection_notify(XEvent *event)
      e->selection = ECORE_X_SELECTION_PRIMARY;
    else if (sel == ECORE_X_ATOM_SELECTION_SECONDARY)
      e->selection = ECORE_X_SELECTION_SECONDARY;
+   else if (sel == ECORE_X_ATOM_SELECTION_XDND)
+     e->selection = ECORE_X_SELECTION_XDND;
    else if (sel == ECORE_X_ATOM_SELECTION_CLIPBOARD)
      e->selection = ECORE_X_SELECTION_CLIPBOARD;
    else
@@ -2221,7 +2236,7 @@ _ecore_x_event_handle_fixes_selection_notify(XEvent *event)
 void
 _ecore_x_event_handle_damage_notify(XEvent *event)
 {
-   XDamageNotifyEvent *damage_event;
+   XDamageNotifyEvent *damage_event;   
    Ecore_X_Event_Damage *e;
 
    _ecore_x_last_event_mouse_move = 0;
@@ -2496,4 +2511,33 @@ _ecore_x_event_handle_gesture_notify_group(XEvent *xevent)
 }
 
 #endif /* ifdef ECORE_XGESTURE */
+#ifdef ECORE_XKB
+void
+_ecore_x_event_handle_xkb(XEvent *xevent)
+{
+   XkbEvent *xkbev;
+   Ecore_X_Event_Xkb *e;
+   
+   xkbev = (XkbEvent *) xevent;
+   e = calloc(1, sizeof(Ecore_X_Event_Xkb));
+   if (!e)
+     return;
+   e->group = xkbev->state.group;
+   if (xkbev->any.xkb_type == XkbStateNotify)
+     ecore_event_add(ECORE_X_EVENT_XKB_STATE_NOTIFY, e, NULL, NULL);
+   else if ((xkbev->any.xkb_type == XkbNewKeyboardNotify) ||
+            (xkbev->any.xkb_type == XkbMapNotify))
+     {
+        if (xkbev->any.xkb_type == XkbMapNotify)
+          {
+             XkbMapNotifyEvent *xkbmapping;
 
+             xkbmapping = (XkbMapNotifyEvent *)xkbev;
+             XkbRefreshKeyboardMapping(xkbmapping);
+          }
+        ecore_event_add(ECORE_X_EVENT_XKB_NEWKBD_NOTIFY, e, NULL, NULL);
+     }
+   else
+     free(e);
+}
+#endif /* ifdef ECORE_XKB */

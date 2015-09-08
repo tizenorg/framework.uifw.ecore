@@ -1,10 +1,10 @@
 #ifndef _ECORE_WAYLAND_H_
 # define _ECORE_WAYLAND_H_
 
-/*
- * Wayland supoprt is considered experimental as wayland itself is still
- * unstable and liable to change core protocol. If you use this api, it is
- * possible it will break in future, until this notice is removed.
+/**
+ * Wayland support is considered experimental as Wayland itself is still
+ * unstable and liable to change in the core protocol. If you use this API, it is
+ * possible that it may break in the future, until this notice is removed.
  */
 
 # include <Eina.h>
@@ -35,6 +35,7 @@ typedef struct _Ecore_Wl_Input Ecore_Wl_Input;
 # ifndef _ECORE_WAYLAND_WINDOW_PREDEF
 typedef struct _Ecore_Wl_Window Ecore_Wl_Window;
 # endif
+typedef struct _Ecore_Wl_Dnd Ecore_Wl_Dnd; /** @since 1.7 */
 typedef struct _Ecore_Wl_Dnd_Source Ecore_Wl_Dnd_Source;
 typedef struct _Ecore_Wl_Dnd_Target Ecore_Wl_Dnd_Target;
 
@@ -47,6 +48,8 @@ typedef struct _Ecore_Wl_Event_Dnd_Enter Ecore_Wl_Event_Dnd_Enter;
 typedef struct _Ecore_Wl_Event_Dnd_Position Ecore_Wl_Event_Dnd_Position;
 typedef struct _Ecore_Wl_Event_Dnd_Leave Ecore_Wl_Event_Dnd_Leave;
 typedef struct _Ecore_Wl_Event_Dnd_Drop Ecore_Wl_Event_Dnd_Drop;
+typedef struct _Ecore_Wl_Event_Data_Source_Send Ecore_Wl_Event_Data_Source_Send; /** @since 1.7 */
+typedef struct _Ecore_Wl_Event_Selection_Data_Ready Ecore_Wl_Event_Selection_Data_Ready; /** @since 1.7 */
 typedef struct _Ecore_Wl_Event_Interfaces_Bound Ecore_Wl_Event_Interfaces_Bound;
 
 enum _Ecore_Wl_Window_Type
@@ -121,6 +124,7 @@ struct _Ecore_Wl_Input
    struct wl_keyboard *keyboard;
    struct wl_touch *touch;
 
+   const char *cursor_name;
    struct wl_surface *cursor_surface;
    struct wl_callback *cursor_frame_cb;
 
@@ -142,6 +146,7 @@ struct _Ecore_Wl_Input
 
    Ecore_Wl_Dnd_Source *drag_source;
    Ecore_Wl_Dnd_Source *selection_source;
+   Ecore_Wl_Dnd *dnd; /** @since 1.7 */
 
    struct
      {
@@ -151,6 +156,13 @@ struct _Ecore_Wl_Input
         xkb_mod_mask_t alt_mask;
         xkb_mod_mask_t shift_mask;
      } xkb;
+
+   struct 
+     {
+        Ecore_Fd_Handler *hdlr;
+        int timerfd;
+        unsigned int sym, key, time;
+     } repeat;
 };
 
 struct _Ecore_Wl_Window
@@ -175,6 +187,7 @@ struct _Ecore_Wl_Window
 
    /* Eina_Bool redraw_scheduled : 1; */
    /* Eina_Bool resize_scheduled : 1; */
+   Eina_Bool alpha : 1;
    Eina_Bool transparent : 1;
    Eina_Bool moving : 1;
    Eina_Bool resizing : 1;
@@ -184,6 +197,11 @@ struct _Ecore_Wl_Window
 
    Ecore_Wl_Input *pointer_device;
    Ecore_Wl_Input *keyboard_device;
+
+   Eina_Bool frame_pending;
+   struct wl_callback *frame_callback;
+   /* FIXME: Ideally we should record the cursor name for this window 
+    * so that we can compare and avoid unnecessary cursor set calls to Wayland */
 
    void *data;
 };
@@ -269,6 +287,21 @@ struct _Ecore_Wl_Event_Dnd_Drop
      } position;
 };
 
+/** @since 1.7 */
+struct _Ecore_Wl_Event_Data_Source_Send
+{
+   char *type;
+   int fd;
+};
+
+/** @since 1.7 */
+struct _Ecore_Wl_Event_Selection_Data_Ready
+{
+   char *data;
+   int len;
+   Eina_Bool done;
+};
+
 struct _Ecore_Wl_Event_Interfaces_Bound
 {
    Eina_Bool compositor : 1;
@@ -277,12 +310,13 @@ struct _Ecore_Wl_Event_Interfaces_Bound
 };
 
 /**
+ * @internal
  * @file
- * @brief Ecore functions for dealing with the Wayland window system
+ * @brief Ecore functions for dealing with the Wayland window system.
  * 
- * Ecore_Wl provides a wrapper and convenience functions for using the 
- * Wayland window system. Function groups for this part of the library 
- * include the following:
+ * @remarks Ecore_Wl provides wrapper and convenience functions for using the 
+ *          Wayland window system. Function groups for this part of the library 
+ *          include the following:
  * 
  * @li @ref Ecore_Wl_Init_Group
  * @li @ref Ecore_Wl_Display_Group
@@ -299,6 +333,10 @@ EAPI extern int ECORE_WL_EVENT_DND_ENTER;
 EAPI extern int ECORE_WL_EVENT_DND_POSITION;
 EAPI extern int ECORE_WL_EVENT_DND_LEAVE;
 EAPI extern int ECORE_WL_EVENT_DND_DROP;
+EAPI extern int ECORE_WL_EVENT_DATA_SOURCE_TARGET; /** @since 1.7 */
+EAPI extern int ECORE_WL_EVENT_DATA_SOURCE_SEND; /** @since 1.7 */
+EAPI extern int ECORE_WL_EVENT_DATA_SOURCE_CANCELLED; /** @since 1.7 */
+EAPI extern int ECORE_WL_EVENT_SELECTION_DATA_READY; /** @since 1.7 */
 EAPI extern int ECORE_WL_EVENT_INTERFACES_BOUND;
 
 EAPI int ecore_wl_init(const char *name);
@@ -343,5 +381,16 @@ EAPI void ecore_wl_window_pointer_set(Ecore_Wl_Window *win, struct wl_surface *s
 EAPI void ecore_wl_window_cursor_from_name_set(Ecore_Wl_Window *win, const char *cursor_name);
 EAPI void ecore_wl_window_cursor_default_restore(Ecore_Wl_Window *win);
 EAPI void ecore_wl_window_parent_set(Ecore_Wl_Window *win, Ecore_Wl_Window *parent);
+
+/** 
+ * @internal
+ * @since 1.7
+ */
+EAPI Eina_Bool ecore_wl_dnd_set_selection(Ecore_Wl_Dnd *dnd, const char **types_offered);
+
+EAPI Eina_Bool ecore_wl_dnd_get_selection(Ecore_Wl_Dnd *dnd, const char *type);
+EAPI Ecore_Wl_Dnd *ecore_wl_dnd_get();
+EAPI Eina_Bool ecore_wl_dnd_start_drag();
+EAPI Eina_Bool ecore_wl_dnd_selection_has_owner(Ecore_Wl_Dnd *dnd);
 
 #endif

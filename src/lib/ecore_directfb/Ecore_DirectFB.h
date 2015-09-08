@@ -54,9 +54,9 @@ typedef struct _Ecore_DirectFB_Event_Wheel         Ecore_DirectFB_Event_Wheel;
 typedef struct _Ecore_DirectFB_Event_Got_Focus     Ecore_DirectFB_Event_Got_Focus;
 typedef struct _Ecore_DirectFB_Event_Lost_Focus    Ecore_DirectFB_Event_Lost_Focus;
 
-/* this struct is to keep windows data (id, window itself and surface) in memory as every call
- * to DirectFB for this values (e.g window->GetSurface(window,&surface)) will increment the
- * reference count, then we will have to release N times the data, so better we just ask for
+/* This struct is to keep windows data (id, window itself, and surface) in memory as every call
+ * to DirectFB for these values (e.g window->GetSurface(window,&surface)) increments the
+ * reference count, then we have to release N times the data, so it is better if we just ask for
    them once */
 struct _Ecore_DirectFB_Window
 {
@@ -75,18 +75,18 @@ struct _Ecore_DirectFB_Cursor
 
 struct _Ecore_DirectFB_Event_Key_Down /** DirectFB Key Down event */
 {
-   char        *name; /**< The name of the key that was released */
-   char        *string; /**< The logical symbol of the key that was pressed */
-   char        *key_compose; /**< The UTF-8 string conversion if any */
+   char        *name; /**< The name of the key that is released */
+   char        *string; /**< The logical symbol of the key that is pressed */
+   char        *key_compose; /**< The UTF-8 string conversion, if any */
    unsigned int time;
    DFBWindowID  win;
 };
 
 struct _Ecore_DirectFB_Event_Key_Up /** DirectFB Key Up event */
 {
-   char        *name; /**< The name of the key that was released */
-   char        *string; /**< The logical symbol of the key that was pressed */
-   char        *key_compose; /**< The UTF-8 string conversion if any */
+   char        *name; /**< The name of the key that is released */
+   char        *string; /**< The logical symbol of the key that is pressed */
+   char        *key_compose; /**< The UTF-8 string conversion, if any */
    unsigned int time;
    DFBWindowID  win;
 };

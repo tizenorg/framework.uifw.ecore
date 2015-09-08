@@ -59,8 +59,8 @@ main()
    ecore_con_init();
 
 /* comment if not using gnutls */
-   gnutls_global_set_log_level(9);
-   gnutls_global_set_log_function(tls_log_func);
+//   gnutls_global_set_log_level(9);
+//   gnutls_global_set_log_function(tls_log_func);
 
    if (!(it = eina_file_ls("/etc/ssl/certs")))
      exit(1);

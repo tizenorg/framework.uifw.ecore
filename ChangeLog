@@ -851,3 +851,230 @@
 2012-08-09  Cedric Bail
 
 	* Correctly shutdown Ecore_Thread.
+	* Add a way to reset Ecore_Thread internal pipe after a fork via ecore_fork_reset.
+
+2012-08-13  Carsten Haitzler (The Rasterman)
+
+        * Fix ecore fork reset function to allow for callbacks to be
+          attached so ecore-evas can reset evas async fd on fork.
+
+2012-08-13  Vincent Torri
+
+        * Fix segmentation fault when fd_set pointers are NULL on Windows
+
+2012-08-18  Carsten Haitzler (The Rasterman)
+
+        * Add xkb change events patch from trac.
+
+2012-08-27  Carsten Haitzler (The Rasterman)
+
+        * Add ecore_x custom blanker screensaver enable/disable - cant
+          do e17 properly without so add in even in freeze.
+
+2012-08-27  Vincent Torri
+
+        * Fix segmentation fault in ecore_thread on Windows as PHS
+	  was returning a wrong value.
+
+2012-08-29  Cedric Bail
+
+	* Always call evas_render_update_free to prevent leak in Ecore_Evas X backend.
+
+2012-08-29  Mike Blumenkrantz
+
+        * Fix leak in ecore_ipc servers
+
+2012-08-29  Christopher Michael
+
+        * Add Copy-N-Paste support for Ecore_Wayland.
+
+2012-08-30  Carsten Haitzler (The Rasterman)
+
+        1.7.0 release
+
+2012-08-31  Cedric Bail
+
+	* Add Ecore_Con_Eet API to help using Eet_Data with Ecore_Con
+
+2012-09-03  Shinwoo Kim (kimcinoo)
+
+       * Add ecore_x illume access messages:
+         ECORE_X_ATOM_E_ILLUME_ACCESS_ACTION_UP
+         ECORE_X_ATOM_E_ILLUME_ACCESS_ACTION_DOWN
+
+2012-09-04  Jihoon Kim (jihoon)
+
+       * Add ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_SIGNIN
+
+2012-09-05  Mike Blumenkrantz
+
+       * Fix crash that could occur in ecore_con_ssl with privkeys and certificates on failure
+
+2012-09-06  Mike Blumenkrantz
+
+       * Fix race condition in ecore-con where events could sometimes be sent for freed clients
+       * Fix ssl servers using openssl
+       * Fix ssl connections overall
+
+2012-09-07  Christopher Michael
+
+       * Fix ecore_x_randr to actually return outputs properly.
+
+2012-09-08  Vincent Torri
+
+       * Fix readlink usage in ecore_file.
+
+2012-09-12  Jihoon Kim (jihoon)
+
+       * Add ECORE_IMF_PREEDIT_TYPE_SUB4~7 style.
+
+2012-09-10  Christopher Michael
+
+       * Fix ecore_x_randr to actually return crtcs properly.
+
+2012-09-11  Christopher Michael
+
+       * Fix ecore_x_randr to actually return crtcs possible outputs properly.
+       * Fix ecore_x_randr to actually return crtcs outputs properly.
+
+2012-09-13  Mike Blumenkrantz
+
+       * Return -1 for ecore_con_server_fd_get() in the case that the server has already been deleted
+
+2012-09-13  Carsten Haitzler (The Rasterman)
+
+       * Fix ecore-evas rotation handling for canvases that shows up
+       only on some drivers and GL implementations.
+
+2012-09-14  Doyoun Kang
+
+       * Add string to atom_items for ECORE_X_ATOM_E_ILLUME_WINDOW_STATE, 
+       ECORE_X_ATOM_E_ILLUME_WINDOW_STATE_NORMAL, ECORE_X_ATOM_E_ILLUME_WINDOW_STATE_FLOATING
+
+2012-09-18  Patryk Kaczmarek
+
+       * Fix escaping in ecore_file_escape_name() to handle tab and
+       newline right.
+
+2012-09-21  Carsten Haitzler (The Rasterman)
+
+       * Fix ecore_x_image_is_argb32_get() to return correctly on
+       endianess.
+
+2012-09-21  Christopher Michael
+
+       * Fix ecore_x_randr to properly return output modes from
+       ecore_x_randr_output_modes_get().
+
+2012-09-27  Carsten Haitzler (The Rasterman)
+
+       * Fix ecore_imf buf in the ibus module where it may segv
+       accessing a wrong context handle.
+
+2012-10-02  Daniel Willmann
+
+       * Fix memory allocation size in ecore_thread_feedback()
+
+2012-10-03  Daniel Wilmann
+       * Fix memory allocation size in ecore_x xcb randr function
+
+2012-10-04  Cedric Bail
+
+	* Add ecore_x_input_raw_select and ECORE_X_RAW_*.
+
+2012-10-04  Sebastian Dransfeld
+
+	* Expose ecore_x_selection_converter_text
+
+2012-10-05  Cedric Bail
+
+	* Properly reschedule call to curl.
+
+2012-10-05  Eduardo Lima (Etrunko)
+
+       * Wayland SHM now features a mechanism to synchronize rendering with
+       the compositor, removing tearing effect in animations when using that
+       engine.
+
+2012-10-10 Michal Pakula vel Rutka
+
+       * Fix: Send ECORE_X_EVENT_SELECTION_NOTIFY even if there is no data.
+
+2012-11-23 Sebastian Dransfeld
+
+	* Correctly define alloca
+	* Minor build fixes for solaris
+
+2012-11-27  Alexey Yakovenko
+
+	* Fix ecore_evas_sdl window resize bug.
+
+2012-12-05  Robert David
+
+	* Fix Ecore_Evas_Extn on Solaris 11.
+
+2012-12-07  Cedric Bail
+
+	* Don't leak fd on exec.
+
+2012-12-07  Luis Felipe Strano Moraes
+
+	* 1.7.3 release
+
+2012-12-09  Cedric Bail
+
+	* Fix build without IPv6.
+
+2012-12-12  Daniel Willmann
+
+	* Fix possible memory corruption in xrandr EDID functions.
+
+2012-12-12  Nicolas Aguirre
+
+	* Fix build on win32
+
+2012-12-17 Vincent Torri
+
+	* Add XML output to doc
+	* Add installation rule for doc
+
+2012-12-19 Luis Felip Strano Moraes
+
+	* Backport 81304 which fixes memory errors on ecore_evas_extn
+
+2012-12-19 Christopher Michael
+
+        * Fix XCB compile with screensaver support
+
+2012-12-20  Carsten Haitzler (The Rasterman)
+
+        * Fixed 24bpp ximage convert back from 24bpp to 32bpp in
+        ecore-x. Only shows itself in qemu/kvm.
+                
+
+2012-12-21  Luis Felipe Strano Moraes
+
+	* 1.7.4 release
+
+2013-01-03  Carsten Haitzler (The Rasterman)
+
+        * Fixed ecore_con case where freeing server double-frees clients
+
+        
+2013-01-04  Luis Felipe Strano Moraes
+
+	* 1.7.5 release
+
+2013-01-13  Boris Faure (billiob)
+
+	* Fixed condition based on uninitialized value in ecore_x_selection
+	(both xlib and xcb).
+	* Fixed a leaked when no selection converter matches.
+
+2013-05-21	Daniel Willmann
+
+				* Backport (6d54f46) from Raster:
+        Ecore-X: Fix selection parser to not use longs - wrong on
+        64bit as the rest of ecore-x keeps types to their REAL sizes (ints),
+        but xlib uses longs (change size - eg 64bit even though protocol-wise
+        the data is DEFINEd as 32bit)

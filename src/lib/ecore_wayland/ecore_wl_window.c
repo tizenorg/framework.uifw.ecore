@@ -2,14 +2,40 @@
 # include <config.h>
 #endif
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include "ecore_wl_private.h"
 
 /* local function prototypes */
 static void _ecore_wl_window_cb_ping(void *data __UNUSED__, struct wl_shell_surface *shell_surface, unsigned int serial);
 static void _ecore_wl_window_cb_configure(void *data, struct wl_shell_surface *shell_surface __UNUSED__, unsigned int edges, int w, int h);
 static void _ecore_wl_window_cb_popup_done(void *data, struct wl_shell_surface *shell_surface __UNUSED__);
-static void _ecore_wl_window_cb_surface_enter(void *data, struct wl_surface *surface, struct wl_output *output);
-static void _ecore_wl_window_cb_surface_leave(void *data, struct wl_surface *surface, struct wl_output *output);
+static void _ecore_wl_window_cb_surface_enter(void *data, struct wl_surface *surface, struct wl_output *output __UNUSED__);
+static void _ecore_wl_window_cb_surface_leave(void *data, struct wl_surface *surface, struct wl_output *output __UNUSED__);
 static void _ecore_wl_window_configure_send(Ecore_Wl_Window *win, int w, int h);
 static char *_ecore_wl_window_id_str_get(unsigned int win_id);
 
@@ -205,11 +231,11 @@ ecore_wl_window_resize(Ecore_Wl_Window *win, int w, int h, int location)
 
    if (!win) return;
 
-   win->allocation.w = w;
-   win->allocation.h = h;
-
    if (win->type != ECORE_WL_WINDOW_TYPE_FULLSCREEN)
      {
+        win->allocation.w = w;
+        win->allocation.h = h;
+
         win->region.input = 
           wl_compositor_create_region(_ecore_wl_disp->wl.compositor);
         wl_region_add(win->region.input, win->allocation.x, win->allocation.y, 
@@ -264,17 +290,26 @@ ecore_wl_window_buffer_attach(Ecore_Wl_Window *win, struct wl_buffer *buffer, in
    switch (win->buffer_type)
      {
       case ECORE_WL_WINDOW_BUFFER_TYPE_EGL_WINDOW:
-        /* FIXME: weston has wl_egl_window_get_attached_size */
+        win->server_allocation = win->allocation;
         break;
       case ECORE_WL_WINDOW_BUFFER_TYPE_EGL_IMAGE:
       case ECORE_WL_WINDOW_BUFFER_TYPE_SHM:
         if (win->surface)
           {
+             if (win->edges & 4) //  resizing from the left
+               x = win->server_allocation.w - win->allocation.w;
+             else
+               x = 0;
+
+             if (win->edges & 1) // resizing from the top
+               y = win->server_allocation.h - win->allocation.h;
+             else
+               y = 0;
+
+             win->edges = 0;
+
              /* if (buffer) */
              wl_surface_attach(win->surface, buffer, x, y);
-             wl_surface_damage(win->surface, 0, 0, 
-                               win->allocation.w, win->allocation.h);
-
              wl_surface_damage(win->surface, 0, 0, 
                                win->allocation.w, win->allocation.h);
 
@@ -422,6 +457,7 @@ ecore_wl_window_maximized_set(Ecore_Wl_Window *win, Eina_Bool maximized)
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
    if (!win) return;
+
    if ((win->type == ECORE_WL_WINDOW_TYPE_MAXIMIZED) == maximized) return;
    if (win->type == ECORE_WL_WINDOW_TYPE_TOPLEVEL)
      {
@@ -430,14 +466,13 @@ ecore_wl_window_maximized_set(Ecore_Wl_Window *win, Eina_Bool maximized)
           wl_shell_surface_set_maximized(win->shell_surface, NULL);
         win->type = ECORE_WL_WINDOW_TYPE_MAXIMIZED;
      }
-   else
+   else if (win->type == ECORE_WL_WINDOW_TYPE_MAXIMIZED)
      {
         if (win->shell_surface) 
           wl_shell_surface_set_toplevel(win->shell_surface);
         win->type = ECORE_WL_WINDOW_TYPE_TOPLEVEL;
-        win->allocation = win->saved_allocation;
-        _ecore_wl_window_configure_send(win, win->allocation.w, 
-                                        win->allocation.h);
+        _ecore_wl_window_configure_send(win, win->saved_allocation.w, 
+                                        win->saved_allocation.h);
      }
 }
 
@@ -462,9 +497,8 @@ ecore_wl_window_fullscreen_set(Ecore_Wl_Window *win, Eina_Bool fullscreen)
         if (win->shell_surface)
           wl_shell_surface_set_toplevel(win->shell_surface);
         win->type = ECORE_WL_WINDOW_TYPE_TOPLEVEL;
-        win->allocation = win->saved_allocation;
-        _ecore_wl_window_configure_send(win, win->allocation.w, 
-                                        win->allocation.h);
+        _ecore_wl_window_configure_send(win, win->saved_allocation.w, 
+                                        win->saved_allocation.h);
      }
 }
 
@@ -475,6 +509,15 @@ ecore_wl_window_transparent_set(Ecore_Wl_Window *win, Eina_Bool transparent)
 
    if (!win) return;
    win->transparent = transparent;
+   if (win->region.opaque) wl_region_destroy(win->region.opaque);
+   win->region.opaque = NULL;
+   if (!win->transparent)
+     {
+        win->region.opaque = 
+          wl_compositor_create_region(_ecore_wl_disp->wl.compositor);
+        wl_region_add(win->region.opaque, win->allocation.x, win->allocation.y, 
+                      win->allocation.w, win->allocation.h);
+     }
 }
 
 EAPI void 
@@ -586,6 +629,7 @@ ecore_wl_window_parent_set(Ecore_Wl_Window *win, Ecore_Wl_Window *parent)
 static void 
 _ecore_wl_window_cb_ping(void *data __UNUSED__, struct wl_shell_surface *shell_surface, unsigned int serial)
 {
+   if (!shell_surface) return;
    wl_shell_surface_pong(shell_surface, serial);
 }
 
@@ -619,27 +663,30 @@ _ecore_wl_window_cb_popup_done(void *data, struct wl_shell_surface *shell_surfac
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
+   if (!shell_surface) return;
    if (!(win = data)) return;
    ecore_wl_input_ungrab(win->pointer_device);
 }
 
 static void 
-_ecore_wl_window_cb_surface_enter(void *data, struct wl_surface *surface, struct wl_output *output)
+_ecore_wl_window_cb_surface_enter(void *data, struct wl_surface *surface, struct wl_output *output __UNUSED__)
 {
    Ecore_Wl_Window *win;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
+   if (!surface) return;
    if (!(win = data)) return;
 }
 
 static void 
-_ecore_wl_window_cb_surface_leave(void *data, struct wl_surface *surface, struct wl_output *output)
+_ecore_wl_window_cb_surface_leave(void *data, struct wl_surface *surface, struct wl_output *output __UNUSED__)
 {
    Ecore_Wl_Window *win;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
+   if (!surface) return;
    if (!(win = data)) return;
 }
 

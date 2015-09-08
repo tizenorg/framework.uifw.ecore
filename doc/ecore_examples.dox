@@ -1,5 +1,5 @@
 /**
- * @page Examples Examples
+ * @page ecore_examples Ecore Example
  *
  * Here is a page with some Ecore examples explained:
  *
@@ -11,6 +11,7 @@
  * @li @ref ecore_event_example_02_c
  * @li @ref ecore_fd_handler_example_c
  * @li @ref ecore_poller_example_c
+ * @internal
  * @li @ref ecore_con_lookup_example_c
  * @li @ref ecore_con_url_download_example_c
  * @li @ref ecore_con_server_simple_example_c
@@ -23,6 +24,9 @@
  * @li @ref Ecore_Evas_Buffer_Example_02_c
  * @li @ref Ecore_exe_simple_example_c
  * @li @ref ecore_imf_example_c
+ * @li @ref ecore_evas_extn_socket_example
+ * @li @ref ecore_evas_extn_plug_example
+ * @endinternal
  */
 
 /**
@@ -505,6 +509,7 @@
  */
 
 /**
+ * @internal
  * @page ecore_con_lookup_example_c Ecore_Con - DNS lookup
  *
  * This is a very simple example that shows how to make a simple DNS lookup
@@ -538,6 +543,7 @@
  */
 
 /**
+ * @internal
  * @page ecore_con_url_download_example_c Ecore_Con_Url - downloading a file
  *
  * This is a simple example that shows how to download a file using @ref
@@ -586,6 +592,7 @@
  */
 
 /**
+ * @internal
  * @page ecore_con_url_cookies_example_c Ecore_Con_Url - Managing cookies
  *
  * This example shows how to use an @ref Ecore_Con_Url and enable it to
@@ -654,6 +661,7 @@
  */
 
 /**
+ * @internal
  * @page ecore_con_url_headers_example_c Ecore_Con_Url - customizing a request
  *
  * This is a simple example that shows how to make a custom request using @ref
@@ -704,6 +712,7 @@
  */
 
 /**
+ * @internal
  * @page ecore_con_server_simple_example_c Ecore_Con - Creating a server
  *
  * In this example we are going to create a server that listens for connections
@@ -814,12 +823,12 @@
  * This example will start a server and start accepting connections from clients, as
  * demonstrated in the following diagram:
  * @htmlonly
- * <img src="ecore_con-client-server-example.png" style="max-width: 400px"/>
  * <a href="ecore_con-client-server-example.png">Full size</a>
  * @endhtmlonly
  *
+ * @image html ecore_con-client-server-example.png
  * @image rtf ecore_con-client-server-example.png
- * @image latex ecore_con-client-server-example.eps width=\textwidth
+ * @image latex ecore_con-client-server-example.eps "ecore con client server example" width=\textwidth
  *
  * @note This example contains a serious security flaw: it doesn't check for the
  * size of data being received, thus allowing to the string to be exploited in
@@ -828,6 +837,7 @@
  */
 
 /**
+ * @internal
  * @page ecore_con_client_simple_example_c Ecore_Con - Creating a client
  *
  * Following the same idea as the @ref ecore_con_server_simple_example_c , this
@@ -878,12 +888,12 @@
  * This example will connect to the server and start comunicating with it, as
  * demonstrated in the following diagram:
  * @htmlonly
- * <img src="ecore_con-client-server-example2.png" style="max-width: 400px"/>
  * <a href="ecore_con-client-server-example2.png">Full size</a>
  * @endhtmlonly
  *
+ * @image html ecore_con-client-server-example2.png
  * @image rtf ecore_con-client-server-example2.png
- * @image latex ecore_con-client-server-example2.eps width=\textwidth
+ * @image latex ecore_con-client-server-example2.eps "ecore con client server example 2" width=\textwidth
  *
  * @note This example contains a serious security flaw: it doesn't check for the
  * size of data being received, thus allowing to the string to be exploited in
@@ -917,6 +927,7 @@
  */
 
 /**
+ * @internal
  * @example ecore_exe_example_child.c
  * This is a child process used to receive messages and send it back
  * to its father.
@@ -924,6 +935,7 @@
  */
 
 /**
+ * @internal
  * @example ecore_exe_example.c
  * This is a process that will send messages to a child and it will stop
  * when it receives "quit".
@@ -955,29 +967,28 @@
  */
 
 /**
- * @example ecore_fd_handler_gnutls_example.c
- * Shows how to use fd handlers.
- */
-
-/**
+ * @internal
  * @example ecore_con_lookup_example.c
  * Shows how to make a simple DNS lookup. See the complete example description
  * at @ref ecore_con_lookup_example_c
  */
 
 /**
+ * @internal
  * @example ecore_con_url_download_example.c
  * Shows how to download a file using an @ref Ecore_Con_Url object. See the
  * complete example description at @ref ecore_con_url_download_example_c
  */
 
 /**
+ * @internal
  * @example ecore_con_url_cookies_example.c
  * Shows how to manage cookies on a @ref Ecore_Con_Url object. See the complete
  * example description at @ref ecore_con_url_cookies_example_c.
  */
 
 /**
+ * @internal
  * @example ecore_con_server_simple_example.c
  * Shows how to setup a simple server that accepts client connections and sends
  * a "hello" string to them. See the complete example description at @ref
@@ -985,6 +996,7 @@
  */
 
 /**
+ * @internal
  * @example ecore_con_client_simple_example.c
  * Shows how to setup a simple client that connects to a server and sends a
  * "hello" string to it. See the complete example description at @ref
@@ -992,6 +1004,7 @@
  */
 
 /**
+ * @internal
  * @example ecore_con_url_headers_example.c
  * Shows how to make GET or POST requests using an @ref Ecore_Con_Url object,
  * and make use of most of its API.  See the complete example description at
@@ -999,6 +1012,7 @@
  */
 
 /**
+ * @internal
  * @page tutorial_ecore_pipe_gstreamer_example
  *
  * Here is an example that uses the pipe wrapper with a Gstreamer
@@ -1261,6 +1275,7 @@
  */
 
 /**
+ * @internal
  * @page ecore_evas_callbacks_example_c Ecore Evas Callbacks
  * @dontinclude ecore_evas_callbacks.c
  *
@@ -1284,6 +1299,7 @@
  */
 
 /**
+ * @internal
  * @page Ecore_Evas_Window_Sizes_Example_c Ecore_Evas window size hints
  *
  * On this example, we show you how to deal with @c Ecore_Evas window
@@ -1356,6 +1372,7 @@
  */
 
 /**
+ * @internal
  * @page ecore_evas_object_example_c Ecore Evas Object example
  * @dontinclude ecore_evas_object_example.c
  *
@@ -1388,6 +1405,7 @@
  */
 
 /**
+ * @internal
  * @page ecore_evas_basics_example_c Ecore Evas basics example
  * @dontinclude ecore_evas_basics_example.c
  *
@@ -1460,6 +1478,7 @@
  */
 
 /**
+ * @internal
  * @page Ecore_Evas_Buffer_Example_01_c Ecore_Evas buffer example
  *
  * Between the Evas examples, there is one in which one creates a
@@ -1510,6 +1529,7 @@
  */
 
 /**
+ * @internal
  * @page Ecore_Evas_Buffer_Example_02_c Ecore_Evas (image) buffer example
  *
  * In this example, we'll demonstrate the use of
@@ -1545,6 +1565,7 @@
  */
 
 /**
+ * @internal
  * @page Ecore_exe_simple_example_c Ecore_exe
  * Creating a processes and IPC (Inter process communication)
  *
@@ -1670,6 +1691,7 @@
  */
 
 /**
+ * @internal
  * @page ecore_imf_example_c ecore_imf - How to handle preedit and commit string from Input Method Framework
  *
  * This example demonstrates how to connect input method framework and handle preedit and commit string from input method framework.
@@ -1690,3 +1712,15 @@
  *
  * @include ecore_imf_example.c
  */
+
+ /**
+ * @internal
+  * @page ecore_evas_extn_socket_example
+  * @include ecore_evas_extn_socket_example.c
+  */
+
+ /**
+ * @internal
+  * @page ecore_evas_extn_plug_example
+  * @include ecore_evas_extn_plug_example.c
+  */

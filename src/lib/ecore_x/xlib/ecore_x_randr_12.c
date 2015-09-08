@@ -6,6 +6,32 @@
 # include <config.h>
 #endif
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include "ecore_x_private.h"
 #include "ecore_x_randr.h"
 #include <stdio.h>
@@ -527,13 +553,17 @@ ecore_x_randr_crtcs_get(Ecore_X_Window root,
    XRRScreenResources *res = NULL;
    Ecore_X_Randr_Crtc *ret = NULL;
 
-   if (num && root &&
+   if (root &&
        (res = _ecore_x_randr_get_screen_resources (_ecore_x_disp, root)))
      {
         if ((ret = malloc(sizeof(Ecore_X_Randr_Crtc) * res->ncrtc)))
           {
-             memcpy(ret, res->crtcs, (sizeof(Ecore_X_Randr_Crtc) * res->ncrtc));
-             *num = res->ncrtc;
+             int i = 0;
+
+             if (num) *num = res->ncrtc;
+
+             for (i = 0; i < res->ncrtc; i++)
+               ret[i] = res->crtcs[i];
           }
 
         XRRFreeScreenResources(res);
@@ -637,15 +667,17 @@ ecore_x_randr_outputs_get(Ecore_X_Window root,
    XRRScreenResources *res = NULL;
    Ecore_X_Randr_Output *ret = NULL;
 
-   if (num && root &&
-       (res = _ecore_x_randr_get_screen_resources (_ecore_x_disp, root)))
+   if (root && 
+       (res = _ecore_x_randr_get_screen_resources(_ecore_x_disp, root)))
      {
         if ((ret = malloc(sizeof(Ecore_X_Randr_Output) * res->noutput)))
           {
-             memcpy(ret, res->outputs,
-                    (sizeof(Ecore_X_Randr_Output) * res->noutput));
-             if (num)
-               *num = res->noutput;
+             int i = 0;
+
+             if (num) *num = res->noutput;
+
+             for (i = 0; i < res->noutput; i++)
+               ret[i] = res->outputs[i];
           }
 
         if (res)
@@ -675,19 +707,19 @@ ecore_x_randr_crtc_outputs_get(Ecore_X_Window root,
    Ecore_X_Randr_Output *ret = NULL;
    XRRCrtcInfo *crtc_info = NULL;
 
-   if (_ecore_x_randr_crtc_validate(root,
-                                    crtc) &&
+   if (_ecore_x_randr_crtc_validate(root, crtc) &&
        (res =
-          _ecore_x_randr_get_screen_resources (_ecore_x_disp,
-                                               root)) &&
+           _ecore_x_randr_get_screen_resources (_ecore_x_disp, root)) &&
        (crtc_info = XRRGetCrtcInfo(_ecore_x_disp, res, crtc)))
      {
         if ((ret = malloc(sizeof(Ecore_X_Randr_Output) * crtc_info->noutput)))
           {
-             memcpy(ret, crtc_info->outputs,
-                    (sizeof(Ecore_X_Randr_Output) * crtc_info->noutput));
-             if (num)
-               *num = crtc_info->noutput;
+             int i = 0;
+
+             if (num) *num = crtc_info->noutput;
+
+             for (i = 0; i < crtc_info->noutput; i++)
+               ret[i] = crtc_info->outputs[i];
           }
 
         if (crtc_info)
@@ -719,8 +751,7 @@ ecore_x_randr_crtc_possible_outputs_get(Ecore_X_Window root,
    Ecore_X_Randr_Output *ret = NULL;
    XRRCrtcInfo *crtc_info = NULL;
 
-   if (_ecore_x_randr_crtc_validate(root,
-                                    crtc) &&
+   if (_ecore_x_randr_crtc_validate(root, crtc) &&
        (res = _ecore_x_randr_get_screen_resources (_ecore_x_disp, root)))
      {
         if ((crtc_info = XRRGetCrtcInfo(_ecore_x_disp, res, crtc)))
@@ -728,10 +759,12 @@ ecore_x_randr_crtc_possible_outputs_get(Ecore_X_Window root,
              if ((ret =
                     malloc(sizeof(Ecore_X_Randr_Output) * crtc_info->npossible)))
                {
-                  memcpy(ret, crtc_info->possible,
-                         (sizeof(Ecore_X_Randr_Output) * crtc_info->npossible));
-                  if (num)
-                    *num = res->ncrtc;
+                  int i = 0;
+
+                  if (num) *num = crtc_info->npossible;
+
+                  for (i = 0; i < crtc_info->npossible; i++)
+                    ret[i] = crtc_info->possible[i];
                }
 
              XRRFreeCrtcInfo(crtc_info);
@@ -1583,13 +1616,13 @@ ecore_x_randr_output_modes_get(Ecore_X_Window root,
      {
         if ((modes = malloc(sizeof(Ecore_X_Randr_Mode) * output_info->nmode)))
           {
-             memcpy(modes, output_info->modes,
-                    (sizeof(Ecore_X_Randr_Mode) * output_info->nmode));
-             if (num)
-               *num = output_info->nmode;
+             int i = 0;
 
-             if (npreferred)
-               *npreferred = output_info->npreferred;
+             if (num) *num = output_info->nmode;
+             if (npreferred) *npreferred = output_info->npreferred;
+
+             for (i = 0; i < output_info->nmode; i++)
+               modes[i] = output_info->modes[i];
           }
      }
 
@@ -1917,7 +1950,7 @@ ecore_x_randr_move_all_crtcs_but(Ecore_X_Window root,
    Ecore_X_Randr_Crtc *crtcs_to_be_moved = NULL;
    XRRScreenResources *res = NULL;
    int i, j, k, n;
-   Eina_Bool ret;
+   Eina_Bool ret = EINA_FALSE;
 
    if ((nnot_moved <= 0) || (!not_moved)
        || !_ecore_x_randr_root_validate(root)
@@ -1939,11 +1972,11 @@ ecore_x_randr_move_all_crtcs_but(Ecore_X_Window root,
                //crtcs[i] is not in the 'not to move'-list
                crtcs_to_be_moved[k++] = res->crtcs[i];
           }
+        ret = ecore_x_randr_move_crtcs(root, crtcs_to_be_moved, n, dx, dy);
+        free(crtcs_to_be_moved);
      }
 
    XRRFreeScreenResources(res);
-   ret = ecore_x_randr_move_crtcs(root, crtcs_to_be_moved, n, dx, dy);
-   free(crtcs_to_be_moved);
    return ret;
 #else
    return EINA_FALSE;

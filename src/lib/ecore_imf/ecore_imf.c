@@ -16,20 +16,8 @@ EAPI int ECORE_IMF_EVENT_DELETE_SURROUNDING = 0;
 
 int _ecore_imf_log_dom = -1;
 static int _ecore_imf_init_count = 0;
+extern Ecore_IMF_Context *show_req_ctx;
 
-/**
- * @defgroup Ecore_IMF_Lib_Group Ecore Input Method Library Functions
- *
- * Utility functions that set up and shut down the Ecore Input Method
- * library.
- */
-
-/**
- * Initialises the Ecore_IMF library.
- * @return  Number of times the library has been initialised without being
- *          shut down.
- * @ingroup Ecore_IMF_Lib_Group
- */
 EAPI int
 ecore_imf_init(void)
 {
@@ -55,12 +43,6 @@ ecore_imf_init(void)
    return _ecore_imf_init_count;
 }
 
-/**
- * Shuts down the Ecore_IMF library.
- * @return  Number of times the library has been initialised without being
- *          shut down.
- * @ingroup Ecore_IMF_Lib_Group
- */
 EAPI int
 ecore_imf_shutdown(void)
 {
@@ -70,4 +52,19 @@ ecore_imf_shutdown(void)
    _ecore_imf_log_dom = -1;
    ecore_shutdown();
    return _ecore_imf_init_count;
+}
+
+EAPI Eina_Bool
+ecore_imf_input_panel_hide(void)
+{
+   if (show_req_ctx)
+     {
+        if (ecore_imf_context_input_panel_state_get(show_req_ctx) != ECORE_IMF_INPUT_PANEL_STATE_HIDE)
+          {
+             ecore_imf_context_input_panel_hide(show_req_ctx);
+             return EINA_TRUE;
+          }
+     }
+
+   return EINA_FALSE;
 }

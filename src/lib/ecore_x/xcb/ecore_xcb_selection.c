@@ -1,16 +1,39 @@
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
+
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include "ecore_xcb_private.h"
 //#include "Ecore_X_Atoms.h"
 
 #define ECORE_XCB_SELECTION_DATA(x) ((Ecore_X_Selection_Data *)(x))
 
 /* local function prototypes */
-static Eina_Bool _ecore_xcb_selection_converter_text(char         *target,
-                                                     void         *data,
-                                                     int           size,
-                                                     void        **data_ret,
-                                                     int          *size_ret,
-                                                     Ecore_X_Atom *type,
-                                                     int          *size_type);
 static void *_ecore_xcb_selection_parser_text(const char *target __UNUSED__,
                                               void       *data,
                                               int         size,
@@ -53,13 +76,13 @@ _ecore_xcb_selection_init(void)
 
    /* init converters */
    ecore_x_selection_converter_atom_add(ECORE_X_ATOM_TEXT,
-                                        _ecore_xcb_selection_converter_text);
+                                        ecore_x_selection_converter_text);
    ecore_x_selection_converter_atom_add(ECORE_X_ATOM_UTF8_STRING,
-                                        _ecore_xcb_selection_converter_text);
+                                        ecore_x_selection_converter_text);
    ecore_x_selection_converter_atom_add(ECORE_X_ATOM_COMPOUND_TEXT,
-                                        _ecore_xcb_selection_converter_text);
+                                        ecore_x_selection_converter_text);
    ecore_x_selection_converter_atom_add(ECORE_X_ATOM_STRING,
-                                        _ecore_xcb_selection_converter_text);
+                                        ecore_x_selection_converter_text);
 
    /* init parsers */
    ecore_x_selection_parser_add("text/plain",
@@ -456,7 +479,7 @@ ecore_x_selection_convert(Ecore_X_Atom  selection,
 {
    Ecore_X_Selection_Intern *sel;
    Ecore_X_Selection_Converter *cnv;
-   void *data;
+   void *data = NULL;
    char *tgt_str;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
@@ -468,7 +491,7 @@ ecore_x_selection_convert(Ecore_X_Atom  selection,
      {
         if (cnv->target == target)
           {
-             int r = 0;
+             int r;
 
              r = cnv->convert(tgt_str, sel->data, sel->length, &data, size,
                               targtype, typesize);
@@ -482,6 +505,7 @@ ecore_x_selection_convert(Ecore_X_Atom  selection,
                return EINA_FALSE;
           }
      }
+   free(tgt_str);
 
    return EINA_FALSE;
 }
@@ -624,6 +648,12 @@ _ecore_xcb_selection_set(Ecore_X_Window win,
    else
      return EINA_FALSE;
 
+   if (_selections[in].data)
+     {
+        free(_selections[in].data);
+        memset(&_selections[in], 0, sizeof(Ecore_X_Selection_Intern));
+     }
+
    if (data)
      {
         unsigned char *buff = NULL;
@@ -637,11 +667,6 @@ _ecore_xcb_selection_set(Ecore_X_Window win,
         if (!buff) return EINA_FALSE;
         memcpy(buff, data, size);
         _selections[in].data = buff;
-     }
-   else if (_selections[in].data)
-     {
-        free(_selections[in].data);
-        memset(&_selections[in], 0, sizeof(Ecore_X_Selection_Data));
      }
 
    return EINA_TRUE;
@@ -672,14 +697,14 @@ _ecore_xcb_selection_request(Ecore_X_Window win,
                          XCB_CURRENT_TIME);
 }
 
-static Eina_Bool
-_ecore_xcb_selection_converter_text(char         *target,
-                                    void         *data,
-                                    int           size,
-                                    void        **data_ret,
-                                    int          *size_ret,
-                                    Ecore_X_Atom *type __UNUSED__,
-                                    int          *size_type __UNUSED__)
+EAPI Eina_Bool
+ecore_x_selection_converter_text(char         *target,
+                                 void         *data,
+                                 int           size,
+                                 void        **data_ret,
+                                 int          *size_ret,
+                                 Ecore_X_Atom *type __UNUSED__,
+                                 int          *size_type __UNUSED__)
 {
    Ecore_Xcb_Encoding_Style style;
    Ecore_Xcb_Textproperty ret;
@@ -755,7 +780,7 @@ _ecore_xcb_selection_parser_text(const char *target __UNUSED__,
    sel = calloc(1, sizeof(Ecore_X_Selection_Data_Text));
    if (!sel) return NULL;
 
-   if (_data[size - 1])
+   if (_data && _data[size - 1])
      {
         size++;
         t = realloc(_data, size);
@@ -797,7 +822,7 @@ _ecore_xcb_selection_parser_files(const char *target,
 
    ECORE_XCB_SELECTION_DATA(sel)->free = _ecore_xcb_selection_data_files_free;
 
-   if (_data[size - 1])
+   if (_data && _data[size - 1])
      {
         size++;
         t = realloc(_data, size);
@@ -871,13 +896,13 @@ _ecore_xcb_selection_parser_targets(const char *target __UNUSED__,
                                     int         format __UNUSED__)
 {
    Ecore_X_Selection_Data_Targets *sel;
-   unsigned long *targets;
+   int *targets;
    int i = 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
    CHECK_XCB_CONN;
 
-   if (!(targets = (unsigned long *)data)) return NULL;
+   if (!(targets = data)) return NULL;
 
    sel = calloc(1, sizeof(Ecore_X_Selection_Data_Targets));
    if (!sel) return NULL;

@@ -2828,6 +2828,7 @@ slot_get_surrounding_text(IMEngineInstanceBase *si,
              else if (maxlen_after == 0) after = WideString();
              text = before + after;
              cursor = before.length();
+             if (surrounding) free(surrounding);
              return true;
           }
      }

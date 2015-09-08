@@ -65,6 +65,7 @@ ecore_x_region.c \
 ecore_x_image.c \
 ecore_x_xi2.c \
 ecore_x_vsync.c \
+ioctl.h \
 ecore_x_randr.h \
 ecore_x_gesture.c
 

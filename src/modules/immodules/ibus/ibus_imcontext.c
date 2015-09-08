@@ -257,6 +257,8 @@ ibus_im_context_del(Ecore_IMF_Context *ctx)
    // release preedit
    if (ibusimcontext->preedit_string)
      free(ibusimcontext->preedit_string);
+   if (_focus_im_context == ctx)
+     _focus_im_context = NULL;
 }
 
 EAPI Eina_Bool
@@ -426,7 +428,12 @@ ibus_im_context_preedit_string_get(Ecore_IMF_Context *ctx,
         if (cursor_pos)
           *cursor_pos = 0;
      }
-   EINA_LOG_DBG("str : %s, cursor_pos : %d", *str, *cursor_pos);
+
+   if (str)
+     EINA_LOG_DBG("str : %s", *str);
+
+   if (cursor_pos)
+     EINA_LOG_DBG("cursor_pos : %d", *cursor_pos);
 }
 
 EAPI void
@@ -454,7 +461,12 @@ ibus_im_context_preedit_string_with_attributes_get(Ecore_IMF_Context   *ctx,
         if (cursor_pos)
           *cursor_pos = 0;
      }
-   EINA_LOG_DBG("str : %s, cursor_pos : %d", *str, *cursor_pos);
+
+   if (str)
+     EINA_LOG_DBG("str : %s", *str);
+
+   if (cursor_pos)
+     EINA_LOG_DBG("cursor_pos : %d", *cursor_pos);
 }
 
 EAPI void

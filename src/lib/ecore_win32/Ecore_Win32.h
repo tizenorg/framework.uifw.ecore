@@ -2,17 +2,17 @@
 #define __ECORE_WIN32_H__
 
 /*
- * DO NOT USE THIS HEADER. IT IS WORK IN PROGRESS. IT IS NOT FINAL AND
+ * DO NOT USE THIS HEADER. IT IS A WORK IN PROGRESS API. IT IS NOT FINAL AND
  * THE API MAY CHANGE.
  */
 
 #ifndef ECORE_WIN32_WIP_POZEFLKSD
 # ifdef _MSC_VER
 #  pragma message ("You are using a work in progress API. This API is not stable")
-#  pragma message ("and is subject to change. You use this at your own risk.")
+#  pragma message ("and is subject to change. You can use this at your own risk.")
 # else
 #  warning "You are using a work in progress API. This API is not stable"
-#  warning "and is subject to change. You use this at your own risk."
+#  warning "and is subject to change. You can use this at your own risk."
 # endif
 #endif
 
@@ -50,35 +50,37 @@ extern "C" {
 #endif
 
 /**
+ * @internal
  * @defgroup Ecore_Win32_Group Ecore_Win32 library
+ * @ingroup Ecore_Group
  *
  * @{
  */
 
 /**
  * @typedef Ecore_Win32_Window_State
- * State of a window.
+ * @brief Enumeration for state of a window.
  */
 typedef enum
 {
-   ECORE_WIN32_WINDOW_STATE_ICONIFIED, /**< iconified window */
-   ECORE_WIN32_WINDOW_STATE_MODAL, /**< modal dialog box */
-   ECORE_WIN32_WINDOW_STATE_STICKY, /**< sticky window */
-   ECORE_WIN32_WINDOW_STATE_MAXIMIZED_VERT, /**< maximum vertical sized window */
-   ECORE_WIN32_WINDOW_STATE_MAXIMIZED_HORZ, /**< maximum horizontal sized window */
-   ECORE_WIN32_WINDOW_STATE_MAXIMIZED, /**< maximum sized window */
-   ECORE_WIN32_WINDOW_STATE_SHADED, /**< shaded window */
-   ECORE_WIN32_WINDOW_STATE_HIDDEN, /**< hidden (minimized or iconified) window */
-   ECORE_WIN32_WINDOW_STATE_FULLSCREEN, /**< fullscreen window */
-   ECORE_WIN32_WINDOW_STATE_ABOVE, /**< above window */
-   ECORE_WIN32_WINDOW_STATE_BELOW, /**< below window */
+   ECORE_WIN32_WINDOW_STATE_ICONIFIED, /**< Iconified window */
+   ECORE_WIN32_WINDOW_STATE_MODAL, /**< Modal dialog box */
+   ECORE_WIN32_WINDOW_STATE_STICKY, /**< Sticky window */
+   ECORE_WIN32_WINDOW_STATE_MAXIMIZED_VERT, /**< Maximum vertical sized window */
+   ECORE_WIN32_WINDOW_STATE_MAXIMIZED_HORZ, /**< Maximum horizontal sized window */
+   ECORE_WIN32_WINDOW_STATE_MAXIMIZED, /**< Maximum sized window */
+   ECORE_WIN32_WINDOW_STATE_SHADED, /**< Shaded window */
+   ECORE_WIN32_WINDOW_STATE_HIDDEN, /**< Hidden (minimized or iconified) window */
+   ECORE_WIN32_WINDOW_STATE_FULLSCREEN, /**< Fullscreen window */
+   ECORE_WIN32_WINDOW_STATE_ABOVE, /**< Above window */
+   ECORE_WIN32_WINDOW_STATE_BELOW, /**< Below window */
    ECORE_WIN32_WINDOW_STATE_DEMANDS_ATTENTION, /**< To document */
    ECORE_WIN32_WINDOW_STATE_UNKNOWN /**< Unknown state */
 } Ecore_Win32_Window_State;
 
 /**
  * @typedef Ecore_Win32_Window_Type
- * Type of a window.
+ * @brief Enumeration for type of a window.
  */
 typedef enum
 {
@@ -95,7 +97,7 @@ typedef enum
 
 /**
  * @typedef Ecore_Win32_Cursor_Shape
- * Shape of a cursor.
+ * @brief Enumeration for shape of a cursor.
  */
 typedef enum
 {
@@ -117,7 +119,7 @@ typedef enum
 
 /**
  * @typedef Ecore_Win32_DnD_State
- * State of a DnD operation.
+ * @brief Enumeration for state of a DnD operation.
  */
 typedef enum
 {
@@ -129,136 +131,136 @@ typedef enum
 
 /**
  * @typedef Ecore_Win32_Window
- * Abstract type for a window.
+ * @brief The structure type containing the abstract type for a window.
  */
 typedef struct _Ecore_Win32_Window Ecore_Win32_Window;
 
 /**
  * @typedef Ecore_Win32_Cursor
- * Abstract type for a cursor.
+ * @brief The structure type containing the abstract type for a cursor.
  */
 typedef void Ecore_Win32_Cursor;
 
 
 /**
  * @typedef Ecore_Win32_Event_Mouse_In
- * Event sent when the mouse enters the window.
+ * @brief The structure type containing the event sent when the mouse enters the window.
  */
 typedef struct _Ecore_Win32_Event_Mouse_In              Ecore_Win32_Event_Mouse_In;
 
 /**
  * @typedef Ecore_Win32_Event_Mouse_Out
- * Event sent when the mouse leaves the window.
+ * @brief The structure type containing the event sent when the mouse leaves the window.
  */
 typedef struct _Ecore_Win32_Event_Mouse_Out             Ecore_Win32_Event_Mouse_Out;
 
 /**
  * @typedef Ecore_Win32_Event_Window_Focus_In
- * Event sent when the window gets the focus.
+ * @brief The structure type containing the event sent when the window gets focus.
  */
 typedef struct _Ecore_Win32_Event_Window_Focus_In       Ecore_Win32_Event_Window_Focus_In;
 
 /**
  * @typedef Ecore_Win32_Event_Window_Focus_Out
- * Event sent when the window looses the focus.
+ * @brief The structure type containing the event sent when the window loses focus.
  */
 typedef struct _Ecore_Win32_Event_Window_Focus_Out      Ecore_Win32_Event_Window_Focus_Out;
 
 /**
  * @typedef Ecore_Win32_Event_Window_Damage
- * Event sent when the window is damaged.
+ * @brief The structure type containing the event sent when the window is damaged.
  */
 typedef struct _Ecore_Win32_Event_Window_Damage         Ecore_Win32_Event_Window_Damage;
 
 /**
  * @typedef Ecore_Win32_Event_Window_Create
- * Event sent when the window is created.
+ * @brief The structure type containing the event sent when the window is created.
  */
 typedef struct _Ecore_Win32_Event_Window_Create         Ecore_Win32_Event_Window_Create;
 
 /**
  * @typedef Ecore_Win32_Event_Window_Destroy
- * Event sent when the window is destroyed.
+ * @brief The structure type containing the event sent when the window is destroyed.
  */
 typedef struct _Ecore_Win32_Event_Window_Destroy        Ecore_Win32_Event_Window_Destroy;
 
 /**
  * @typedef Ecore_Win32_Event_Window_Hide
- * Event sent when the window is hidden.
+ * @brief The structure type containing the event sent when the window is hidden.
  */
 typedef struct _Ecore_Win32_Event_Window_Hide           Ecore_Win32_Event_Window_Hide;
 
 /**
  * @typedef Ecore_Win32_Event_Window_Show
- * Event sent when the window is shown.
+ * @brief The structure type containing the event sent when the window is shown.
  */
 typedef struct _Ecore_Win32_Event_Window_Show           Ecore_Win32_Event_Window_Show;
 
 /**
  * @typedef Ecore_Win32_Event_Window_Configure
- * Event sent when the window is configured.
+ * @brief The structure type containing the event sent when the window is configured.
  */
 typedef struct _Ecore_Win32_Event_Window_Configure      Ecore_Win32_Event_Window_Configure;
 
 /**
  * @typedef Ecore_Win32_Event_Window_Resize
- * Event sent when the window is resized.
+ * @brief The structure type containing the event sent when the window is resized.
  */
 typedef struct _Ecore_Win32_Event_Window_Resize         Ecore_Win32_Event_Window_Resize;
 
 /**
  * @typedef Ecore_Win32_Event_Window_Delete_Request
- * Event sent when the window is deleted.
+ * @brief The structure type containing the event sent when the window is deleted.
  */
 typedef struct _Ecore_Win32_Event_Window_Delete_Request Ecore_Win32_Event_Window_Delete_Request;
 
 /**
  * @struct _Ecore_Win32_Event_Mouse_In
- * Event sent when the mouse enters the window.
+ * @brief The structure type containing the event sent when the mouse enters the window.
  */
 struct _Ecore_Win32_Event_Mouse_In
 {
    Ecore_Win32_Window *window; /**< The window that received the event */
-   int                 x; /**< The x coordinate where the mouse leaved */
+   int                 x; /**< The x coordinate where the mouse left */
    int                 y; /**< The y coordinate where the mouse entered */
-   unsigned long       timestamp; /**< The time the event occurred */
+   unsigned long       timestamp; /**< The time when the event occurred */
 };
 
 /**
  * @struct _Ecore_Win32_Event_Mouse_Out
- * Event sent when the mouse leaves the window.
+ * @brief The structure type containing the event sent when the mouse leaves the window.
  */
 struct _Ecore_Win32_Event_Mouse_Out
 {
    Ecore_Win32_Window *window; /**< The window that received the event */
-   int                 x; /**< The x coordinate where the mouse leaved */
-   int                 y; /**< The y coordinate where the mouse leaved */
-   unsigned long       timestamp; /**< The time the event occurred */
+   int                 x; /**< The x coordinate where the mouse left */
+   int                 y; /**< The y coordinate where the mouse left */
+   unsigned long       timestamp; /**< The time when the event occurred */
 };
 
 /**
  * @struct _Ecore_Win32_Event_Window_Focus_In
- * Event sent when the window gets the focus.
+ * @brief The structure type containing the event sent when the window gets focus.
  */
 struct _Ecore_Win32_Event_Window_Focus_In
 {
    Ecore_Win32_Window *window; /**< The window that received the event */
-   unsigned long       timestamp; /**< The time the event occurred */
+   unsigned long       timestamp; /**< The time when the event occurred */
 };
 
 /**
  * @struct _Ecore_Win32_Event_Window_Focus_Out
- * Event sent when the window looses the focus.
+ * @brief The structure type containing the event sent when the window loses focus.
  */
 struct _Ecore_Win32_Event_Window_Focus_Out
 {
    Ecore_Win32_Window *window; /**< The window that received the event */
-   unsigned long       timestamp; /**< The time the event occurred */
+   unsigned long       timestamp; /**< The time when the event occurred */
 };
 
 /**
  * @struct _Ecore_Win32_Event_Window_Damage
- * Event sent when the window is damaged.
+ * @brief The structure type containing the event sent when the window is damaged.
  */
 struct _Ecore_Win32_Event_Window_Damage
 {
@@ -266,53 +268,53 @@ struct _Ecore_Win32_Event_Window_Damage
    int                 x; /**< The x coordinate of the top left corner of the damaged region */
    int                 y; /**< The y coordinate of the top left corner of the damaged region */
    int                 width; /**< The width of the damaged region */
-   int                 height; /**< The time the event occurred */
-   unsigned long       timestamp; /**< The time the event occurred */
+   int                 height; /**< The time when the event occurred */
+   unsigned long       timestamp; /**< The time when the event occurred */
 };
 
 /**
  * @struct _Ecore_Win32_Event_Window_Create
- * Event sent when the window is created.
+ * @brief The structure type containing the event sent when the window is created.
  */
 struct _Ecore_Win32_Event_Window_Create
 {
    Ecore_Win32_Window *window; /**< The window that received the event */
-   unsigned long       timestamp; /**< The time the event occurred */
+   unsigned long       timestamp; /**< The time when the event occurred */
 };
 
 /**
  * @struct _Ecore_Win32_Event_Window_Destroy
- * Event sent when the window is destroyed.
+ * @brief The structure type containing the event sent when the window is destroyed.
  */
 struct _Ecore_Win32_Event_Window_Destroy
 {
    Ecore_Win32_Window *window; /**< The window that received the event */
-   unsigned long       timestamp; /**< The time the event occurred */
+   unsigned long       timestamp; /**< The time when the event occurred */
 };
 
 /**
  * @struct _Ecore_Win32_Event_Window_Hide
- * Event sent when the window is hidden.
+ * @brief The structure type containing the event sent when the window is hidden.
  */
 struct _Ecore_Win32_Event_Window_Hide
 {
    Ecore_Win32_Window *window; /**< The window that received the event */
-   unsigned long       timestamp; /**< The time the event occurred */
+   unsigned long       timestamp; /**< The time when the event occurred */
 };
 
 /**
  * @struct _Ecore_Win32_Event_Window_Show
- * Event sent when the window is shown.
+ * @brief The structure type containing the event sent when the window is shown.
  */
 struct _Ecore_Win32_Event_Window_Show
 {
    Ecore_Win32_Window *window; /**< The window that received the event */
-   unsigned long       timestamp; /**< The time the event occurred */
+   unsigned long       timestamp; /**< The time when the event occurred */
 };
 
 /**
  * @struct _Ecore_Win32_Event_Window_Configure
- * Event sent when the window is configured.
+ * @brief The structure type containing the event sent when the window is configured.
  */
 struct _Ecore_Win32_Event_Window_Configure
 {
@@ -322,34 +324,34 @@ struct _Ecore_Win32_Event_Window_Configure
    int                 y; /**< The new y coordinate of the top left corner */
    int                 width; /**< The new width */
    int                 height; /**< The new height */
-   unsigned long       timestamp; /**< The time the event occurred */
+   unsigned long       timestamp; /**< The time when the event occurred */
 };
 
 /**
  * @struct _Ecore_Win32_Event_Window_Resize
- * Event sent when the window is resized.
+ * @brief The structure type containing the event sent when the window is resized.
  */
 struct _Ecore_Win32_Event_Window_Resize
 {
    Ecore_Win32_Window *window; /**< The window that received the event */
    int                 width; /**< The new width */
    int                 height; /**< The new height */
-   unsigned long       timestamp; /**< The time the event occurred */
+   unsigned long       timestamp; /**< The time when the event occurred */
 };
 
 /**
  * @struct _Ecore_Win32_Event_Window_Delete_Request
- * Event sent when the window is deleted.
+ * @brief The structure type containing the event sent when the window is deleted.
  */
 struct _Ecore_Win32_Event_Window_Delete_Request
 {
    Ecore_Win32_Window *window; /**< The window that received the event */
-   unsigned long       timestamp; /**< The time the event occurred */
+   unsigned long       timestamp; /**< The time when the event occurred */
 };
 
 /**
  * @typedef Ecore_Win32_Dnd_DropTarget_Callback
- * Callback type for Drop operations. See ecore_win32_dnd_register_drop_target().
+ * @brief The integer callback type for Drop operations. See ecore_win32_dnd_register_drop_target().
  */
 typedef int (*Ecore_Win32_Dnd_DropTarget_Callback)(void *window, int event, int pt_x, int pt_y, void *data, int size);
 
@@ -357,13 +359,13 @@ EAPI extern int ECORE_WIN32_EVENT_MOUSE_IN; /**< Ecore_Event for the #Ecore_Win3
 EAPI extern int ECORE_WIN32_EVENT_MOUSE_OUT; /**< Ecore_Event for the #Ecore_Win32_Event_Mouse_Out event */
 EAPI extern int ECORE_WIN32_EVENT_WINDOW_FOCUS_IN; /**< Ecore_Event for the #Ecore_Win32_Event_Window_Focus_In event */
 EAPI extern int ECORE_WIN32_EVENT_WINDOW_FOCUS_OUT; /**< Ecore_Event for the #Ecore_Win32_Event_Window_Focus_Out event */
-EAPI extern int ECORE_WIN32_EVENT_WINDOW_DAMAGE; /**< Ecore_Event for the Ecore_Win32_Event_Damage event */
-EAPI extern int ECORE_WIN32_EVENT_WINDOW_CREATE; /**< Ecore_Event for the Ecore_Win32_Event_Create event */
-EAPI extern int ECORE_WIN32_EVENT_WINDOW_DESTROY; /**< Ecore_Event for the Ecore_Win32_Event_Destroy event */
-EAPI extern int ECORE_WIN32_EVENT_WINDOW_HIDE; /**< Ecore_Event for the Ecore_Win32_Event_Hide event */
-EAPI extern int ECORE_WIN32_EVENT_WINDOW_SHOW; /**< Ecore_Event for the Ecore_Win32_Event_Show event */
-EAPI extern int ECORE_WIN32_EVENT_WINDOW_CONFIGURE; /**< Ecore_Event for the Ecore_Win32_Event_Configure event */
-EAPI extern int ECORE_WIN32_EVENT_WINDOW_RESIZE; /**< Ecore_Event for the Ecore_Win32_Event_Resize event */
+EAPI extern int ECORE_WIN32_EVENT_WINDOW_DAMAGE; /**< Ecore_Event for the #Ecore_Win32_Event_Damage event */
+EAPI extern int ECORE_WIN32_EVENT_WINDOW_CREATE; /**< Ecore_Event for the #Ecore_Win32_Event_Create event */
+EAPI extern int ECORE_WIN32_EVENT_WINDOW_DESTROY; /**< Ecore_Event for the #Ecore_Win32_Event_Destroy event */
+EAPI extern int ECORE_WIN32_EVENT_WINDOW_HIDE; /**< Ecore_Event for the #Ecore_Win32_Event_Hide event */
+EAPI extern int ECORE_WIN32_EVENT_WINDOW_SHOW; /**< Ecore_Event for the #Ecore_Win32_Event_Show event */
+EAPI extern int ECORE_WIN32_EVENT_WINDOW_CONFIGURE; /**< Ecore_Event for the #Ecore_Win32_Event_Configure event */
+EAPI extern int ECORE_WIN32_EVENT_WINDOW_RESIZE; /**< Ecore_Event for the #Ecore_Win32_Event_Resize event */
 EAPI extern int ECORE_WIN32_EVENT_WINDOW_DELETE_REQUEST; /**< Ecore_Event for the #Ecore_Win32_Event_Window_Delete_Request event */
 
 

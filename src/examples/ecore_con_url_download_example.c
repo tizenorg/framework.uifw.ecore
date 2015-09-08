@@ -103,7 +103,7 @@ free_ec_url:
    ecore_con_url_free(ec_url);
 end:
 
-   close(fd);
+//   close(fd);
    ecore_con_url_shutdown();
    ecore_con_shutdown();
    ecore_shutdown();

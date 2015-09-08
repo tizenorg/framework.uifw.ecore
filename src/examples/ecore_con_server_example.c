@@ -57,8 +57,8 @@ main()
    ecore_con_init();
 
 /* comment if not using gnutls */
-   gnutls_global_set_log_level(9);
-   gnutls_global_set_log_function(tls_log_func);
+//   gnutls_global_set_log_level(9);
+//   gnutls_global_set_log_function(tls_log_func);
 
 /* to use a PEM certificate with TLS and SSL3, uncomment the lines below */
    if (!(svr = ecore_con_server_add(ECORE_CON_REMOTE_TCP | ECORE_CON_USE_TLS | ECORE_CON_USE_SSL3 | ECORE_CON_LOAD_CERT, "127.0.0.1", 8080, NULL)))

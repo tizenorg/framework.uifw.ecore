@@ -2,6 +2,32 @@
 # include <config.h>
 #endif
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include <string.h>
 
 #ifdef HAVE_NETINET_IN_H
@@ -357,6 +383,8 @@ ecore_ipc_server_add(Ecore_Ipc_Type compl_type, const char *name, int port, cons
    Ecore_Ipc_Type type;
    Ecore_Con_Type extra = 0;
 
+   if (!name) return NULL;
+
    svr = calloc(1, sizeof(Ecore_Ipc_Server));
    if (!svr) return NULL;
    type = compl_type;
@@ -538,7 +566,7 @@ ecore_ipc_server_clients_get(Ecore_Ipc_Server *svr)
                          "ecore_ipc_server_clients_get");
         return NULL;
      }
-   return svr->client_list;
+   return svr->clients;
 }
 
 #define SVENC(_member) \
@@ -1044,7 +1072,6 @@ _ecore_ipc_event_client_add(void *data __UNUSED__, int ev_type __UNUSED__, void 
         cl->max_buf_size = 32 * 1024;
         ecore_con_client_data_set(cl->client, (void *)cl);
         svr->clients = eina_list_append(svr->clients, cl);
-        svr->client_list = eina_list_append(svr->client_list, cl);
         if (!cl->delete_me)
           {
              Ecore_Ipc_Event_Client_Add *e2;
@@ -1081,7 +1108,6 @@ _ecore_ipc_event_client_del(void *data __UNUSED__, int ev_type __UNUSED__, void 
           {
              Ecore_Ipc_Event_Client_Del *e2;
 
-             svr->client_list = eina_list_remove(svr->client_list, cl);
              if (!cl->delete_me)
                {
                   e2 = calloc(1, sizeof(Ecore_Ipc_Event_Client_Del));
@@ -1491,19 +1517,36 @@ _ecore_ipc_event_server_data(void *data __UNUSED__, int ev_type __UNUSED__, void
                                  e2->response = msg.response;
                                  e2->size     = msg.size;
                                  e2->data     = buf;
+                                 if (buf == svr->buf)
+                                   {
+                                      svr->buf = NULL;
+                                      svr->buf_size = 0;
+                                   }
+                                 buf = NULL;
                                  ecore_event_add(ECORE_IPC_EVENT_SERVER_DATA, e2,
                                                  _ecore_ipc_event_server_data_free,
                                                  NULL);
                               }
+                            else
+                              {
+                                 free(buf);
+                                 buf = NULL;
+                              }
+                         }
+                       else
+                         {
+                            free(buf);
+                            buf = NULL;
                          }
                     }
                   svr->prev.i = msg;
                   offset += (s + msg.size);
-                  if (svr->buf_size == offset)
+                  if ((svr->buf_size == offset) && ((svr->buf) || (buf)))
                     {
-                       free(svr->buf);
+                       if (svr->buf) free(svr->buf);
                        svr->buf = NULL;
                        svr->buf_size = 0;
+                       if (buf) free(buf);
                        return ECORE_CALLBACK_CANCEL;
                     }
                   goto redo;

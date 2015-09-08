@@ -56,7 +56,7 @@ static CURLM *_curlm = NULL;
 static int _init_count = 0;
 static Ecore_Timer *_curl_timer = NULL;
 static Eina_Bool pipelining = EINA_FALSE;
-
+Ecore_Idler *_curl_idler;
 #endif
 
 /**
@@ -91,6 +91,7 @@ ecore_con_url_init(void)
 
    _curl_timer = ecore_timer_add((double)ms / 1000, _ecore_con_url_timer, NULL);
    ecore_timer_freeze(_curl_timer);
+   _curl_idler = NULL;
 
    return _init_count;
 #else
@@ -113,6 +114,9 @@ ecore_con_url_shutdown(void)
         ecore_timer_del(_curl_timer);
         _curl_timer = NULL;
      }
+
+   if (_curl_idler) ecore_idler_del(_curl_idler);
+   _curl_idler = NULL;
 
    EINA_LIST_FREE(_url_con_list, url_con)
      ecore_con_url_free(url_con);
@@ -1304,22 +1308,39 @@ static void
 _ecore_con_url_event_url_complete(Ecore_Con_Url *url_con, CURLMsg *curlmsg)
 {
    Ecore_Con_Event_Url_Complete *e;
+   int status = url_con->status;
 
    e = calloc(1, sizeof(Ecore_Con_Event_Url_Complete));
    if (!e) return;
 
-   if (curlmsg && (curlmsg->data.result == CURLE_OK))
+   if (!curlmsg)
      {
-        if (!url_con->status)
-          _ecore_con_url_status_get(url_con);
+        ERR("Event completed without CURL message handle. Shouldn't happen");
      }
-   else if (curlmsg)
-     ERR("Curl message have errors: %d", curlmsg->data.result);
+   else if ((curlmsg->msg == CURLMSG_DONE) &&
+            (curlmsg->data.result == CURLE_OPERATION_TIMEDOUT) &&
+            (!curlmsg->easy_handle))
+     {
+        /* easy_handle is set to NULL on timeout messages */
+        status = 408; /* Request Timeout */
+     }
+   else if (curlmsg->data.result == CURLE_OK)
+     {
+        if (!status)
+          {
+             _ecore_con_url_status_get(url_con);
+             status = url_con->status;
+          }
+     }
    else
-     CRIT("THIS IS BAD.");
+     {
+        ERR("Curl message have errors: %d (%s)",
+          curlmsg->data.result, curl_easy_strerror(curlmsg->data.result));
+     }
 
-   e->status = url_con->status;
+   e->status = status;
    e->url_con = url_con;
+
    url_con->event_count++;
    ecore_event_add(ECORE_CON_EVENT_URL_COMPLETE, e, (Ecore_End_Cb)_ecore_con_event_url_free, url_con);
 }
@@ -1338,6 +1359,7 @@ static Eina_Bool
 _ecore_con_url_timeout_cb(void *data)
 {
    Ecore_Con_Url *url_con = data;
+   CURLMsg timeout_msg;
 
    if (!url_con) return ECORE_CALLBACK_CANCEL;
    if (!url_con->curl_easy) return ECORE_CALLBACK_CANCEL;
@@ -1350,7 +1372,11 @@ _ecore_con_url_timeout_cb(void *data)
 
    url_con->timer = NULL;
 
-   _ecore_con_url_event_url_complete(url_con, NULL);
+   timeout_msg.msg = CURLMSG_DONE;
+   timeout_msg.easy_handle = NULL;
+   timeout_msg.data.result = CURLE_OPERATION_TIMEDOUT;
+
+   _ecore_con_url_event_url_complete(url_con, &timeout_msg);
    return ECORE_CALLBACK_CANCEL;
 }
 
@@ -1519,8 +1545,18 @@ static Eina_Bool
 _ecore_con_url_fd_handler(void *data __UNUSED__, Ecore_Fd_Handler *fd_handler __UNUSED__)
 {
    Ecore_Fd_Handler *fdh;
+   long ms;
+
    EINA_LIST_FREE(_fd_hd_list, fdh) ecore_main_fd_handler_del(fdh);
-   ecore_timer_interval_set(_curl_timer, 0.1);
+
+   curl_multi_timeout(_curlm, &ms);
+   if (ms >= CURL_MIN_TIMEOUT || ms <= 0) ms = CURL_MIN_TIMEOUT;
+
+   ecore_timer_interval_set(_curl_timer, (double)ms / 1000);
+
+   if (!_curl_timer)
+     _curl_idler = ecore_idler_add(_ecore_con_url_timer, NULL);
+
    return ECORE_CALLBACK_CANCEL;
 }
 
@@ -1583,6 +1619,8 @@ _ecore_con_url_timer(void *data __UNUSED__)
         ERR("curl_multi_perform() failed: %s", curl_multi_strerror(ret));
         _ecore_con_url_curl_clear();
         ecore_timer_freeze(_curl_timer);
+        if (_curl_idler) ecore_idler_del(_curl_idler);
+        _curl_idler = NULL;
      }
 
    if (still_running)
@@ -1600,6 +1638,8 @@ _ecore_con_url_timer(void *data __UNUSED__)
         _ecore_con_url_info_read();
         _ecore_con_url_curl_clear();
         ecore_timer_freeze(_curl_timer);
+        if (_curl_idler) ecore_idler_del(_curl_idler);
+        _curl_idler = NULL;
      }
 
    return ECORE_CALLBACK_RENEW;

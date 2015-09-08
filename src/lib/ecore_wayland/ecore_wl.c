@@ -2,6 +2,32 @@
 # include <config.h>
 #endif
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include <fcntl.h>
 #include "ecore_wl_private.h"
 
@@ -29,6 +55,10 @@ EAPI int ECORE_WL_EVENT_DND_ENTER = 0;
 EAPI int ECORE_WL_EVENT_DND_POSITION = 0;
 EAPI int ECORE_WL_EVENT_DND_LEAVE = 0;
 EAPI int ECORE_WL_EVENT_DND_DROP = 0;
+EAPI int ECORE_WL_EVENT_DATA_SOURCE_TARGET = 0;
+EAPI int ECORE_WL_EVENT_DATA_SOURCE_SEND = 0;
+EAPI int ECORE_WL_EVENT_SELECTION_DATA_READY = 0;
+EAPI int ECORE_WL_EVENT_DATA_SOURCE_CANCELLED = 0;
 EAPI int ECORE_WL_EVENT_INTERFACES_BOUND = 0;
 
 /**
@@ -95,6 +125,10 @@ ecore_wl_init(const char *name)
         ECORE_WL_EVENT_DND_POSITION = ecore_event_type_new();
         ECORE_WL_EVENT_DND_LEAVE = ecore_event_type_new();
         ECORE_WL_EVENT_DND_DROP = ecore_event_type_new();
+        ECORE_WL_EVENT_DATA_SOURCE_TARGET = ecore_event_type_new();
+        ECORE_WL_EVENT_DATA_SOURCE_SEND = ecore_event_type_new();
+        ECORE_WL_EVENT_SELECTION_DATA_READY = ecore_event_type_new();
+        ECORE_WL_EVENT_DATA_SOURCE_CANCELLED = ecore_event_type_new();
         ECORE_WL_EVENT_INTERFACES_BOUND = ecore_event_type_new();
      }
 
@@ -436,6 +470,9 @@ _ecore_wl_cb_handle_global(struct wl_display *disp, unsigned int id, const char 
    else if (!strcmp(interface, "wl_shm"))
      {
         ewd->wl.shm = wl_display_bind(disp, id, &wl_shm_interface);
+
+        /* FIXME: We should not hard-code a cursor size here, and we should 
+         * also import the theme name from a config or env variable */
         ewd->cursor_theme = wl_cursor_theme_load(NULL, 32, ewd->wl.shm);
      }
    else if (!strcmp(interface, "wl_data_device_manager"))
@@ -478,4 +515,10 @@ _ecore_wl_xkb_shutdown(Ecore_Wl_Display *ewd)
    xkb_context_unref(ewd->xkb.context);
 
    return EINA_TRUE;
+}
+
+struct wl_data_source *
+_ecore_wl_create_data_source(Ecore_Wl_Display *ewd)
+{
+   return wl_data_device_manager_create_data_source(ewd->wl.data_device_manager);
 }

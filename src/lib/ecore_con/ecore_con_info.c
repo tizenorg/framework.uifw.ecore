@@ -9,26 +9,36 @@
 # include <config.h>
 #endif
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
 #ifdef HAVE_ALLOCA_H
 # include <alloca.h>
-#elif defined __GNUC__
-# define alloca __builtin_alloca
-#elif defined _AIX
-# define alloca __alloca
-#elif defined _MSC_VER
-# include <malloc.h>
-# define alloca _alloca
-#else
-# include <stddef.h>
-# ifdef  __cplusplus
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
 extern "C"
+#  endif
+void *alloca (size_t);
 # endif
-void *alloca(size_t);
 #endif
 
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <ctype.h>
 #ifdef __OpenBSD__
 # include <sys/types.h>
@@ -196,6 +206,26 @@ ecore_con_info_mcast_listen(Ecore_Con_Server *svr,
    return ecore_con_info_get(svr, done_cb, data, &hints);
 }
 
+Eina_Bool
+_ecore_fd_close_on_exec(int fd)
+{
+#ifdef HAVE_EXECVP
+   int flags;
+
+   flags = fcntl(fd, F_GETFD);
+   if (flags == -1)
+     return EINA_FALSE;
+
+   flags |= FD_CLOEXEC;
+   if (fcntl(fd, F_SETFD, flags) == -1)
+     return EINA_FALSE;
+   return EINA_TRUE;
+#else
+   (void) fd;
+   return EINA_FALSE;
+#endif
+}
+
 EAPI int
 ecore_con_info_get(Ecore_Con_Server *svr,
                    Ecore_Con_Info_Cb done_cb,
@@ -210,6 +240,9 @@ ecore_con_info_get(Ecore_Con_Server *svr,
         ecore_con_event_server_error(svr, strerror(errno));
         return 0;
      }
+
+   _ecore_fd_close_on_exec(fd[0]);
+   _ecore_fd_close_on_exec(fd[1]);
 
    cbdata = calloc(1, sizeof(CB_Data));
    if (!cbdata)

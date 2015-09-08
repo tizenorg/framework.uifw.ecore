@@ -1,7 +1,10 @@
+
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
 
+#include <Ecore.h>
+#include "ecore_private.h"
 #include "Ecore_IMF_Evas.h"
 
 /**
@@ -10,8 +13,6 @@
  * Helper functions to make it easy to use Evas with Ecore_IMF.
  * Converts each event from Evas to the corresponding event of Ecore_IMF.
  *
- * An example of usage of these functions can be found at:
- * @li @ref ecore_imf_example_c
  */
 
 static const char *_ecore_imf_evas_event_empty = "";
@@ -299,6 +300,18 @@ EAPI void
 ecore_imf_evas_event_key_up_wrap(Evas_Event_Key_Up *evas_event,
                                  Ecore_IMF_Event_Key_Up *imf_event)
 {
+   if (!evas_event)
+     {
+        EINA_LOG_ERR("Evas event is missing");
+        return;
+     }
+
+   if (!imf_event)
+     {
+        EINA_LOG_ERR("Imf event is missing");
+        return;
+     }
+
    imf_event->keyname = evas_event->keyname ? evas_event->keyname : _ecore_imf_evas_event_empty;
    imf_event->key = evas_event->key ? evas_event->key : _ecore_imf_evas_event_empty;
    imf_event->string = evas_event->string ? evas_event->string : _ecore_imf_evas_event_empty;

@@ -228,8 +228,6 @@ _ecore_imf_context_xim_preedit_string_get(Ecore_IMF_Context *ctx,
      {
         if (str)
           *str = NULL;
-        if (cursor_pos)
-          *cursor_pos = 0;
      }
 
    if (cursor_pos)
@@ -738,18 +736,7 @@ _ecore_imf_context_xim_filter_event(Ecore_IMF_Context *ctx,
           }
         else
           {
-             XComposeStatus status;
-             val = XLookupString(&xev,
-                                 compose_buffer,
-                                 sizeof(compose_buffer),
-                                 &sym,
-                                 &status);
-             if (val > 0)
-               {
-                  compose_buffer[val] = '\0';
-                  compose = eina_str_convert(nl_langinfo(CODESET),
-                                             "UTF-8", compose_buffer);
-               }
+             compose = strdup(ev->compose);
           }
 
         if (compose)
@@ -1031,6 +1018,8 @@ preedit_draw_callback(XIC xic __UNUSED__,
 
    EINA_SAFETY_ON_NULL_RETURN(imf_context_data);
 
+   imf_context_data->preedit_cursor = call_data->caret;
+
    preedit_bufs = eina_ustrbuf_new();
    if (imf_context_data->preedit_chars)
      {
@@ -1132,6 +1121,8 @@ preedit_callback_set(Ecore_IMF_Context *ctx)
 {
    Ecore_IMF_Context_Data *imf_context_data;
    imf_context_data = ecore_imf_context_data_get(ctx);
+   if (!imf_context_data)
+     return XVaCreateNestedList(0, NULL);
 
    imf_context_data->preedit_start_cb.client_data = (XPointer)ctx;
    imf_context_data->preedit_start_cb.callback = (XIMProc)preedit_start_callback;
@@ -1356,12 +1347,13 @@ set_ic_client_window(Ecore_IMF_Context *ctx,
    EINA_LOG_DBG("old_win:%d window:%d ", old_win, window);
    if (old_win != 0 && old_win != window)   /* XXX how do check window... */
      {
-        XIM_Im_Info *info;
-        info = imf_context_data->im_info;
-        info->ics = eina_list_remove(info->ics, imf_context_data);
-        if (imf_context_data->im_info)
-          imf_context_data->im_info->user = NULL;
-        imf_context_data->im_info = NULL;
+        XIM_Im_Info *info = imf_context_data->im_info;
+        if (info)
+          {
+             info->ics = eina_list_remove(info->ics, imf_context_data);
+             info->user = NULL;
+             info = NULL;
+          }
      }
 
    imf_context_data->win = window;

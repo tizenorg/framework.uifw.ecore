@@ -19,6 +19,7 @@
 
 #include "ecore_wl_private.h"
 #include <sys/mman.h>
+#include <sys/timerfd.h>
 
 /* FIXME: This gives BTN_LEFT/RIGHT/MIDDLE for linux systems ... 
  *        What about other OSs ?? */
@@ -34,9 +35,7 @@
 # define BTN_BACK 0x116
 #endif
 
-#define MOD_SHIFT_MASK 0x01
-#define MOD_ALT_MASK 0x02
-#define MOD_CONTROL_MASK 0x04
+Ecore_Wl_Dnd *glb_dnd = NULL;
 
 /* local function prototypes */
 static void _ecore_wl_input_seat_handle_capabilities(void *data, struct wl_seat *seat, enum wl_seat_capability caps);
@@ -52,6 +51,7 @@ static void _ecore_wl_input_cb_keyboard_enter(void *data, struct wl_keyboard *ke
 static void _ecore_wl_input_cb_keyboard_leave(void *data, struct wl_keyboard *keyboard __UNUSED__, unsigned int serial, struct wl_surface *surface);
 static void _ecore_wl_input_cb_keyboard_key(void *data, struct wl_keyboard *keyboard __UNUSED__, unsigned int serial, unsigned int timestamp, unsigned int key, unsigned int state);
 static void _ecore_wl_input_cb_keyboard_modifiers(void *data, struct wl_keyboard *keyboard __UNUSED__, unsigned int serial __UNUSED__, unsigned int depressed, unsigned int latched, unsigned int locked, unsigned int group);
+static Eina_Bool _ecore_wl_input_cb_keyboard_repeat(void *data, Ecore_Fd_Handler *handler __UNUSED__);
 static void _ecore_wl_input_cb_touch_down(void *data, struct wl_touch *touch __UNUSED__, unsigned int serial, unsigned int timestamp, struct wl_surface *surface __UNUSED__, int id __UNUSED__, wl_fixed_t x, wl_fixed_t y);
 static void _ecore_wl_input_cb_touch_up(void *data, struct wl_touch *touch __UNUSED__, unsigned int serial, unsigned int timestamp, int id __UNUSED__);
 static void _ecore_wl_input_cb_touch_motion(void *data, struct wl_touch *touch __UNUSED__, unsigned int timestamp, int id __UNUSED__, wl_fixed_t x, wl_fixed_t y);
@@ -107,7 +107,6 @@ static const struct wl_seat_listener _ecore_wl_seat_listener =
 {
    _ecore_wl_input_seat_handle_capabilities,
 };
-
 
 static const struct wl_data_device_listener _ecore_wl_data_listener = 
 {
@@ -168,18 +167,25 @@ ecore_wl_input_cursor_from_name_set(Ecore_Wl_Input *input, const char *cursor_na
 
    if (!input) return;
 
-   /* No cursor */
-   if (!cursor_name)
+   eina_stringshare_replace(&input->cursor_name, cursor_name);
+
+   /* No cursor. Set to default Left Pointer */
+   if (!cursor_name) 
+     eina_stringshare_replace(&input->cursor_name, "left_ptr");
+
+   /* try to get this cursor from the theme */
+   if (!(cursor = ecore_wl_cursor_get(input->cursor_name)))
+     {
+        /* if the theme does not have this cursor, default to left pointer */
+        if (!(cursor = ecore_wl_cursor_get("left_ptr")))
+          return;
+     }
+
+   if ((!cursor->images) || (!cursor->images[0]))
      {
         ecore_wl_input_pointer_set(input, NULL, 0, 0);
         return;
      }
-
-   if (!(cursor = ecore_wl_cursor_get(cursor_name)))
-     return;
-
-   if ((!cursor->images) || (!cursor->images[0]))
-     return;
 
    cursor_image = cursor->images[0];
    if ((buffer = wl_cursor_image_get_buffer(cursor_image)))
@@ -207,6 +213,7 @@ ecore_wl_input_cursor_default_restore(Ecore_Wl_Input *input)
    ecore_wl_input_cursor_from_name_set(input, "left_ptr");
 }
 
+/* local functions */
 void 
 _ecore_wl_input_add(Ecore_Wl_Display *ewd, unsigned int id)
 {
@@ -237,13 +244,42 @@ _ecore_wl_input_add(Ecore_Wl_Display *ewd, unsigned int id)
    input->cursor_surface = 
      wl_compositor_create_surface(_ecore_wl_disp->wl.compositor);
 
+   input->repeat.timerfd = 
+     timerfd_create(CLOCK_MONOTONIC, (TFD_CLOEXEC | TFD_NONBLOCK));
+
+   input->repeat.hdlr = 
+     ecore_main_fd_handler_add(input->repeat.timerfd, ECORE_FD_READ, 
+                               _ecore_wl_input_cb_keyboard_repeat, input, 
+                               NULL, NULL);
+
    ewd->input = input;
+
+   /* create Ecore_Wl_Dnd */
+   if (!glb_dnd)
+     if (!(glb_dnd = calloc(1, sizeof(Ecore_Wl_Dnd)))) return;
+   glb_dnd->ewd = ewd;
+   glb_dnd->input = input;
+   input->dnd = glb_dnd;
+   wl_array_init(&glb_dnd->types_offered);
 }
 
 void 
 _ecore_wl_input_del(Ecore_Wl_Input *input)
 {
    if (!input) return;
+
+   if (input->cursor_name) eina_stringshare_del(input->cursor_name);
+   input->cursor_name = NULL;
+
+   if (input->keyboard_focus)
+     {
+        Ecore_Wl_Window *win = NULL;
+
+        if ((win = input->keyboard_focus))
+          win->keyboard_device = NULL;
+
+        input->keyboard_focus = NULL;
+     }
 
    if (input->drag_source) _ecore_wl_dnd_del(input->drag_source);
    input->drag_source = NULL;
@@ -264,6 +300,12 @@ _ecore_wl_input_del(Ecore_Wl_Input *input)
    wl_list_remove(&input->link);
    if (input->seat) wl_seat_destroy(input->seat);
 
+   if (input->repeat.hdlr) ecore_main_fd_handler_del(input->repeat.hdlr);
+   input->repeat.hdlr = NULL;
+
+   if (input->repeat.timerfd) close(input->repeat.timerfd);
+   input->repeat.timerfd = 0;
+
    free(input);
 }
 
@@ -274,7 +316,6 @@ _ecore_wl_input_pointer_xy_get(int *x, int *y)
    if (y) *y = _pointer_y;
 }
 
-/* local functions */
 static void 
 _ecore_wl_input_seat_handle_capabilities(void *data, struct wl_seat *seat, enum wl_seat_capability caps)
 {
@@ -336,7 +377,7 @@ _ecore_wl_input_cb_pointer_motion(void *data, struct wl_pointer *pointer __UNUSE
    if (input->pointer_focus)
      _ecore_wl_input_mouse_move_send(input, input->pointer_focus, timestamp);
 
-   ecore_wl_input_cursor_default_restore(input);
+   ecore_wl_input_cursor_from_name_set(input, input->cursor_name);
 }
 
 static void 
@@ -403,7 +444,12 @@ _ecore_wl_input_cb_pointer_frame(void *data, struct wl_callback *callback, unsig
         input->cursor_frame_cb = NULL;
      }
 
-   /* TODO: Finish me */
+   if (!input->cursor_name)
+     {
+        ecore_wl_input_pointer_set(input, NULL, 0, 0);
+        return;
+     }
+
    if (!input->cursor_frame_cb)
      {
         input->cursor_frame_cb = wl_surface_frame(input->cursor_surface);
@@ -462,56 +508,6 @@ _ecore_wl_input_cb_keyboard_keymap(void *data, struct wl_keyboard *keyboard __UN
      1 << xkb_map_mod_get_index(input->xkb.keymap, "Shift");
 }
 
-/*
- * _ecore_wl_input_keysym_to_string: Translate a symbol to its printable form 
- * 
- * @symbol: the symbol to translate
- * @buffer: the buffer where to put the translated string
- * @len: size of the buffer
- *
- * Translates @symbol into a printable representation in @buffer, if possible.
- *
- * Return value: The number of bytes of the translated string, 0 if the
- *               symbol can't be printed
- *
- * Note: The code is derived from libX11's src/KeyBind.c
- *       Copyright 1985, 1987, 1998  The Open Group
- *
- */
-static int
-_ecore_wl_input_keysym_to_string(unsigned int symbol, char *buffer, int len)
-{
-  unsigned long high_bytes;
-  unsigned char c;
-
-   high_bytes = symbol >> 8;
-   if (!(len &&
-         ((high_bytes == 0) ||
-             ((high_bytes == 0xFF) &&
-                 (((symbol >= XKB_KEY_BackSpace) &&
-                   (symbol <= XKB_KEY_Clear)) ||
-                     (symbol == XKB_KEY_Return) ||
-                     (symbol == XKB_KEY_Escape) ||
-                     (symbol == XKB_KEY_KP_Space) ||
-                     (symbol == XKB_KEY_KP_Tab) ||
-                     (symbol == XKB_KEY_KP_Enter) ||
-                     ((symbol >= XKB_KEY_KP_Multiply) &&
-                         (symbol <= XKB_KEY_KP_9)) ||
-                     (symbol == XKB_KEY_KP_Equal) ||
-                     (symbol == XKB_KEY_Delete))))))
-     return 0;
-
-   if (symbol == XKB_KEY_KP_Space)
-     c = ' ';
-   else if (high_bytes == 0xFF)
-     c = symbol & 0x7F;
-   else
-     c = symbol & 0xFF;
-
-   buffer[0] = c;
-   return 1;
-}
-
 static void 
 _ecore_wl_input_cb_keyboard_key(void *data, struct wl_keyboard *keyboard __UNUSED__, unsigned int serial, unsigned int timestamp, unsigned int keycode, unsigned int state)
 {
@@ -519,50 +515,69 @@ _ecore_wl_input_cb_keyboard_key(void *data, struct wl_keyboard *keyboard __UNUSE
    Ecore_Wl_Window *win;
    unsigned int code, num;
    const xkb_keysym_t *syms;
-   xkb_keysym_t sym;
-   char string[32], key[32], keyname[32];
+   xkb_keysym_t sym = XKB_KEY_NoSymbol;
+   xkb_mod_mask_t mask;
+   char string[32], key[32], keyname[32];// compose[32];
    Ecore_Event_Key *e;
+   struct itimerspec ts;
+   int len = 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
    if (!(input = data)) return;
    input->display->serial = serial;
+
+   /* xkb rules reflect X broken keycodes, so offset by 8 */
    code = keycode + 8;
 
    win = input->keyboard_focus;
-   if ((!win) || (win->keyboard_device != input)) return;
+   if ((!win) || (win->keyboard_device != input) || (!input->xkb.state)) 
+     return;
+
+   mask = xkb_state_serialize_mods(input->xkb.state, 
+                                   XKB_STATE_DEPRESSED | XKB_STATE_LATCHED);
+
+   input->modifiers = 0;
+
+   /* The Ecore_Event_Modifiers don't quite match the X mask bits */
+   if (mask & input->xkb.control_mask)
+     input->modifiers |= ECORE_EVENT_MODIFIER_CTRL;
+   if (mask & input->xkb.alt_mask)
+     input->modifiers |= ECORE_EVENT_MODIFIER_ALT;
+   if (mask & input->xkb.shift_mask)
+     input->modifiers |= ECORE_EVENT_MODIFIER_SHIFT;
 
    num = xkb_key_get_syms(input->xkb.state, code, &syms);
-
-   xkb_state_update_key(input->xkb.state, code, 
-                        (state ? XKB_KEY_DOWN : XKB_KEY_UP));
-
-   /* mask = xkb_state_serialize_mods(input->display->xkb.state,  */
-   /*                                 (XKB_STATE_DEPRESSED | XKB_STATE_LATCHED)); */
-   /* input->modifiers = 0; */
-   /* if (mask & input->display->xkb.control_mask) */
-   /*   input->modifiers |= MOD_CONTROL_MASK; */
-   /* if (mask & input->display->xkb.alt_mask) */
-   /*   input->modifiers |= MOD_ALT_MASK; */
-   /* if (mask & input->display->xkb.shift_mask) */
-   /*   input->modifiers |= MOD_SHIFT_MASK; */
-
    if (num == 1) sym = syms[0];
-   else sym = XKB_KEY_NoSymbol;
 
    memset(key, 0, sizeof(key));
-   memset(keyname, 0, sizeof(keyname));
-   memset(string, 0, sizeof(string));
-
-   /* TODO: Switch over to the libxkbcommon API when it is available */
-   if (!_ecore_wl_input_keysym_to_string(sym, string, sizeof(string)))
-     string[0] = '\0';
-
    xkb_keysym_get_name(sym, key, sizeof(key));
-   xkb_keysym_get_name(sym, keyname, sizeof(keyname));
 
-   e = malloc(sizeof(Ecore_Event_Key) + strlen(keyname) + strlen(key) +
-              strlen(string) + 3);
+   memset(keyname, 0, sizeof(keyname));
+   xkb_keysym_get_name(sym, keyname, sizeof(keyname));
+   if (keyname[0] == '\0')
+     snprintf(keyname, sizeof(keyname), "Keycode-%i", code);
+
+   memset(string, 0, sizeof(string));
+   if (xkb_keysym_to_utf8(sym, string, 32) <= 0)
+     {
+        /* FIXME: NB: We may need to add more checks here for other 
+         * non-printable characters */
+        if ((sym == XKB_KEY_Tab) || (sym == XKB_KEY_ISO_Left_Tab)) 
+          string[len++] = '\t';
+     }
+
+   /* FIXME: NB: Start hacking on compose key support */
+   /* memset(compose, 0, sizeof(compose)); */
+   /* if (sym == XKB_KEY_Multi_key) */
+   /*   { */
+   /*      if (xkb_keysym_to_utf8(sym, compose, 32) <= 0) */
+   /*        compose[0] = '\0'; */
+   /*   } */
+
+   e = malloc(sizeof(Ecore_Event_Key) + strlen(key) + strlen(keyname) +
+              ((string[0] != '\0') ? strlen(string) : 0) + 3);
+   if (!e) return;
 
    e->keyname = (char *)(e + 1);
    e->key = e->keyname + strlen(keyname) + 1;
@@ -571,8 +586,7 @@ _ecore_wl_input_cb_keyboard_key(void *data, struct wl_keyboard *keyboard __UNUSE
 
    strcpy((char *)e->keyname, keyname);
    strcpy((char *)e->key, key);
-   if (strlen (string))
-     strcpy((char *)e->string, string);
+   if (strlen(string)) strcpy((char *)e->string, string);
 
    e->window = win->id;
    e->event_window = win->id;
@@ -583,36 +597,73 @@ _ecore_wl_input_cb_keyboard_key(void *data, struct wl_keyboard *keyboard __UNUSE
      ecore_event_add(ECORE_EVENT_KEY_DOWN, e, NULL, NULL);
    else
      ecore_event_add(ECORE_EVENT_KEY_UP, e, NULL, NULL);
+
+   if ((!state) && (keycode == input->repeat.key))
+     {
+        input->repeat.sym = 0;
+        input->repeat.key = 0;
+        input->repeat.time = 0;
+
+        ts.it_interval.tv_sec = 0;
+        ts.it_interval.tv_nsec = 0;
+        ts.it_value.tv_sec = 0;
+        ts.it_value.tv_nsec = 0;
+
+        timerfd_settime(input->repeat.timerfd, 0, &ts, NULL);
+     }
+   else if ((state) && 
+            ((!input->repeat.key) || 
+                ((keycode) && (keycode != input->repeat.key))))
+     {
+        input->repeat.sym = sym;
+        input->repeat.key = keycode;
+        input->repeat.time = timestamp;
+
+        /* interval after expires */
+        ts.it_interval.tv_sec = 0;
+        ts.it_interval.tv_nsec = 35 * 1000 * 1000;
+
+        /* initial expiration */
+        ts.it_value.tv_sec = 0;
+        ts.it_value.tv_nsec = 500 * 1000 * 1000;
+
+        timerfd_settime(input->repeat.timerfd, 0, &ts, NULL);
+     }
 }
 
 static void 
 _ecore_wl_input_cb_keyboard_modifiers(void *data, struct wl_keyboard *keyboard __UNUSED__, unsigned int serial __UNUSED__, unsigned int depressed, unsigned int latched, unsigned int locked, unsigned int group)
 {
    Ecore_Wl_Input *input;
-   xkb_mod_mask_t mask = 0;
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
    if (!(input = data)) return;
-   if (input->xkb.state)
-     {
-        xkb_state_update_mask(input->xkb.state, depressed, latched, 
-                              locked, 0, 0, group);
+   xkb_state_update_mask(input->xkb.state, depressed, latched, 
+                         locked, 0, 0, group);
+}
 
-        mask = 
-          xkb_state_serialize_mods(input->xkb.state, 
-                                   (XKB_STATE_DEPRESSED | XKB_STATE_LATCHED));
-     }
+static Eina_Bool 
+_ecore_wl_input_cb_keyboard_repeat(void *data, Ecore_Fd_Handler *handler __UNUSED__)
+{
+   Ecore_Wl_Input *input;
+   Ecore_Wl_Window *win = NULL;
+   unsigned long long int xp;
 
-   input->modifiers = 0;
+   LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
-   /* The Ecore_Event_Modifiers don't quite match the X mask bits */
-   if (mask & input->xkb.control_mask)
-     input->modifiers |= MOD_CONTROL_MASK;
-   if (mask & input->xkb.alt_mask)
-     input->modifiers |= MOD_ALT_MASK;
-   if (mask & input->xkb.shift_mask)
-     input->modifiers |= MOD_SHIFT_MASK;
+   if (!(input = data)) return ECORE_CALLBACK_RENEW;
+
+   /* Trap for EAGAIN */
+   if (read(input->repeat.timerfd, &xp, sizeof(xp)) != sizeof(xp))
+     return ECORE_CALLBACK_RENEW;
+
+   if ((win = input->keyboard_focus))
+     _ecore_wl_input_cb_keyboard_key(input, NULL, input->display->serial, 
+                                     input->repeat.time, 
+                                     input->repeat.key, EINA_TRUE);
+
+   return ECORE_CALLBACK_RENEW;
 }
 
 static void 
@@ -648,7 +699,7 @@ _ecore_wl_input_cb_pointer_enter(void *data, struct wl_pointer *pointer __UNUSED
    _ecore_wl_input_mouse_in_send(input, win, input->timestamp);
 
    /* The cursor on the surface is undefined until we set it */
-   ecore_wl_window_cursor_default_restore(win);
+   ecore_wl_input_cursor_from_name_set(input, "left_ptr");
 
    /* NB: This whole 'if' below is a major HACK due to wayland's stupidness 
     * of not sending a mouse_up (or any notification at all for that matter) 
@@ -692,6 +743,7 @@ _ecore_wl_input_cb_pointer_leave(void *data, struct wl_pointer *pointer __UNUSED
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
+   if (!surface) return;
    if (!(input = data)) return;
 
    input->display->serial = serial;
@@ -721,6 +773,7 @@ _ecore_wl_input_cb_keyboard_enter(void *data, struct wl_keyboard *keyboard __UNU
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
+   if (!surface) return;
    if (!(input = data)) return;
 
    if (!input->timestamp)
@@ -749,7 +802,20 @@ _ecore_wl_input_cb_keyboard_leave(void *data, struct wl_keyboard *keyboard __UNU
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
+   if (!surface) return;
    if (!(input = data)) return;
+
+   if (input->repeat.timerfd)
+     {
+        struct itimerspec ts;
+        
+        ts.it_interval.tv_sec = 0;
+        ts.it_interval.tv_nsec = 0;
+        ts.it_value.tv_sec = 0;
+        ts.it_value.tv_nsec = 0;
+
+        timerfd_settime(input->repeat.timerfd, 0, &ts, NULL);
+     }
 
    if (!input->timestamp)
      {
@@ -765,9 +831,9 @@ _ecore_wl_input_cb_keyboard_leave(void *data, struct wl_keyboard *keyboard __UNU
    if (!(win = wl_surface_get_user_data(surface))) return;
 
    win->keyboard_device = NULL;
-   input->keyboard_focus = NULL;
-
    _ecore_wl_input_focus_out_send(input, win, input->timestamp);
+
+   input->keyboard_focus = NULL;
 }
 
 static void 
@@ -777,15 +843,17 @@ _ecore_wl_input_cb_touch_down(void *data, struct wl_touch *touch __UNUSED__, uns
 
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
 
+   if (!surface) return;
    if (!(input = data)) return;
 
    /* FIXME: NB: Not sure yet if input->timestamp should be set here. 
     * This needs to be tested with an actual touch device */
    /* input->timestamp = timestamp; */
    input->display->serial = serial;
-   input->button = 0;
+   input->button = BTN_LEFT;
    input->sx = wl_fixed_to_int(x);
    input->sy = wl_fixed_to_int(y);
+   _ecore_wl_input_cb_pointer_enter(data, NULL, serial, surface, x, y);
    _ecore_wl_input_mouse_down_send(input, input->pointer_focus, timestamp);
 }
 
@@ -801,9 +869,10 @@ _ecore_wl_input_cb_touch_up(void *data, struct wl_touch *touch __UNUSED__, unsig
    /* FIXME: NB: Not sure yet if input->timestamp should be set here. 
     * This needs to be tested with an actual touch device */
    /* input->timestamp = timestamp; */
-   input->button = 0;
+   input->button = BTN_LEFT;
    input->display->serial = serial;
    _ecore_wl_input_mouse_up_send(input, input->pointer_focus, timestamp);
+   input->button = 0;
 }
 
 static void 
@@ -848,6 +917,8 @@ static void
 _ecore_wl_input_cb_data_enter(void *data, struct wl_data_device *data_device, unsigned int timestamp, struct wl_surface *surface, wl_fixed_t x, wl_fixed_t y, struct wl_data_offer *offer)
 {
    LOGFN(__FILE__, __LINE__, __FUNCTION__);
+
+   if (!surface) return;
 
    _ecore_wl_dnd_enter(data, data_device, timestamp, surface, x, y, offer);
 }
@@ -908,8 +979,11 @@ _ecore_wl_input_mouse_move_send(Ecore_Wl_Input *input, Ecore_Wl_Window *win, uns
    ev->multi.x = input->sx;
    ev->multi.y = input->sy;
 
-   ev->window = win->id;
-   ev->event_window = win->id;
+   if (win)
+     {
+        ev->window = win->id;
+        ev->event_window = win->id;
+     }
 
    ecore_event_add(ECORE_EVENT_MOUSE_MOVE, ev, NULL, NULL);
 }
@@ -930,8 +1004,11 @@ _ecore_wl_input_mouse_in_send(Ecore_Wl_Input *input, Ecore_Wl_Window *win, unsig
    ev->modifiers = input->modifiers;
    ev->timestamp = timestamp;
 
-   ev->window = win->id;
-   ev->event_window = win->id;
+   if (win)
+     {
+        ev->window = win->id;
+        ev->event_window = win->id;
+     }
 
    ecore_event_add(ECORE_WL_EVENT_MOUSE_IN, ev, NULL, NULL);
 }
@@ -952,8 +1029,11 @@ _ecore_wl_input_mouse_out_send(Ecore_Wl_Input *input, Ecore_Wl_Window *win, unsi
    ev->modifiers = input->modifiers;
    ev->timestamp = timestamp;
 
-   ev->window = win->id;
-   ev->event_window = win->id;
+   if (win)
+     {
+        ev->window = win->id;
+        ev->event_window = win->id;
+     }
 
    ecore_event_add(ECORE_WL_EVENT_MOUSE_OUT, ev, NULL, NULL);
 }
@@ -967,7 +1047,7 @@ _ecore_wl_input_focus_in_send(Ecore_Wl_Input *input __UNUSED__, Ecore_Wl_Window 
 
    if (!(ev = calloc(1, sizeof(Ecore_Wl_Event_Focus_In)))) return;
    ev->timestamp = timestamp;
-   ev->win = win->id;
+   if (win) ev->win = win->id;
    ecore_event_add(ECORE_WL_EVENT_FOCUS_IN, ev, NULL, NULL);
 }
 
@@ -980,7 +1060,7 @@ _ecore_wl_input_focus_out_send(Ecore_Wl_Input *input __UNUSED__, Ecore_Wl_Window
 
    if (!(ev = calloc(1, sizeof(Ecore_Wl_Event_Focus_Out)))) return;
    ev->timestamp = timestamp;
-   ev->win = win->id;
+   if (win) ev->win = win->id;
    ecore_event_add(ECORE_WL_EVENT_FOCUS_OUT, ev, NULL, NULL);
 }
 
@@ -1007,7 +1087,6 @@ _ecore_wl_input_mouse_down_send(Ecore_Wl_Input *input, Ecore_Wl_Window *win, uns
    ev->y = input->sy;
    /* ev->root.x = input->sx; */
    /* ev->root.y = input->sy; */
-   /* printf("Input Modifiers: %d\n", input->modifiers); */
    ev->modifiers = input->modifiers;
 
    /* FIXME: Need to get these from wayland somehow */
@@ -1023,8 +1102,11 @@ _ecore_wl_input_mouse_down_send(Ecore_Wl_Input *input, Ecore_Wl_Window *win, uns
    ev->multi.x = input->sx;
    ev->multi.y = input->sy;
 
-   ev->window = win->id;
-   ev->event_window = win->id;
+   if (win)
+     {
+        ev->window = win->id;
+        ev->event_window = win->id;
+     }
 
    ecore_event_add(ECORE_EVENT_MOUSE_BUTTON_DOWN, ev, NULL, NULL);
 }
@@ -1067,8 +1149,11 @@ _ecore_wl_input_mouse_up_send(Ecore_Wl_Input *input, Ecore_Wl_Window *win, unsig
    ev->multi.x = input->sx;
    ev->multi.y = input->sy;
 
-   ev->window = win->id;
-   ev->event_window = win->id;
+   if (win)
+     {
+        ev->window = win->id;
+        ev->event_window = win->id;
+     }
 
    ecore_event_add(ECORE_EVENT_MOUSE_BUTTON_UP, ev, NULL, NULL);
 }
@@ -1113,3 +1198,10 @@ _ecore_wl_input_mouse_wheel_send(Ecore_Wl_Input *input, unsigned int axis, int v
 
    ecore_event_add(ECORE_EVENT_MOUSE_WHEEL, ev, NULL, NULL);
 }
+
+void
+_ecore_wl_input_set_selection(Ecore_Wl_Input *input, struct wl_data_source *source)
+{
+   wl_data_device_set_selection(input->data_device, source, input->display->serial);
+}
+

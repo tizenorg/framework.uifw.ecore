@@ -2,6 +2,32 @@
 # include <config.h>
 #endif
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -692,10 +718,12 @@ ecore_exe_pipe_run(const char     *exe_cmd,
       Ecore_Exe_Event_Add *e;
 
       e = _ecore_exe_event_add_new();
-      e->exe = exe;
       if (e) /* Send the event. */
-        ecore_event_add(ECORE_EXE_EVENT_ADD, e,
-                        _ecore_exe_event_add_free, NULL);
+        {
+          e->exe = exe;
+          ecore_event_add(ECORE_EXE_EVENT_ADD, e,
+                          _ecore_exe_event_add_free, NULL);
+        }
       /* INF("Running as %d for %s.\n", exe->pid, exe->cmd); */
    }
 

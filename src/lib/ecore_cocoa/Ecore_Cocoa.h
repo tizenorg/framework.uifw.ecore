@@ -2,13 +2,13 @@
 #define __ECORE_COCOA_H__
 
 /*
- * DO NOT USE THIS HEADER. IT IS WORK IN PROGRESS. IT IS NOT FINAL AND
+ * DO NOT USE THIS HEADER. IT IS A WORK IN PROGRESS API. IT IS NOT FINAL AND
  * THE API MAY CHANGE.
  */
 
 #ifndef ECORE_COCOA_WIP_GNSIDNQI
 # warning "You are using a work in progress API. This API is not stable"
-# warning "and is subject to change. You use this at your own risk."
+# warning "and is subject to change. You can use this at your own risk."
 #endif
 
 #ifdef EAPI

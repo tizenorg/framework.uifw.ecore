@@ -131,7 +131,7 @@ _ecore_imf_retrieve_surrounding_cb(void *data, Ecore_IMF_Context *ctx, char **te
    Entry *en = data;
    const char *str;
 
-   if (!en) return;
+   if (!en) return EINA_FALSE;
 
    str = evas_object_textblock_text_markup_get(en->txt_obj);
    *text = str ? strdup(str) : strdup("");
@@ -426,7 +426,6 @@ create_input_field(Evas *evas, Entry *en, Evas_Coord x, Evas_Coord y, Evas_Coord
      return;
 
    en->imf_context = ecore_imf_context_add(default_id);
-   ecore_imf_context_client_window_set(en->imf_context, (void *)ecore_evas_window_get(ecore_evas_ecore_evas_get(evas)));
    ecore_imf_context_client_canvas_set(en->imf_context, evas);
 
    evas_object_event_callback_add(en->rect, EVAS_CALLBACK_KEY_DOWN, _key_down_cb, en);

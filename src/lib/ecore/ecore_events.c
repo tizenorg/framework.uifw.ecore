@@ -128,6 +128,7 @@ ecore_event_handler_del(Ecore_Event_Handler *event_handler)
 {
    void *data = NULL;
 
+   if (!event_handler) return NULL;
    EINA_MAIN_LOOP_CHECK_RETURN_VAL(NULL);
    _ecore_lock();
    if (!ECORE_MAGIC_CHECK(event_handler, ECORE_MAGIC_EVENT_HANDLER))

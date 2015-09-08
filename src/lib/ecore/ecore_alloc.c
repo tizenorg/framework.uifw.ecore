@@ -2,6 +2,32 @@
 # include "config.h"
 #endif
 
+#ifdef STDC_HEADERS
+# include <stdlib.h>
+# include <stddef.h>
+#else
+# ifdef HAVE_STDLIB_H
+#  include <stdlib.h>
+# endif
+#endif
+#ifdef HAVE_ALLOCA_H
+# include <alloca.h>
+#elif !defined alloca
+# ifdef __GNUC__
+#  define alloca __builtin_alloca
+# elif defined _AIX
+#  define alloca __alloca
+# elif defined _MSC_VER
+#  include <malloc.h>
+#  define alloca _alloca
+# elif !defined HAVE_ALLOCA
+#  ifdef  __cplusplus
+extern "C"
+#  endif
+void *alloca (size_t);
+# endif
+#endif
+
 #include <stdlib.h>
 
 #include <Eina.h>
@@ -102,7 +128,7 @@ ecore_mempool_init(void)
         mempool_array[i]->mp = eina_mempool_add(choice, mempool_array[i]->name, NULL, mempool_array[i]->size, 16);
         if (!mempool_array[i]->mp)
           {
-             if (!strcmp(choice, "pass_through"))
+             if (!(!strcmp(choice, "pass_through")))
                {
                   ERR("Falling back to pass through ! Previously tried '%s' mempool.", choice);
                   choice = "pass_through";
