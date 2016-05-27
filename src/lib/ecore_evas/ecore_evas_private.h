@@ -269,6 +269,9 @@ struct _Ecore_Evas_Engine
            int depth; // store depth to save us from fetching engine info pre_render
            void *visual; // store visual used to create pixmap
            unsigned long colormap; // store colormap used to create pixmap
+           unsigned int (*alloc_func) (void *data, Ecore_X_Pixmap pixmap, int w, int h, int depth);
+           void         (*free_func) (void *data, Ecore_X_Pixmap pixmap);
+           void *cbdata;
       } pixmap;
    } x;
 #endif
@@ -284,6 +287,7 @@ struct _Ecore_Evas_Engine
       Evas_Object *image;
       void  (*free_func) (void *data, void *pix);
       void *(*alloc_func) (void *data, int size);
+      void *(*alloc_func_with_stride) (void *data, int size, int *stride, int *bpp);
       void *data;
    } buffer;
 #endif

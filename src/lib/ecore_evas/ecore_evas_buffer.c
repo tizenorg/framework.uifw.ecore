@@ -11,6 +11,18 @@
 #include "ecore_evas_private.h"
 #include "Ecore_Evas.h"
 
+EAPI Ecore_Evas     *ecore_evas_buffer_allocfunc_new(int w, int h, void *(*alloc_func) (void *data, int size), void (*free_func) (void *data, void *pix), const void *data);
+
+EAPI Ecore_Evas     *ecore_evas_buffer_allocfunc_with_stride_new(int w, int h, void *(*alloc_func_with_stride) (void *data, int size, int *stride, int *bpp), void (*free_func) (void *data, void *pix), const void *data);
+
+EAPI void    ecore_evas_buffer_allocfunc_set(Ecore_Evas *ee, void *(*alloc_func_with_stride) (void *data, int size, int *stride, int *bpp));
+
+EAPI void    ecore_evas_buffer_freefunc_set(Ecore_Evas *ee, void (*free_func) (void *data, void *pix));
+
+EAPI void    ecore_evas_buffer_data_set(Ecore_Evas *ee, void *data);
+
+EAPI void*   ecore_evas_buffer_data_get(Ecore_Evas *ee);
+
 #ifdef BUILD_ECORE_EVAS_SOFTWARE_BUFFER
 static int _ecore_evas_init_count = 0;
 
@@ -69,8 +81,14 @@ _ecore_evas_resize(Ecore_Evas *ee, int w, int h)
         if (ee->engine.buffer.pixels)
           ee->engine.buffer.free_func(ee->engine.buffer.data,
                                       ee->engine.buffer.pixels);
+        if (ee->engine.buffer.alloc_func_with_stride)
+          {
+             ee->engine.buffer.pixels =
+               ee->engine.buffer.alloc_func_with_stride(ee->engine.buffer.data,
+                                         ee->w * ee->h * sizeof(int), &stride, &bpp);
 
-        if (ee->engine.buffer.alloc_func)
+          }
+        else if (ee->engine.buffer.alloc_func)
           {
              ee->engine.buffer.pixels =
                ee->engine.buffer.alloc_func(ee->engine.buffer.data,
@@ -615,9 +633,16 @@ _ecore_evas_buffer_ecore_evas_create(int w, int h, void *alloc_func, void *free_
    _ecore_evas_buffer_init();
 
    ee->engine.func = (Ecore_Evas_Engine_Func *)&_ecore_buffer_engine_func;
-
-   ee->engine.buffer.alloc_func = alloc_func;
-
+   if (use_stride)
+     {
+        ee->engine.buffer.alloc_func_with_stride = alloc_func;
+        ee->engine.buffer.alloc_func = NULL;
+     }
+   else
+     {
+        ee->engine.buffer.alloc_func = alloc_func;
+        ee->engine.buffer.alloc_func_with_stride = NULL;
+     }
    ee->engine.buffer.free_func = free_func;
    ee->engine.buffer.data = (void *)data;
 
@@ -664,14 +689,21 @@ _ecore_evas_buffer_evas_create(Ecore_Evas* ee, int w,int h, const Eina_Bool  use
    evas_output_size_set(ee->evas, w, h);
    evas_output_viewport_set(ee->evas, 0, 0, w, h);
 
-   ee->engine.buffer.pixels = ee->engine.buffer.alloc_func(ee->engine.buffer.data, w * h * sizeof(int));
+   if (use_stride)
+     ee->engine.buffer.pixels = ee->engine.buffer.alloc_func_with_stride(ee->engine.buffer.data, w * h * sizeof(int),&buf_stride, &buf_bpp);
+   else
+     ee->engine.buffer.pixels = ee->engine.buffer.alloc_func(ee->engine.buffer.data, w * h * sizeof(int));
 
    einfo = (Evas_Engine_Info_Buffer *)evas_engine_info_get(ee->evas);
    if (einfo)
      {
         einfo->info.depth_type = EVAS_ENGINE_BUFFER_DEPTH_RGB32;
         einfo->info.dest_buffer = ee->engine.buffer.pixels;
-        einfo->info.dest_buffer_row_bytes = ee->w * sizeof(int);
+        if ((use_stride) && (buf_stride > 0))
+          einfo->info.dest_buffer_row_bytes = buf_stride;
+        else
+          einfo->info.dest_buffer_row_bytes = ee->w * sizeof(int);
+
         einfo->info.use_color_key = 0;
         einfo->info.alpha_threshold = 0;
         einfo->info.func.new_update_region = NULL;
@@ -733,6 +765,121 @@ ecore_evas_buffer_allocfunc_new(int w, int h, void *(*alloc_func) (void *data, i
         return NULL;
      }
    return ee;
+#else
+   return NULL;
+#endif
+}
+
+EAPI Ecore_Evas *
+ecore_evas_buffer_allocfunc_with_stride_new(int w, int h, void *(*alloc_func_with_stride) (void *data, int size, int *stride, int *bpp), void (*free_func) (void *data, void *pix), const void *data)
+{
+#ifdef BUILD_ECORE_EVAS_SOFTWARE_BUFFER
+   Ecore_Evas *ee;
+
+   ee = _ecore_evas_buffer_ecore_evas_create(w,h,alloc_func_with_stride,free_func,data,EINA_TRUE);
+   if (!ee) return NULL;
+
+   if (_ecore_evas_buffer_evas_create(ee,w,h,EINA_TRUE) == EINA_FALSE)
+     {
+        ERR("_ecore_evas_buffer_evas_create() is failed.");
+        ecore_evas_free(ee);
+        return NULL;
+     }
+   return ee;
+#else
+   return NULL;
+#endif
+}
+
+EAPI void
+ecore_evas_buffer_allocfunc_set(Ecore_Evas *ee, void *(*alloc_func_with_stride) (void *data, int size, int *stride, int *bpp))
+{
+#ifdef BUILD_ECORE_EVAS_SOFTWARE_BUFFER
+   Evas_Engine_Info_Buffer *einfo;
+   int stride = 0;
+   int bpp = 0;
+
+   if (!ee)
+     {
+        CRIT("Ecore_Evas is missing");
+        return NULL;
+     }
+
+   if (ee->engine.buffer.pixels)
+      ee->engine.buffer.free_func(ee->engine.buffer.data,ee->engine.buffer.pixels);
+
+   ee->engine.buffer.alloc_func_with_stride = alloc_func_with_stride;
+   ee->engine.buffer.alloc_func = NULL;
+   if (ee->engine.buffer.alloc_func_with_stride)
+     {
+        ee->engine.buffer.pixels =
+              ee->engine.buffer.alloc_func_with_stride(ee->engine.buffer.data,
+                                         ee->w * ee->h * sizeof(int), &stride, &bpp);
+        if (stride == 0)
+          {
+             stride = ee->w * sizeof(int);
+             bpp = sizeof(int);
+          }
+
+        einfo = (Evas_Engine_Info_Buffer *)evas_engine_info_get(ee->evas);
+        if (einfo)
+          {
+            if (ee->alpha)
+               einfo->info.depth_type = EVAS_ENGINE_BUFFER_DEPTH_ARGB32;
+            else
+               einfo->info.depth_type = EVAS_ENGINE_BUFFER_DEPTH_RGB32;
+
+            einfo->info.dest_buffer = ee->engine.buffer.pixels;
+            einfo->info.dest_buffer_row_bytes = stride;
+            einfo->info.use_color_key = 0;
+            einfo->info.alpha_threshold = 0;
+            einfo->info.func.new_update_region = NULL;
+            einfo->info.func.free_update_region = NULL;
+            if (!evas_engine_info_set(ee->evas, (Evas_Engine_Info *)einfo))
+              {
+                 ERR("evas_engine_info_set() for engine '%s' failed.", ee->driver);
+              }
+          }
+     }
+#endif
+}
+
+EAPI void
+ecore_evas_buffer_freefunc_set(Ecore_Evas *ee, void (*free_func) (void *data, void *pix))
+{
+#ifdef BUILD_ECORE_EVAS_SOFTWARE_BUFFER
+   if (!ee)
+     {
+        CRIT("Ecore_Evas is missing");
+        return NULL;
+     }
+   ee->engine.buffer.free_func = free_func;
+#endif
+}
+
+EAPI void
+ecore_evas_buffer_data_set(Ecore_Evas *ee, void *data)
+{
+#ifdef BUILD_ECORE_EVAS_SOFTWARE_BUFFER
+   if (!ee)
+     {
+        CRIT("Ecore_Evas is missing");
+        return ;
+     }
+   ee->engine.buffer.data = data;
+#endif
+}
+
+EAPI void *
+ecore_evas_buffer_data_get(Ecore_Evas *ee)
+{
+#ifdef BUILD_ECORE_EVAS_SOFTWARE_BUFFER
+   if (!ee)
+     {
+        CRIT("Ecore_Evas is missing");
+        return NULL;
+     }
+   return ee->engine.buffer.data;
 #else
    return NULL;
 #endif
